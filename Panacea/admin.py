@@ -1,10 +1,10 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as DjangoUserAdmin
 from django.utils.translation import ugettext_lazy as _
-from .forms import CustomUserCreationForm, CustomUserChangeForm
-from .models import CustomUser
+from .forms import CustomUserCreationForm, custom_user_ChangeForm
+from .models import custom_user
 
-@admin.register(CustomUser)
+@admin.register(custom_user)
 class UserAdmin(DjangoUserAdmin):
     """Define admin model for custom User model with no username field."""
 
@@ -28,8 +28,8 @@ class UserAdmin(DjangoUserAdmin):
 
 class CustomUserAdmin(UserAdmin):
     add_form = CustomUserCreationForm
-    form = CustomUserChangeForm
-    model = CustomUser
+    form = custom_user_ChangeForm
+    model = custom_user
     list_display = ['email', ]
 
 

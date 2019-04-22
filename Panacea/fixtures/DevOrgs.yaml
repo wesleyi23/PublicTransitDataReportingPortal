@@ -1,0 +1,30 @@
+- model: Panacea.organization
+  pk: 1
+  fields:
+    name: Washington State Department of Transportation
+    address_line_1: 310 Maple Park Ave. SE
+    address_line_2:
+    city: Olympia
+    state: WA
+    zip_code: 98504
+    vanshare_program: True
+- model: Panacea.organization
+  pk: 2
+  fields:
+    name: Test Reporter
+    address_line_1: 100 Test St.
+    address_line_2:
+    city: Test Town
+    state: WA
+    zip_code: 98504
+    vanshare_program: True
+- model: Panacea.organization
+  pk: 3
+  fields:
+    name: Test Reporter 2
+    address_line_1: 200 Test St.
+    address_line_2:
+    city: Testville
+    state: WA
+    zip_code: 98504
+    vanshare_program: False

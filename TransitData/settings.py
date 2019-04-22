@@ -15,7 +15,6 @@ import os
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/2.1/howto/deployment/checklist/
 
@@ -27,12 +26,14 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
-
 # Application definition
 
 INSTALLED_APPS = [
     'bootstrap4',
     'widget_tweaks',
+    'phonenumber_field',
+    'django.contrib.humanize',
+    'localflavor',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -86,10 +87,9 @@ SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.TestDatabase'),
+        'NAME': os.path.join(BASE_DIR, 'db.PanaceaDB'),
     }
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/2.1/ref/settings/#auth-password-validators
@@ -109,7 +109,6 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
 # Internationalization
 # https://docs.djangoproject.com/en/2.1/topics/i18n/
 
@@ -123,7 +122,6 @@ USE_L10N = True
 
 USE_TZ = True
 
-
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.1/howto/static-files/
 
@@ -131,4 +129,6 @@ STATIC_URL = '/static/'
 
 # User authentication from tut located here:https://wsvincent.com/django-custom-user-model-tutorial/
 
-AUTH_USER_MODEL = 'Panacea.CustomUser'
+AUTH_USER_MODEL = 'Panacea.custom_user'
+
+PHONENUMBER_DEFAULT_REGION = 'US'

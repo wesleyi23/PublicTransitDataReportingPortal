@@ -1,0 +1,124 @@
+{% extends 'index.html' %}
+{% load staticfiles %}
+
+{% block content %}
+    <div class="container-fluid">
+
+        <!-- Page Heading -->
+        <h1 class="h3 mb-2 text-gray-800">Profile Setup</h1>
+
+        <div id="carouselIndicators" class="carousel slide" data-ride="carousel" data-interval="false">
+            <ol class="carousel-indicators">
+                <li data-target="#carouselIndicators" data-slide-to="0" class="active"></li>
+                <li data-target="#carouselIndicators" data-slide-to="1"></li>
+                <li data-target="#carouselIndicators" data-slide-to="2"></li>
+                <li data-target="#carouselIndicators" data-slide-to="3"></li>
+                <li data-target="#carouselIndicators" data-slide-to="4"></li>
+            </ol>
+            <div class="carousel-inner">
+                <div class="carousel-item active">
+                    <div class="card shadow mb-4">
+                        <div class="card-header py-3">
+                            <h6 class="m-0 font-weight-bold text-primary">Welcome!</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="text-center">
+                                <img class="img-fluid px-3 px-sm-4 mt-3 mb-4" style="width: 25rem; float: left" src="{% static 'img/undraw_bus_stop.svg' %}" alt="Drawing of people waiting at bus stop.">
+                            </div>
+                            <p>It looks like this is the first time you have visited our site.  The first thing we need to do is
+                                finish setting up your profile.  Once we have done that, we will request the correct site permissions from
+                                the  administrator.  Once you have your permissions set up, you will be ready to report your data and view
+                                your organizations reports.</p>
+                            <br>
+                            <a href="#carouselIndicators" data-slide="next" style="position: absolute; bottom: 20px; right: 20px" class="btn btn-primary"> Lets Get Started</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="carousel-item">
+                    <div class="card shadow mb-4">
+                        <div class="card-header py-3">
+                            <h6 class="m-0 font-weight-bold text-primary">Lets complete your profile</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="text-center">
+                                <img class="img-fluid px-3 px-sm-4 mt-3 mb-4" style="width: 20rem; float: left" src="{% static 'img/undraw_account.svg' %}" alt="Drawing of a user account screen.">
+                            </div>
+                            <div style="float: left">
+                                <h5>Please confirm or edit the following information:</h5>
+
+                                <form action = "{% url 'ProfileSetup_Review' %}" method="post" class="post-form" name="ProfileSetup_Review">
+                                    {% csrf_token %}
+                                    {{ custom_user_ChangeForm.as_p }}
+                                    <div id="ProfileSetup_Review_err"></div>
+                                    <input type="submit" value="Looks good" class="btn btn-primary" style="position: absolute; bottom: 20px; right: 20px">
+                                </form>
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="carousel-item">
+                    <div class="card shadow mb-4">
+                        <div class="card-header py-3">
+                            <h6 class="m-0 font-weight-bold text-primary">Lets complete your profile</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="text-center">
+                                <img class="img-fluid px-3 px-sm-4 mt-3 mb-4" style="width: 20rem; float: left" src="{% static 'img/undraw_account.svg' %}" alt="Drawing of a user account screen.">
+                            </div>
+                            <div style="float: left">
+                                <h5>What's your phone number and where do you work?</h5>
+
+                                <form action = "{% url 'ProfileSetup_PhoneAndOrg' %}" method="post" class="post-form" name="ProfileSetup_PhoneAndOrg" data-errField="telephone_number">
+                                    {% csrf_token %}
+                                    {{ ProfileSetup_PhoneAndOrg.as_p }}
+                                    <div id="ProfileSetup_PhoneAndOrg_err"></div>
+                                    <input type="submit" value="Looks good" class="btn btn-primary" style="position: absolute; bottom: 20px; right: 20px">
+                                </form>
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="carousel-item">
+                    <div class="card shadow mb-4">
+                        <div class="card-header py-3">
+                            <h6 class="m-0 font-weight-bold text-primary">Lets complete your profile</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="text-center">
+                                <img class="img-fluid px-3 px-sm-4 mt-3 mb-4" style="width: 20rem; float: left" src="{% static 'img/undraw_account.svg' %}" alt="Drawing of a user account screen.">
+                            </div>
+                            <div style="float: left">
+                                <h5>What data will you be reporting?</h5>
+
+                                <form action = "{% url 'ProfileSetup_ReportSelection' %}" method="post" class="post-form" name="ReportSelection" data-errField="reports_on">
+                                    {% csrf_token %}
+                                    {{ ProfileSetup_ReportSelection.as_p }}
+                                    <div id="ReportSelection_err"></div>
+                                    <input type="submit" value="Looks good" class="btn btn-primary" style="position: absolute; bottom: 20px; right: 20px">
+                                </form>
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
+            </div>
+
+            {#            <a class="carousel-control-prev" href="#carouselIndicators" role="button" data-slide="prev">#}
+            {#                <span class="carousel-control-prev-icon" aria-hidden="true"></span>#}
+            {#                <span class="sr-only">Previous</span>#}
+            {#            </a>#}
+            {#            <a class="carousel-control-next" href="#carouselIndicators" role="button" data-slide="next">#}
+            {#                <span class="carousel-control-next-icon" aria-hidden="true"></span>#}
+            {#                <span class="sr-only">Next</span>#}
+            {#            </a>#}
+        </div>
+
+    </div>
+
+
+
+{% endblock %}

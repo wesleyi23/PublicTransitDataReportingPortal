@@ -1,0 +1,38 @@
+{% extends 'index.html' %}
+{% load staticfiles %}
+
+{% block content %}
+    <div class="container-fluid">
+
+        <!-- Page Heading -->
+        <h1 class="h3 mb-2 text-gray-800"></h1>
+
+
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Congratulations your done setting up your profile!</h6>
+            </div>
+            <div class="card-body">
+                <div>
+                    <img class="img-fluid px-3 px-sm-4 mt-3 mb-4" style="width: 20rem; float: left" src="{% static 'img/undraw_happy_feeling.svg' %}" alt="Drawing of a user account screen.">
+                </div>
+                <div>
+
+                    <p>
+                        Your information has been sent to our system administrators who will review your profile
+                        information and update your system permissions.  Once they have done this you will receive
+                        an email with additional information on how to submit your data.
+                    </p>
+                    <p>
+                        Thanks for completing your profile!
+                        <br>
+                        -WSDOT | Public Transportation Division | Data Team
+                    </p>
+
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}

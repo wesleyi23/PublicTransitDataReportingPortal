@@ -15,16 +15,21 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
-
-
 from Panacea import views
 
+
 urlpatterns = [
+    # path('test/', views.testView, name="testView"),
     path('', views.dashboard, name="dashboard"),
     path('dashboard/', views.dashboard, name="dashboard"),
-    path('AssetInvReport/Report/', views.AssetInvReport_report, name="AssetInvReport_report"),
-    path('AssetInvReport/Data/', views.AssetInvReport_data, name="AssetInvReport_data"),
-    path('AssetInvReport/Other/', views.AssetInvReport_other, name="AssetInvReport_other"),
+    path('ProfileSetup/', views.ProfileSetup, name="ProfileSetup"),
+    path('ProfileSetup/Review/', views.ProfileSetup_Review, name="ProfileSetup_Review"),
+    path('ProfileSetup/PhoneAndOrg/', views.ProfileSetup_PhoneAndOrg, name="ProfileSetup_PhoneAndOrg"),
+    path('ProfileSetup/ReportSelection/', views.ProfileSetup_ReportSelection, name="ProfileSetup_ReportSelection"),
+    path('AssetInvReport/Report/', views.Vanpool_report, name="Vanpool_report"),
+    path('AssetInvReport/Report/<int:year>/<int:month>/', views.Vanpool_report, name="Vanpool_report"),
+    path('AssetInvReport/Data/', views.Vanpool_data, name="Vanpool_data"),
+    path('AssetInvReport/Other/', views.Vanpool_other, name="Vanpool_other"),
     path('UserProfile/', views.UserProfile, name="UserProfile"),
     path('OrganizationProfile/', views.OrganizationProfile, name="OrganizationProfile"),
     path('Permissions/', views.Permissions, name="Permissions"),
