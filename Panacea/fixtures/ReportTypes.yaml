@@ -1,0 +1,14 @@
+- model: Panacea.ReportType
+  pk: 1
+  fields:
+    name: Summary of Public Transportation
+    report_frequency: Yearly
+    due_date: 0001-01-01
+    report_owner_id:
+- model: Panacea.ReportType
+  pk: 2
+  fields:
+    name: Vanpool Report
+    report_frequency: Monthly
+    due_date: 0001-01-01
+    report_owner_id:

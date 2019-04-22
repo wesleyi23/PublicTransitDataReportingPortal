@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 
 {% load static  %}
+{% load humanize %}
 
 <html lang="en">
 
@@ -20,7 +21,7 @@
 
     <!-- Custom styles for this template-->
     <link href="{% static 'css/sb-admin-2.css'%}" rel="stylesheet">
-
+    {% block head_content %} {% endblock %}
 </head>
 
 <body id="page-top">
@@ -44,7 +45,7 @@
 
         <!-- Nav Item - Dashboard -->
         <li class="nav-item active">
-            <a class="nav-link" href="/dashboard">
+            <a class="nav-link" href="{% url 'dashboard' %}">
                 <i class="fas fa-fw fa-tachometer-alt"></i>
                 <span>Dashboard</span></a>
         </li>
@@ -61,14 +62,14 @@
         <li class="nav-item">
             <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseAsset" aria-expanded="true" aria-controls="collapseAsset">
                 <i class="fas fa-fw fa-clipboard-check"></i>
-                <span>Asset Inventory Reports</span>
+                <span>Vanpool Reporting</span>
             </a>
             <div id="collapseAsset" class="collapse" aria-labelledby="headingTwo" data-parent="#accordionSidebar">
                 <div class="bg-white py-2 collapse-inner rounded">
-                    <h6 class="collapse-header">Custom Components:</h6>
-                    <a class="collapse-item" href="/AssetInvReport/Report">Submit yearly report</a>
-                    <a class="collapse-item" href="/AssetInvReport/Data">View reported data</a>
-                    <a class="collapse-item" href="/AssetInvReport/Other">....</a>
+                    <h6 class="collapse-header">Vanpool:</h6>
+                    <a class="collapse-item" href="{% url 'Vanpool_report' %}">Submit monthly report</a>
+                    <a class="collapse-item" href="{% url 'Vanpool_data' %}">View reported data</a>
+                    <a class="collapse-item" href="{% url 'Vanpool_other' %}">....</a>
                 </div>
             </div>
         </li>
@@ -89,9 +90,9 @@
             </a>
             <div id="collapseSettings" class="collapse" aria-labelledby="headingPages" data-parent="#accordionSidebar">
                 <div class="bg-white py-2 collapse-inner rounded">
-                    <a class="collapse-item" href="/UserProfile">User Profile</a>
-                    <a class="collapse-item" href="/OrganizationProfile">Organization Profile</a>
-                    <a class="collapse-item" href="/Permissions">Permissions</a>
+                    <a class="collapse-item" href="{% url 'UserProfile' %}">User Profile</a>
+                    <a class="collapse-item" href="{% url 'OrganizationProfile' %}">Organization Profile</a>
+                    <a class="collapse-item" href="{% url 'Permissions' %}">Permissions</a>
                 </div>
             </div>
         </li>
@@ -112,9 +113,9 @@
             </a>
             <div id="collapseAdmin" class="collapse" aria-labelledby="headingPages" data-parent="#accordionSidebar">
                 <div class="bg-white py-2 collapse-inner rounded">
-                    <a class="collapse-item" href="/Admin/Reports">Reports</a>
-                    <a class="collapse-item" href="/Admin/ReminderEmail">Reminder Emails</a>
-                    <a class="collapse-item" href="/Admin/AssignPermissions">Assign Permissions</a>
+                    <a class="collapse-item" href="{% url 'Admin_reports' %}">Reports</a>
+                    <a class="collapse-item" href="{% url 'Admin_ReminderEmail' %}">Reminder Emails</a>
+                    <a class="collapse-item" href="{% url 'Admin_assignPermissions' %}">Assign Permissions</a>
                 </div>
             </div>
         </li>
@@ -268,7 +269,7 @@
                     <li class="nav-item dropdown no-arrow">
                         <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                             <span class="mr-2 d-none d-lg-inline text-gray-600 small"> {{request.user.get_full_name }} </span>
-                            <img class="img-profile rounded-circle" src="https://source.unsplash.com/QAB-WJcbgJk/60x60">
+                            <img class="img-profile rounded-circle" src="{% static 'img/RailIcon.svg' %}">
                         </a>
                         <!-- Dropdown - User Information -->
                         <div class="dropdown-menu dropdown-menu-right shadow animated--grow-in" aria-labelledby="userDropdown">
@@ -351,21 +352,22 @@
 
 <!-- Bootstrap core JavaScript-->
 <script src="{% static 'vendor/jquery/jquery.min.js'%}"></script>
+{#<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.12.1/jquery.min.js"></script>#}
 <script src="{% static 'vendor/bootstrap/js/bootstrap.bundle.min.js'%}"></script>
 
 <!-- Core plugin JavaScript-->
-<script src="{% static 'vendor/jquery-easing/jquery.easing.min.js'%}"></script>
+{#<script src="{% static 'vendor/jquery-easing/jquery.easing.min.js'%}"></script>#}
 
 <!-- Custom scripts for all pages-->
 <script src="{% static 'js/sb-admin-2.min.js'%}"></script>
 
 <!-- Page level plugins -->
-<script src="{% static 'vendor/chart.js/Chart.min.js'%}"></script>
+{#<script src="{% static 'vendor/chart.js/Chart.min.js'%}"></script>#}
 
 <!-- Page level custom scripts -->
-<script src="{% static 'js/demo/chart-area-demo.js'%}"></script>
-<script src="{% static 'js/demo/chart-pie-demo.js'%}"></script>
-
+{#<script src="{% static 'js/demo/chart-area-demo.js' %}"></script>#}
+{#<script src="{% static 'js/demo/chart-pie-demo.js' %}"></script>#}
+<script src="{% static 'js/main.js' %}"></script>
 </body>
 
 </html>

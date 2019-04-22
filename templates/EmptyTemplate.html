@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+
+{% load static  %}
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+    {% block content %}
+                                <form action = "{% url 'ProfileSetup_PhoneAndOrg' %}" method="post" id="post-form">
+                                    {% csrf_token %}
+                                    {{ form.as_p }}
+                                    <div id="errormessage"></div>
+                                    <input type="submit" value="Looks good" class="btn btn-primary" style="position: absolute; bottom: 20px; right: 20px">
+                                </form>
+    {% endblock %}
+
+
+</body>
+</html>
