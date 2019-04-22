@@ -28,12 +28,17 @@ ALLOWED_HOSTS = []
 
 # Application definition
 
+# Install instructions:
+# pip install bootstrap4
+# pip install django-phonenumber-field
+# pip install phonenumbers
+# django-localflavor
+
 INSTALLED_APPS = [
     'bootstrap4',
-    'widget_tweaks',
     'phonenumber_field',
-    'django.contrib.humanize',
     'localflavor',
+    'django.contrib.humanize',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
