@@ -111,36 +111,20 @@ def Vanpool_report(request, year=None, month=None):
         month = 1
 
     user_organization = profile.objects.get(custom_user=request.user.id).organization
-
     past_report_data = vanpool_report.objects.filter(organization_id=user_organization, report_year=year)
     form_data = vanpool_report.objects.get(organization_id=user_organization.id, report_year=year, report_month=month)
 
     if request.method == 'POST':
-        form = VanpoolMonthlyReport(request.POST, instance=form_data)
+        form = VanpoolMonthlyReport(data=request.POST, instance=form_data)
         if form.is_valid():
             form.save()
             successful_submit = True
-            return render(request, 'pages/Vanpool_report.html', {'form': form,
-                                                                 'past_report_data': past_report_data,
-                                                                 'year': year,
-                                                                 'month': month,
-                                                                 'organization': user_organization,
-                                                                 'successful_submit': successful_submit}
-                          )
         else:
             successful_submit = False
-            # form = VanpoolMonthlyReport(instance=form_data)
-            return render(request, 'pages/Vanpool_report.html', {'form': form,
-                                                                 'past_report_data': past_report_data,
-                                                                 'year': year,
-                                                                 'month': month,
-                                                                 'organization': user_organization,
-                                                                 'successful_submit': successful_submit}
-                          )
     else:
         form = VanpoolMonthlyReport(instance=form_data)
         successful_submit = False
-        return render(request, 'pages/Vanpool_report.html', {'form': form,
+    return render(request, 'pages/Vanpool_report.html', {'form': form,
                                                              'past_report_data': past_report_data,
                                                              'year': year,
                                                              'month': month,

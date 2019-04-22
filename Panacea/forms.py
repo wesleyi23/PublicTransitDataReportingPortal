@@ -132,7 +132,8 @@ class VanpoolMonthlyReport(forms.ModelForm):
 
     class Meta:
         model = vanpool_report
-        exclude = ('report_date', 'report_year', 'report_month', 'report_by', 'organization')
+        exclude = ('report_date', 'report_year', 'report_month', 'report_by', 'organization', 'report_type',
+                   'report_due_date')
         widgets = {
             'vanshare_groups_in_operation': forms.NumberInput(attrs={'class': 'form-control input-sm'}),
             'vanshare_group_starts': forms.NumberInput(attrs={'class': 'form-control input-sm'}),
