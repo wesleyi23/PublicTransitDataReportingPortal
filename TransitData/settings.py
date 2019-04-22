@@ -82,7 +82,7 @@ TEMPLATES = [
 ]
 
 LOGIN_REDIRECT_URL = 'dashboard'
-LOGOUT_REDIRECT_URL = 'register'
+LOGOUT_REDIRECT_URL = 'login'
 
 WSGI_APPLICATION = 'TransitData.wsgi.application'
 

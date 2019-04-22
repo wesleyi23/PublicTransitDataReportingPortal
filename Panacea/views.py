@@ -1,7 +1,7 @@
 import json
 
 from django.contrib import messages
-from django.contrib.auth import authenticate, login
+from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render, redirect
@@ -178,3 +178,6 @@ def Admin_assignPermissions(request):
 def Help(request):
     return render(request, 'pages/Help.html', {})
 
+@login_required(login_url='Panacea/login')
+def logout_view(request):
+    logout(request)
