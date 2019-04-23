@@ -36,4 +36,11 @@ $(document).ready(function($) {
     });
 });
 
-
+$(document).ready(function ($) {
+    $(".edit_profile_field").click(function () {
+        var field_name = "#id_"+ $(this).data("field_name");
+        $(field_name).prop("readonly", false);
+        $(field_name).css("pointer-events", '');
+        $(field_name).attr("class", "form-control")
+    })
+})

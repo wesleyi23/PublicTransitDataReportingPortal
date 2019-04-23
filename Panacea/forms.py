@@ -5,6 +5,8 @@ from django.contrib.auth.forms import UserChangeForm, AuthenticationForm
 from .models import custom_user, profile, organization, ReportType, vanpool_report
 from django.utils.translation import gettext, gettext_lazy as _
 from phonenumber_field.formfields import PhoneNumberField
+from localflavor.us.forms import USStateSelect, USZipCodeField
+
 
 
 class CustomUserCreationForm(forms.ModelForm):
@@ -160,4 +162,57 @@ class VanpoolMonthlyReport(forms.ModelForm):
                 attrs={'class': 'form-control input-sm'}),
             'average_round_trip_miles': forms.NumberInput(
                 attrs={'class': 'form-control input-sm'}),
+        }
+
+
+class user_profile_custom_user(forms.ModelForm):
+
+    class Meta:
+        model = custom_user
+        fields = ('first_name', 'last_name', 'email')
+        widgets = {
+            'first_name': forms.TextInput(
+                attrs={'class': 'form-control-plaintext'}),
+            'last_name': forms.TextInput(attrs={'class': 'form-control-plaintext', 'readonly': 'True'}),
+            'email': forms.EmailInput(
+                attrs={'class': 'form-control-plaintext', 'readonly': 'True'}),
+        }
+
+
+class user_profile_profile(forms.ModelForm):
+
+
+    class Meta:
+        model = profile
+        queryset = organization.objects.all()
+        fields = ('telephone_number', )
+        widgets = {
+            'telephone_number': forms.TextInput(
+                attrs={'class': 'form-control-plaintext', 'readonly': 'True'})
+        }
+
+class organization_profile(forms.ModelForm):
+
+
+    class Meta:
+        TRUE_FALSE_CHOICES = (
+            (False, 'No'),
+            (True, 'Yes')
+
+        )
+        model = organization
+        fields = ('name', 'address_line_1', 'address_line_2', 'city', 'state', 'zip_code', 'vanshare_program')
+        widgets = {
+            'name': forms.TextInput(
+                attrs={'class': 'form-control-plaintext', 'readonly': 'True', 'style': "width:350px"}),
+            'address_line_1': forms.TextInput(
+                attrs={'class': 'form-control-plaintext', 'readonly': 'True', 'style': "width:350px"}),
+            'address_line_2': forms.TextInput(
+                attrs={'class': 'form-control-plaintext', 'readonly': 'True', 'style': "width:350px"}),
+            'city': forms.TextInput(
+                attrs={'class': 'form-control-plaintext', 'readonly': 'True'}),
+            'state': forms.Select(attrs={'class': 'form-control form-control-plaintext', 'readonly': 'True', 'style': 'pointer-events: none'}),
+            'zip_code': forms.TextInput(
+                attrs={'class': 'form-control-plaintext', 'readonly': 'True'}),
+            'vanshare_program': forms.Select(choices=TRUE_FALSE_CHOICES, attrs={'class': 'form-control form-control-plaintext', 'readonly': 'True', 'style': 'pointer-events: none'})
         }

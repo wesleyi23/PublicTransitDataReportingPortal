@@ -82,7 +82,7 @@ TEMPLATES = [
 ]
 
 LOGIN_REDIRECT_URL = 'dashboard'
-LOGOUT_REDIRECT_URL = 'login'
+LOGOUT_REDIRECT_URL = '/Panacea/login'
 
 WSGI_APPLICATION = 'TransitData.wsgi.application'
 

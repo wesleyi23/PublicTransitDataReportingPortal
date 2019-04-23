@@ -25,7 +25,7 @@ def print_long_date_name(int_month):
 @register.filter(name='get_status_icon')
 def get_status_icon(status):
     if status == "Past due":
-        html = '<i class="fas fa-exclamation-triangle text-warning"> Past Due</i>'
+        html = '<i class="fas fa-exclamation-triangle text-warning"> Due</i>'
     elif status == "Submitted":
         html = '<i class="fas fa-check-circle text-success"></i>'
     elif status == "Not due yet":
