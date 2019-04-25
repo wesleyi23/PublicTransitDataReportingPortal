@@ -1,9 +1,83 @@
 {% extends 'index.html' %}
+{% load static %}
 
 {% block content %}
-        <div class="container-fluid">
 
-          <!-- Page Heading -->
-          <h1 class="h3 mb-2 text-gray-800">User Profile</h1>
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">{{  user_name }}'s User Profile</h6>
         </div>
+        <div class="card-body">
+            <div>
+                <img class="img-fluid px-3 px-sm-4 mt-3 mb-4" style="width: 20rem; float: left" src="{% static 'img/undraw_profile_pic.svg' %}" alt="Drawing of a user profile picture.">
+            </div>
+            <div>
+                <div style="float: left">
+                    <form action="/UserProfile/" method="post">
+                        {% csrf_token  %}
+                        <table style="border-collapse: separate; border-spacing: .5rem">
+                            <tr class="fieldWrapper">
+                                <td>{{ form_custom_user.first_name.label_tag }}</td>
+                                <td>{{ form_custom_user.first_name }}</td>
+                                <td><a href="#" class="edit_profile_field" data-field_name="{{ form_custom_user.first_name.name }}">(Edit)</a></td>
+                                <td>{{ form_custom_user.first_name.errors }}</td>
+                            </tr>
+                            <tr class="fieldWrapper">
+                                <td>{{ form_custom_user.last_name.label_tag }}</td>
+                                <td>{{ form_custom_user.last_name }}</td>
+                                <td><a href="#" class="edit_profile_field" data-field_name="{{ form_custom_user.last_name.name }}">(Edit)</a></td>
+                                <td>{{ form_custom_user.last_name.errors }}</td>
+                            </tr>
+                            <tr class="fieldWrapper">
+                                <td>{{ form_custom_user.email.label_tag }}</td>
+                                <td>{{ form_custom_user.email }}</td>
+                                <td><a href="#" class="edit_profile_field" data-field_name="{{ form_custom_user.email.name }}">(Edit)</a></td>
+                                <td>{{ form_custom_user.email.errors }}</td>
+                            </tr>
+                            <tr class="fieldWrapper">
+                                <td>{{ form_profile.telephone_number.label_tag }}</td>
+                                <td>{{ form_profile.telephone_number }}</td>
+                                <td><a href="#" class="edit_profile_field" data-field_name="{{ form_profile.telephone_number.name }}">(Edit)</a></td>
+                                <td>{{ form_profile.telephone_number.errors }}</td>
+                            </tr>
+                            <tr class="fieldWrapper">
+                                <td>Organization:</td>
+                                <td>{{ user_org }}</td>
+                                <td><a href="#" data-toggle="modal" data-target="#ChangeOrgModal">(Edit)</a> </td>
+                                <td></td>
+                            </tr>
+
+                        </table>
+                        {{ form.non_field_errors }}
+                        {{ form.source.errors }}
+                        {{ form.source }}
+                        <input type="submit" value="Submit"  class="btn btn-primary float-right mt-3">
+                        <a href="."  class="btn btn-secondary float-right mr-2 mt-3" >Cancel</a>
+                        <a href="{% url 'password_change' %}" class="float-left mt-3 ml-2">(Reset password)</a>
+                    </form>
+
+
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Modal -->
+    <div class="modal fade" id="ChangeOrgModal" tabindex="-1" role="dialog" aria-labelledby="ChangeOrgModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="ChangeOrgModalLabel">Change Organization</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    To change your organization please contact the system administrator.
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
 {% endblock %}

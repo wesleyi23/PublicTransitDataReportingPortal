@@ -1,9 +1,112 @@
 {% extends 'index.html' %}
+{% load static %}
 
 {% block content %}
-        <div class="container-fluid">
 
-          <!-- Page Heading -->
-          <h1 class="h3 mb-2 text-gray-800">Organization Profile</h1>
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">{{  org_name }}'s Profile</h6>
         </div>
+        <div class="card-body">
+            <div class="container-fluid">
+                <div class="row">
+
+                    <div class="col" style="max-width: 22rem">
+                        <div class="text-center">
+                            <img class="img-fluid px-3 px-sm-4 mt-3 mb-4" style="max-width: 22rem; min-width: 22rem" src="{% static 'img/undraw_portfolio_update.svg' %}" alt="Drawing of a user profile picture.">
+                        </div>
+                    </div>
+                    <div class="col">
+                        {#                    <div style="float: left">#}
+                        <form action="/OrganizationProfile/" method="post">
+                            {% csrf_token  %}
+                            {#                        {{ form }}#}
+                            <div class="table-responsive">
+                                <table class="table float-left table-borderless" style="border-collapse: separate; border-spacing: .5rem">
+{#                                    <thead>#}
+{#                                    <tr>#}
+{#                                        <th style="white-space: nowrap; width: 1%">30</th>#}
+{#                                        <th>50</th>#}
+{#                                        <th>15</th>#}
+{#                                        <th>25</th>#}
+{#                                    </tr>#}
+{#                                    </thead>#}
+                                    <tbody>
+                                    <tr class="fieldWrapper">
+                                        <td>{{ form.name.label_tag }}</td>
+                                        <td style="white-space: nowrap; width: 1%">{{ form.name }}</td>
+                                        <td><a href="#" class="edit_profile_field" data-field_name="{{ form.name.name }}">(Edit)</a></td>
+                                        <td>{{ form.name.errors }}</td>
+                                    </tr>
+                                    <tr class="fieldWrapper">
+                                        <td style="white-space: nowrap; width: 1%">{{ form.address_line_1.label_tag }}</td>
+                                        <td style="white-space: nowrap; width: 1%">{{ form.address_line_1 }}</td>
+                                        <td><a href="#" class="edit_profile_field" data-field_name="{{ form.address_line_1.name }}">(Edit)</a></td>
+                                        <td>{{ form.last_name.errors }}</td>
+                                    </tr>
+                                    <tr class="fieldWrapper">
+                                        <td>{{ form.address_line_2.label_tag }}</td>
+                                        <td style="white-space: nowrap; width: 1%">{{ form.address_line_2 }}</td>
+                                        <td><a href="#" class="edit_profile_field" data-field_name="{{ form.address_line_2.name }}">(Edit)</a></td>
+                                        <td>{{ form.address_line_2.errors }}</td>
+                                    </tr>
+                                    <tr class="fieldWrapper">
+                                        <td>{{ form.city.label_tag }}</td>
+                                        <td style="white-space: nowrap; width: 1%">{{ form.city }}</td>
+                                        <td><a href="#" class="edit_profile_field" data-field_name="{{ form.city.name }}">(Edit)</a></td>
+                                        <td>{{ form.city.errors }}</td>
+                                    </tr>
+                                    <tr class="fieldWrapper">
+                                        <td>{{ form.state.label_tag }}</td>
+                                        <td style="white-space: nowrap; width: 1%">{{ form.state }}</td>
+                                        <td><a href="#" class="edit_profile_field" data-field_name="{{ form.state.name }}">(Edit)</a></td>
+                                        <td>{{ form.state.errors }}</td>
+                                    </tr>
+                                    <tr class="fieldWrapper">
+                                        <td>{{ form.zip_code.label_tag }}</td>
+                                        <td style="white-space: nowrap; width: 1%">{{ form.zip_code }}</td>
+                                        <td><a href="#" class="edit_profile_field" data-field_name="{{ form.zip_code.name }}">(Edit)</a></td>
+                                        <td>{{ form.zip_code.errors }}</td>
+                                    </tr>
+                                    <tr class="fieldWrapper">
+                                        <td>{{ form.vanshare_program.label_tag }}</td>
+                                        <td>{{ form.vanshare_program }}</td>
+                                        <td><a href="#" class="edit_profile_field" data-field_name="{{ form.vanshare_program.name }}">(Edit)</a></td>
+                                        <td>{{ form.vanshare_program.errors }}</td>
+                                    </tr>
+</tbody>
+                                </table>
+                            </div>
+                            {{ form.non_field_errors }}
+                            {{ form.source.errors }}
+                            {{ form.source }}
+                            <input type="submit" value="Submit"  class="btn btn-primary float-right mt-3">
+                            <a href="."  class="btn btn-secondary float-right mr-2 mt-3" >Cancel</a>
+                        </form>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal fade" id="ChangeOrgModal" tabindex="-1" role="dialog" aria-labelledby="ChangeOrgModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="ChangeOrgModalLabel">Change Organization</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    To change your organization please contact the system administrator.
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
 {% endblock %}

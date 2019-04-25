@@ -22,6 +22,7 @@ urlpatterns = [
     # path('test/', views.testView, name="testView"),
     path('', views.dashboard, name="dashboard"),
     path('dashboard/', views.dashboard, name="dashboard"),
+    path('logout/', views.logout_view, name="logout"),
     path('ProfileSetup/', views.ProfileSetup, name="ProfileSetup"),
     path('ProfileSetup/Review/', views.ProfileSetup_Review, name="ProfileSetup_Review"),
     path('ProfileSetup/PhoneAndOrg/', views.ProfileSetup_PhoneAndOrg, name="ProfileSetup_PhoneAndOrg"),

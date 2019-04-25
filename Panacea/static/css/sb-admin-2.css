@@ -2084,8 +2084,9 @@ pre code {
 }
 
 .form-control:disabled, .form-control[readonly] {
-  background-color: #eaecf4;
+  /*background-color: #eaecf4;*/
   opacity: 1;
+  padding: 0rem !important;
 }
 
 select.form-control:focus::-ms-value {
@@ -2124,8 +2125,8 @@ select.form-control:focus::-ms-value {
 .form-control-plaintext {
   display: block;
   width: 100%;
-  padding-top: 0.375rem;
-  padding-bottom: 0.375rem;
+  /*padding-top: 0.375rem;*/
+  padding-bottom: 0.5rem;
   margin-bottom: 0;
   line-height: 1.5;
   color: #858796;

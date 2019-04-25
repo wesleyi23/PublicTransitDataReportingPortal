@@ -32,12 +32,14 @@ ALLOWED_HOSTS = []
 # pip install bootstrap4
 # pip install django-phonenumber-field
 # pip install phonenumbers
-# django-localflavor
+# pip install django-localflavor
+# pip install
 
 INSTALLED_APPS = [
     'bootstrap4',
     'phonenumber_field',
     'localflavor',
+    'widget_tweaks',
     'django.contrib.humanize',
     'django.contrib.admin',
     'django.contrib.auth',
@@ -80,7 +82,7 @@ TEMPLATES = [
 ]
 
 LOGIN_REDIRECT_URL = 'dashboard'
-LOGOUT_REDIRECT_URL = 'register'
+LOGOUT_REDIRECT_URL = '/Panacea/login'
 
 WSGI_APPLICATION = 'TransitData.wsgi.application'
 
