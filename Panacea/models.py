@@ -127,7 +127,7 @@ class vanpool_report(models.Model):
     report_year = models.IntegerField()
     report_month = models.IntegerField(choices=REPORT_MONTH)
     report_due_date = models.DateField()
-    report_date = models.DateTimeField(blank=True, null=True)
+    report_date = models.IntegerField(null = True)
     updated_date = models.DateTimeField(auto_now=True, blank=True, null=True)
     report_by = models.ForeignKey(custom_user, on_delete=models.PROTECT, blank=True, null=True)
     organization = models.ForeignKey(organization, on_delete=models.PROTECT)
