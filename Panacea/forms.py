@@ -216,3 +216,22 @@ class organization_profile(forms.ModelForm):
                 attrs={'class': 'form-control-plaintext', 'readonly': 'True'}),
             'vanshare_program': forms.Select(choices=TRUE_FALSE_CHOICES, attrs={'class': 'form-control form-control-plaintext', 'readonly': 'True', 'style': 'pointer-events: none'})
         }
+
+
+
+class change_user_permissions_group(forms.ModelForm):
+    class Meta:
+        model = custom_user
+        fields = ['first_name', 'last_name', 'email', 'groups', ]
+        widgets = {
+            'groups': forms.CheckboxSelectMultiple(attrs={'class': 'form-check-inline no-bullet AJAX_instant_submit',
+                                                          'data-form-name': "Admin_assignPermissions_all"}),
+            'first_name': forms.TextInput(
+                attrs={'class': 'form-control-plaintext', 'readonly': 'True'}),
+            'last_name': forms.TextInput(
+                attrs={'class': 'form-control-plaintext', 'readonly': 'True'}),
+            'email': forms.TextInput(
+                attrs={'class': 'form-control-plaintext', 'readonly': 'True'}),
+        }
+
+

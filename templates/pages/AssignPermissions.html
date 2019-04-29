@@ -1,9 +1,114 @@
 {% extends 'index.html' %}
+{% load custom_tags %}
+
+{% load static  %}
+
+{% block head_content %}
+{#    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.19/css/jquery.dataTables.css">#}
+    <link href="{% static 'vendor/datatables/dataTables.bootstrap4.css' %}" rel="stylesheet" type="text/css">
+{% endblock %}
 
 {% block content %}
-        <div class="container-fluid">
+    <div class="container-fluid">
 
-          <!-- Page Heading -->
-          <h1 class="h3 mb-2 text-gray-800">Assign Permissions</h1>
+        <!-- Page Heading -->
+        <div class="row">
+            <div class="col">
+
+                <div class="card shadow mb-4">
+                    <!-- Card Header - Accordion -->
+                    <a href="#collapseCardActiveRequests" class="d-block card-header py-3" data-toggle="collapse" role="button" aria-expanded="true" aria-controls="collapseCardExample">
+                        <h6 class="m-0 font-weight-bold text-primary">All users</h6>
+                    </a>
+                    <!-- Card Content - Collapse -->
+                    <div class="collapse show" id="collapseCardActiveRequests">
+                        <div class="card-body">
+                            <div id="Admin_assignPermissions_all_err"></div>
+                            <form id="Admin_assignPermissions_all" action="{% url 'Admin_assignPermissions' %}" method="post" data-err-field="my-errField">
+                                {% csrf_token %}
+                                {{Admin_assignPermissions_all.management_form}}
+                                <div class=""></div>
+                                <div class="dataTable_wrapper">
+                                    <table class="table tdt-bootstrap4 dataTable dataTable_wrapper" id="mydataTable">
+                                        <thead>
+                                        <tr>
+                                            <th style="display: none">id</th>
+                                            <th>First name</th>
+                                            <th style="display: none">first_name</th>
+                                            <th>Last name</th>
+                                            <th style="display: none">last_name</th>
+                                            <th>Email</th>
+                                            <th>Organization</th>
+                                            <th>Requested Permissions</th>
+                                            <th>Permissions</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody>
+                                        {% for form in Admin_assignPermissions_all %}
+
+                                            <tr>
+                                                <td style="display: none">{{ form.id }}</td>
+                                                <td>{{ form.first_name.value }}</td>
+                                                <td style="display: none">{{ form.first_name }}</td>
+                                                <td>{{ form.last_name.value }}</td>
+                                                <td style="display: none">{{ form.last_name }}</td>
+                                                <td>{{ form.email }}</td>
+                                                <td>{{ profile_data | get_org_by_custom_user:form.instance.pk }}</td>
+                                                <td>{{ profile_data | get_reports_on_by_custom_user:form.instance.pk }}</td>
+                                                <td class="no-bullet"> {{ form.groups }}</td>
+                                            </tr>
+                                        {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
+        <div class="row">
+            <div class="col">
+                <div class="card shadow mb-4">
+                    <!-- Card Header - Accordion -->
+                    <a href="#collapseCardAll" class="d-block card-header py-3" data-toggle="collapse" role="button" aria-expanded="true" aria-controls="collapseCardExample">
+                        <h6 class="m-0 font-weight-bold text-primary">User with active requests</h6>
+                    </a>
+                    <!-- Card Content - Collapse -->
+                    <div class="collapse hide" id="collapseCardAll">
+                        <div class="card-body">
+                            This is a collapsable card example using Bootstrap's built in collapse functionality. <strong>Click on the card header</strong> to see the card body collapse and expand!
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+{% endblock %}
+
+{% block page_scripts %}
+
+
+    <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.19/js/jquery.dataTables.js"></script>
+    <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.19/js/dataTables.bootstrap4.min.js "></script>
+
+    <script type="text/javascript">
+        $(document).ready( function () {
+            $('#mydataTable').DataTable({
+                "scrollX": true,
+                "sScrollX": "100%",
+                "sScrollXInner": "100%",
+                "bLengthChange": false,
+                "dom": '<"top"fl>rt<"bottom"ip><"clear">'
+            });
+            $('.dataTables_filter').addClass('form-inline');
+            $('.dataTables_filter').css({"float":"left", "margin-bottom":"2px", "margin-left":"2px"})
+        });
+
+
+
+    </script>
 {% endblock %}
