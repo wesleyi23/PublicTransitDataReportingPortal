@@ -45,11 +45,54 @@
 
 /*! ADDITIONS
  */
+/* Small devices (landscape phones, 544px and up) */
+@media (min-width: 544px) {
+  html {font-size:11px;}
+}
+
+/* Medium devices (tablets, 768px and up) The navbar toggle appears at this breakpoint */
+@media (min-width: 768px) {
+  html {font-size:12px;} /*1rem = 16px*/
+}
+
+/* Large devices (desktops, 992px and up) */
+@media (min-width: 992px) {
+  html {font-size:13px;} /*1rem = 16px*/
+}
+
+/* Extra large devices (large desktops, 1200px and up) */
+@media (min-width: 1200px) {
+  html {font-size:16px;} /*1rem = 16px*/
+}
+
 
 .clickable-row{
   cursor: pointer;
 }
 
+.no-bullet li {
+  list-style: none !important;
+  text-align: left;
+  padding-right: 1rem;
+  float: left;
+  vertical-align: middle;
+}
+
+div.dataTables_wrapper {
+        margin: 0 auto;
+    }
+.dataTable_wrapper td {
+  font-size: .85rem !important;
+  vertical-align: middle !important;
+}
+
+.dataTable_wrapper ul {
+margin: auto;
+}
+
+.dataTable_wrapper label {
+margin: 0px;
+}
 
 *,
 *::before,
@@ -59,7 +102,7 @@
 }
 
 html {
-  font-size: 85%;
+  /*font-size: 85%;*/
   font-family: sans-serif;
   line-height: 1.15;
   -webkit-text-size-adjust: 100%;
@@ -2217,7 +2260,8 @@ textarea.form-control {
   -ms-flex-align: center;
   align-items: center;
   padding-left: 0;
-  margin-right: 0.75rem;
+  margin-right: 0.25rem;
+  list-style: none !important;
 }
 
 .form-check-inline .form-check-input {

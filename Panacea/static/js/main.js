@@ -1,3 +1,6 @@
+
+// AJAX submit so that the questions can be asked slide rather than redraw page
+// used on profilesetup.html
 $(document).ready(function() {
     $(".post-form").submit(function(event) {
         event.preventDefault();
@@ -30,12 +33,15 @@ $(document).ready(function() {
 });
 
 
+// Used on Vanpool_report.html
 $(document).ready(function($) {
     $(".clickable-row").click(function() {
         window.location = $(this).data("href");
     });
 });
 
+
+// Used on UserProfile.html and OrganizationProfile.html
 $(document).ready(function ($) {
     $(".edit_profile_field").click(function () {
         var field_name = "#id_"+ $(this).data("field_name");
@@ -44,3 +50,34 @@ $(document).ready(function ($) {
         $(field_name).attr("class", "form-control")
     })
 })
+
+
+$(document).ready(function ($) {
+    $(".AJAX_instant_submit").change( function(e) {
+        e.stopImmediatePropagation();
+        var FormName = $(this).data('form-name');
+        var errField = $("#" + FormName).data('err-field')
+        $.ajax({ data: $("#" + FormName).serialize(),
+            dataType: 'json',
+            type: $("#" + FormName).attr('method'),
+            url: $("#" + FormName).attr('action'),
+            success: function(response) {
+                console.log(response);
+                if(response['success']) {
+
+                } else if(response['error']) {
+                    console.log("#" + FormName + errField + "_err");
+                    $("#" + FormName + "_err").html("<div class='alert alert-danger'>" +
+                        response['error'][errField] +"</div>");
+                } else if(response['redirect']) {
+                    window.location = response['redirect'];
+                }
+            },
+            error: function (request, status, error) {
+                console.log(request.responseText);
+            }
+        });
+    });
+})
+
+

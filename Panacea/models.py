@@ -7,6 +7,7 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from localflavor.us.models import USStateField, USZipCodeField
 from phonenumber_field.modelfields import PhoneNumberField
+import datetime
 
 
 # Create your models here.
@@ -126,7 +127,7 @@ class vanpool_report(models.Model):
     report_type = models.ForeignKey(ReportType, on_delete=models.PROTECT)
     report_year = models.IntegerField()
     report_month = models.IntegerField(choices=REPORT_MONTH)
-    report_due_date = models.DateField()
+    # report_due_date = models.DateField()
     report_date = models.DateTimeField(blank=True, null=True)
     updated_date = models.DateTimeField(auto_now=True, blank=True, null=True)
     report_by = models.ForeignKey(custom_user, on_delete=models.PROTECT, blank=True, null=True)
@@ -158,11 +159,22 @@ class vanpool_report(models.Model):
         else:
             return "Error"
 
+    @property
+    def report_due_date(self):
+        month = self.report_month
+        year = self.report_year + month // 12
+        month = month % 12 + 1
+        day = 1
+        return datetime.date(year, month, day)
+
     def save(self, no_report_date=False, *args, **kwargs):
 
         if not no_report_date and self.report_date is None:
             self.report_date = datetime.datetime.now().date()
         super(vanpool_report, self).save(*args, **kwargs)
+
+    class Meta:
+        unique_together = ('organization', 'report_year', 'report_month',)
 
 @receiver(post_save, sender=custom_user)
 def create_user_profile(sender, instance, created, **kwargs):

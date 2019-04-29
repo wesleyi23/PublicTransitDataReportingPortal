@@ -3,6 +3,7 @@ import json
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
+from django.forms import modelformset_factory
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render, redirect
 from django.template import RequestContext
@@ -11,6 +12,7 @@ from django.utils.datetime_safe import datetime
 from django.utils.decorators import method_decorator
 from django.views import generic
 from django.views.generic import TemplateView
+from django.forms.models import inlineformset_factory
 
 from .forms import CustomUserCreationForm, \
     custom_user_ChangeForm, \
@@ -19,9 +21,10 @@ from .forms import CustomUserCreationForm, \
     VanpoolMonthlyReport, \
     user_profile_custom_user, \
     user_profile_profile, \
-    organization_profile
+    organization_profile, \
+    change_user_permissions_group
 from django.utils.translation import ugettext_lazy as _
-from .models import profile, vanpool_report
+from .models import profile, vanpool_report, custom_user
 
 
 def register(request):
@@ -220,7 +223,30 @@ def Admin_ReminderEmail(request):
 
 @login_required(login_url='/Panacea/login')
 def Admin_assignPermissions(request):
-    return render(request, 'pages/AssignPermissions.html', {})
+    profile_data = profile.objects.all()
+    Admin_assignPermissions_all = modelformset_factory(custom_user, change_user_permissions_group, extra=0)
+    if request.method == 'POST':
+        formset = Admin_assignPermissions_all(request.POST)
+        # if formset.is_valid():
+        #     formset.save()
+        #     return JsonResponse({'success': True})
+        # else:
+        for form in formset:
+            if form.is_valid():
+                if len(form.changed_data) > 0:
+                    data = form.cleaned_data
+                    email = data['email']
+                    id = custom_user.objects.get(email=email).id
+                    my_profile = profile.objects.get(custom_user_id=id)
+                    my_profile.profile_complete = True
+                    my_profile.save()
+                    print(email)
+                form.save()
+
+        return JsonResponse({'success': True})
+    else:
+        formset = Admin_assignPermissions_all()
+        return render(request, 'pages/AssignPermissions.html', {'Admin_assignPermissions_all': formset, 'profile_data': profile_data})
 
 
 @login_required(login_url='/Panacea/login')
