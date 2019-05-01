@@ -42,5 +42,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('Panacea/', include('Panacea.urls')),
     path('Panacea/', include('django.contrib.auth.urls')),
+    path('accessibility', views.accessibility, name='accessibility'),
+    path('PublicDisclosure/', views.public_disclosure, name="public_disclosure")
 
 ]

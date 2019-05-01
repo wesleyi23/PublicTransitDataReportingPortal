@@ -22,15 +22,12 @@ class Command(BaseCommand):
         print(num_results)
         if num_results < 1:
             for month in vanpool_report.REPORT_MONTH:
-                report_month = datetime.datetime(options['year'], month[0], 1)
-                due_date = add_months(report_month, 1)
                 for org in organization.objects.all():
                     new_report = vanpool_report()
                     new_report.report_type_id = 2
                     new_report.report_year = options['year']
                     new_report.report_month = month[0]
                     new_report.report_date = None
-                    new_report.report_due_date = due_date
                     new_report.organization = org
                     new_report.save(no_report_date=True)
 

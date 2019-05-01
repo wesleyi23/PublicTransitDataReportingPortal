@@ -3,6 +3,7 @@ import json
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
+from django.db.models import Min, Max
 from django.forms import modelformset_factory
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render, redirect
@@ -115,12 +116,25 @@ def ProfileSetup_ReportSelection(request):
 
 @login_required(login_url='/Panacea/login')
 def Vanpool_report(request, year=None, month=None):
+    user_organization = profile.objects.get(custom_user=request.user.id).organization
+    organization_data = vanpool_report.objects.filter(organization_id=user_organization)
+
     if not year:
-        year = 2019
-    if not month:
+        organization_data_incomplete = organization_data.filter(report_date=None)
+        start_year = organization_data_incomplete\
+            .aggregate(Min('report_year'))\
+            .get('report_year__min')
+        start_month = organization_data_incomplete.filter(report_year=start_year)\
+            .aggregate(Min('report_month'))\
+            .get('report_month__min')
+        year = start_year
+        month = start_month
+    elif not month:
         month = 1
 
-    user_organization = profile.objects.get(custom_user=request.user.id).organization
+    min_year = organization_data.all().aggregate(Min('report_year')).get('report_year__min') == year
+    max_year = organization_data.all().aggregate(Max('report_year')).get('report_year__max') == year
+
     past_report_data = vanpool_report.objects.filter(organization_id=user_organization, report_year=year)
     form_data = vanpool_report.objects.get(organization_id=user_organization.id, report_year=year, report_month=month)
 
@@ -139,7 +153,9 @@ def Vanpool_report(request, year=None, month=None):
                                                          'year': year,
                                                          'month': month,
                                                          'organization': user_organization,
-                                                         'successful_submit': successful_submit}
+                                                         'successful_submit': successful_submit,
+                                                         'min_year': min_year,
+                                                         'max_year': max_year}
                   )
 
 
@@ -236,8 +252,8 @@ def Admin_assignPermissions(request):
                 if len(form.changed_data) > 0:
                     data = form.cleaned_data
                     email = data['email']
-                    id = custom_user.objects.get(email=email).id
-                    my_profile = profile.objects.get(custom_user_id=id)
+                    this_user_id = custom_user.objects.get(email=email).id
+                    my_profile = profile.objects.get(custom_user_id=this_user_id)
                     my_profile.profile_complete = True
                     my_profile.save()
                     print(email)
@@ -250,6 +266,16 @@ def Admin_assignPermissions(request):
 
 
 @login_required(login_url='/Panacea/login')
+def accessibility(request):
+    return render(request, 'pages/accessibility.html', {})
+
+
+@login_required(login_url='/Panacea/login')
+def public_disclosure(request):
+    return render(request, 'pages/PublicDisclosure.html', {})
+
+
+@login_required(login_url='/Panacea/login')
 def Help(request):
     return render(request, 'pages/Help.html', {})
 
@@ -257,3 +283,4 @@ def Help(request):
 @login_required(login_url='/Panacea/login')
 def logout_view(request):
     logout(request)
+

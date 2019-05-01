@@ -41,7 +41,7 @@
                                     <tr class='clickable-row {% if report.report_month == month %} table-active {% endif %}'
                                         data-href="{%  url 'Vanpool_report' %}{{ year }}/{{ report.report_month }}"
                                     >
-                                        <td>{{ report.report_month | print_long_date_name }}</td>
+                                        <td><a href="{%  url 'Vanpool_report' %}{{ year }}/{{ report.report_month }}">{{ report.report_month | print_long_date_name }}</a></td>
                                         <td class="d-none d-md-table-cell" align="center">{{  report.status | get_status_icon | safe}}</td>
                                         <td class="d-none d-lg-table-cell">{{  report.vanpool_miles_traveled | floatformat:"0"| intcomma}}</td>
                                         <td class="d-none d-lg-table-cell">{{  report.vanpool_passenger_trips | floatformat:"0"| intcomma}}</td>
@@ -51,24 +51,25 @@
                             </table>
                         </div>
                     </div>
-                <div class="card-footer">
-                    <div class="container">
-                        <div class="row">
-                            <div class="col">
-                                <a class="nav-link active float-left" href="{% url 'Vanpool_report' %}{{ year | minus_one }}/1"><i class="fas fa-chevron-left"></i> {{ year | minus_one }}</a>
-                            </div>
-                             <div class="col">
-                            </div>
-                            <div class="col">
-                                <a class="nav-link active float-right" href="{% url 'Vanpool_report' %}{{ year | plus_one }}/1">{{ year | plus_one }}  <i class="fas fa-chevron-right"></i></a>
+                    <div class="card-footer">
+                        <div class="container">
+                            <div class="row">
+                                <div class="col">
+                                    {% if not min_year %}
+                                        <a class="nav-link active float-left" href="{% url 'Vanpool_report' %}{{ year | minus_one }}/1"><i class="fas fa-chevron-left"></i> {{ year | minus_one }}</a>
+                                    {% endif %}
+
+                                </div>
+                                <div class="col">
+                                </div>
+                                <div class="col">
+                                    {% if not max_year %}
+                                        <a class="nav-link active float-right" href="{% url 'Vanpool_report' %}{{ year | plus_one }}/1">{{ year | plus_one }}  <i class="fas fa-chevron-right"></i></a>
+                                    {% endif %}
+                                </div>
                             </div>
                         </div>
-
-
-
-
-</div>
-                </div>
+                    </div>
                 </div>
             </div>
             <div class="col">

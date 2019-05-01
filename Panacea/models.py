@@ -82,6 +82,12 @@ class ReportType(models.Model):
 
 
 class organization(models.Model):
+    AGENCY_CLASSIFICATIONS = (
+        ("Urban", "Urban"),
+        ("Small Urban", "Small Urban"),
+        ("Rural", "Rural"),
+    )
+
     def __str__(self):
         return self.name
 
@@ -91,7 +97,10 @@ class organization(models.Model):
     city = models.CharField(max_length=50, blank=True)
     state = USStateField(blank=True)
     zip_code = USZipCodeField(blank=True)
+    classification = models.CharField(max_length=50, choices=AGENCY_CLASSIFICATIONS, blank=True, null=True)
     vanshare_program = models.BooleanField(blank=True, null=True)
+    in_jblm_area = models.BooleanField(blank=True, null=True)
+    in_puget_sound_area = models.BooleanField(blank=True, null=True)
 
 
 class profile(models.Model):
@@ -105,7 +114,7 @@ class profile(models.Model):
     city = models.CharField(max_length=50, blank=True)
     state = USStateField(blank=True)
     zip_code = USZipCodeField(blank=True)
-    reports_on = models.ManyToManyField(ReportType, blank=True, null=True)
+    reports_on = models.ManyToManyField(ReportType, blank=True)
 
 
 class vanpool_report(models.Model):

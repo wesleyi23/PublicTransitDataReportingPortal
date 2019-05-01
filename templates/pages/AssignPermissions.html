@@ -29,14 +29,14 @@
                                 {{Admin_assignPermissions_all.management_form}}
                                 <div class=""></div>
                                 <div class="dataTable_wrapper">
-                                    <table class="table tdt-bootstrap4 dataTable dataTable_wrapper" id="mydataTable">
+                                    <table class="table tdt-bootstrap4 dataTable dataTable_wrapper" id="permissions_datatable">
                                         <thead>
                                         <tr>
-                                            <th style="display: none">id</th>
+                                            <th style="display: none; visibility: hidden;" aria-hidden="true">id</th>
                                             <th>First name</th>
-                                            <th style="display: none">first_name</th>
+                                            <th style="display: none; visibility: hidden;" aria-hidden="true">first_name</th>
                                             <th>Last name</th>
-                                            <th style="display: none">last_name</th>
+                                            <th style="display: none; visibility: hidden;" aria-hidden="true">last_name</th>
                                             <th>Email</th>
                                             <th>Organization</th>
                                             <th>Requested Permissions</th>
@@ -47,15 +47,15 @@
                                         {% for form in Admin_assignPermissions_all %}
 
                                             <tr>
-                                                <td style="display: none">{{ form.id }}</td>
+                                                <td style="display: none; visibility: hidden;" aria-hidden="true">{{ form.id }}</td>
                                                 <td>{{ form.first_name.value }}</td>
-                                                <td style="display: none">{{ form.first_name }}</td>
+                                                <td style="display: none; visibility: hidden;" aria-hidden="true">{{ form.first_name }}</td>
                                                 <td>{{ form.last_name.value }}</td>
-                                                <td style="display: none">{{ form.last_name }}</td>
+                                                <td style="display: none; visibility: hidden;" aria-hidden="true">{{ form.last_name }}</td>
                                                 <td>{{ form.email }}</td>
                                                 <td>{{ profile_data | get_org_by_custom_user:form.instance.pk }}</td>
                                                 <td>{{ profile_data | get_reports_on_by_custom_user:form.instance.pk }}</td>
-                                                <td class="no-bullet"> {{ form.groups }}</td>
+                                                <td class="no-bullet"><fieldset><legend style="display: none";>Permissions Group</legend>{{ form.groups }}</fieldset> </td>
                                             </tr>
                                         {% endfor %}
                                         </tbody>
@@ -97,7 +97,7 @@
 
     <script type="text/javascript">
         $(document).ready( function () {
-            $('#mydataTable').DataTable({
+            $('#permissions_datatable').DataTable({
                 "scrollX": true,
                 "sScrollX": "100%",
                 "sScrollXInner": "100%",

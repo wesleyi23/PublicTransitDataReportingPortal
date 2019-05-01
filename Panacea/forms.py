@@ -227,11 +227,11 @@ class change_user_permissions_group(forms.ModelForm):
             'groups': forms.CheckboxSelectMultiple(attrs={'class': 'form-check-inline no-bullet AJAX_instant_submit',
                                                           'data-form-name': "Admin_assignPermissions_all"}),
             'first_name': forms.TextInput(
-                attrs={'class': 'form-control-plaintext', 'readonly': 'True'}),
+                attrs={'class': 'form-control-plaintext', 'readonly': 'True', 'style': 'display: none; visibility: hidden'}),
             'last_name': forms.TextInput(
-                attrs={'class': 'form-control-plaintext', 'readonly': 'True'}),
+                attrs={'class': 'form-control-plaintext', 'readonly': 'True', 'style': 'display: none; visibility: hidden'}),
             'email': forms.TextInput(
-                attrs={'class': 'form-control-plaintext', 'readonly': 'True'}),
+                attrs={'class': 'form-control-plaintext', 'readonly': 'True', 'style': 'display: none; visibility: hidden'}),
         }
 
 
