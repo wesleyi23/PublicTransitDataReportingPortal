@@ -24,7 +24,7 @@ from .forms import CustomUserCreationForm, \
     organization_profile, \
     change_user_permissions_group
 from django.utils.translation import ugettext_lazy as _
-from .models import profile, vanpool_report, custom_user
+from .models import profile, vanpool_report, custom_user, vanpool_expansion_analysis
 
 
 def register(request):
@@ -141,6 +141,18 @@ def Vanpool_report(request, year=None, month=None):
                                                          'organization': user_organization,
                                                          'successful_submit': successful_submit}
                   )
+
+@login_required(login_url = '/Panacea/login')
+def Vanpool_expansion_analysis(request):
+    orgs = vanpool_expansion_analysis.objects.filter(expired = False).values('organization_id', flat = True)
+    latest_reporting_vans = vanpool_report.objects.filter(organization_id__in=orgs, report_month__isnull = False).latest('id').values('report_year', 'report_month',
+    'report_date', 'vanpool_groups_in_operation')
+
+
+
+
+
+
 
 
 @login_required(login_url='/Panacea/login')

@@ -35,6 +35,7 @@ urlpatterns = [
     path('OrganizationProfile/', views.OrganizationProfile, name="OrganizationProfile"),
     path('Permissions/', views.Permissions, name="Permissions"),
     path('Admin/Reports/', views.Admin_reports, name="Admin_reports"),
+    path('Admin/Expansion/', views.Vanpool_expansion_analysis, name="Vanpool_expansion_analysis"),
     path('Admin/ReminderEmail/', views.Admin_ReminderEmail, name="Admin_ReminderEmail"),
     path('Admin/AssignPermissions/', views.Admin_assignPermissions, name="Admin_assignPermissions"),
     path('Help/', views.Help, name="Help"),
