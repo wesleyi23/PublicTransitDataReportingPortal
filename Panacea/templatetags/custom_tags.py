@@ -36,11 +36,33 @@ def get_status_icon(status):
         html = 'Error'
     return html
 
+
 @register.filter(name='plus_one')
 def plus_one(int_num):
     return int_num+1
 
+
 @register.filter(name='minus_one')
 def plus_one(int_num):
     return int_num-1
+
+
+@register.filter(name='get_org_by_custom_user')
+def get_org_by_custom_user(profile_data, pk):
+    output = profile_data.get(custom_user_id=pk).organization
+    return output
+
+
+@register.filter(name='get_reports_on_by_custom_user')
+def get_reports_on_by_custom_user(profile_data, pk):
+    requested_permisions = profile_data.get(custom_user_id=pk).reports_on.all()
+    output = ""
+    i = 0
+    for item in requested_permisions:
+        if i == 0:
+            output = item.name
+            i += 1
+        else:
+            output = output + " & " + item.name
+    return output
 
