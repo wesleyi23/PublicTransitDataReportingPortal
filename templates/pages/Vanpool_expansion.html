@@ -3,7 +3,6 @@
 {% load custom_tags %}
 {% load static %}
 
-
 {% block content %}
         <div class="container-fluid">
 
@@ -25,8 +24,8 @@
                                     <th scope="col" >Date of Award</th>
                                     <th scope="col">Expansion Vans Awarded</th>
                                     <th scope="col">Latest Vehicle Acceptance Date</th>
-                                    <th  scope="col">Vanpool in Service Goals</th>
                                     <th scope="col" >Spare Vanpool Allowance</th>
+                                    <th  scope="col">Vanpool in Service Goals</th>
                                     <th scope="col">Extension Granted</th>
                                     <th scope="col">Service Expansion Goal Met</th>
                                     <th scope="col">Service Expansion Goal Met Date</th>
@@ -37,7 +36,37 @@
                                 </tr>
                                 </thead>
                             <tbody>
+                            {%  for orgname, latest_van, max_van,van_expand in zipped_data %}
+                                <tr>
+                                <td class="d-none d-md-table-cell"> {{ orgname.name}}</td>
+                                <td class="d-none d-md-table-cell" > {{ latest_van.vanpool_groups_in_operation}}</td>
+                                <td class="d-none d-md-table-cell" >  {{ latest_van.report_year }}-{{ latest_van.report_month }}-{{ latest_van.report_date }}</td>
+                                <td class="d-none d-md-table-cell" > {{ van_expand.vanpools_in_service_at_time_of_award}}
+                                <td class="d-none d-md-table-cell" > {{ van_expand.date_of_award|date:'Y-m-d'}} </td>
+                                <td class="d-none d-md-table-cell" > {{ van_expand.expansion_vans_awarded }} </td>
+                                <td class="d-none d-md-table-cell" > {{ van_expand.latest_vehicle_acceptance|date:'Y-m-d'}} </td>
+                                <td class="d-none d-md-table-cell" > {{ van_expand.spare_allowance}} </td>
+                                <td class="d-none d-md-table-cell" > {{ van_expand.adjusted_service_goal}} </td>
+                                <td class = "d-none d-md-table-cell" > {{ van_expand.extension_granted }}</td>
+                                    {%  if latest_van.vanpool_groups_in_operation >= van_expand.adjusted_service_goal %}
+                                            <td class = "d-none d-md-table-cell" > YES </td>
+                                    {%  else %}
+                                    <td class = "d-none d-md-table-cell" > TBD </td>
+                                    {%  endif %}
+                                {%  if latest_van.vanpool_groups_in_operation >= van_expand.adjusted_service_goal %}
+                                   <td class = "d-none d-md-table-cell" > {{ latest_van.report_year }}-{{ latest_van.report_month }}-{{ latest_van.report_date }}</td>
+                                {%  else %}
+                                    <td class = "d-none d-md-table-cell" > </td>
+                                    {%  endif %}
 
+                                <td class = "d-none d-md-table-cell" > {{ max_van.vanpool_groups_in_operation }}  </td>
+                                <td class = "d-none d-md-table-cell" > {{ max_van.report_year }}-{{ max_van.report_month }}-{{ max_van.report_date}}  </td>
+                                <td class = "d-none d-md-table-cell" >  </td>
+                                <td class = "d-none d-md-table-cell" > {{ van_expand.calculate_current_biennium }} </td>
+
+
+                                </tr>
+                            {%  endfor %}
                             </tbody>
                             </table>
                     </div>

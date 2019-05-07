@@ -200,10 +200,14 @@ class vanpool_expansion_analysis(models.Model):
 
 
     @property
+    def adjusted_service_goal(self):
+        return self.vanpools_in_service_at_time_of_award + round(self.expansion_vans_awarded*.8, 0)
+
+    @property
     def spare_allowance(self):
-        expansion_vans = self.expansion_vans_awarded
-        spares = round(expansion_vans*.2, 0)
-        return spares
+        return round(self. expansion_vans_awarded*.2, 1)
+
+
     @property
     def calculate_current_biennium(self):
         import datetime
@@ -218,10 +222,8 @@ class vanpool_expansion_analysis(models.Model):
             current_biennium = '21-25'
         return current_biennium
 
+    def save(self, *args, **kwargs):
+        super(vanpool_expansion_analysis, self).save(*args, **kwargs)
 
-    #ask ian what I should be doing here
 
-
-
-    #latest_date_to_reach_goal = property(_calculate_goal)
 

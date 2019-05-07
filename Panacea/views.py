@@ -13,6 +13,11 @@ from django.utils.decorators import method_decorator
 from django.views import generic
 from django.views.generic import TemplateView
 from django.forms.models import inlineformset_factory
+from django.db.models import Max, Subquery, F, OuterRef
+from django.db.models.expressions import RawSQL
+from dateutil.relativedelta import relativedelta
+import datetime
+
 
 from .forms import CustomUserCreationForm, \
     custom_user_ChangeForm, \
@@ -24,7 +29,7 @@ from .forms import CustomUserCreationForm, \
     organization_profile, \
     change_user_permissions_group
 from django.utils.translation import ugettext_lazy as _
-from .models import profile, vanpool_report, custom_user, vanpool_expansion_analysis
+from .models import profile, vanpool_report, custom_user, vanpool_expansion_analysis, organization
 
 
 def register(request):
@@ -144,16 +149,43 @@ def Vanpool_report(request, year=None, month=None):
 
 @login_required(login_url = '/Panacea/login')
 def Vanpool_expansion_analysis(request):
-    orgs = vanpool_expansion_analysis.objects.filter(expired = False).values('organization_id', flat = True)
-    latest_reporting_vans = vanpool_report.objects.filter(organization_id__in=orgs, report_month__isnull = False).latest('id').values('report_year', 'report_month',
-    'report_date', 'vanpool_groups_in_operation')
+    # pulls the latest vanpool data
+    orgs = vanpool_expansion_analysis.objects.filter(expired = False).values('organization_id')
+    organization_name = organization.objects.filter(id__in=orgs).values('name')
+    van_reporting_list = []
+    vp = vanpool_report.objects.all()
+    pv = vp.filter(organization_id__in = orgs, organization = OuterRef('organization'), report_month__isnull = False).order_by('-id').values('id')
+    latest_vanpool = vp.annotate(latest = Subquery(pv[:1])).filter(id = F('latest')).values('report_year', 'report_month','report_date', 'vanpool_groups_in_operation', 'organization_id').order_by('organization_id')
 
+    # filters out the max vanpool
+    award_date = vanpool_expansion_analysis.objects.filter(expired=False).dates('date_of_award', 'month')
+    award_date = award_date[0]
+    award_month = award_date.month
+    award_year = award_date.year
+    van_max = vanpool_report.objects.filter(organization_id__in= orgs, report_year__gte=award_year,report_month__gte=award_month).values('organization').annotate(max_van = Max('vanpool_groups_in_operation')).order_by('organization')
+    van_max_list = []
+    # had to use a for loop since there's nothing easier really
+    for i in van_max:
+        vpr  = vanpool_report.objects.filter(organization_id = i['organization'], vanpool_groups_in_operation = i['max_van'], report_year__gte=award_year,report_month__gte=award_month).values('id','report_year', 'report_month', 'report_date', 'vanpool_groups_in_operation', 'organization_id')
+        if len(vpr) > 1:
+            vpr = vpr.latest('id')
+        van_max_list.append(vpr)
+    vea = vanpool_expansion_analysis.objects.filter(expired = False).order_by('organization_id')
+    vea2 = vanpool_expansion_analysis.objects.filter(expired = False).values('latest_vehicle_acceptance').order_by('organization_id')
+    # this bit does some logic to ascertain the remaing months and the deadline
+    acceptance_list = []
+    for j in vea2:
+        result_dic = {}
+        latest_date = j['latest_vehicle_acceptance']
+        latest_date =latest_date + relativedelta(months=+18)
+        r = relativedelta(latest_date, datetime.date.today())
+        remaining_months = r.months
+        result_dic['latest_date'] = latest_date
+        result_dic['remaining_months'] = remaining_months
+        acceptance_list.append(result_dic)
 
-
-
-
-
-
+    zipped = zip(organization_name, latest_vanpool, van_max_list, vea)
+    return render(request, 'pages/Vanpool_expansion.html', {'zipped_data': zipped})
 
 @login_required(login_url='/Panacea/login')
 def Vanpool_data(request):
