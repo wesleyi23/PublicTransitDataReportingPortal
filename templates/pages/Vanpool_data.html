@@ -1,9 +1,112 @@
 {% extends 'index.html' %}
 
 {% block content %}
-        <div class="container-fluid">
 
-          <!-- Page Heading -->
-          <h1 class="h3 mb-2 text-gray-800">Vanpool Report - Data Summary</h1>
+    <div class="container h-100" style="max-width: none">
+        <!-- Page Heading -->
+        <div class="card shadow h-100" style="max-width: none">
+            <div class="card-header">
+                <ul class="nav nav-pills">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="#">Active</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">Link</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">Link</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link disabled" href="#">Disabled</a>
+                    </li>
+                </ul>
+            </div>
+            <div class="card-body d-flex flex-grow-1">
+                <form method="POST" >{% csrf_token %}
+                    {{ form.as_p }}
+                    <button type="submit" class="save btn btn-default">Save</button>
+                </form>
+
+                <div class="container" style="max-width: none !important;min-width:100px; min-height:100px">
+                    <canvas id="myChart" style="width:100% !important; height:100% !important;" >
+
+                    </canvas>
+                </div>
+            </div>
         </div>
+    </div>
+
+
+
+
+{% endblock %}
+
+{% block page_scripts %}
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@2.8.0"></script>
+
+    <script type="text/javascript">
+        var chart;
+        var ctx = document.getElementById('myChart').getContext('2d');
+        var chart = new Chart(ctx, {
+            // The type of chart we want to create
+            type: 'line',
+
+
+            // The data for our dataset
+            data: {
+                labels: {{ chart_label | safe }}, //[1, 2, 3,4,5,6,7,8,9,10,11,12], //
+                datasets: [
+                    {% for key, value in chart_datasets_filtered.items %}
+                    {
+                        label: "{{ key }}",
+                        fillColor: "rgba(220,220,220,0.2)",
+                        strokeColor: "rgba(220,220,220,1)",
+                        pointColor: "rgba(220,220,220,1)",
+                        pointStrokeColor: "#fff",
+                        pointHighlightFill: "#fff",
+                        pointHighlightStroke: "rgba(220,220,220,1)",
+                        data: {{ value | safe }}
+                    },
+                    {% endfor %}
+                ]
+            },
+
+            // Configuration options go here
+            options: {
+                responsive:'true',
+                maintainAspectRatio: 'false',
+                title: {
+                    display: true,
+                    text: '{{ chart_title }}'
+                },
+                layout: {
+                    padding: {
+                        left: 0,
+                        right: 0,
+                        top: 0,
+                        bottom: 0
+                    }
+                }
+            }
+        });
+
+        function chartTypeChanged() {
+            alert(chart.data.labels);
+            chart.options.scales.yAxes[0] = {
+                type: 'logarithmic'
+            };
+            chart.resize(chart.render, true);
+        }
+
+
+        var button = document.getElementById( "sidebarToggle" );
+        button.addEventListener( "click",  chartTypeChanged);
+
+
+
+    </script>
+
+
+
 {% endblock %}

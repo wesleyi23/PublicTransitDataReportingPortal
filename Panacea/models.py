@@ -152,7 +152,7 @@ class vanpool_report(models.Model):
     vans_available = models.IntegerField(blank=True, null=True)
     loaner_spare_vans_in_fleet = models.IntegerField(blank=True, null=True)
     vanpool_passenger_trips = models.IntegerField(blank=True, null=True)
-    vanpool_miles_traveled = models.DecimalField(blank=True, null=True, decimal_places=2, max_digits=15)
+    vanpool_miles_traveled = models.FloatField(blank=True, null=True)
     average_riders_per_van = models.DecimalField(blank=True, null=True, decimal_places=2, max_digits=15)
     average_round_trip_miles = models.DecimalField(blank=True, null=True, decimal_places=2, max_digits=15)
 
@@ -175,6 +175,10 @@ class vanpool_report(models.Model):
         month = month % 12 + 1
         day = 1
         return datetime.date(year, month, day)
+
+    @property
+    def report_year_month_label(self):
+        return str(self.report_year) + " - " + str(self.report_month)
 
     def save(self, no_report_date=False, *args, **kwargs):
 

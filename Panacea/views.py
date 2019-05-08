@@ -1,12 +1,14 @@
+import decimal
 import json
 
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
-from django.db.models import Min, Max
+from django.db.models import Min, Max, Value
 from django.forms import modelformset_factory
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render, redirect
+from django.db.models.functions import Concat
 from django.template import RequestContext
 from django.urls import reverse_lazy
 from django.utils.datetime_safe import datetime
@@ -23,9 +25,10 @@ from .forms import CustomUserCreationForm, \
     user_profile_custom_user, \
     user_profile_profile, \
     organization_profile, \
-    change_user_permissions_group
+    change_user_permissions_group, \
+    chart_form
 from django.utils.translation import ugettext_lazy as _
-from .models import profile, vanpool_report, custom_user
+from .models import profile, vanpool_report, custom_user, organization
 
 
 def register(request):
@@ -121,11 +124,11 @@ def Vanpool_report(request, year=None, month=None):
 
     if not year:
         organization_data_incomplete = organization_data.filter(report_date=None)
-        start_year = organization_data_incomplete\
-            .aggregate(Min('report_year'))\
+        start_year = organization_data_incomplete \
+            .aggregate(Min('report_year')) \
             .get('report_year__min')
-        start_month = organization_data_incomplete.filter(report_year=start_year)\
-            .aggregate(Min('report_month'))\
+        start_month = organization_data_incomplete.filter(report_year=start_year) \
+            .aggregate(Min('report_month')) \
             .get('report_month__min')
         year = start_year
         month = start_month
@@ -161,7 +164,71 @@ def Vanpool_report(request, year=None, month=None):
 
 @login_required(login_url='/Panacea/login')
 def Vanpool_data(request):
-    return render(request, 'pages/Vanpool_data.html', {})
+
+    def monthdelta(date, delta):
+        m, y = (date.month + delta) % 12, date.year + ((date.month) + delta - 1) // 12
+        if not m: m = 12
+        d = min(date.day, [31,
+                           29 if y % 4 == 0 and not y % 400 == 0 else 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31][
+            m - 1])
+        return date.replace(day=d, month=m, year=y)
+
+    if request.POST:
+        form = chart_form(data=request.POST)
+        if form.is_valid:
+            chart_title = form.MEASURE_CHOICES_DICT[form.data['chart_measure']]
+            print(form.data['chart_measure'])
+
+            print(form.data['chart_organizations'])
+            org_list = request.POST.getlist("chart_organizations")
+
+            chart_timeframe = monthdelta(datetime.now(), form.data['chart_timeframe'])
+
+            all_chart_data = [x for x in vanpool_report.objects.filter(organization_id__in=org_list).all() if x.report_due_date >= chart_timeframe]
+
+            print(org_list)
+            chart_label = [report.report_year_month_label for report
+                           in vanpool_report.objects.filter(organization_id__in=org_list,
+                                                            report_year=2017).order_by('organization', 'report_year', 'report_month')]
+            chart_label = list(dict.fromkeys(chart_label))
+            print(chart_label)
+
+            chart_datasets = vanpool_report.objects.filter(organization_id__in=org_list,
+                                                            report_year=2017).order_by('organization', 'report_year', 'report_month')
+
+            chart_datasets_filtered = {}
+
+            for org in org_list:
+                print(org)
+                chart_dataset = chart_datasets.filter(organization_id=org).values_list(form.data['chart_measure'])
+                print(chart_dataset)
+                chart_datasets_filtered[organization.objects.get(id=org).name] = json.dumps(list(chart_dataset))
+
+
+
+            print(chart_datasets_filtered)
+
+            return render(request, 'pages/Vanpool_data.html', {'form': form,
+                                                               'chart_title': chart_title,
+                                                               'chart_measure': form.data['chart_measure'],
+                                                               'chart_label': chart_label,
+                                                               'chart_datasets_filtered': chart_datasets_filtered,
+                                                               'org_list': org_list
+                                                               })
+
+    else:
+        user_ogranization_id = profile.objects.get(id=request.user.id).organization_id
+        user_ogranization = organization.objects.get(id=user_ogranization_id)
+        chart_label = [report.report_year_month_label for report
+                       in vanpool_report.objects.filter(organization_id=user_ogranization_id,
+                                                        report_year=2017).order_by('organization', 'report_year',
+                                                                                   'report_month')]
+        chart_label = list(dict.fromkeys(chart_label))
+        form = chart_form(initial={'chart_organizations': user_ogranization, 'chart_measure': 'vanpool_miles_traveled'})
+        chart_title = form.MEASURE_CHOICES_DICT[form.initial.get('chart_measure')]
+        return render(request, 'pages/Vanpool_data.html', {'form': form,
+                                                           'chart_title': chart_title,
+                                                           'chart_label': chart_label})
 
 
 @login_required(login_url='/Panacea/login')

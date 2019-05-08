@@ -198,7 +198,6 @@ class organization_profile(forms.ModelForm):
         TRUE_FALSE_CHOICES = (
             (False, 'No'),
             (True, 'Yes')
-
         )
         model = organization
         fields = ('name', 'address_line_1', 'address_line_2', 'city', 'state', 'zip_code', 'vanshare_program')
@@ -235,3 +234,35 @@ class change_user_permissions_group(forms.ModelForm):
         }
 
 
+class chart_form(forms.Form):
+    MEASURE_CHOICES_DICT = {
+        "vanpool_miles_traveled": "Vanpool Miles Traveled",
+        "vanpool_passenger_trips": "Vanpool Passenger Trips"
+    }
+
+    MEASURE_CHOICES = (
+        ("vanpool_miles_traveled", "Vanpool Miles Traveled"),
+        ("vanpool_passenger_trips", "Vanpool Passenger Trips")
+    )
+
+    ORGANIZATION_CHOICES = organization.objects.all().values('name')
+    TIMEFRAME_CHOICES = (
+        (3, "Three Months"),
+        (6, "Six Months"),
+        (12, "One Year"),
+        (36, "Three Years"),
+        (60, "Five Years"),
+        (120, "Ten Years"),
+        (99999, "All")
+    )
+
+    chart_measure = forms.CharField(widget=forms.Select(choices=MEASURE_CHOICES,
+                                                        attrs={'class': 'form-control my_chart_control',
+                                                               'data-form-name': "chart_form"}))
+    chart_organizations = forms.ModelChoiceField(queryset=organization.objects.all(),
+                                                 widget=forms.SelectMultiple(
+                                                     attrs={'class': 'form-control my_chart_control',
+                                                            'data-form-name': "chart_form"}))
+    chart_timeframe = forms.CharField(widget=forms.Select(choices=TIMEFRAME_CHOICES,
+                                                          attrs={'class': 'form-control my_chart_control',
+                                                                 'data-form-name': "chart_form"}))
