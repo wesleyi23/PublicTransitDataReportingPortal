@@ -37,7 +37,7 @@
                                 </tr>
                                 </thead>
                             <tbody>
-                            {%  for orgname, latest_van, max_van,van_expand, acceptance in zipped_data %}
+                            {%  for orgname, latest_van, max_van,van_expand, acceptance, eg in zipped_data %}
                                 <tr>
                                 <td class="d-none d-md-table-cell"> {{ orgname.name}}</td>
                                 <td class="d-none d-md-table-cell" > {{ latest_van.vanpool_groups_in_operation}}</td>
@@ -50,13 +50,13 @@
                                 <td class="d-none d-md-table-cell" > {{ van_expand.adjusted_service_goal}} </td>
                                 <td class = "d-none d-md-table-cell" > {{ van_expand.extension_granted }}</td>
                                 <td class="d-none d-md-table-cell" > {{ acceptance.latest_date|date:'Y-m-d'}} </td>
-                                    {%  if latest_van.vanpool_groups_in_operation >= van_expand.adjusted_service_goal %}
+                                    {%  if eg != '' %}
                                             <td class = "d-none d-md-table-cell" > YES </td>
                                     {%  else %}
                                     <td class = "d-none d-md-table-cell" > TBD </td>
                                     {%  endif %}
-                                {%  if latest_van.vanpool_groups_in_operation >= van_expand.adjusted_service_goal %}
-                                   <td class = "d-none d-md-table-cell" > {{ latest_van.report_year }}-{{ latest_van.report_month }}-{{ latest_van.report_date }}</td>
+                                {%  if eg != ''%}
+                                   <td class = "d-none d-md-table-cell" > {{ eg.report_year }}-{{ eg.report_month }}-{{ eg.report_date }}</td>
                                 {%  else %}
                                     <td class = "d-none d-md-table-cell" > </td>
                                     {%  endif %}

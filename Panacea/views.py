@@ -175,6 +175,8 @@ def Vanpool_expansion_analysis(request):
     vea = vanpool_expansion_analysis.objects.filter(expired = False).order_by('organization_id')
     vea2 = vanpool_expansion_analysis.objects.filter(expired = False).values('latest_vehicle_acceptance').order_by('organization_id')
     # this bit does some logic to ascertain the remaining months and the deadline
+
+    # this is a method for calculating the deadline and how many months remain
     acceptance_list = []
     for j in vea2:
         result_dic = {}
@@ -187,7 +189,22 @@ def Vanpool_expansion_analysis(request):
         result_dic['remaining_months'] = remaining_months
         acceptance_list.append(result_dic)
 
-    zipped = zip(organization_name, latest_vanpool, van_max_list, vea, acceptance_list)
+    # this is a method for calculating the date when the service expansion was met
+    vanexpand = vanpool_expansion_analysis.objects.filter(expired=False).order_by('organization_id').values('date_of_award', 'expansion_vans_awarded', 'vanpools_in_service_at_time_of_award', 'organization_id')
+    expansion_goal = []
+    for org in vanexpand:
+        award_month = org['date_of_award'].month
+        award_year = org['date_of_award'].year
+        goal = round(org['expansion_vans_awarded']*.8, 0) + org['vanpools_in_service_at_time_of_award']
+        org_id = org['organization_id']
+        goal = vanpool_report.objects.filter(organization_id = org_id, report_year__gte=award_year,report_month__gte=award_month, vanpool_groups_in_operation__gte=goal).values('id','report_year', 'report_month', 'report_date', 'vanpool_groups_in_operation', 'organization_id')
+        if goal.exists():
+            expansion_goal.append(goal.earliest('id'))
+        else:
+            expansion_goal.append('')
+
+    # put them in an iterator to move
+    zipped = zip(organization_name, latest_vanpool, van_max_list, vea, acceptance_list, expansion_goal)
     return render(request, 'pages/Vanpool_expansion.html', {'zipped_data': zipped})
 
 @login_required(login_url='/Panacea/login')
