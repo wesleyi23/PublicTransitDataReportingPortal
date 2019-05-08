@@ -27,6 +27,7 @@
                                     <th scope="col" >Spare Vanpool Allowance</th>
                                     <th  scope="col">Vanpool in Service Goals</th>
                                     <th scope="col">Extension Granted</th>
+                                    <th scope = "col"> Latest Date Needed to Reach Goal</th>
                                     <th scope="col">Service Expansion Goal Met</th>
                                     <th scope="col">Service Expansion Goal Met Date</th>
                                     <th scope="col">Largest Number of Vanpools in Service</th>
@@ -36,7 +37,7 @@
                                 </tr>
                                 </thead>
                             <tbody>
-                            {%  for orgname, latest_van, max_van,van_expand in zipped_data %}
+                            {%  for orgname, latest_van, max_van,van_expand, acceptance in zipped_data %}
                                 <tr>
                                 <td class="d-none d-md-table-cell"> {{ orgname.name}}</td>
                                 <td class="d-none d-md-table-cell" > {{ latest_van.vanpool_groups_in_operation}}</td>
@@ -48,6 +49,7 @@
                                 <td class="d-none d-md-table-cell" > {{ van_expand.spare_allowance}} </td>
                                 <td class="d-none d-md-table-cell" > {{ van_expand.adjusted_service_goal}} </td>
                                 <td class = "d-none d-md-table-cell" > {{ van_expand.extension_granted }}</td>
+                                <td class="d-none d-md-table-cell" > {{ acceptance.latest_date|date:'Y-m-d'}} </td>
                                     {%  if latest_van.vanpool_groups_in_operation >= van_expand.adjusted_service_goal %}
                                             <td class = "d-none d-md-table-cell" > YES </td>
                                     {%  else %}
@@ -58,10 +60,13 @@
                                 {%  else %}
                                     <td class = "d-none d-md-table-cell" > </td>
                                     {%  endif %}
-
                                 <td class = "d-none d-md-table-cell" > {{ max_van.vanpool_groups_in_operation }}  </td>
                                 <td class = "d-none d-md-table-cell" > {{ max_van.report_year }}-{{ max_van.report_month }}-{{ max_van.report_date}}  </td>
-                                <td class = "d-none d-md-table-cell" >  </td>
+                                {%  if acceptance.remaining_months < 0 %}
+                                    <td class = "d-none d-md-table-cell" > Deadline Expired </td>
+                                {%  else %}
+                                <td class = "d-none d-md-table-cell" > {{ acceptance.remaining_months }} Months </td>
+                                {%  endif %}
                                 <td class = "d-none d-md-table-cell" > {{ van_expand.calculate_current_biennium }} </td>
 
 

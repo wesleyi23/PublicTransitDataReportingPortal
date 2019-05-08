@@ -169,10 +169,12 @@ def Vanpool_expansion_analysis(request):
         vpr  = vanpool_report.objects.filter(organization_id = i['organization'], vanpool_groups_in_operation = i['max_van'], report_year__gte=award_year,report_month__gte=award_month).values('id','report_year', 'report_month', 'report_date', 'vanpool_groups_in_operation', 'organization_id')
         if len(vpr) > 1:
             vpr = vpr.latest('id')
-        van_max_list.append(vpr)
+            van_max_list.append(vpr)
+        else:
+            van_max_list.append(vpr[0])
     vea = vanpool_expansion_analysis.objects.filter(expired = False).order_by('organization_id')
     vea2 = vanpool_expansion_analysis.objects.filter(expired = False).values('latest_vehicle_acceptance').order_by('organization_id')
-    # this bit does some logic to ascertain the remaing months and the deadline
+    # this bit does some logic to ascertain the remaining months and the deadline
     acceptance_list = []
     for j in vea2:
         result_dic = {}
@@ -180,11 +182,12 @@ def Vanpool_expansion_analysis(request):
         latest_date =latest_date + relativedelta(months=+18)
         r = relativedelta(latest_date, datetime.date.today())
         remaining_months = r.months
+
         result_dic['latest_date'] = latest_date
         result_dic['remaining_months'] = remaining_months
         acceptance_list.append(result_dic)
 
-    zipped = zip(organization_name, latest_vanpool, van_max_list, vea)
+    zipped = zip(organization_name, latest_vanpool, van_max_list, vea, acceptance_list)
     return render(request, 'pages/Vanpool_expansion.html', {'zipped_data': zipped})
 
 @login_required(login_url='/Panacea/login')

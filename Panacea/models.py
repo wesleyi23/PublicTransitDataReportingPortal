@@ -201,7 +201,7 @@ class vanpool_expansion_analysis(models.Model):
 
     @property
     def adjusted_service_goal(self):
-        return self.vanpools_in_service_at_time_of_award + round(self.expansion_vans_awarded*.8, 0)
+        return int(self.vanpools_in_service_at_time_of_award + round(self.expansion_vans_awarded*.8, 0))
 
     @property
     def spare_allowance(self):
