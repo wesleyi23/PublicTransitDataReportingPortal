@@ -48,6 +48,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'Panacea.apps.PanaceaConfig',
+    'tempus_dominus'
+
 ]
 
 MIDDLEWARE = [

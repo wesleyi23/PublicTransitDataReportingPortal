@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+{% extends 'index.html' %}
+{% load humanize %}
+{% load custom_tags %}
+{% load static %}
+
+
+
+{% block content %}
+<head>
+    <meta charset="UTF-8">
+    <title>Form Submission page</title>
+
+</head>
+<body>
+
+
+</body>
+</html>
+
+<h2 class = "card-title" align = "center" > Submit a new vanpool expansion </h2>
+
+</head>
+<body >
+
+<nav class="navbar navbar-expand-sm bg-light navbar-light">
+  <ul class="navbar-nav">
+    <li class="nav-item">
+      <a class="nav-link" href="{% url 'Vanpool_expansion_analysis' %}">Vanpool Expansion Analysis</a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" href="{% url 'Vanpool_expansion_modify' %}">Modify a Vanpool Expansion</a>
+    </li>
+    <li class="nav-item active">
+      <a class="nav-link" href="{% url 'Vanpool_expansion_submission' %}">Submit a New Vanpool Expansion</a>
+    </li>
+  </ul>
+</nav>
+<div class="container-fluid" >
+        <div class="row">
+            <div class="col-md-3 box">
+                          <div class="card-body" >
+
+
+<table class = 'table-borderless' >
+
+<form action={% url 'Vanpool_expansion_submission' %} method="POST"   onsubmit="return validation()">
+{%  csrf_token %}
+    {{ form.errors }}
+    <tbody>
+    <tr class="fieldWrapper">
+        <td> Agency</td>
+         <td> <select class="form-control" id="id_organization_id" name='organization_id'>
+            {% for choice in form.organization_id.field.choices  %}
+             <option value = "{{ choice.0 }}" > {{ choice.1 }}</option>
+             {%  endfor %}
+        </select>
+        </td>
+    </tr>
+    <tr class = "fieldWrapper"></tr>
+    <td >Date of Award </td>
+        <td>
+  {{ form.date_of_award }}
+        </td>
+    </tr>
+    <tr class="fieldWrapper"> <td> Expansion Vans Awarded</td>
+        <td> {{ form.expansion_vans_awarded }} </td>
+    </tr>
+    <tr class="fieldWrapper"> <td nowrap="nowrap">Latest Vehicle</td>
+    <td>
+  {{ form.latest_vehicle_acceptance}}
+  </td>
+    </tr>
+    <tr class = "fieldWrapper">
+        <td> Baseline Vanpools </td>
+        <td> {{ form.vanpools_in_service_at_time_of_award }} </td>
+    </tr>
+    <tr class = "fieldWrapper"> <td> Expired</td>
+       <td>{{form.expired }}</td>
+        </tr>
+    <tr class = "fieldWrapper">  <td>Extension Granted</td>
+                <td>{{ form.extension_granted }}</td>
+    </tr>
+    <tr class = "fieldWrapper">
+        <td>Notes</td>
+        <td> {{ form.notes }} </td>
+    </tr>
+    <tr class = "fieldWrapper">
+        <td>Ready to Submit?</td>
+        <td> <input type="submit" value="Submit a New Vanpool Expansion" class="btn btn-primary" >
+ </td>
+    </tr>
+
+
+    </tbody>
+</form>
+
+
+</table>
+                     </div>
+                    </div>
+                    </div>
+                    </div>
+
+
+</body>
+
+{%  endblock %}
+</html>

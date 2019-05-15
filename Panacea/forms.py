@@ -2,11 +2,11 @@ from django import forms
 from django.contrib.auth import password_validation, login
 from django.contrib.auth.forms import UserChangeForm, AuthenticationForm
 
-from .models import custom_user, profile, organization, ReportType, vanpool_report
+from .models import custom_user, profile, organization, ReportType, vanpool_report, vanpool_expansion_analysis
 from django.utils.translation import gettext, gettext_lazy as _
 from phonenumber_field.formfields import PhoneNumberField
 from localflavor.us.forms import USStateSelect, USZipCodeField
-
+from tempus_dominus.widgets import DatePicker
 
 
 class CustomUserCreationForm(forms.ModelForm):
@@ -235,3 +235,38 @@ class change_user_permissions_group(forms.ModelForm):
         }
 
 
+class submit_a_new_vanpool_expansion(forms.ModelForm):
+    queryset = organization.objects.all()
+    organization_id = forms.ModelChoiceField(queryset=queryset)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['expired'].initial = 'No'
+        self.fields['extension_granted'].initial = 'No'
+        self.fields['vanpools_in_service_at_time_of_award'].initial = 0
+        self.fields['expansion_vans_awarded'].initial = 0
+        for field in self.Meta.required:
+            self.fields[field].required = True
+
+
+
+    class Meta:
+
+        model = vanpool_expansion_analysis
+        fields = ['organization_id', 'date_of_award', 'expansion_vans_awarded', 'latest_vehicle_acceptance', 'extension_granted', 'vanpools_in_service_at_time_of_award','expired', 'notes']
+        required = ['organization_id','date_of_award', 'expansion_vans_awarded', 'latest_vehicle_acceptance', 'extension_granted', 'vanpools_in_service_at_time_of_award','expired']
+        widgets = {
+             'date_of_award':forms.DateInput(),
+            'latest_vehicle_acceptance': forms.DateInput(),
+            'expansion_vans_awarded': forms.NumberInput(),
+            'vanpools_in_service_at_time_of_award': forms.NumberInput(),
+
+        }
+
+
+class Modify_A_Vanpool_Expansion(forms.ModelForm):
+
+    class Meta:
+        model = vanpool_expansion_analysis
+        fields = ['expansion_vans_awarded', 'latest_vehicle_acceptance', 'notes']
+        widgets = {'expansion_vans_awarded':forms.NumberInput(), 'latest_vehicle_acceptance': forms.DateInput(), 'notes': forms.TextInput()}

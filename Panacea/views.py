@@ -1,6 +1,7 @@
 import json
 
 from django.contrib import messages
+from django.core.mail import send_mail
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.forms import modelformset_factory
@@ -13,6 +14,9 @@ from django.utils.decorators import method_decorator
 from django.views import generic
 from django.views.generic import TemplateView
 from django.forms.models import inlineformset_factory
+from django.core.mail import send_mail
+from django.template.loader import render_to_string
+from django.http import HttpResponseRedirect
 from django.db.models import Max, Subquery, F, OuterRef
 from django.db.models.expressions import RawSQL
 from dateutil.relativedelta import relativedelta
@@ -27,7 +31,9 @@ from .forms import CustomUserCreationForm, \
     user_profile_custom_user, \
     user_profile_profile, \
     organization_profile, \
-    change_user_permissions_group
+    change_user_permissions_group, \
+   submit_a_new_vanpool_expansion, \
+    Modify_A_Vanpool_Expansion
 from django.utils.translation import ugettext_lazy as _
 from .models import profile, vanpool_report, custom_user, vanpool_expansion_analysis, organization
 
@@ -113,6 +119,8 @@ def ProfileSetup_ReportSelection(request):
                 form.save()
                 myInstance.profile_submitted = True
                 myInstance.save()
+                user = custom_user.objects.filter(custom_user = request.user_id).values('first_name', 'last_name', 'email')
+                print(user)
                 return JsonResponse({'redirect': '../dashboard'})
             else:
                 return JsonResponse({'error': form.errors})
@@ -120,6 +128,7 @@ def ProfileSetup_ReportSelection(request):
 
 @login_required(login_url='/Panacea/login')
 def Vanpool_report(request, year=None, month=None):
+    print(month)
     if not year:
         year = 2019
     if not month:
@@ -128,6 +137,7 @@ def Vanpool_report(request, year=None, month=None):
     user_organization = profile.objects.get(custom_user=request.user.id).organization
     past_report_data = vanpool_report.objects.filter(organization_id=user_organization, report_year=year)
     form_data = vanpool_report.objects.get(organization_id=user_organization.id, report_year=year, report_month=month)
+
 
     if request.method == 'POST':
         form = VanpoolMonthlyReport(data=request.POST, instance=form_data)
@@ -148,11 +158,33 @@ def Vanpool_report(request, year=None, month=None):
                   )
 
 @login_required(login_url = '/Panacea/login')
+def Vanpool_expansion_submission(request):
+    ids = list(organization.objects.all().values_list('id', flat = True))
+    names = list(organization.objects.all().values_list('name', flat = True))
+    agency_dic = dict(list(zip(names, ids)))
+    if request.method == 'POST':
+        form = submit_a_new_vanpool_expansion(request.POST)
+        new_form = form.save(commit=False)
+        org = form.cleaned_data['organization_id']
+        org = str(org)
+        form.cleaned_data['organization_id'] = agency_dic[org]
+        print(form.cleaned_data)
+        if form.is_valid():
+            form = form.save(commit=False)
+            form.save()
+            return HttpResponseRedirect(reverse_lazy('pages/Vanpool_expansion.html'))
+        else:
+            return render(request, 'pages/Vanpool_expansion_submission.html', {'form':form})
+    else:
+        form = submit_a_new_vanpool_expansion()
+    return render(request, 'pages/Vanpool_expansion_submission.html', {'form': form})
+
+
+@login_required(login_url = '/Panacea/login')
 def Vanpool_expansion_analysis(request):
     # pulls the latest vanpool data
     orgs = vanpool_expansion_analysis.objects.filter(expired = False).values('organization_id')
     organization_name = organization.objects.filter(id__in=orgs).values('name')
-    van_reporting_list = []
     vp = vanpool_report.objects.all()
     pv = vp.filter(organization_id__in = orgs, organization = OuterRef('organization'), report_month__isnull = False).order_by('-id').values('id')
     latest_vanpool = vp.annotate(latest = Subquery(pv[:1])).filter(id = F('latest')).values('report_year', 'report_month','report_date', 'vanpool_groups_in_operation', 'organization_id').order_by('organization_id')
@@ -204,8 +236,35 @@ def Vanpool_expansion_analysis(request):
             expansion_goal.append('')
 
     # put them in an iterator to move
+    current_biennium = vea
     zipped = zip(organization_name, latest_vanpool, van_max_list, vea, acceptance_list, expansion_goal)
-    return render(request, 'pages/Vanpool_expansion.html', {'zipped_data': zipped})
+    return render(request, 'pages/Vanpool_expansion.html', {'zipped_data': zipped, 'current_biennium': current_biennium})
+
+
+@login_required(login_url='/Panacea/login')
+def Vanpool_expansion_modify(request, id = None):
+    if not id:
+        id = 1
+    orgs = vanpool_expansion_analysis.objects.filter(expired = False).values('organization_id')
+    organization_name = organization.objects.filter(id__in=orgs).values('name')
+    vea = vanpool_expansion_analysis.objects.all().filter(expired = False).order_by('organization_id')
+    form_data = vanpool_expansion_analysis.objects.get(id = id)
+
+    if request.method == 'POST':
+        form = Modify_A_Vanpool_Expansion(data=request.POST, instance=form_data)
+        if form.is_valid():
+            form.save()
+            successful_submit = True
+        else:
+            successful_submit = False
+    else:
+        form = Modify_A_Vanpool_Expansion(instance=form_data)
+        successful_submit = False
+
+    zipped = zip(organization_name, vea)
+    return render(request, 'pages/Vanpool_expansion_modify.html', {'zipped':zipped, 'id': id, 'form':form, 'successful_submit': successful_submit})
+
+
 
 @login_required(login_url='/Panacea/login')
 def Vanpool_data(request):

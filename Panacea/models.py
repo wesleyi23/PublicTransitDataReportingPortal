@@ -196,6 +196,7 @@ class vanpool_expansion_analysis(models.Model):
     latest_vehicle_acceptance = models.DateField(blank =True, null=True)
     extension_granted = models.BooleanField(blank = False, null = True)
     expired = models.BooleanField(blank=False, null = True)
+    notes = models.TextField(blank = False, null = True)
     # going to need to add a loan thing here once I figure out what the story is
 
 
