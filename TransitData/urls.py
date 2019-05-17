@@ -49,3 +49,5 @@ urlpatterns = [
     path('Panacea/', include('django.contrib.auth.urls')),
 
 ]
+
+handler404 = views.handler404

@@ -125,6 +125,10 @@ def ProfileSetup_ReportSelection(request):
             else:
                 return JsonResponse({'error': form.errors})
 
+@login_required(login_url = '/Panacea/login')
+def handler404(request, exception):
+    return render(request,'pages/error_404.html', status = 404)
+
 
 @login_required(login_url='/Panacea/login')
 def Vanpool_report(request, year=None, month=None):
