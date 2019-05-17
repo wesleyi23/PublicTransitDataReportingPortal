@@ -223,8 +223,7 @@ class vanpool_expansion_analysis(models.Model):
             current_biennium = '21-25'
         return current_biennium
 
-    def save(self, *args, **kwargs):
-        super(vanpool_expansion_analysis, self).save(*args, **kwargs)
+
 
 
 

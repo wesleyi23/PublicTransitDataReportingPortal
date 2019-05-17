@@ -33,6 +33,7 @@ urlpatterns = [
     path('AssetInvReport/Other/', views.Vanpool_other, name="Vanpool_other"),
     path('UserProfile/', views.UserProfile, name="UserProfile"),
     path('OrganizationProfile/', views.OrganizationProfile, name="OrganizationProfile"),
+    path('OrganizationProfile/Users', views.OrganizationProfileUsers, name = "OrganizationProfileUsers"),
     path('Permissions/', views.Permissions, name="Permissions"),
     path('Admin/Reports/', views.Admin_reports, name="Admin_reports"),
     path('Admin/Expansion/', views.Vanpool_expansion_analysis, name="Vanpool_expansion_analysis"),

@@ -1,0 +1,70 @@
+{% extends 'index.html' %}
+{% load static %}
+
+{% block content %}
+
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+             <nav class="navbar navbar-expand-sm bg-light navbar-light">
+  <ul class="navbar-nav">
+    <h6 class="nav-item">
+      <a class="nav-link" href="{% url 'OrganizationProfile' %}">{{ org_name }}'s Profile</a>
+    </h6>
+    <h6 class="nav-item active">
+      <a class="nav-link" href="{% url 'OrganizationProfileUsers' %}">Users for {{ org_name }}</a>
+    </h6>
+  </ul>
+</nav>
+        </div>
+
+
+        <div class="card-body">
+            <div class="container-fluid">
+                <div class="row">
+
+                    <div class="col" style="max-width: 22rem">
+                        <div class="text-center">
+                            <img class="img-fluid px-3 px-sm-4 mt-3 mb-4" style="max-width: 22rem; min-width: 22rem" src="{% static 'img/undraw_meeting.svg' %}" alt="Drawing of a user profile picture.">
+                        </div>
+                    </div>
+                    <div class="col">
+
+                            <div class="table-responsive">
+                                <table class="table float-left">
+                                    <thead>
+                                    <tr>
+                                    <th>First Name
+                                    </th>
+                                    <th>Last Name</th>
+                                    <th> Email</th>
+                                    <th> Date Joined</th>
+                                    <th>Last Accessed Page</th>
+                                    </tr>
+                                    </thead>
+                                     <tbody>
+                                     {%  for user in users %}
+                                     <tr>
+                                         <td>{{user.first_name}}
+
+                                         </td>
+                                     <td> {{ user.last_name }}</td>
+                                     <td>{{ user.email }}</td>
+                                     <td>{{ user.date_joined}}</td>
+                                       <td> {{ user.last_login}}</td>
+                                     </tr> {%  endfor %}
+
+                </tbody>
+                                </table>
+                            </div>
+
+
+
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+
+{% endblock %}

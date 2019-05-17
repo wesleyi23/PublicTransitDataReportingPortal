@@ -168,7 +168,8 @@ def Vanpool_expansion_submission(request):
         org = form.cleaned_data['organization_id']
         org = str(org)
         form.cleaned_data['organization_id'] = agency_dic[org]
-        print(form.cleaned_data)
+        form.cleaned_data['organization_id'] = int(form.cleaned_data['organization_id'])
+        print(form.cleaned_data['organization_id'])
         if form.is_valid():
             form = form.save(commit=False)
             form.save()
@@ -301,6 +302,18 @@ def UserProfile(request):
                                                       'form_profile': form_profile,
                                                       'user_org': user_org})
 
+
+@login_required(login_url='/Panacea/login')
+def OrganizationProfileUsers(request):
+    user_profile_data = profile.objects.get(custom_user=request.user.id)
+    org = user_profile_data.organization
+    org_id = organization.objects.filter(name=org).values('id')
+    org_id = org_id[0]['id']
+    vals = profile.objects.filter(organization_id=org_id).values('custom_user')
+    vals = [i['custom_user'] for i in vals]
+    cust = custom_user.objects.filter(id__in=vals).values('first_name', 'last_name', 'email', 'date_joined', 'last_login')
+    org_name = org.name
+    return render(request, 'pages/OrganizationProfileUsers.html', {'org_name': org_name, 'users': cust})
 
 @login_required(login_url='/Panacea/login')
 def OrganizationProfile(request):
