@@ -237,24 +237,36 @@ class change_user_permissions_group(forms.ModelForm):
 
 class submit_a_new_vanpool_expansion(forms.ModelForm):
     queryset = organization.objects.all()
-    organization_id = forms.ModelChoiceField(queryset=queryset)
+    organization = forms.ModelChoiceField(queryset=queryset,
+                                          widget=forms.Select(attrs={'class': 'form-control form-control-user'}))
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.fields['expired'].initial = 'No'
-        self.fields['extension_granted'].initial = 'No'
-        self.fields['vanpools_in_service_at_time_of_award'].initial = 0
-        self.fields['expansion_vans_awarded'].initial = 0
-        for field in self.Meta.required:
-            self.fields[field].required = True
-
+    def as_myp(self):
+        "Returns this form rendered as HTML <p>s."
+        return self._html_output(
+            normal_row='<p%(html_class_attr)s>%(label)s</p> <p>%(field)s%(help_text)s</p>',
+            error_row='%s',
+            row_ender='</p>',
+            help_text_html=' <span class="helptext">%s</span>',
+            errors_on_separate_row=True)
 
 
     class Meta:
 
         model = vanpool_expansion_analysis
-        fields = ['organization_id', 'date_of_award', 'expansion_vans_awarded', 'latest_vehicle_acceptance', 'extension_granted', 'vanpools_in_service_at_time_of_award','expired', 'notes']
-        required = ['organization_id','date_of_award', 'expansion_vans_awarded', 'latest_vehicle_acceptance', 'extension_granted', 'vanpools_in_service_at_time_of_award','expired']
+        fields = ['organization', 'date_of_award', 'expansion_vans_awarded', 'latest_vehicle_acceptance', 'extension_granted', 'vanpools_in_service_at_time_of_award','expired', 'notes']
+        required = ['organization','date_of_award', 'expansion_vans_awarded', 'latest_vehicle_acceptance', 'extension_granted', 'vanpools_in_service_at_time_of_award','expired']
+
+        labels = {'organization': False,
+                  'date_of_award': 'When was the vanpool expansion awarded? Use format YYYY-MM-DD',
+                  'expansion_vans_awarded': 'Number of vans awarded in the expansion',
+                  'latest_vehicle_acceptance': 'Latest date that vehicle was accepted? Use format YYYY-MM-DD',
+                   'extension_granted': 'Extenstion Granted? Set this to no',
+                  'vanpools_in_service_at_time_of_award': 'Vanpools in service at time of award',
+                  'expired': 'Has the expansion award expired? Set this to no (as it is used later for reporting)',
+                   'Notes': False
+
+        }
+
         widgets = {
              'date_of_award':forms.DateInput(),
             'latest_vehicle_acceptance': forms.DateInput(),

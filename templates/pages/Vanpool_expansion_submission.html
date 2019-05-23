@@ -19,7 +19,6 @@
 </body>
 </html>
 
-<h2 class = "card-title" align = "center" > Submit a new vanpool expansion </h2>
 
 </head>
 <body >
@@ -41,63 +40,20 @@
         <div class="row">
             <div class="col-md-3 box">
                           <div class="card-body" >
+                            <div class="text-left">
 
 
-<table class = 'table-borderless' >
 
-<form action={% url 'Vanpool_expansion_submission' %} method="POST"   onsubmit="return validation()">
+<form action="{% url 'Vanpool_expansion_submission' %}" method="POST" class="post-form" name="ReportSelection" data-errField="reports_on" >
 {%  csrf_token %}
-    {{ form.errors }}
-    <tbody>
-    <tr class="fieldWrapper">
-        <td> Agency</td>
-         <td> <select class="form-control" id="id_organization_id" name='organization_id'>
-            {% for choice in form.organization_id.field.choices  %}
-             <option value = "{{ choice.0 }}" > {{ choice.1 }}</option>
-             {%  endfor %}
-        </select>
-        </td>
-    </tr>
-    <tr class = "fieldWrapper"></tr>
-    <td >Date of Award </td>
-        <td>
-  {{ form.date_of_award }}
-        </td>
-    </tr>
-    <tr class="fieldWrapper"> <td> Expansion Vans Awarded</td>
-        <td> {{ form.expansion_vans_awarded }} </td>
-    </tr>
-    <tr class="fieldWrapper"> <td nowrap="nowrap">Latest Vehicle</td>
-    <td>
-  {{ form.latest_vehicle_acceptance}}
-  </td>
-    </tr>
-    <tr class = "fieldWrapper">
-        <td> Baseline Vanpools </td>
-        <td> {{ form.vanpools_in_service_at_time_of_award }} </td>
-    </tr>
-    <tr class = "fieldWrapper"> <td> Expired</td>
-       <td>{{form.expired }}</td>
-        </tr>
-    <tr class = "fieldWrapper">  <td>Extension Granted</td>
-                <td>{{ form.extension_granted }}</td>
-    </tr>
-    <tr class = "fieldWrapper">
-        <td>Notes</td>
-        <td> {{ form.notes }} </td>
-    </tr>
-    <tr class = "fieldWrapper">
-        <td>Ready to Submit?</td>
-        <td> <input type="submit" value="Submit a New Vanpool Expansion" class="btn btn-primary" >
- </td>
-    </tr>
+    {{ form.as_p }}
+                                    <div id="ReportSelection_err"></div>
+                                    <input type="submit" value="Submit a New Expansion" class="btn btn-primary" style="bottom: 20px; right: 20px">
+                                </form>
 
 
-    </tbody>
-</form>
 
-
-</table>
+</div>
                      </div>
                     </div>
                     </div>

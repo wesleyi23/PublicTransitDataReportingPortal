@@ -33,7 +33,7 @@ ALLOWED_HOSTS = []
 # pip install django-phonenumber-field
 # pip install phonenumbers
 # pip install django-localflavor
-# pip install
+# pip install celery 4.3.0
 
 INSTALLED_APPS = [
     'bootstrap4',
@@ -141,3 +141,5 @@ STATIC_URL = '/static/'
 AUTH_USER_MODEL = 'Panacea.custom_user'
 
 PHONENUMBER_DEFAULT_REGION = 'US'
+
+CELERY_BROKER_URL = 'amqp://localhost'

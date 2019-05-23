@@ -21,6 +21,7 @@ from django.db.models import Max, Subquery, F, OuterRef
 from django.db.models.expressions import RawSQL
 from dateutil.relativedelta import relativedelta
 import datetime
+from .tasks import profile_created
 
 
 from .forms import CustomUserCreationForm, \
@@ -58,7 +59,6 @@ def index(request):
 @login_required(login_url='/Panacea/login')
 def dashboard(request):
     myProfile = profile.objects.get(custom_user=request.user)
-
     if myProfile.profile_complete is True:
         return render(request, 'pages/dashboard.html')
     elif myProfile.profile_submitted is True:
@@ -119,8 +119,7 @@ def ProfileSetup_ReportSelection(request):
                 form.save()
                 myInstance.profile_submitted = True
                 myInstance.save()
-                user = custom_user.objects.filter(custom_user = request.user_id).values('first_name', 'last_name', 'email')
-                print(user)
+                profile_created.delay(request.user.id)
                 return JsonResponse({'redirect': '../dashboard'})
             else:
                 return JsonResponse({'error': form.errors})
@@ -163,21 +162,11 @@ def Vanpool_report(request, year=None, month=None):
 
 @login_required(login_url = '/Panacea/login')
 def Vanpool_expansion_submission(request):
-    ids = list(organization.objects.all().values_list('id', flat = True))
-    names = list(organization.objects.all().values_list('name', flat = True))
-    agency_dic = dict(list(zip(names, ids)))
     if request.method == 'POST':
         form = submit_a_new_vanpool_expansion(request.POST)
-        new_form = form.save(commit=False)
-        org = form.cleaned_data['organization_id']
-        org = str(org)
-        form.cleaned_data['organization_id'] = agency_dic[org]
-        form.cleaned_data['organization_id'] = int(form.cleaned_data['organization_id'])
-        print(form.cleaned_data['organization_id'])
         if form.is_valid():
-            form = form.save(commit=False)
             form.save()
-            return HttpResponseRedirect(reverse_lazy('pages/Vanpool_expansion.html'))
+            return JsonResponse({'redirect': '../Expansion/'})
         else:
             return render(request, 'pages/Vanpool_expansion_submission.html', {'form':form})
     else:
