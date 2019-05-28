@@ -191,6 +191,7 @@ class VanpoolMonthlyReport(forms.ModelForm):
             instance.save()
         return instance
 
+
 class user_profile_custom_user(forms.ModelForm):
 
     class Meta:

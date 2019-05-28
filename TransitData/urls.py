@@ -33,8 +33,13 @@ urlpatterns = [
     path('vanpool/Other/', views.Vanpool_other, name="Vanpool_other"),
     path('UserProfile/', views.UserProfile, name="UserProfile"),
     path('OrganizationProfile/', views.OrganizationProfile, name="OrganizationProfile"),
+    path('OrganizationProfile/Users', views.OrganizationProfileUsers, name = "OrganizationProfileUsers"),
     path('Permissions/', views.Permissions, name="Permissions"),
     path('Admin/Reports/', views.Admin_reports, name="Admin_reports"),
+    path('Admin/Expansion/', views.Vanpool_expansion_analysis, name="Vanpool_expansion_analysis"),
+    path('Admin/Vanpool_expansion_modify', views.Vanpool_expansion_modify, name = "Vanpool_expansion_modify"),
+    path('Admin/Vanpool_expansion_modify/<int:id>', views.Vanpool_expansion_modify, name = "Vanpool_expansion_modify"),
+    path('Admin/Vanpool_expansion_submission/', views.Vanpool_expansion_submission, name = "Vanpool_expansion_submission"),
     path('Admin/ReminderEmail/', views.Admin_ReminderEmail, name="Admin_ReminderEmail"),
     path('Admin/AssignPermissions/', views.Admin_assignPermissions, name="Admin_assignPermissions"),
     path('Help/', views.Help, name="Help"),
@@ -46,3 +51,5 @@ urlpatterns = [
     path('PublicDisclosure/', views.public_disclosure, name="public_disclosure")
 
 ]
+
+handler404 = views.handler404

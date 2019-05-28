@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+{% extends 'index.html' %}
+{% load humanize %}
+{% load custom_tags %}
+{% load static %}
+
+
+
+{% block content %}
+
+        <div class="container-fluid">
+
+          <!-- Page Heading -->
+        </div>
+<nav class="navbar navbar-expand-sm bg-light navbar-light">
+  <ul class="navbar-nav">
+    <li class="nav-item">
+      <a class="nav-link" href="{% url 'Vanpool_expansion_analysis' %}">Vanpool Expansion Analysis</a>
+    </li>
+    <li class="nav-item active">
+      <a class="nav-link" href="{% url 'Vanpool_expansion_modify' %}">Modify a Vanpool</a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" href="{% url 'Vanpool_expansion_submission' %}">Submit a Vanpool</a>
+    </li>
+  </ul>
+</nav>
+<body>
+
+   <div class="container-fluid">
+        <div class="col">
+<div class="card shadow mb-4">
+                    <div class="card-header">
+                        <h6 class="font-weight-bold text-primary"> Select a Vanpool Expansion to Modify {{ org.name }}</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-group">
+                    <div class = "table-responsive">
+                        <table class = 'table-bordered table-striped table-hover table table-responsive-lg'>
+                          <thead class="table-secondary" >
+                                <tr>
+                                    <th align = 'center'>Agency Name</th>
+                                    <th scope="col">Expansion Vans</th>
+                                    <th scope="col">Latest Vehicle Acceptance Date</th>
+                                    <th scope="col">Notes</th>
+                                </tr>
+                                </thead>
+                            <tbody>
+                            {%  for org, vea in zipped %}
+                                <tr class = "fieldWrapper clickable-row {% if vea.id == id %} table-active {% endif %}" data-href="{%  url 'Vanpool_expansion_modify' %}/{{vea.id}}">
+                                <td> {{ org.name}}</td>
+                                <td>{{ vea.expansion_vans_awarded}}</td>
+                                <td>{{ vea.latest_vehicle_acceptance|date:"Y-m-d"}}</td>
+                                <td>{{ vea.notes}}</td>
+                                </tr>
+                            {%  endfor %}
+                            </tbody>
+                            </table>
+                    </div>
+                        </div>
+                    </div>
+</div>
+
+
+                <div class="card shadow mb-4">
+                    <div class="card-header">
+                        <h6 class="font-weight-bold text-primary"> | Report Details | {{ org.name }}</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-group">
+                            <form action = "{% url 'Vanpool_expansion_modify' %}/{{id}}" method="post" id="post-form" style="opacity: 0" class="form-fade-out">
+                                {% csrf_token %}
+                                {{ form.non_field_errors }}
+                                {{ form.source.errors }}
+                                {{ form.source }}
+                                <table style="border-collapse: separate; border-spacing: .5rem">
+                                    <tr class="fieldWrapper">
+                                        <td>{{ form.expansion_vans_awarded.errors }}</td>
+                                        <td>Expansion Vans Awarded</td>
+                                        <td>{{ form.expansion_vans_awarded }}</td>
+                                    </tr>
+                                    <tr class="fieldWrapper">
+                                        <td>{{ form.latest_vehicle_acceptance.errors }}</td>
+                                        <td>Latest Vehicle Acceptance</td>
+                                        <td>{{ form.latest_vehicle_acceptance }}</td>
+                                    </tr>
+                                    <tr class="fieldWrapper">
+                                        <td>{{ form.notes.errors }}</td>
+                                        <td>Notes</td>
+                                        <td>{{ form.notes }}</td>
+                                    </tr>
+                                </table>
+                                <input type="submit" value="Modify Vanpool" form = "post-form" class="btn btn-primary float-left" style="position: absolute; bottom: 20px; right: 20px">
+
+                            </form>
+                        </div>
+                    </div>
+  </div>
+
+
+
+
+
+
+    {% if successful_submit %}
+        <!-- Modal -->
+        <div class="modal fade" id="success_modal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="exampleModalLabel">Success!</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        Your data has been submitted successfully.  You may review it and edit it at any time.
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <script src="{% static 'vendor/jquery/jquery.min.js'%}"></script>
+        <script type="text/javascript">
+            $(document).ready(function(){
+                $("#success_modal").modal();
+                $(".form-fade-out").fadeTo("fast", 1)
+            });
+        </script>
+
+    {% else %}
+        <script src="{% static 'vendor/jquery/jquery.min.js'%}"></script>
+        <script type="text/javascript">
+            $(document).ready(function() {
+                $(".form-fade-out").fadeTo("fast", 1)
+            });
+        </script>
+
+    {% endif %}
+    <script type="text/javascript">
+        $(document).ready(function(){
+
+
+        }) </script>
+
+
+{% endblock %}
+</body>

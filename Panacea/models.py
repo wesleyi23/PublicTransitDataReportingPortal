@@ -88,9 +88,18 @@ class organization(models.Model):
         ("Rural", "Rural"),
     )
 
+    CHOICES = (
+        ('13-15', '13-15'),
+        ('15-17', '15-17'),
+        ('17-19', '17-19'),
+        ('19-21', '19-21'),
+        ('21-23', '21-23')
+    )
+
     def __str__(self):
         return self.name
 
+    biennia = models.CharField(max_length=50, choices=CHOICES, blank=True, null=True)
     name = models.CharField(max_length=80, blank=True)
     address_line_1 = models.CharField(max_length=50, blank=True)
     address_line_2 = models.CharField(max_length=50, blank=True, null=True)
@@ -99,6 +108,12 @@ class organization(models.Model):
     zip_code = USZipCodeField(blank=True)
     classification = models.CharField(max_length=50, choices=AGENCY_CLASSIFICATIONS, blank=True, null=True)
     vanshare_program = models.BooleanField(blank=True, null=True)
+    vanpool_expansion = models.BooleanField(blank= True, null = True)
+    latest_vanpool_expansion  = models.CharField(blank = True, max_length = 10, choices = biennia)
+    # this is kind of a hack and I hate it; on the other hand, it seems less complex than storing a list
+
+
+
     in_jblm_area = models.BooleanField(blank=True, null=True)
     in_puget_sound_area = models.BooleanField(blank=True, null=True)
 
@@ -138,6 +153,7 @@ class vanpool_report(models.Model):
     report_year = models.IntegerField()
     report_month = models.IntegerField(choices=REPORT_MONTH)
     # report_due_date = models.DateField()
+    report_day = models.IntegerField(null=True)
     report_date = models.DateTimeField(blank=True, null=True)
     updated_date = models.DateTimeField(auto_now=True, blank=True, null=True)
     report_by = models.ForeignKey(custom_user, on_delete=models.PROTECT, blank=True, null=True)
@@ -173,6 +189,7 @@ class vanpool_report(models.Model):
 
     @property
     def report_due_date(self):
+        import datetime.date
         month = self.report_month
         year = self.report_year + month // 12
         month = month % 12 + 1
@@ -223,3 +240,43 @@ def create_user_profile(sender, instance, created, **kwargs):
 # @receiver(post_save, sender=custom_user)
 # def save_user_profile(sender, instance, **kwargs):
 #     instance.profile.save()
+
+class vanpool_expansion_analysis(models.Model):
+    organization = models.ForeignKey(organization, on_delete=models.PROTECT, related_name = '+')
+    vanpools_in_service_at_time_of_award = models.IntegerField(blank=True, null=True)
+    date_of_award = models.DateField(blank = True, null = True)
+    expansion_vans_awarded = models.IntegerField(blank= True, null = True)
+    latest_vehicle_acceptance = models.DateField(blank =True, null=True)
+    extension_granted = models.BooleanField(blank = False, null = True)
+    expired = models.BooleanField(blank=False, null = True)
+    notes = models.TextField(blank = False, null = True)
+    # going to need to add a loan thing here once I figure out what the story is
+
+
+    @property
+    def adjusted_service_goal(self):
+        return int(self.vanpools_in_service_at_time_of_award + round(self.expansion_vans_awarded*.8, 0))
+
+    @property
+    def spare_allowance(self):
+        return round(self. expansion_vans_awarded*.2, 1)
+
+
+    @property
+    def calculate_current_biennium(self):
+        import datetime
+        today = datetime.date.today()
+        if today < datetime.date(2019, 6, 1):
+            current_biennium = '17-19'
+        elif today >= datetime.date(2019, 6, 1) and today < datetime.date(2021, 6, 1):
+            current_biennium = '19-21'
+        elif today >= datetime.date(2021, 6, 1) and today < datetime.date(2023, 6, 1):
+            current_biennium = '21-23'
+        elif today >= datetime.date(2023, 6, 1) and today < datetime.date(2025, 6, 1):
+            current_biennium = '21-25'
+        return current_biennium
+
+
+
+
+
