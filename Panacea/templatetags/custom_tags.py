@@ -48,14 +48,14 @@ def plus_one(int_num):
 
 
 @register.filter(name='get_org_by_custom_user')
-def get_org_by_custom_user(profile_data, pk):
-    output = profile_data.get(custom_user_id=pk).organization
+def get_org_by_custom_user(profile_data, id):
+    output = profile_data.get(custom_user_id=id).organization
     return output
 
 
 @register.filter(name='get_reports_on_by_custom_user')
-def get_reports_on_by_custom_user(profile_data, pk):
-    requested_permisions = profile_data.get(custom_user_id=pk).reports_on.all()
+def get_reports_on_by_custom_user(profile_data, id):
+    requested_permisions = profile_data.get(custom_user_id=id).reports_on.all()
     output = ""
     i = 0
     for item in requested_permisions:
@@ -66,3 +66,12 @@ def get_reports_on_by_custom_user(profile_data, pk):
             output = output + " & " + item.name
     return output
 
+
+@register.filter(name='get_chart_dataset_data')
+def get_chart_data(chart_dict_item):
+    return chart_dict_item[0]
+
+
+@register.filter(name='get_chart_dataset_color')
+def get_chart_color(chart_dict_item):
+    return chart_dict_item[1]

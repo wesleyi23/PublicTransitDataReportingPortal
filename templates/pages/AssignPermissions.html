@@ -52,9 +52,10 @@
                                                 <td style="display: none; visibility: hidden;" aria-hidden="true">{{ form.first_name }}</td>
                                                 <td>{{ form.last_name.value }}</td>
                                                 <td style="display: none; visibility: hidden;" aria-hidden="true">{{ form.last_name }}</td>
-                                                <td>{{ form.email }}</td>
-                                                <td>{{ profile_data | get_org_by_custom_user:form.instance.pk }}</td>
-                                                <td>{{ profile_data | get_reports_on_by_custom_user:form.instance.pk }}</td>
+                                                <td>{{ form.email.value }}</td>
+                                                <td style="display: none; visibility: hidden;" aria-hidden="true">{{ form.email }}</td>
+                                                <td>{{ profile_data | get_org_by_custom_user:form.instance.id }}</td>
+                                                <td>{{ profile_data | get_reports_on_by_custom_user:form.instance.id }}</td>
                                                 <td class="no-bullet"><fieldset><legend style="display: none";>Permissions Group</legend>{{ form.groups }}</fieldset> </td>
                                             </tr>
                                         {% endfor %}

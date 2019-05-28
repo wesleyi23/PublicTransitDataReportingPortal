@@ -108,6 +108,7 @@ class profile(models.Model):
     profile_submitted = models.BooleanField(default=False)
     profile_complete = models.BooleanField(default=False)
     telephone_number = PhoneNumberField(blank=True)
+    job_title = models.CharField(max_length=100, blank=True)
     organization = models.ForeignKey(organization, on_delete=models.PROTECT, blank=True, null=True)
     address_line_1 = models.CharField(max_length=50, blank=True)
     address_line_2 = models.CharField(max_length=50, blank=True)
@@ -145,7 +146,7 @@ class vanpool_report(models.Model):
     vanshare_group_starts = models.IntegerField(blank=True, null=True)
     vanshare_group_folds = models.IntegerField(blank=True, null=True)
     vanshare_passenger_trips = models.IntegerField(blank=True, null=True)
-    vanshare_miles_traveled = models.DecimalField(blank=True, null=True, decimal_places=2, max_digits=15)
+    vanshare_miles_traveled = models.FloatField(blank=True, null=True)
     vanpool_groups_in_operation = models.IntegerField(blank=True, null=True)
     vanpool_group_starts = models.IntegerField(blank=True, null=True)
     vanpool_group_folds = models.IntegerField(blank=True, null=True)
@@ -153,8 +154,10 @@ class vanpool_report(models.Model):
     loaner_spare_vans_in_fleet = models.IntegerField(blank=True, null=True)
     vanpool_passenger_trips = models.IntegerField(blank=True, null=True)
     vanpool_miles_traveled = models.FloatField(blank=True, null=True)
-    average_riders_per_van = models.DecimalField(blank=True, null=True, decimal_places=2, max_digits=15)
-    average_round_trip_miles = models.DecimalField(blank=True, null=True, decimal_places=2, max_digits=15)
+    average_riders_per_van = models.FloatField(blank=True, null=True)
+    average_round_trip_miles = models.FloatField(blank=True, null=True)
+    data_change_explanation = models.CharField(max_length=5000, blank=True, null=True)
+    data_change_record = models.CharField(max_length=10000, blank=True, null=True) #TODO change to JSONField when/if we hook up MySQL
 
     @property
     def status(self):
@@ -180,6 +183,27 @@ class vanpool_report(models.Model):
     def report_year_month_label(self):
         return str(self.report_year) + " - " + str(self.report_month)
 
+    @property
+    def total_miles_traveled(self):
+        result = sum(filter(None, {self.vanpool_miles_traveled, self.vanshare_miles_traveled}))
+        if result == 0:
+            result = None
+        return result
+
+    @property
+    def total_passenger_trips(self):
+        result = sum(filter(None, {self.vanpool_passenger_trips, self.vanshare_passenger_trips}))
+        if result == 0:
+            result = None
+        return result
+
+    @property
+    def total_groups_in_operation(self):
+        result = sum(filter(None, {self.vanpool_groups_in_operation, self.vanshare_groups_in_operation}))
+        if result == 0:
+            result = None
+        return result
+
     def save(self, no_report_date=False, *args, **kwargs):
 
         if not no_report_date and self.report_date is None:
@@ -188,6 +212,7 @@ class vanpool_report(models.Model):
 
     class Meta:
         unique_together = ('organization', 'report_year', 'report_month',)
+
 
 @receiver(post_save, sender=custom_user)
 def create_user_profile(sender, instance, created, **kwargs):

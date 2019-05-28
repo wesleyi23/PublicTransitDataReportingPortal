@@ -9,7 +9,7 @@
         </div>
         <div class="card-body">
             <div>
-                <img class="img-fluid px-3 px-sm-4 mt-3 mb-4" style="width: 20rem; float: left" src="{% static 'img/undraw_profile_pic.svg' %}" alt="Drawing of a user profile picture.">
+                <img class="img-fluid px-3 px-sm-4 mt-3 mb-4" style="width: 20rem; float: left" src="{% static 'img/undraw_creative_team.svg' %}" alt="Drawing of a user profile picture.">
             </div>
             <div>
                 <div style="float: left">
@@ -39,6 +39,12 @@
                                 <td>{{ form_profile.telephone_number }}</td>
                                 <td><a href="#" class="edit_profile_field" data-field_name="{{ form_profile.telephone_number.name }}">(Edit)</a></td>
                                 <td>{{ form_profile.telephone_number.errors }}</td>
+                            </tr>
+                            <tr class="fieldWrapper">
+                                <td>{{ form_profile.job_title.label_tag }}</td>
+                                <td>{{ form_profile.job_title }}</td>
+                                <td><a href="#" class="edit_profile_field" data-field_name="{{ form_profile.job_title.name }}">(Edit)</a></td>
+                                <td>{{ form_profile.job_title.errors }}</td>
                             </tr>
                             <tr class="fieldWrapper">
                                 <td>Organization:</td>

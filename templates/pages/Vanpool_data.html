@@ -1,4 +1,5 @@
 {% extends 'index.html' %}
+{% load custom_tags %}
 
 {% block content %}
 
@@ -6,26 +7,36 @@
         <!-- Page Heading -->
         <div class="card shadow h-100" style="max-width: none">
             <div class="card-header">
-                <ul class="nav nav-pills">
-                    <li class="nav-item">
-                        <a class="nav-link active" href="#">Active</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#">Link</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#">Link</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link disabled" href="#">Disabled</a>
-                    </li>
-                </ul>
-            </div>
-            <div class="card-body d-flex flex-grow-1">
-                <form method="POST" >{% csrf_token %}
-                    {{ form.as_p }}
-                    <button type="submit" class="save btn btn-default">Save</button>
+                <form action="{% url 'Vanpool_data' %}" method="post">
+                    {% csrf_token %}
+                    <p>
+                        <button class="btn btn-primary" type="button" data-toggle="collapse" href="#multiCollapseExample1" aria-expanded="false" aria-controls="multiCollapseExample1">Change Chart Measure</button>
+                        <button id="SelectOrg" class="btn btn-primary" type="button" data-toggle="collapse" data-target="#multiCollapseExample2" aria-expanded="false" aria-controls="multiCollapseExample2">Select Transit Agencies</button>
+                        <button class="btn btn-primary" type="button" data-toggle="collapse" data-target="#multiCollapseExample3" aria-expanded="false" aria-controls="multiCollapseExample2">Change Chart Time Frame</button>
+                        <input  class="btn btn-success" type="submit" value="Update Chart" style="float: right">
+                    </p>
+                    <div class="collapse multi-collapse" id="multiCollapseExample1">
+                        <div class="card card-body" style="">
+                            {{ form.chart_measure }}
+                        </div>
+                    </div>
+
+                    <div class="collapse multi-collapse" id="multiCollapseExample2">
+                        <div class="card card-body" >
+                            <div class="form-group" id="bullet-kill" >{{ form.chart_organizations }}</div>
+                        </div>
+                    </div>
+
+                    <div class="collapse multi-collapse" id="multiCollapseExample3">
+                        <div class="card card-body" >
+                            <div class="form-group" ><fieldset >{{ form.chart_time_frame }}</fieldset></div>
+                        </div>
+                    </div>
+
                 </form>
+            </div>
+
+            <div class="card-body d-flex flex-grow-1">
 
                 <div class="container" style="max-width: none !important;min-width:100px; min-height:100px">
                     <canvas id="myChart" style="width:100% !important; height:100% !important;" >
@@ -35,6 +46,7 @@
             </div>
         </div>
     </div>
+
 
 
 
@@ -58,16 +70,12 @@
                 labels: {{ chart_label | safe }}, //[1, 2, 3,4,5,6,7,8,9,10,11,12], //
                 datasets: [
                     {% for key, value in chart_datasets_filtered.items %}
-                    {
-                        label: "{{ key }}",
-                        fillColor: "rgba(220,220,220,0.2)",
-                        strokeColor: "rgba(220,220,220,1)",
-                        pointColor: "rgba(220,220,220,1)",
-                        pointStrokeColor: "#fff",
-                        pointHighlightFill: "#fff",
-                        pointHighlightStroke: "rgba(220,220,220,1)",
-                        data: {{ value | safe }}
-                    },
+                        {
+                            label: "{{ key | safe }}",
+                            borderColor: "{{ value | get_chart_dataset_color | safe }}",
+                            fill: false,
+                            data: {{ value | get_chart_dataset_data | safe }}
+                        },
                     {% endfor %}
                 ]
             },
@@ -80,6 +88,7 @@
                     display: true,
                     text: '{{ chart_title }}'
                 },
+                lineTension: .2,
                 layout: {
                     padding: {
                         left: 0,
@@ -90,19 +99,33 @@
                 }
             }
         });
-
-        function chartTypeChanged() {
-            alert(chart.data.labels);
-            chart.options.scales.yAxes[0] = {
-                type: 'logarithmic'
-            };
-            chart.resize(chart.render, true);
-        }
-
-
-        var button = document.getElementById( "sidebarToggle" );
-        button.addEventListener( "click",  chartTypeChanged);
-
+$(document).ready(function(){
+    if (document.documentMode || /Edge/.test(navigator.userAgent)) {
+        $('ul:hidden').each(function(){
+            $(this).parent().append($(this).detach());
+        });
+    }
+});
+{#        $(document).ready(function ($) {#}
+{#            $('ul').css('list-style-type', 'none');#}
+{#               $('ul').css('list-style', 'none');#}
+{##}
+{#        });#}
+{##}
+{#        $('#multiCollapseExample2').on('shown.bs.collapse', function () {#}
+{#            if(!$('ul').css('list-style') === 'none')#}
+{#            {#}
+{#                $('ul').css('list-style-type', 'none');#}
+{#                $('ul').css('list-style', 'none');#}
+{##}
+{#            }#}
+{#            else#}
+{#            {#}
+{#                 $('ul').css('list-style-type', 'none');#}
+{#$('ul').css('list-style', 'none');#}
+{##}
+{#            }#}
+{#        })#}
 
 
     </script>

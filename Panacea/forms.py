@@ -1,12 +1,12 @@
 from django import forms
 from django.contrib.auth import password_validation, login
 from django.contrib.auth.forms import UserChangeForm, AuthenticationForm
-
+import datetime
 from .models import custom_user, profile, organization, ReportType, vanpool_report
 from django.utils.translation import gettext, gettext_lazy as _
 from phonenumber_field.formfields import PhoneNumberField
 from localflavor.us.forms import USStateSelect, USZipCodeField
-
+from django.core import serializers
 
 
 class CustomUserCreationForm(forms.ModelForm):
@@ -110,12 +110,13 @@ class PhoneOrgSetup(forms.ModelForm):
 
     telephone_number = PhoneNumberField(widget=forms.TextInput(attrs={'class': 'form-control form-control-user'}),
                                         label=_("Phone number:"), required=True)
+    job_title = forms.CharField(widget=forms.TextInput(attrs={'class': 'form-control form-control-user'}), required=True)
     organization = forms.ModelChoiceField(queryset=queryset,
                                           widget=forms.Select(attrs={'class': 'form-control form-control-user'}))
 
     class Meta:
         model = profile
-        fields = ('telephone_number', 'organization')
+        fields = ('telephone_number', 'job_title', 'organization')
 
 
 class ReportSelection(forms.ModelForm):
@@ -131,39 +132,64 @@ class ReportSelection(forms.ModelForm):
 
 
 class VanpoolMonthlyReport(forms.ModelForm):
+    new_data_change_explanation = forms.CharField(widget=forms.Textarea(
+        attrs={'required': True, 'class': 'form-control input-sm', 'rows': 3})
+    )
 
     class Meta:
         model = vanpool_report
         exclude = ('report_date', 'report_year', 'report_month', 'report_by', 'organization', 'report_type',
                    'report_due_date')
         widgets = {
-            'vanshare_groups_in_operation': forms.NumberInput(attrs={'class': 'form-control input-sm'}),
-            'vanshare_group_starts': forms.NumberInput(attrs={'class': 'form-control input-sm'}),
-            'vanshare_group_folds': forms.NumberInput(attrs={'class': 'form-control form-control-user input-sm'}),
+            'vanshare_groups_in_operation': forms.NumberInput(
+                attrs={'required': True, 'class': 'form-control input-sm'}),
+            'vanshare_group_starts': forms.NumberInput(
+                attrs={'required': True, 'class': 'form-control input-sm'}),
+            'vanshare_group_folds': forms.NumberInput(
+                attrs={'required': True, 'class': 'form-control input-sm'}),
             'vanshare_passenger_trips': forms.NumberInput(
-                attrs={'class': 'form-control input-sm'}),
+                attrs={'required': True, 'class': 'form-control input-sm'}),
             'vanshare_miles_traveled': forms.NumberInput(
-                attrs={'class': 'form-control input-sm'}),
+                attrs={'required': True, 'class': 'form-control input-sm'}),
             'vanpool_groups_in_operation': forms.NumberInput(
-                attrs={'class': 'form-control input-sm'}),
+                attrs={'required': True, 'class': 'form-control input-sm'}),
             'vanpool_group_starts': forms.NumberInput(
-                attrs={'class': 'form-control input-sm'}),
+                attrs={'required': True, 'class': 'form-control input-sm'}),
             'vanpool_group_folds': forms.NumberInput(
-                attrs={'class': 'form-control input-sm'}),
+                attrs={'required': True, 'class': 'form-control input-sm'}),
             'vans_available': forms.NumberInput(
-                attrs={'class': 'form-control input-sm'}),
+                attrs={'required': True, 'class': 'form-control input-sm'}),
             'loaner_spare_vans_in_fleet': forms.NumberInput(
-                attrs={'class': 'form-control input-sm'}),
+                attrs={'required': True, 'class': 'form-control input-sm'}),
             'vanpool_passenger_trips': forms.NumberInput(
-                attrs={'class': 'form-control input-sm'}),
+                attrs={'required': True, 'class': 'form-control input-sm'}),
             'vanpool_miles_traveled': forms.NumberInput(
-                attrs={'class': 'form-control input-sm'}),
+                attrs={'required': True, 'class': 'form-control input-sm'}),
             'average_riders_per_van': forms.NumberInput(
-                attrs={'class': 'form-control input-sm'}),
+                attrs={'required': True, 'class': 'form-control input-sm'}),
             'average_round_trip_miles': forms.NumberInput(
-                attrs={'class': 'form-control input-sm'}),
+                attrs={'required': True, 'class': 'form-control input-sm'})
         }
 
+    # TODO test how easily the fields can be extracted
+    def save(self, commit=True):
+        instance = super(VanpoolMonthlyReport, self).save(commit=False)
+
+        past_explanations = vanpool_report.objects.get(id=instance.id).data_change_explanation
+        if past_explanations is None:
+            past_explanations = ""
+        instance.data_change_explanation = past_explanations + \
+                                           "{'edit_date':'" + str(datetime.date.today()) + \
+                                           "','explanation':'" + self.cleaned_data['new_data_change_explanation'] + "'},"
+
+        past_data_change_record = vanpool_report.objects.get(id=instance.id).data_change_record
+        if past_data_change_record is None:
+            past_data_change_record = ""
+        instance.data_change_record = past_data_change_record + serializers.serialize('json', [ vanpool_report.objects.get(id=instance.id), ])
+
+        if commit:
+            instance.save()
+        return instance
 
 class user_profile_custom_user(forms.ModelForm):
 
@@ -185,11 +211,14 @@ class user_profile_profile(forms.ModelForm):
     class Meta:
         model = profile
         queryset = organization.objects.all()
-        fields = ('telephone_number', )
+        fields = ('telephone_number', 'job_title')
         widgets = {
             'telephone_number': forms.TextInput(
+                attrs={'class': 'form-control-plaintext', 'readonly': 'True'}),
+            'job_title': forms.TextInput(
                 attrs={'class': 'form-control-plaintext', 'readonly': 'True'})
         }
+
 
 class organization_profile(forms.ModelForm):
 
@@ -217,7 +246,6 @@ class organization_profile(forms.ModelForm):
         }
 
 
-
 class change_user_permissions_group(forms.ModelForm):
     class Meta:
         model = custom_user
@@ -236,13 +264,23 @@ class change_user_permissions_group(forms.ModelForm):
 
 class chart_form(forms.Form):
     MEASURE_CHOICES_DICT = {
-        "vanpool_miles_traveled": "Vanpool Miles Traveled",
-        "vanpool_passenger_trips": "Vanpool Passenger Trips"
+        "total_miles_traveled": "Total Miles Traveled",
+        "total_passenger_trips": "Total Passenger Trips",
+        "average_riders_per_van": "Average Riders per Van",
+        "average_round_trip_miles": "Average Round Trip Miles",
+        "total_groups_in_operation": "Total Groups in Operation",
+        "vans_available": "Vans Available",
+        "loaner_spare_vans_in_fleet": "Loaner Spare Vans in Fleet"
     }
 
     MEASURE_CHOICES = (
-        ("vanpool_miles_traveled", "Vanpool Miles Traveled"),
-        ("vanpool_passenger_trips", "Vanpool Passenger Trips")
+        ("total_miles_traveled", "Total Miles Traveled"),
+        ("total_passenger_trips", "Total Passenger Trips"),
+        ("average_riders_per_van", "Average Riders per Van"),
+        ("average_round_trip_miles", "Average Round Trip Miles"),
+        ("total_groups_in_operation", "Total Groups in Operation"),
+        ("vans_available", "Vans Available"),
+        ("loaner_spare_vans_in_fleet", "Loaner Spare Vans in Fleet")
     )
 
     ORGANIZATION_CHOICES = organization.objects.all().values('name')
@@ -253,16 +291,16 @@ class chart_form(forms.Form):
         (36, "Three Years"),
         (60, "Five Years"),
         (120, "Ten Years"),
-        (99999, "All")
+        (999, "All")
     )
 
     chart_measure = forms.CharField(widget=forms.Select(choices=MEASURE_CHOICES,
                                                         attrs={'class': 'form-control my_chart_control',
                                                                'data-form-name': "chart_form"}))
     chart_organizations = forms.ModelChoiceField(queryset=organization.objects.all(),
-                                                 widget=forms.SelectMultiple(
-                                                     attrs={'class': 'form-control my_chart_control',
+                                                 widget=forms.CheckboxSelectMultiple(
+                                                     attrs={'class': 'form-check checkbox-grid',
                                                             'data-form-name': "chart_form"}))
-    chart_timeframe = forms.CharField(widget=forms.Select(choices=TIMEFRAME_CHOICES,
-                                                          attrs={'class': 'form-control my_chart_control',
-                                                                 'data-form-name': "chart_form"}))
+    chart_time_frame = forms.CharField(widget=forms.Select(choices=TIMEFRAME_CHOICES,
+                                                           attrs={'class': 'form-control my_chart_control',
+                                                                  'data-form-name': "chart_form"}))
