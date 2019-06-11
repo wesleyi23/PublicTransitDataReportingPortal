@@ -132,9 +132,20 @@ class ReportSelection(forms.ModelForm):
 
 
 class VanpoolMonthlyReport(forms.ModelForm):
+
+
+    def __init__(self, user_organization, record_id, *args, **kwargs):
+        self.user_organization = user_organization
+        self.record_id = record_id
+        super(VanpoolMonthlyReport, self).__init__(*args, **kwargs)
+
+
     new_data_change_explanation = forms.CharField(widget=forms.Textarea(
         attrs={'required': True, 'class': 'form-control input-sm', 'rows': 3})
-    )
+    ),
+    acknowledge_validation_errors = forms.BooleanField(label= 'Check this box to confirm that your submitted numbers are correct, even though there are validation errors.',
+                                                              widget = forms.CheckboxInput(attrs={'class': 'checkbox form-control'}))
+
 
     class Meta:
         model = vanpool_report
@@ -168,25 +179,27 @@ class VanpoolMonthlyReport(forms.ModelForm):
             'average_riders_per_van': forms.NumberInput(
                 attrs={'required': True, 'class': 'form-control input-sm'}),
             'average_round_trip_miles': forms.NumberInput(
-                attrs={'required': True, 'class': 'form-control input-sm'})
+                attrs={'required': True, 'class': 'form-control input-sm'}),
+
         }
 
     # TODO test how easily the fields can be extracted
     def save(self, commit=True):
         instance = super(VanpoolMonthlyReport, self).save(commit=False)
-
-        past_explanations = vanpool_report.objects.get(id=instance.id).data_change_explanation
-        if past_explanations is None:
-            past_explanations = ""
-        instance.data_change_explanation = past_explanations + \
+        if self.cleaned_data['data_change_explanation'] != None:
+            past_explanations = vanpool_report.objects.get(id=instance.id).data_change_explanation
+            if past_explanations is None:
+                past_explanations = ""
+            instance.data_change_explanation = past_explanations + \
                                            "{'edit_date':'" + str(datetime.date.today()) + \
-                                           "','explanation':'" + self.cleaned_data['new_data_change_explanation'] + "'},"
+                                           "','explanation':'" + self.cleaned_data[
+                                               'data_change_explanation'] + "'},"
 
-        past_data_change_record = vanpool_report.objects.get(id=instance.id).data_change_record
-        if past_data_change_record is None:
-            past_data_change_record = ""
-        instance.data_change_record = past_data_change_record + serializers.serialize('json', [ vanpool_report.objects.get(id=instance.id), ])
-
+            past_data_change_record = vanpool_report.objects.get(id=instance.id).data_change_record
+            if past_data_change_record is None:
+                past_data_change_record = ""
+            instance.data_change_record = past_data_change_record + serializers.serialize('json', [
+                vanpool_report.objects.get(id=instance.id), ])
         if commit:
             instance.save()
         return instance

@@ -1,0 +1,48 @@
+{% extends 'index.html' %}
+{% load humanize %}
+{% load custom_tags %}
+{% load static %}
+
+<title> Vanpool in Service Operational Summary</title>
+
+{% block content %}
+<div class="container-fluid">
+        <div class="row">
+
+                    <div class="card-body">
+
+<table cellpadding="10">
+
+
+    <thead>
+        {%  for year in years %}
+        <th>{{ year}}</th>
+        <th>Percent Change from Last Year</th>
+        {%  endfor %}
+    </thead>
+    <tbody>
+
+
+      {%  for total_vp, vp_percent_change, total_vs, vs_percent_change, total_starts, starts_percent_change, starts_as_a_percent, total_folds, folds_percent_change, folds_as_a_percent, net_vanpool, avg_riders, avg_miles in data %}
+
+          <td class = "d-none d-md-table-cell"> {{ total_vp.vanpool_groups_in_operation__sum }} </td>
+          <td class = "d-none d-md-table-cell"> {{ vp_percent_change }}%</td>
+          <td class = "d-none d-md-table-cell">{{ total_vs.vanshare_groups_in_operation__sum }}</td>
+          <td class = "d-none d-md-table-cell"> {{ vs_percent_change }}%</td>
+    <td class = "d-none d-md-table-cell"> {{ total_starts.vanpool_group_starts__sum}}</td>
+          <td class = "d-none d-md-table-cell"> {{ starts_percent_change }}%</td>
+
+
+{%  endfor %}
+
+    </tbody>
+
+
+</table>
+
+
+{% endblock %}
+
+                    </div>
+        </div>
+</div>

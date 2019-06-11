@@ -81,7 +81,14 @@
                     <div class="form-group">
                         <form action = "{% url 'Vanpool_report' %}{{ year }}/{{ month }}/" method="post" id="post-form" style="opacity: 0" class="form-fade-out">
                             {% csrf_token %}
-                            {{ form.non_field_errors }}
+
+                            {%  if form.non_field_errors %}
+                           <ul>{% for error in form.non_field_errors %}
+                               <li> {{error}} </li>
+                            {% endfor %} </ul>
+                                {{ form.acknowledge_validation_errors.label }}
+                                <div class = "align-content-left"> {{form.acknowledge_validation_errors}} </div>
+                                {%  endif %}
                             {{ form.source.errors }}
                             {{ form.source }}
                             <table style="border-collapse: separate; border-spacing: .25rem">
@@ -163,7 +170,7 @@
 
                             {% else %}
                                 <p>If you would like to update you report, please provide a brief explination of your update:</p>
-                                {{ form.new_data_change_explanation }}
+                                {{ form.data_change_explanation }}
                                 <input id="update_report" type="submit" value="Update Report" class="btn btn-secondary float-left" style="position: absolute; bottom: 1rem; right: 1.25rem">
                             {% endif %}
                         </form>
