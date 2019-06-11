@@ -99,7 +99,7 @@ class organization(models.Model):
     def __str__(self):
         return self.name
 
-    biennia = models.CharField(max_length=50, choices=CHOICES, blank=True, null=True)
+    #biennia = models.CharField(max_length=50, choices=CHOICES, blank=True, null=True)
     name = models.CharField(max_length=80, blank=True)
     address_line_1 = models.CharField(max_length=50, blank=True)
     address_line_2 = models.CharField(max_length=50, blank=True, null=True)
@@ -109,7 +109,6 @@ class organization(models.Model):
     classification = models.CharField(max_length=50, choices=AGENCY_CLASSIFICATIONS, blank=True, null=True)
     vanshare_program = models.BooleanField(blank=True, null=True)
     vanpool_expansion = models.BooleanField(blank= True, null = True)
-    latest_vanpool_expansion  = models.CharField(blank = True, max_length = 10, choices = biennia)
     # this is kind of a hack and I hate it; on the other hand, it seems less complex than storing a list
 
 
@@ -153,8 +152,8 @@ class vanpool_report(models.Model):
     report_year = models.IntegerField()
     report_month = models.IntegerField(choices=REPORT_MONTH)
     # report_due_date = models.DateField()
-    report_day = models.IntegerField(null=True)
-    report_date = models.DateTimeField(blank=True, null=True)
+    #report_day = models.IntegerField(default = 1, null=True)
+    report_date = models.DateTimeField(default = None, null=True)
     updated_date = models.DateTimeField(auto_now=True, blank=True, null=True)
     report_by = models.ForeignKey(custom_user, on_delete=models.PROTECT, blank=True, null=True)
     organization = models.ForeignKey(organization, on_delete=models.PROTECT)
@@ -189,7 +188,7 @@ class vanpool_report(models.Model):
 
     @property
     def report_due_date(self):
-        import datetime.date
+
         month = self.report_month
         year = self.report_year + month // 12
         month = month % 12 + 1

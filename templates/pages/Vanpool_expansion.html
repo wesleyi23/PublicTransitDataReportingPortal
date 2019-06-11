@@ -58,7 +58,7 @@
                                 <tr>
                                 <td class="d-none d-md-table-cell"> {{ orgname.name}}</td>
                                 <td class="d-none d-md-table-cell" align="center" > {{ latest_van.vanpool_groups_in_operation}}</td>
-                                <td class="d-none d-md-table-cell" >  {{ latest_van.report_month }}/{{ latest_van.report_date }}/{{ latest_van.report_year }}</td>
+                                <td class="d-none d-md-table-cell" >  {{ latest_van.report_month }}/1/{{ latest_van.report_year }}</td>
                                 <td class="d-none d-md-table-cell" align="center"> {{ van_expand.vanpools_in_service_at_time_of_award}}
                                 <td class="d-none d-md-table-cell" > {{ van_expand.date_of_award|date:'m/d/y'}} </td>
                                 <td class="d-none d-md-table-cell" align="center" > {{ van_expand.expansion_vans_awarded }} </td>
@@ -71,12 +71,12 @@
                                     <td class = "d-none d-md-table-cell" align="center" > TBD </td>
                                     {%  endif %}
                                 {%  if eg != ''%}
-                                   <td class = "d-none d-md-table-cell" > {{ eg.report_month }}/{{ eg.report_date }}/{{ eg.report_year }}</td>
+                                   <td class = "d-none d-md-table-cell" > {{ eg.report_month }}/1/{{ eg.report_year }}</td>
                                 {%  else %}
                                     <td class = "d-none d-md-table-cell" > </td>
                                     {%  endif %}
                                 <td class = "d-none d-md-table-cell"  align="center"> {{ max_van.vanpool_groups_in_operation }}  </td>
-                                <td class = "d-none d-md-table-cell" > {{ max_van.report_month }}/{{ max_van.report_date}}/{{ max_van.report_year }}</td>
+                                <td class = "d-none d-md-table-cell" > {{ max_van.report_month }}/1/{{ max_van.report_year }}</td>
                                 {%  if acceptance.remaining_months < 0 %}
                                     <td class = "d-none d-md-table-cell"align="center"> Deadline Expired </td>
                                 {%  else %}

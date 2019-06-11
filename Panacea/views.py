@@ -25,6 +25,8 @@ from django.db.models.expressions import RawSQL
 from dateutil.relativedelta import relativedelta
 import datetime
 from .tasks import profile_created
+from django.core.exceptions import ValidationError
+from django.forms.widgets import CheckboxInput
 
 
 from .forms import CustomUserCreationForm, \
@@ -135,9 +137,8 @@ def handler404(request, exception):
 
 @login_required(login_url='/Panacea/login')
 def Vanpool_report(request, year=None, month=None):
-    user_organization = profile.objects.get(custom_user=request.user.id).organization
+    user_organization = profile.objects.get(custom_user_id=request.user.id).organization_id
     organization_data = vanpool_report.objects.filter(organization_id=user_organization)
-
     if not year:
         organization_data_incomplete = organization_data.filter(report_date=None)
         start_year = organization_data_incomplete \
@@ -150,12 +151,12 @@ def Vanpool_report(request, year=None, month=None):
         month = start_month
     elif not month:
         month = 1
-
     min_year = organization_data.all().aggregate(Min('report_year')).get('report_year__min') == year
     max_year = organization_data.all().aggregate(Max('report_year')).get('report_year__max') == year
 
+
     past_report_data = vanpool_report.objects.filter(organization_id=user_organization, report_year=year)
-    form_data = vanpool_report.objects.get(organization_id=user_organization.id, report_year=year, report_month=month)
+    form_data = vanpool_report.objects.get(organization_id=user_organization, report_year=year, report_month=month)
     if form_data.report_date is None:
         new_report = True
     else:
@@ -210,9 +211,9 @@ def Vanpool_expansion_analysis(request):
     orgs = vanpool_expansion_analysis.objects.filter(expired = False).values('organization_id')
     organization_name = organization.objects.filter(id__in=orgs).values('name')
     vp = vanpool_report.objects.all()
-    pv = vp.filter(organization_id__in = orgs, organization = OuterRef('organization'), report_month__isnull = False).order_by('-id').values('id')
-    latest_vanpool = vp.annotate(latest = Subquery(pv[:1])).filter(id = F('latest')).values('report_year', 'report_month','report_date', 'vanpool_groups_in_operation', 'organization_id').order_by('organization_id')
-
+    pv = vp.filter(organization_id__in = orgs, organization = OuterRef('organization'), report_month__isnull = False, vanpool_groups_in_operation__isnull=False).order_by('-id').values('id')
+    latest_vanpool = vp.annotate(latest = Subquery(pv[:1])).filter(id = F('latest')).values('report_year', 'report_month', 'vanpool_groups_in_operation', 'organization_id').order_by('organization_id')
+    print(latest_vanpool)
     # filters out the max vanpool
     award_date = vanpool_expansion_analysis.objects.filter(expired=False).dates('date_of_award', 'month')
     award_date = award_date[0]
@@ -222,7 +223,7 @@ def Vanpool_expansion_analysis(request):
     van_max_list = []
     # had to use a for loop since there's nothing easier really
     for i in van_max:
-        vpr  = vanpool_report.objects.filter(organization_id = i['organization'], vanpool_groups_in_operation = i['max_van'], report_year__gte=award_year,report_month__gte=award_month).values('id','report_year', 'report_month', 'report_date', 'vanpool_groups_in_operation', 'organization_id')
+        vpr = vanpool_report.objects.filter(organization_id = i['organization'], vanpool_groups_in_operation = i['max_van'], report_year__gte=award_year,report_month__gte=award_month).values('id','report_year', 'report_month','vanpool_groups_in_operation')
         if len(vpr) > 1:
             vpr = vpr.latest('id')
             van_max_list.append(vpr)
@@ -253,7 +254,7 @@ def Vanpool_expansion_analysis(request):
         award_year = org['date_of_award'].year
         goal = round(org['expansion_vans_awarded']*.8, 0) + org['vanpools_in_service_at_time_of_award']
         org_id = org['organization_id']
-        goal = vanpool_report.objects.filter(organization_id = org_id, report_year__gte=award_year,report_month__gte=award_month, vanpool_groups_in_operation__gte=goal).values('id','report_year', 'report_month', 'report_date', 'vanpool_groups_in_operation', 'organization_id')
+        goal = vanpool_report.objects.filter(organization_id = org_id, report_year__gte=award_year,report_month__gte=award_month, vanpool_groups_in_operation__gte=goal).values('id','report_year', 'report_month', 'vanpool_groups_in_operation', 'organization_id')
         if goal.exists():
             expansion_goal.append(goal.earliest('id'))
         else:
@@ -347,7 +348,7 @@ def Vanpool_data(request):
 
     else:
         defualt_chart_time_frame = 36
-        user_organization_id = profile.objects.get(id=request.user.id).organization_id
+        user_organization_id = profile.objects.get(custom_user_id=request.user.id).organization_id
         user_organization = organization.objects.get(id=user_organization_id)
 
         form = chart_form(initial={'chart_organizations': user_organization,

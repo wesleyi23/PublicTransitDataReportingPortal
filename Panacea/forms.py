@@ -2,7 +2,7 @@ from django import forms
 from django.contrib.auth import password_validation, login
 from django.contrib.auth.forms import UserChangeForm, AuthenticationForm
 import datetime
-from .models import custom_user, profile, organization, ReportType, vanpool_report
+from .models import custom_user, profile, organization, ReportType, vanpool_report, vanpool_expansion_analysis
 from django.utils.translation import gettext, gettext_lazy as _
 from phonenumber_field.formfields import PhoneNumberField
 from localflavor.us.forms import USStateSelect, USZipCodeField
@@ -146,6 +146,94 @@ class VanpoolMonthlyReport(forms.ModelForm):
     acknowledge_validation_errors = forms.BooleanField(label= 'Check this box to confirm that your submitted numbers are correct, even though there are validation errors.',
                                                               widget = forms.CheckboxInput(attrs={'class': 'checkbox form-control'}))
 
+
+    def validate_vanshare_groups_in_operation(self, error_list):
+        data_submitted = self.cleaned_data['vanshare_groups_in_operation']
+        vanop =vanpool_report.objects.all(organization_id = self.user_organization, vanshare_groups_in_operation__isnull = False,
+        vanshare_group_starts__isnull  = False, vanshare_group_folds__isnull = False).latest('id').values('vanshare_groups_in_operation', 'vanshare_group_starts', 'vanshare_group_folds')
+        if data_submitted != (vanop.vanshare_groups_in_operation + vanop.vanshare_group_starts - vanop.vanshare_group_folds):
+            error_list.append('The Vanshare Groups in Operation do not reflect the folds and started recorded last month')
+        return error_list
+
+    def validate_vanshare_miles_traveled(self, error_list):
+        data_submitted = self.cleaned_data['vanshare_miles_traveled']
+        vanmiles = vanpool_report.objects.all(organization_id=self.user_organization, vanshare_miles_traveled__isnull = False).latest('id').values('vanshare_miles_traveled')
+        if (vanmiles.vanshare_miles_traveled - data_submitted)/vanmiles.vanshare_miles_traveled >=.2:
+            error_list.append('Vanshare miles have increased more than 20%. Please confirm this mileage')
+        elif (vanmiles.vanshare_miles_traveled - data_submitted)/vanmiles.vanshare_miles_traveled <= -.2:
+            error_list.append('Vanshare miles have decreased more than 20%. Please confirm this mileage')
+        return error_list
+
+    def validate_vanshare_psgr_trips(self, error_list):
+        data_submitted = self.cleaned_data['vanshare_passenger_trips']
+        vanmiles = vanpool_report.objects.all(organization_id=self.user_organization, vanshare_passenger_trips__isnull = False).latest('id').values('vanshare_passenger_trips')
+        if (vanmiles.vanshare_passenger_trips - data_submitted) / vanmiles.vanshare_passenger_trips >= .2:
+            error_list.append('Vanshare passenger trips have increased more than 20%. Please confirm this trip number')
+        elif (vanmiles.vanshare_passenger_trips - data_submitted) / vanmiles.vanshare_passenger_trips <= -.2:
+            error_list.append('Vanshare passenger trips have decreased more than 20%. Please confirm this trip number')
+        return error_list
+
+    def validate_vanpool_groups_in_operation(self, error_list):
+        data_submitted = self.cleaned_data['vanpool_groups_in_operation']
+        vanop =vanpool_report.objects.filter(organization_id = self.user_organization, vanpool_group_folds__isnull= False, vanpool_groups_in_operation__isnull= False, vanpool_group_starts__isnull=False).latest('id')
+        if data_submitted != (vanop.vanpool_groups_in_operation + vanop.vanpool_group_starts - vanop.vanpool_group_folds):
+            error_list.append('The Vanpool Groups in Operation do not reflect the folds and started recorded last month')
+        return error_list
+
+
+    def validate_vp_miles_traveled(self, error_list):
+        data_submitted = self.cleaned_data['vanpool_miles_traveled']
+        vanmiles = vanpool_report.objects.filter(organization_id=self.user_organization, vanpool_miles_traveled__isnull = False).latest('id')
+        if (data_submitted -vanmiles.vanpool_miles_traveled)/vanmiles.vanpool_miles_traveled >=.2:
+            error_list.append('Vanpool miles have increased more than 20%. Please confirm this mileage')
+        elif (data_submitted - vanmiles.vanpool_miles_traveled)/vanmiles.vanpool_miles_traveled <= -.2:
+            error_list.append('Vanpool miles have decreased more than 20%. Please confirm this mileage')
+        return error_list
+
+
+    def clean_psgr_trips(self, error_list):
+        vanpool_passenger_trips = self.cleaned_data['vanpool_passenger_trips']
+        vanmiles = vanpool_report.objects.filter(organization_id=self.user_organization, vanpool_passenger_trips__isnull= False).latest('id')
+        if (vanpool_passenger_trips - vanmiles.vanpool_passenger_trips) / vanmiles.vanpool_passenger_trips >= .2:
+            error_list.append('Vanpool passenger trips have increased more than 20%. Please confirm this trip number')
+        elif (vanpool_passenger_trips - vanmiles.vanpool_passenger_trips) / vanmiles.vanpool_passenger_trips <= -.2:
+            error_list.append('Vanpool passenger trips have decreased more than 20%. Please confirm this trip number')
+        return error_list
+
+# TODO Have to rework this so I only throw one validation errror per method, and I guess put them in a list or something
+
+    def clean(self):
+        cleaned_data = super(VanpoolMonthlyReport, self).clean()
+        print(cleaned_data)
+        validator_necessary = vanpool_report.objects.get(id=self.record_id).report_date
+        error_list = []
+        try:
+            if cleaned_data['acknowledge_validation_errors'] == False:
+                if validator_necessary == None:
+                    error_list = self.clean_psgr_trips(error_list)
+                    error_list = self.validate_vp_miles_traveled(error_list)
+                    error_list = self.validate_vanpool_groups_in_operation(error_list)
+                    if cleaned_data['vanshare_groups_in_operation'] != None:
+                        error_list = self.validate_vanshare_groups_in_operation(error_list)
+                        error_list = self.validate_vanshare_psgr_trips(error_list)
+                        error_list = self.validate_vanshare_miles_traveled(error_list)
+                if len(error_list) > 0:
+                    raise forms.ValidationError(error_list)
+                return cleaned_data
+            else:
+                return cleaned_data
+        except:
+            if validator_necessary == None:
+                error_list = self.clean_psgr_trips(error_list)
+                error_list = self.validate_vp_miles_traveled(error_list)
+                error_list = self.validate_vanpool_groups_in_operation(error_list)
+                if cleaned_data['vanshare_groups_in_operation'] != None:
+                    error_list = self.validate_vanshare_groups_in_operation(error_list)
+                    error_list = self.validate_vanshare_psgr_trips(error_list)
+                    error_list = self.validate_vanshare_miles_traveled(error_list)
+            if len(error_list) > 0:
+                raise forms.ValidationError(error_list)
+            return cleaned_data
 
     class Meta:
         model = vanpool_report
@@ -318,3 +406,51 @@ class chart_form(forms.Form):
     chart_time_frame = forms.CharField(widget=forms.Select(choices=TIMEFRAME_CHOICES,
                                                            attrs={'class': 'form-control my_chart_control',
                                                                   'data-form-name': "chart_form"}))
+
+class submit_a_new_vanpool_expansion(forms.ModelForm):
+    queryset = organization.objects.all()
+    organization = forms.ModelChoiceField(queryset=queryset,
+                                              widget=forms.Select(attrs={'class': 'form-control form-control-user'}))
+
+    def as_myp(self):
+
+        return self._html_output(
+                normal_row='<p%(html_class_attr)s>%(label)s</p> <p>%(field)s%(help_text)s</p>',
+                error_row='%s',
+                row_ender='</p>',
+                help_text_html=' <span class="helptext">%s</span>',
+                errors_on_separate_row=True)
+
+    class Meta:
+        model = vanpool_expansion_analysis
+        fields = ['organization', 'date_of_award', 'expansion_vans_awarded', 'latest_vehicle_acceptance',
+                      'extension_granted', 'vanpools_in_service_at_time_of_award', 'expired', 'notes']
+        required = ['organization', 'date_of_award', 'expansion_vans_awarded', 'latest_vehicle_acceptance',
+                        'extension_granted', 'vanpools_in_service_at_time_of_award', 'expired']
+
+        labels = {'organization': False,
+                      'date_of_award': 'When was the vanpool expansion awarded? Use format YYYY-MM-DD',
+                      'expansion_vans_awarded': 'Number of vans awarded in the expansion',
+                      'latest_vehicle_acceptance': 'Latest date that vehicle was accepted? Use format YYYY-MM-DD',
+                      'extension_granted': 'Extenstion Granted? Set this to no',
+                      'vanpools_in_service_at_time_of_award': 'Vanpools in service at time of award',
+                      'expired': 'Has the expansion award expired? Set this to no (as it is used later for reporting)',
+                      'Notes': False
+
+                      }
+
+        widgets = {
+                'date_of_award': forms.DateInput(),
+                'latest_vehicle_acceptance': forms.DateInput(),
+                'expansion_vans_awarded': forms.NumberInput(),
+                'vanpools_in_service_at_time_of_award': forms.NumberInput(),
+
+            }
+
+class Modify_A_Vanpool_Expansion(forms.ModelForm):
+    class Meta:
+        model = vanpool_expansion_analysis
+        fields = ['expansion_vans_awarded', 'latest_vehicle_acceptance', 'notes']
+        widgets = {'expansion_vans_awarded': forms.NumberInput(), 'latest_vehicle_acceptance': forms.DateInput(),
+                       'notes': forms.TextInput()}
+
