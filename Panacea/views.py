@@ -519,72 +519,43 @@ def Help(request):
 def logout_view(request):
     logout(request)
 
+
+def percent_change_calculation(totals, label):
+    percent_change = []
+    count = 0
+    # calculating the percent change in this for loop because its messy as hell otherwise
+    for idx, val in enumerate(totals):
+        if count == 0:
+            percent_change.append('N/A')
+            count += 1
+        else:
+            try:
+                percent = round(((val[label] - totals[idx - 1][label]) / totals[idx - 1][label]) * 100, 2)
+                percent_change.append(percent)
+            except ZeroDivisionError:
+                percent_change.append('N/A')
+    return percent_change
+
+
+
 @login_required(login_url='/Panacea/login')
 def Operation_Summary(request):
     total_vp = vanpool_report.objects.values('report_year').annotate(Sum('vanpool_groups_in_operation')).filter(report_month=12, vanpool_groups_in_operation__isnull=False)
     years = [i['report_year'] for i in total_vp]
     print(years)
     total_vp = vanpool_report.objects.values('report_year').annotate(Sum('vanpool_groups_in_operation')).filter(report_month = 12, vanpool_groups_in_operation__isnull=False)
-    vp_percent_change = []
-    count = 0
-    # calculating the percent change in this for loop because its messy as hell otherwise
-    for idx, val in enumerate(total_vp):
-        if count ==0:
-            vp_percent_change.append('N/A')
-            count+=1
-        else:
-            percent = round(((val['vanpool_groups_in_operation__sum']-total_vp[idx-1]['vanpool_groups_in_operation__sum'])/total_vp[idx-1]['vanpool_groups_in_operation__sum'])*100, 2)
-            vp_percent_change.append(percent)
-
+    vp_percent_change = percent_change_calculation(total_vp, 'vanpool_groups_in_operation__sum')
     total_vs =vanpool_report.objects.values('report_year').annotate(Sum('vanshare_groups_in_operation')).filter(report_month = 12, vanshare_groups_in_operation__isnull=False)
-    # doing the same thing with vanshare
-    vs_percent_change = []
-    count = 0
-    for idx, val in enumerate(total_vs):
-        if count ==0:
-            vs_percent_change.append('N/A')
-            count+=1
-        else:
-            try:
-                percent = round(((val['vanshare_groups_in_operation__sum']-total_vs[idx-1]['vanshare_groups_in_operation__sum'])/total_vs[idx-1]['vanshare_groups_in_operation__sum'])*100, 2)
-            except ZeroDivisionError:
-                percent = 'N/A'
-            vs_percent_change.append(percent)
-
-    # doing starts percent change
+    vs_percent_change = percent_change_calculation(total_vs, 'vanshare_groups_in_operation__sum')
     total_starts = vanpool_report.objects.values('report_year').annotate(Sum('vanpool_group_starts')).filter(vanpool_groups_in_operation__isnull=False)
-    starts_percent_change = []
-    count = 0
-    for idx, val in enumerate(total_starts):
-        if count == 0:
-            starts_percent_change.append('N/A')
-            count += 1
-        else:
-            try:
-                percent = round(((val['vanpool_group_starts__sum'] - total_starts[idx - 1]['vanpool_group_starts__sum']) / total_starts[idx - 1]['vanpool_group_starts__sum']) * 100,2)
-            except ZeroDivisionError:
-                percent = 'N/A'
-            starts_percent_change.append(percent)
+    starts_percent_change = percent_change_calculation(total_starts, 'vanpool_group_starts__sum')
+    total_folds = vanpool_report.objects.values('report_year').annotate(Sum('vanpool_group_folds')).filter(vanpool_groups_in_operation__isnull=False)
+    folds_percent_change = percent_change_calculation(total_folds, 'vanpool_group_folds__sum')
     zipped = zip(total_starts, total_vp)
     starts_as_a_percent = []
     for i in zipped:
         percent = round((i[0]['vanpool_group_starts__sum']/i[1]['vanpool_groups_in_operation__sum'])*100, 2)
         starts_as_a_percent.append(percent)
-
-
-    # heres a block for folds
-    total_folds = vanpool_report.objects.values('report_year').annotate(Sum('vanpool_group_folds')).filter(vanpool_groups_in_operation__isnull=False)
-    folds_percent_change = []
-    count = 0
-    for idx, val in enumerate(total_folds):
-        if count == 0:
-            folds_percent_change.append('N/A')
-            count += 1
-        else:
-            percent = round(((val['vanpool_group_folds__sum'] - total_folds[idx - 1]['vanpool_group_folds__sum']) /
-                             total_folds[idx - 1]['vanpool_group_folds__sum']) * 100, 2)
-            folds_percent_change.append(percent)
-
     folds_as_a_percent = []
     zipped = zip(total_folds, total_vp)
     for i in zipped:
@@ -596,11 +567,21 @@ def Operation_Summary(request):
         net_vanpool.append(start['vanpool_group_starts__sum'] - fold['vanpool_group_folds__sum'])
     avg_riders = vanpool_report.objects.values('report_year').annotate(Avg('average_riders_per_van')).filter(vanpool_groups_in_operation__isnull=False)
     avg_miles = vanpool_report.objects.values('report_year').annotate(Avg('average_round_trip_miles')).filter(vanpool_groups_in_operation__isnull=False)
+    print(avg_riders)
+    print(avg_miles)
+    vp_totals = zip(total_vp, vp_percent_change)
+    vs_totals = zip(total_vs, vs_percent_change)
+    starts = zip(total_starts, starts_percent_change)
+    folds = zip(total_folds, folds_percent_change)
+    empty_list = ['']*len(total_vp)
+    starts_as_percent = zip(starts_as_a_percent, empty_list)
+    folds_as_percent = zip(folds_as_a_percent, empty_list)
+    net_vans = zip(net_vanpool, empty_list)
+    average_riders = zip(avg_riders, empty_list)
+    average_miles = zip(avg_miles, empty_list)
 
-
-#TODO going to have to pass in rows of full percent length and empty rows that are just lists, and push them throuh in non zipped form, so that it fills the relevant columns, break everything out by category, basically
-    column_list = zip(total_vp, vp_percent_change, total_vs, vs_percent_change, total_starts, starts_percent_change, starts_as_a_percent, total_folds, folds_percent_change, folds_as_a_percent, net_vanpool, avg_riders, avg_miles)
-    return render(request, 'pages/OperationSummary.html', {'data':column_list, 'years':years})
+    return render(request, 'pages/OperationSummary.html', {'vp_totals': vp_totals, 'vs_totals': vs_totals, 'starts':starts, 'folds': folds, 'starts_as_a_percent': starts_as_percent,
+            'folds_as_percent': folds_as_percent, 'net_vans': net_vans, 'average_riders': average_riders, 'average_miles': average_miles, 'years':years})
 
 def Vanpool_Growth(request):
 
