@@ -137,8 +137,11 @@ def handler404(request, exception):
 
 @login_required(login_url='/Panacea/login')
 def Vanpool_report(request, year=None, month=None):
+    # Set form parameters
     user_organization = profile.objects.get(custom_user_id=request.user.id).organization_id
     organization_data = vanpool_report.objects.filter(organization_id=user_organization)
+
+    # logic to select the most recent form or the form requested through the URL
     if not year:
         organization_data_incomplete = organization_data.filter(report_date=None)
         start_year = organization_data_incomplete \
@@ -151,34 +154,43 @@ def Vanpool_report(request, year=None, month=None):
         month = start_month
     elif not month:
         month = 1
+
+    # Logic to hide year selectors
     min_year = organization_data.all().aggregate(Min('report_year')).get('report_year__min') == year
     max_year = organization_data.all().aggregate(Max('report_year')).get('report_year__max') == year
 
-
+    #TODO what his this???
     past_report_data = vanpool_report.objects.filter(organization_id=user_organization, report_year=year)
+
+    # Instance data to link form to data
     form_data = vanpool_report.objects.get(organization_id=user_organization, report_year=year, report_month=month)
+
+    # Logic if form is a new report or is an existing report
     if form_data.report_date is None:
         new_report = True
     else:
         new_report = False
 
+    # Respond to request
     if request.method == 'POST':
-        form = VanpoolMonthlyReport(user_organization = user_organization, data=request.POST, instance=form_data, record_id = form_data.id)
+
+        form = VanpoolMonthlyReport(user_organization=user_organization, data=request.POST, instance=form_data, record_id=form_data.id)
         if form.is_valid():
             form.save()
-            successful_submit = True
+            successful_submit = True  # Triggers a modal that says the form was submitted
             new_report = False
         else:
+            print("failed")
+            print(form.errors)
             successful_submit = False
 
+    # If not POST
     else:
-        form = VanpoolMonthlyReport(user_organization = user_organization, instance=form_data, record_id = form_data.id)
+        form = VanpoolMonthlyReport(user_organization=user_organization, instance=form_data, record_id=form_data.id)
         successful_submit = False
 
     if not new_report:
-        form.fields['data_change_explanation'].required = True
-
-
+        form.fields['new_data_change_explanation'].required = True
 
     return render(request, 'pages/Vanpool_report.html', {'form': form,
                                                          'past_report_data': past_report_data,

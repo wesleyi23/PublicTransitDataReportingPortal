@@ -133,20 +133,19 @@ class ReportSelection(forms.ModelForm):
 
 class VanpoolMonthlyReport(forms.ModelForm):
 
-
     def __init__(self, user_organization, record_id, *args, **kwargs):
         self.user_organization = user_organization
         self.record_id = record_id
         super(VanpoolMonthlyReport, self).__init__(*args, **kwargs)
 
-
     new_data_change_explanation = forms.CharField(widget=forms.Textarea(
-        attrs={'required': True, 'class': 'form-control input-sm', 'rows': 3})
-    ),
+        attrs={'required': True, 'class': 'form-control', 'rows': 3})
+    )
+
     acknowledge_validation_errors = forms.BooleanField(label= 'Check this box to confirm that your submitted numbers are correct, even though there are validation errors.',
-                                                              widget = forms.CheckboxInput(attrs={'class': 'checkbox form-control'}))
+                                                              widget=forms.CheckboxInput(attrs={'class': 'checkbox', 'style': 'zoom:200%;margin-right:.35rem'}))
 
-
+    # region FORM VALIDATORS
     def validate_vanshare_groups_in_operation(self, error_list):
         data_submitted = self.cleaned_data['vanshare_groups_in_operation']
         vanop =vanpool_report.objects.all(organization_id = self.user_organization, vanshare_groups_in_operation__isnull = False,
@@ -184,9 +183,9 @@ class VanpoolMonthlyReport(forms.ModelForm):
     def validate_vp_miles_traveled(self, error_list):
         data_submitted = self.cleaned_data['vanpool_miles_traveled']
         vanmiles = vanpool_report.objects.filter(organization_id=self.user_organization, vanpool_miles_traveled__isnull = False).latest('id')
-        if (data_submitted -vanmiles.vanpool_miles_traveled)/vanmiles.vanpool_miles_traveled >=.2:
+        if (data_submitted - vanmiles.vanpool_miles_traveled) / vanmiles.vanpool_miles_traveled >= 0.2:
             error_list.append('Vanpool miles have increased more than 20%. Please confirm this mileage')
-        elif (data_submitted - vanmiles.vanpool_miles_traveled)/vanmiles.vanpool_miles_traveled <= -.2:
+        elif (data_submitted - vanmiles.vanpool_miles_traveled) / vanmiles.vanpool_miles_traveled <= -0.2:
             error_list.append('Vanpool miles have decreased more than 20%. Please confirm this mileage')
         return error_list
 
@@ -199,6 +198,7 @@ class VanpoolMonthlyReport(forms.ModelForm):
         elif (vanpool_passenger_trips - vanmiles.vanpool_passenger_trips) / vanmiles.vanpool_passenger_trips <= -.2:
             error_list.append('Vanpool passenger trips have decreased more than 20%. Please confirm this trip number')
         return error_list
+    # endregion
 
 # TODO Have to rework this so I only throw one validation errror per method, and I guess put them in a list or something
 
@@ -274,14 +274,17 @@ class VanpoolMonthlyReport(forms.ModelForm):
     # TODO test how easily the fields can be extracted
     def save(self, commit=True):
         instance = super(VanpoolMonthlyReport, self).save(commit=False)
-        if self.cleaned_data['data_change_explanation'] != None:
+        print("save")
+        # print("data: " + self.cleaned_data['new_data_change_explanation'])
+
+        if self.cleaned_data['new_data_change_explanation'] != None:
             past_explanations = vanpool_report.objects.get(id=instance.id).data_change_explanation
             if past_explanations is None:
                 past_explanations = ""
             instance.data_change_explanation = past_explanations + \
                                            "{'edit_date':'" + str(datetime.date.today()) + \
                                            "','explanation':'" + self.cleaned_data[
-                                               'data_change_explanation'] + "'},"
+                                               'new_data_change_explanation'] + "'},"
 
             past_data_change_record = vanpool_report.objects.get(id=instance.id).data_change_record
             if past_data_change_record is None:
