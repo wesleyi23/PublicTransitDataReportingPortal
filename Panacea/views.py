@@ -179,6 +179,8 @@ def Vanpool_report(request, year=None, month=None):
             form.save()
             successful_submit = True  # Triggers a modal that says the form was submitted
             new_report = False
+
+        #TODO Fix this show it shows the form
         else:
             print("failed")
             print(form.errors)

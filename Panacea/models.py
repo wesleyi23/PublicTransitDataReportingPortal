@@ -236,9 +236,9 @@ def create_user_profile(sender, instance, created, **kwargs):
         profile.objects.create(custom_user=instance)
 
 
-# @receiver(post_save, sender=custom_user)
-# def save_user_profile(sender, instance, **kwargs):
-#     instance.profile.save()
+@receiver(post_save, sender=custom_user)
+def save_user_profile(sender, instance, **kwargs):
+    instance.profile.save()
 
 class vanpool_expansion_analysis(models.Model):
     organization = models.ForeignKey(organization, on_delete=models.PROTECT, related_name = '+')

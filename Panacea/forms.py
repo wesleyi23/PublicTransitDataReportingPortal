@@ -7,6 +7,8 @@ from django.utils.translation import gettext, gettext_lazy as _
 from phonenumber_field.formfields import PhoneNumberField
 from localflavor.us.forms import USStateSelect, USZipCodeField
 from django.core import serializers
+from tempus_dominus.widgets import DatePicker
+from .widgets import FengyuanChenDatePickerInput
 
 
 class CustomUserCreationForm(forms.ModelForm):
@@ -105,8 +107,36 @@ class ProfileSetup_PhoneAndOrg(forms.ModelForm):
         }
 
 
+class user_profile_custom_user(forms.ModelForm):
+
+    class Meta:
+        model = custom_user
+        fields = ('first_name', 'last_name', 'email')
+        widgets = {
+            'first_name': forms.TextInput(
+                attrs={'class': 'form-control-plaintext'}),
+            'last_name': forms.TextInput(attrs={'class': 'form-control-plaintext', 'readonly': 'True'}),
+            'email': forms.EmailInput(
+                attrs={'class': 'form-control-plaintext', 'readonly': 'True'}),
+        }
+
+
+class user_profile_profile(forms.ModelForm):
+
+    class Meta:
+        model = profile
+        queryset = organization.objects.all()
+        fields = ('telephone_number', 'job_title')
+        widgets = {
+            'telephone_number': forms.TextInput(
+                attrs={'class': 'form-control-plaintext', 'readonly': 'True'}),
+            'job_title': forms.TextInput(
+                attrs={'class': 'form-control-plaintext', 'readonly': 'True'})
+        }
+
+
 class PhoneOrgSetup(forms.ModelForm):
-    queryset = organization.objects.all()
+    queryset = organization.objects.all().order_by('name')
 
     telephone_number = PhoneNumberField(widget=forms.TextInput(attrs={'class': 'form-control form-control-user'}),
                                         label=_("Phone number:"), required=True)
@@ -143,13 +173,13 @@ class VanpoolMonthlyReport(forms.ModelForm):
     )
 
     acknowledge_validation_errors = forms.BooleanField(label= 'Check this box to confirm that your submitted numbers are correct, even though there are validation errors.',
-                                                              widget=forms.CheckboxInput(attrs={'class': 'checkbox', 'style': 'zoom:200%;margin-right:.35rem'}))
+                                                       widget=forms.CheckboxInput(attrs={'class': 'checkbox', 'style': 'zoom:200%;margin-right:.35rem'}))
 
     # region FORM VALIDATORS
     def validate_vanshare_groups_in_operation(self, error_list):
         data_submitted = self.cleaned_data['vanshare_groups_in_operation']
         vanop =vanpool_report.objects.all(organization_id = self.user_organization, vanshare_groups_in_operation__isnull = False,
-        vanshare_group_starts__isnull  = False, vanshare_group_folds__isnull = False).latest('id').values('vanshare_groups_in_operation', 'vanshare_group_starts', 'vanshare_group_folds')
+                                          vanshare_group_starts__isnull  = False, vanshare_group_folds__isnull = False).latest('id').values('vanshare_groups_in_operation', 'vanshare_group_starts', 'vanshare_group_folds')
         if data_submitted != (vanop.vanshare_groups_in_operation + vanop.vanshare_group_starts - vanop.vanshare_group_folds):
             error_list.append('The Vanshare Groups in Operation do not reflect the folds and started recorded last month')
         return error_list
@@ -200,13 +230,14 @@ class VanpoolMonthlyReport(forms.ModelForm):
         return error_list
     # endregion
 
-# TODO Have to rework this so I only throw one validation errror per method, and I guess put them in a list or something
+    # TODO Have to rework this so I only throw one validation errror per method, and I guess put them in a list or something
 
     def clean(self):
         cleaned_data = super(VanpoolMonthlyReport, self).clean()
         print(cleaned_data)
         validator_necessary = vanpool_report.objects.get(id=self.record_id).report_date
         error_list = []
+        #
         try:
             if cleaned_data['acknowledge_validation_errors'] == False:
                 if validator_necessary == None:
@@ -282,9 +313,9 @@ class VanpoolMonthlyReport(forms.ModelForm):
             if past_explanations is None:
                 past_explanations = ""
             instance.data_change_explanation = past_explanations + \
-                                           "{'edit_date':'" + str(datetime.date.today()) + \
-                                           "','explanation':'" + self.cleaned_data[
-                                               'new_data_change_explanation'] + "'},"
+                                               "{'edit_date':'" + str(datetime.date.today()) + \
+                                               "','explanation':'" + self.cleaned_data[
+                                                   'new_data_change_explanation'] + "'},"
 
             past_data_change_record = vanpool_report.objects.get(id=instance.id).data_change_record
             if past_data_change_record is None:
@@ -294,35 +325,6 @@ class VanpoolMonthlyReport(forms.ModelForm):
         if commit:
             instance.save()
         return instance
-
-
-class user_profile_custom_user(forms.ModelForm):
-
-    class Meta:
-        model = custom_user
-        fields = ('first_name', 'last_name', 'email')
-        widgets = {
-            'first_name': forms.TextInput(
-                attrs={'class': 'form-control-plaintext'}),
-            'last_name': forms.TextInput(attrs={'class': 'form-control-plaintext', 'readonly': 'True'}),
-            'email': forms.EmailInput(
-                attrs={'class': 'form-control-plaintext', 'readonly': 'True'}),
-        }
-
-
-class user_profile_profile(forms.ModelForm):
-
-
-    class Meta:
-        model = profile
-        queryset = organization.objects.all()
-        fields = ('telephone_number', 'job_title')
-        widgets = {
-            'telephone_number': forms.TextInput(
-                attrs={'class': 'form-control-plaintext', 'readonly': 'True'}),
-            'job_title': forms.TextInput(
-                attrs={'class': 'form-control-plaintext', 'readonly': 'True'})
-        }
 
 
 class organization_profile(forms.ModelForm):
@@ -410,50 +412,63 @@ class chart_form(forms.Form):
                                                            attrs={'class': 'form-control my_chart_control',
                                                                   'data-form-name': "chart_form"}))
 
+
 class submit_a_new_vanpool_expansion(forms.ModelForm):
-    queryset = organization.objects.all()
+    queryset = organization.objects.all().order_by('name')
     organization = forms.ModelChoiceField(queryset=queryset,
-                                              widget=forms.Select(attrs={'class': 'form-control form-control-user'}))
-
+                                          widget=forms.Select(attrs={'class': 'form-control'}))
+    date_of_award = forms.DateTimeField(input_formats=['%Y-%m-%d'],
+                                        widget=forms.DateInput(attrs={'class': 'form-control'}))
+    latest_vehicle_acceptance = forms.DateTimeField(input_formats=['%Y-%m-%d'],
+                                                    widget=forms.DateInput(attrs={'class': 'form-control'}))
+    #TODO is this used?
     def as_myp(self):
-
         return self._html_output(
-                normal_row='<p%(html_class_attr)s>%(label)s</p> <p>%(field)s%(help_text)s</p>',
-                error_row='%s',
-                row_ender='</p>',
-                help_text_html=' <span class="helptext">%s</span>',
-                errors_on_separate_row=True)
+            normal_row='<p%(html_class_attr)s>%(label)s</p> <p>%(field)s%(help_text)s</p>',
+            error_row='%s',
+            row_ender='</p>',
+            help_text_html=' <span class="helptext">%s</span>',
+            errors_on_separate_row=True)
 
     class Meta:
         model = vanpool_expansion_analysis
+
         fields = ['organization', 'date_of_award', 'expansion_vans_awarded', 'latest_vehicle_acceptance',
-                      'extension_granted', 'vanpools_in_service_at_time_of_award', 'expired', 'notes']
+                  'vanpools_in_service_at_time_of_award',  'notes']
         required = ['organization', 'date_of_award', 'expansion_vans_awarded', 'latest_vehicle_acceptance',
-                        'extension_granted', 'vanpools_in_service_at_time_of_award', 'expired']
+                    'extension_granted', 'vanpools_in_service_at_time_of_award', 'expired']
 
         labels = {'organization': False,
-                      'date_of_award': 'When was the vanpool expansion awarded? Use format YYYY-MM-DD',
-                      'expansion_vans_awarded': 'Number of vans awarded in the expansion',
-                      'latest_vehicle_acceptance': 'Latest date that vehicle was accepted? Use format YYYY-MM-DD',
-                      'extension_granted': 'Extenstion Granted? Set this to no',
-                      'vanpools_in_service_at_time_of_award': 'Vanpools in service at time of award',
-                      'expired': 'Has the expansion award expired? Set this to no (as it is used later for reporting)',
-                      'Notes': False
-
-                      }
+                  'date_of_award': 'When was the vanpool expansion awarded? Use format YYYY-MM-DD',
+                  'expansion_vans_awarded': 'Number of vans awarded in the expansion',
+                  'latest_vehicle_acceptance': 'Latest date that vehicle was accepted? Use format YYYY-MM-DD',
+                  'extension_granted': 'Extenstion Granted? Set this to no',
+                  'vanpools_in_service_at_time_of_award': 'Vanpools in service at time of award',
+                  'expired': 'Has the expansion award expired? Set this to no (as it is used later for reporting)',
+                  'Notes': False
+                  }
 
         widgets = {
-                'date_of_award': forms.DateInput(),
-                'latest_vehicle_acceptance': forms.DateInput(),
-                'expansion_vans_awarded': forms.NumberInput(),
-                'vanpools_in_service_at_time_of_award': forms.NumberInput(),
+            # 'date_of_award': forms.DateInput(attrs={'class': 'form-control'}),
+            'latest_vehicle_acceptance': forms.DateInput(attrs={'class': 'form-control'}),
+            'expansion_vans_awarded': forms.NumberInput(attrs={'class': 'form-control'}),
+            'vanpools_in_service_at_time_of_award': forms.NumberInput(attrs={'class': 'form-control'}),
+            'notes': forms.Textarea(attrs={'class': 'form-control', 'rows':3})
+        }
 
-            }
 
 class Modify_A_Vanpool_Expansion(forms.ModelForm):
     class Meta:
         model = vanpool_expansion_analysis
-        fields = ['expansion_vans_awarded', 'latest_vehicle_acceptance', 'notes']
-        widgets = {'expansion_vans_awarded': forms.NumberInput(), 'latest_vehicle_acceptance': forms.DateInput(),
-                       'notes': forms.TextInput()}
+        latest_vehicle_acceptance = forms.DateTimeField(input_formats=['%Y-%m-%d'],
+                                                        widget=forms.DateInput(attrs={'class': 'form-control'}))
+
+        fields = ['expansion_vans_awarded', 'latest_vehicle_acceptance', 'extension_granted', 'expired', 'notes']
+        widgets = {'expansion_vans_awarded': forms.NumberInput(attrs={'class': 'form-control'}),
+                   'notes': forms.Textarea(attrs={'class': 'form-control', 'rows':3, 'style': 'max-width:600px'}),
+                   'extension_granted': forms.CheckboxInput(attrs={'class': 'form-control', 'style': 'width:auto;zoom:200%'}),
+                   'expired': forms.CheckboxInput(attrs={'class': 'form-control',
+                                                         'style': 'width:auto;zoom:200%;float:left;margin-right:0.5rem',
+                                                         'disabled': 'disabled'})
+                   }
 
