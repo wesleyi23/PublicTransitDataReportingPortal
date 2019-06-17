@@ -64,24 +64,24 @@ def index(request):
 
 @login_required(login_url='/Panacea/login')
 def dashboard(request):
-    myProfile = profile.objects.get(custom_user=request.user)
-    if myProfile.profile_complete is True:
+    current_user_profile = profile.objects.get(custom_user=request.user)
+    if current_user_profile.profile_complete is True:
         return render(request, 'pages/dashboard.html')
-    elif myProfile.profile_submitted is True:
+    elif current_user_profile.profile_submitted is True:
         return render(request, 'pages/ProfileComplete.html')
     else:
         return redirect('ProfileSetup')
 
-
+# TODO rename forms
 @login_required(login_url='/Panacea/login')
 def ProfileSetup(request):
-    form1 = custom_user_ChangeForm(instance=request.user)
-    myInstance = profile.objects.get(custom_user=request.user.id)
-    form2 = PhoneOrgSetup(instance=myInstance)
-    form3 = ReportSelection(instance=myInstance)
-    return render(request, 'pages/ProfileSetup.html', {'ProfileSetup_PhoneAndOrg': form2,
-                                                       'custom_user_ChangeForm': form1,
-                                                       'ProfileSetup_ReportSelection': form3})
+    user_change_form = custom_user_ChangeForm(instance=request.user)
+    current_user_instance = profile.objects.get(custom_user=request.user.id)
+    phone_org_form = PhoneOrgSetup(instance=current_user_instance)
+    report_selection_form = ReportSelection(instance=current_user_instance)
+    return render(request, 'pages/ProfileSetup.html', {'ProfileSetup_PhoneAndOrg': phone_org_form,
+                                                       'custom_user_ChangeForm': user_change_form,
+                                                       'ProfileSetup_ReportSelection': report_selection_form})
 
 
 @login_required(login_url='/Panacea/login')
@@ -102,9 +102,9 @@ def ProfileSetup_Review(request):
 @login_required(login_url='/Panacea/login')
 def ProfileSetup_PhoneAndOrg(request):
     if request.method == 'POST':
-        myInstance = profile.objects.get(custom_user=request.user.id)
+        current_user_instance = profile.objects.get(custom_user=request.user.id)
         if request.POST:
-            form = PhoneOrgSetup(request.POST, instance=myInstance)
+            form = PhoneOrgSetup(request.POST, instance=current_user_instance)
             if form.is_valid():
                 form.user = request.user
                 form = form.save(commit=False)
@@ -117,18 +117,19 @@ def ProfileSetup_PhoneAndOrg(request):
 @login_required(login_url='/Panacea/login')
 def ProfileSetup_ReportSelection(request):
     if request.method == 'POST':
-        myInstance = profile.objects.get(custom_user=request.user.id)
+        current_user_instance = profile.objects.get(custom_user=request.user.id)
         if request.POST:
-            form = ReportSelection(request.POST, instance=myInstance)
+            form = ReportSelection(request.POST, instance=current_user_instance)
             if form.is_valid():
                 # form.user = request.user
                 form.save()
-                myInstance.profile_submitted = True
-                myInstance.save()
+                current_user_instance.profile_submitted = True
+                current_user_instance.save()
                 profile_created.delay(request.user.id)
                 return JsonResponse({'redirect': '../dashboard'})
             else:
                 return JsonResponse({'error': form.errors})
+
 
 @login_required(login_url = '/Panacea/login')
 def handler404(request, exception):
@@ -159,19 +160,19 @@ def Vanpool_report(request, year=None, month=None):
     min_year = organization_data.all().aggregate(Min('report_year')).get('report_year__min') == year
     max_year = organization_data.all().aggregate(Max('report_year')).get('report_year__max') == year
 
-    #TODO what his this???
+    # TODO rename to something better (this populates the navigation table)
     past_report_data = vanpool_report.objects.filter(organization_id=user_organization, report_year=year)
 
     # Instance data to link form to data
     form_data = vanpool_report.objects.get(organization_id=user_organization, report_year=year, report_month=month)
 
-    # Logic if form is a new report or is an existing report
+    # Logic if form is a new report or is an existing report (Comments are needed before editing an existing reports)
     if form_data.report_date is None:
         new_report = True
     else:
         new_report = False
 
-    # Respond to request
+    # Respond to POST request
     if request.method == 'POST':
 
         form = VanpoolMonthlyReport(user_organization=user_organization, data=request.POST, instance=form_data, record_id=form_data.id)
@@ -237,7 +238,7 @@ def Vanpool_expansion_analysis(request):
     van_max_list = []
     # had to use a for loop since there's nothing easier really
     for i in van_max:
-        vpr = vanpool_report.objects.filter(organization_id = i['organization'], vanpool_groups_in_operation = i['max_van'], report_year__gte=award_year,report_month__gte=award_month).values('id','report_year', 'report_month','vanpool_groups_in_operation')
+        vpr = vanpool_report.objects.filter(organization_id = i['organization'], vanpool_groups_in_operation = i['max_van'], report_year__gte=award_year,report_month__gte=award_month).values('id','report_year', 'report_month', 'vanpool_groups_in_operation')
         if len(vpr) > 1:
             vpr = vpr.latest('id')
             van_max_list.append(vpr)
@@ -304,10 +305,10 @@ def Vanpool_expansion_modify(request, id = None):
     return render(request, 'pages/Vanpool_expansion_modify.html', {'zipped':zipped, 'id': id, 'form':form, 'successful_submit': successful_submit})
 
 
-
 @login_required(login_url='/Panacea/login')
 def Vanpool_data(request):
 
+    # TODO move both of these functions to separate area where they can bereferencedd
     def monthdelta(date, delta):
         delta = -int(delta)
         m, y = (date.month + delta) % 12, date.year + ((date.month) + delta - 1) // 12
@@ -332,31 +333,33 @@ def Vanpool_data(request):
 
     if request.POST:
         form = chart_form(data=request.POST)
+
         if form.is_valid:
             chart_title = form.MEASURE_CHOICES_DICT[form.data['chart_measure']]
             org_list = request.POST.getlist("chart_organizations")
             chart_time_frame = monthdelta(datetime.datetime.now().date(), form.data['chart_time_frame'])
             all_chart_data = [report for report in vanpool_report.objects.filter(organization_id__in=org_list).order_by('organization', 'report_year', 'report_month').all() if
                               chart_time_frame <= report.report_due_date <= datetime.datetime.today().date()]
-            chart_label = [report.report_year_month_label for report
-                           in all_chart_data]
+            chart_label = [report.report_year_month_label for report in all_chart_data]
             chart_label = list(dict.fromkeys(chart_label))
 
-            chart_datasets_filtered = {}
+            chart_datasets = {}
 
             i = 0
             for org in org_list:
                 chart_dataset = [report for report in vanpool_report.objects.filter(organization_id=org).order_by('organization', 'report_year', 'report_month').all() if
                                  chart_time_frame <= report.report_due_date <= datetime.datetime.today().date()]
                 chart_dataset = [getattr(report, form.data['chart_measure']) for report in chart_dataset]
-                chart_datasets_filtered[organization.objects.get(id=org).name] = [json.dumps(list(chart_dataset)), get_color(i)]
+                chart_datasets[organization.objects.get(id=org).name] = [json.dumps(list(chart_dataset)), get_color(i)]
                 i = i + 1
+
+            # TODO make one return statement at end instead of two
 
             return render(request, 'pages/Vanpool_data.html', {'form': form,
                                                                'chart_title': chart_title,
                                                                'chart_measure': form.data['chart_measure'],
                                                                'chart_label': chart_label,
-                                                               'chart_datasets_filtered': chart_datasets_filtered,
+                                                               'chart_datasets_filtered': chart_datasets,
                                                                'org_list': org_list
                                                                })
 
@@ -367,7 +370,7 @@ def Vanpool_data(request):
 
         form = chart_form(initial={'chart_organizations': user_organization,
                                    'chart_measure': 'total_miles_traveled',
-                                   'chart_time_frame': 36})
+                                   'chart_time_frame': defualt_chart_time_frame})
 
         chart_time_frame = monthdelta(datetime.datetime.now().date(), defualt_chart_time_frame)
 
@@ -403,8 +406,6 @@ def Vanpool_data(request):
 @login_required(login_url='/Panacea/login')
 def Vanpool_other(request):
     return render(request, 'pages/Vanpool_other.html', {})
-
-
 
 
 @login_required(login_url='/Panacea/login')
@@ -552,7 +553,6 @@ def percent_change_calculation(totals, label):
     return percent_change
 
 
-
 @login_required(login_url='/Panacea/login')
 def Operation_Summary(request):
     total_vp = vanpool_report.objects.values('report_year').annotate(Sum('vanpool_groups_in_operation')).filter(report_month=12, vanpool_groups_in_operation__isnull=False)
@@ -597,6 +597,7 @@ def Operation_Summary(request):
 
     return render(request, 'pages/OperationSummary.html', {'vp_totals': vp_totals, 'vs_totals': vs_totals, 'starts':starts, 'folds': folds, 'starts_as_a_percent': starts_as_percent,
             'folds_as_percent': folds_as_percent, 'net_vans': net_vans, 'average_riders': average_riders, 'average_miles': average_miles, 'years':years})
+
 
 def Vanpool_Growth(request):
 
