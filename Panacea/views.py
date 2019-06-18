@@ -177,8 +177,7 @@ def Vanpool_report(request, year=None, month=None):
 
     # Respond to POST request
     if request.method == 'POST':
-
-        form = VanpoolMonthlyReport(user_organization=user_organization, data=request.POST, instance=form_data, record_id=form_data.id)
+        form = VanpoolMonthlyReport(user_organization = user_organization, data=request.POST, instance=form_data, record_id = form_data.id, report_month=month, report_year=year)
         if form.is_valid():
             form.save()
             successful_submit = True  # Triggers a modal that says the form was submitted
@@ -186,17 +185,21 @@ def Vanpool_report(request, year=None, month=None):
 
         #TODO Fix this show it shows the form
         else:
-            print("failed")
-            print(form.errors)
+            form = VanpoolMonthlyReport(user_organization=user_organization, data=request.POST, instance=form_data,
+                                       record_id=form_data.id, report_month=month, report_year=year)
             successful_submit = False
 
     # If not POST
     else:
-        form = VanpoolMonthlyReport(user_organization=user_organization, instance=form_data, record_id=form_data.id)
+        form = VanpoolMonthlyReport(user_organization = user_organization, instance=form_data, record_id = form_data.id, report_month=month, report_year=year)
+
+
+
         successful_submit = False
 
     if not new_report:
-        form.fields['new_data_change_explanation'].required = True
+        form.fields['data_change_explanation'].required = True
+
 
     return render(request, 'pages/Vanpool_report.html', {'form': form,
                                                          'past_report_data': past_report_data,
