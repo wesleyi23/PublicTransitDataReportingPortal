@@ -174,7 +174,6 @@ def Vanpool_report(request, year=None, month=None):
             successful_submit = False
 
     else:
-        form_data.data_change_explanation = None
         form = VanpoolMonthlyReport(user_organization = user_organization, instance=form_data, record_id = form_data.id, report_month=month, report_year=year)
 
 
@@ -184,7 +183,6 @@ def Vanpool_report(request, year=None, month=None):
     if not new_report:
         form.fields['data_change_explanation'].required = True
 
-        form.data_change_explanation = None
 
     return render(request, 'pages/Vanpool_report.html', {'form': form,
                                                          'past_report_data': past_report_data,
