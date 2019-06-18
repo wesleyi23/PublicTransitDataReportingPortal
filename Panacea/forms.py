@@ -176,16 +176,12 @@ class VanpoolMonthlyReport(forms.ModelForm):
         attrs={'required': True, 'class': 'form-control input-sm', 'rows': 3, 'display': False})
     ),
     acknowledge_validation_errors = forms.BooleanField(label= 'Check this box to confirm that your submitted numbers are correct, even though there are validation errors.',
-                                                       widget=forms.CheckboxInput(attrs={'class': 'checkbox', 'style': 'zoom:200%;margin-right:.35rem'}))
-
-
-
-
+                                                       widget=forms.CheckboxInput(attrs={'class': 'checkbox', 'style': 'zoom:200%;margin-right:.35rem'}), required=False)
 
     def validator_method(self):
         # instantiate the error list
         error_list = []
-        untracked_categories = ['vanpool_group_starts','vanpool_group_folds', 'vans_available', 'loaner_spare_vans_in_fleet', 'average_riders_per_van', 'average_round_trip_miles', 'data_change_explanation', 'data_change_record']
+        untracked_categories = ['vanpool_group_starts','vanpool_group_folds', 'vans_available', 'loaner_spare_vans_in_fleet', 'average_riders_per_van', 'average_round_trip_miles', 'new_data_change_explanation', 'data_change_record', 'acknowledge_validation_errors']
         report_month = self.report_month
         report_year = self.report_year
         if report_month == 1:
@@ -208,11 +204,13 @@ class VanpoolMonthlyReport(forms.ModelForm):
                 new_data = self.cleaned_data[category]
                 old_data = vanpool_report.objects.filter(organization_id = self.user_organization, vanpool_groups_in_operation__isnull=False, report_year = report_year, report_month = report_month).values(category)
                 old_data = old_data[0][category]
-                if (new_data-old_data)/old_data >=.2:
+                if new_data >= old_data * 1.2:
                     category = category.replace('_', ' ')
                     category = category.title()
                     error_list.append('{} have increased more than 20%. Please confirm this number.'.format(category))
-                elif (new_data-old_data)/old_data <= .2:
+
+                # Math error here I changed both to be consistent
+                elif new_data <= old_data * 0.8:
                     category = category.replace('_', ' ')
                     category = category.title()
                     error_list.append('{} have decreased more than 20%. Please confirm this number'.format(category))
@@ -224,7 +222,6 @@ class VanpoolMonthlyReport(forms.ModelForm):
             return error_list
 
 
-
     def clean(self):
 
         cleaned_data = super(VanpoolMonthlyReport, self).clean()
@@ -232,9 +229,13 @@ class VanpoolMonthlyReport(forms.ModelForm):
         try:
             if cleaned_data['acknowledge_validation_errors'] == True:
                 return cleaned_data
+            else:
+                raise NameError('run_validator')
         except:
             error_list = self.validator_method()
+            print(str(error_list) + " " + str(len(error_list)))
             if len(error_list) > 0:
+                print(forms.ValidationError)
                 raise forms.ValidationError(error_list)
             return cleaned_data
 
@@ -278,6 +279,7 @@ class VanpoolMonthlyReport(forms.ModelForm):
 
     # TODO test how easily the fields can be extracted
     def save(self, commit=True):
+        print("save")
         instance = super(VanpoolMonthlyReport, self).save(commit=False)
         if self.cleaned_data['data_change_explanation'] != None:
             past_explanations = vanpool_report.objects.get(id=instance.id).data_change_explanation
@@ -294,6 +296,7 @@ class VanpoolMonthlyReport(forms.ModelForm):
             instance.data_change_record = past_data_change_record + serializers.serialize('json', [
                 vanpool_report.objects.get(id=instance.id), ])
         if commit:
+            print("save")
             instance.save()
         return instance
 

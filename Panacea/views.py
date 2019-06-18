@@ -192,9 +192,6 @@ def Vanpool_report(request, year=None, month=None):
     # If not POST
     else:
         form = VanpoolMonthlyReport(user_organization = user_organization, instance=form_data, record_id = form_data.id, report_month=month, report_year=year)
-
-
-
         successful_submit = False
 
     if not new_report:
