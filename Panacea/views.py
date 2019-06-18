@@ -27,7 +27,8 @@ import datetime
 from .tasks import profile_created
 from django.core.exceptions import ValidationError
 from django.forms.widgets import CheckboxInput
-
+from .utilities import monthdelta, get_wsdot_color
+from django.http import Http404
 
 from .forms import CustomUserCreationForm, \
     custom_user_ChangeForm, \
@@ -72,7 +73,8 @@ def dashboard(request):
     else:
         return redirect('ProfileSetup')
 
-# TODO rename forms
+
+# TODO rename forms to not be camel case
 @login_required(login_url='/Panacea/login')
 def ProfileSetup(request):
     user_change_form = custom_user_ChangeForm(instance=request.user)
@@ -87,9 +89,9 @@ def ProfileSetup(request):
 @login_required(login_url='/Panacea/login')
 def ProfileSetup_Review(request):
     if request.method == 'POST':
-        user = request.user
+        current_user = request.user
         if request.POST:
-            form = custom_user_ChangeForm(request.POST, instance=user)
+            form = custom_user_ChangeForm(request.POST, instance=current_user)
             if form.is_valid():
                 form.user = request.user
                 form = form.save(commit=False)
@@ -131,7 +133,7 @@ def ProfileSetup_ReportSelection(request):
                 return JsonResponse({'error': form.errors})
 
 
-@login_required(login_url = '/Panacea/login')
+@login_required(login_url='/Panacea/login')
 def handler404(request, exception):
     return render(request,'pages/error_404.html', status = 404)
 
@@ -166,6 +168,7 @@ def Vanpool_report(request, year=None, month=None):
     # Instance data to link form to data
     form_data = vanpool_report.objects.get(organization_id=user_organization, report_year=year, report_month=month)
 
+    # TODO convert to django message framework
     # Logic if form is a new report or is an existing report (Comments are needed before editing an existing reports)
     if form_data.report_date is None:
         new_report = True
@@ -206,12 +209,14 @@ def Vanpool_report(request, year=None, month=None):
                                                          'new_report': new_report}
                   )
 
-@login_required(login_url = '/Panacea/login')
+
+@login_required(login_url='/Panacea/login')
 def Vanpool_expansion_submission(request):
     if request.method == 'POST':
         form = submit_a_new_vanpool_expansion(request.POST)
         if form.is_valid():
             form.save()
+            # TODO Do you use AJAX on this - What is this for?
             return JsonResponse({'redirect': '../Expansion/'})
         else:
             return render(request, 'pages/Vanpool_expansion_submission.html', {'form':form})
@@ -220,7 +225,7 @@ def Vanpool_expansion_submission(request):
     return render(request, 'pages/Vanpool_expansion_submission.html', {'form': form})
 
 
-@login_required(login_url = '/Panacea/login')
+@login_required(login_url='/Panacea/login')
 def Vanpool_expansion_analysis(request):
     # pulls the latest vanpool data
     orgs = vanpool_expansion_analysis.objects.filter(expired = False).values('organization_id')
@@ -282,7 +287,7 @@ def Vanpool_expansion_analysis(request):
 
 
 @login_required(login_url='/Panacea/login')
-def Vanpool_expansion_modify(request, id = None):
+def Vanpool_expansion_modify(request, id=None):
     if not id:
         id = 1
     orgs = vanpool_expansion_analysis.objects.filter(expired = False).values('organization_id')
@@ -308,99 +313,52 @@ def Vanpool_expansion_modify(request, id = None):
 @login_required(login_url='/Panacea/login')
 def Vanpool_data(request):
 
-    # TODO move both of these functions to separate area where they can bereferencedd
-    def monthdelta(date, delta):
-        delta = -int(delta)
-        m, y = (date.month + delta) % 12, date.year + ((date.month) + delta - 1) // 12
-        if not m: m = 12
-        d = min(date.day, [31,
-                           29 if y % 4 == 0 and not y % 400 == 0 else 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31][
-            m - 1])
-        return date.replace(day=d, month=m, year=y)
-
-    def get_color(i):
-        wsdot_colors = ["#2C8470",
-                        "#97d700",
-                        "#00aec7",
-                        "#5F615E",
-                        "#00b140",
-                        "#007fa3",
-                        "#ABC785",
-                        "#593160"]
-        j = i % 8
-        return wsdot_colors[j]
-
-
+    # If it is a request for a chart
     if request.POST:
         form = chart_form(data=request.POST)
+        org_list = request.POST.getlist("chart_organizations")
+        chart_time_frame = monthdelta(datetime.datetime.now().date(), form.data['chart_time_frame'])
+        chart_measure = form.data['chart_measure']
 
-        if form.is_valid:
-            chart_title = form.MEASURE_CHOICES_DICT[form.data['chart_measure']]
-            org_list = request.POST.getlist("chart_organizations")
-            chart_time_frame = monthdelta(datetime.datetime.now().date(), form.data['chart_time_frame'])
-            all_chart_data = [report for report in vanpool_report.objects.filter(organization_id__in=org_list).order_by('organization', 'report_year', 'report_month').all() if
-                              chart_time_frame <= report.report_due_date <= datetime.datetime.today().date()]
-            chart_label = [report.report_year_month_label for report in all_chart_data]
-            chart_label = list(dict.fromkeys(chart_label))
-
-            chart_datasets = {}
-
-            i = 0
-            for org in org_list:
-                chart_dataset = [report for report in vanpool_report.objects.filter(organization_id=org).order_by('organization', 'report_year', 'report_month').all() if
-                                 chart_time_frame <= report.report_due_date <= datetime.datetime.today().date()]
-                chart_dataset = [getattr(report, form.data['chart_measure']) for report in chart_dataset]
-                chart_datasets[organization.objects.get(id=org).name] = [json.dumps(list(chart_dataset)), get_color(i)]
-                i = i + 1
-
-            # TODO make one return statement at end instead of two
-
-            return render(request, 'pages/Vanpool_data.html', {'form': form,
-                                                               'chart_title': chart_title,
-                                                               'chart_measure': form.data['chart_measure'],
-                                                               'chart_label': chart_label,
-                                                               'chart_datasets_filtered': chart_datasets,
-                                                               'org_list': org_list
-                                                               })
-
+    # Default chart for first load
     else:
-        defualt_chart_time_frame = 36
-        user_organization_id = profile.objects.get(custom_user_id=request.user.id).organization_id
-        user_organization = organization.objects.get(id=user_organization_id)
+        default_time_frame = 36  # months
+        chart_time_frame = monthdelta(datetime.datetime.now().date(), default_time_frame)
+        org_list = [profile.objects.get(custom_user_id=request.user.id).organization_id]
+        chart_measure = 'total_miles_traveled'
+        form = chart_form(initial={'chart_organizations': org_list[0],
+                                   'chart_measure': chart_measure,
+                                   'chart_time_frame': default_time_frame})
 
-        form = chart_form(initial={'chart_organizations': user_organization,
-                                   'chart_measure': 'total_miles_traveled',
-                                   'chart_time_frame': defualt_chart_time_frame})
-
-        chart_time_frame = monthdelta(datetime.datetime.now().date(), defualt_chart_time_frame)
-
-        all_chart_data = [report for report in
-                          vanpool_report.objects.filter(organization_id=user_organization_id).order_by('organization',
-                                                                                                       'report_year',
-                                                                                                       'report_month').all() if
+    if form.is_valid:
+        # Get data for x axis labels
+        all_chart_data = [report for report in vanpool_report.objects.filter(organization_id__in=org_list).order_by('organization', 'report_year', 'report_month').all() if
                           chart_time_frame <= report.report_due_date <= datetime.datetime.today().date()]
+        x_axis_labels = [report.report_year_month_label for report in all_chart_data]
+        x_axis_labels = list(dict.fromkeys(x_axis_labels))
 
-        chart_label = [report.report_year_month_label for report
-                       in all_chart_data]
-        chart_label = list(dict.fromkeys(chart_label))
-        chart_label = list(dict.fromkeys(chart_label))
+        # Get datasets in the format chart.js needs
+        chart_datasets = {}
+        color_i = 0
+        for org in org_list:
+            chart_dataset = [report for report in vanpool_report.objects.filter(organization_id=org).order_by('organization', 'report_year', 'report_month').all() if
+                             chart_time_frame <= report.report_due_date <= datetime.datetime.today().date()]
+            chart_dataset = [getattr(report, chart_measure) for report in chart_dataset]
+            chart_datasets[organization.objects.get(id=org).name] = [json.dumps(list(chart_dataset)), get_wsdot_color(color_i)]
+            color_i = color_i + 1
 
-        chart_dataset = [report for report in
-                         vanpool_report.objects.filter(organization_id=user_organization_id).order_by('organization', 'report_year',
-                                                                                     'report_month').all() if
-                         chart_time_frame <= report.report_due_date <= datetime.datetime.today().date()]
-        chart_dataset = [getattr(report, form.initial.get('chart_measure')) for report in chart_dataset]
+        # Set chart title
+        chart_title = form.MEASURE_CHOICES_DICT[chart_measure]
 
-        chart_datasets_filtered = {
-            organization.objects.get(id=user_organization_id).name: [json.dumps(list(chart_dataset)), get_color(0)]}
-
-        chart_title = form.MEASURE_CHOICES_DICT[form.initial.get('chart_measure')]
         return render(request, 'pages/Vanpool_data.html', {'form': form,
                                                            'chart_title': chart_title,
-                                                           'chart_measure': form.initial.get('chart_measure'),
-                                                           'chart_label': chart_label,
-                                                           'chart_datasets_filtered': chart_datasets_filtered,
-                                                           'org_list': [user_organization_id]})
+                                                           'chart_measure': chart_measure,
+                                                           'chart_label': x_axis_labels,
+                                                           'chart_datasets_filtered': chart_datasets,
+                                                           'org_list': org_list
+                                                           })
+    else:
+        raise Http404
 
 
 @login_required(login_url='/Panacea/login')
@@ -440,11 +398,13 @@ def OrganizationProfileUsers(request):
     org = user_profile_data.organization
     org_id = organization.objects.filter(name=org).values('id')
     org_id = org_id[0]['id']
+    # TODO could this be valueslist?
     vals = profile.objects.filter(organization_id=org_id).values('custom_user')
     vals = [i['custom_user'] for i in vals]
     cust = custom_user.objects.filter(id__in=vals).values('first_name', 'last_name', 'email', 'date_joined', 'last_login')
     org_name = org.name
     return render(request, 'pages/OrganizationProfileUsers.html', {'org_name': org_name, 'users': cust})
+
 
 @login_required(login_url='/Panacea/login')
 def OrganizationProfile(request):
@@ -455,6 +415,7 @@ def OrganizationProfile(request):
     if request.POST:
         form = organization_profile(data=request.POST.copy(), instance=org)
         if form.is_valid():
+            # TODO figure out why is this here
             if not 'state' in form.data:
                 print(user_profile_data.organization.state)
                 form.data['state'] = user_profile_data.organization.state
@@ -527,7 +488,7 @@ def public_disclosure(request):
 
 
 @login_required(login_url='/Panacea/login')
-def Help(request):
+def help_page(request):
     return render(request, 'pages/Help.html', {})
 
 
@@ -536,6 +497,7 @@ def logout_view(request):
     logout(request)
 
 
+# TODO move to utilities.py
 def percent_change_calculation(totals, label):
     percent_change = []
     count = 0
@@ -596,9 +558,10 @@ def Operation_Summary(request):
     average_miles = zip(avg_miles, empty_list)
 
     return render(request, 'pages/OperationSummary.html', {'vp_totals': vp_totals, 'vs_totals': vs_totals, 'starts':starts, 'folds': folds, 'starts_as_a_percent': starts_as_percent,
-            'folds_as_percent': folds_as_percent, 'net_vans': net_vans, 'average_riders': average_riders, 'average_miles': average_miles, 'years':years})
+                                                           'folds_as_percent': folds_as_percent, 'net_vans': net_vans, 'average_riders': average_riders, 'average_miles': average_miles, 'years':years})
 
 
+@login_required(login_url='/Panacea/login')
 def Vanpool_Growth(request):
 
     return render(request, 'pages/VanpoolGrowth.html', {})

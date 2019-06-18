@@ -329,12 +329,12 @@ class VanpoolMonthlyReport(forms.ModelForm):
 
 class organization_profile(forms.ModelForm):
 
-
     class Meta:
         TRUE_FALSE_CHOICES = (
             (False, 'No'),
             (True, 'Yes')
         )
+
         model = organization
         fields = ('name', 'address_line_1', 'address_line_2', 'city', 'state', 'zip_code', 'vanshare_program')
         widgets = {
