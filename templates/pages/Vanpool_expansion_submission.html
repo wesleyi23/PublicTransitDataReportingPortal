@@ -1,66 +1,60 @@
-<!DOCTYPE html>
-<html lang="en">
 {% extends 'index.html' %}
 {% load humanize %}
 {% load custom_tags %}
 {% load static %}
 
 
+{% block head_content %}
+
+{% endblock %}
 
 {% block content %}
-<head>
-    <meta charset="UTF-8">
-    <title>Form Submission page</title>
+    <div class="card shadow mb-4 w-100">
+        <div class="card-header">
+            <ul class="nav nav-tabs card-header-tabs">
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'Vanpool_expansion_analysis' %}">Vanpool Expansion Analysis</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'Vanpool_expansion_modify' %}">Modify a Vanpool</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link active" href="{% url 'Vanpool_expansion_submission' %}">Submit a Vanpool</a>
+                </li>
+            </ul>
+        </div>
+        <div class="card-body" >
+            <div class="form-group">
 
-</head>
-<body>
+                <form action="{% url 'Vanpool_expansion_submission' %}" method="POST" class="post-form" name="ReportSelection" data-errField="reports_on" style="max-width: 600px">
+                    {%  csrf_token %}
+                    {{ form.as_p }}
+                    <div id="ReportSelection_err"></div>
+                    <input type="submit" value="Submit a New Expansion" class="btn btn-primary" style="bottom: 20px; right: 20px">
+                </form>
 
-
-</body>
-</html>
-
-
-</head>
-<body >
-
-<nav class="navbar navbar-expand-sm bg-light navbar-light">
-  <ul class="navbar-nav">
-    <li class="nav-item">
-      <a class="nav-link" href="{% url 'Vanpool_expansion_analysis' %}">Vanpool Expansion Analysis</a>
-    </li>
-    <li class="nav-item">
-      <a class="nav-link" href="{% url 'Vanpool_expansion_modify' %}">Modify a Vanpool Expansion</a>
-    </li>
-    <li class="nav-item active">
-      <a class="nav-link" href="{% url 'Vanpool_expansion_submission' %}">Submit a New Vanpool Expansion</a>
-    </li>
-  </ul>
-</nav>
-<div class="container-fluid" >
-        <div class="row">
-            <div class="col-md-3 box">
-                          <div class="card-body" >
-                            <div class="text-left">
-
-
-
-<form action="{% url 'Vanpool_expansion_submission' %}" method="POST" class="post-form" name="ReportSelection" data-errField="reports_on" >
-{%  csrf_token %}
-    {{ form.as_p }}
-                                    <div id="ReportSelection_err"></div>
-                                    <input type="submit" value="Submit a New Expansion" class="btn btn-primary" style="bottom: 20px; right: 20px">
-                                </form>
-
-
-
-</div>
-                     </div>
-                    </div>
-                    </div>
-                    </div>
-
-
-</body>
+            </div>
+        </div>
+    </div>
 
 {%  endblock %}
-</html>
+
+{%  block page_scripts %}
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/datepicker/0.6.5/datepicker.min.css"/>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/datepicker/0.6.5/datepicker.min.js"></script>
+
+    <script>
+        $(function () {
+            $("#id_date_of_award").datepicker({
+                format:'yyyy-mm-dd',
+            });
+        });
+    </script>
+    <script>
+        $(function () {
+            $("#id_latest_vehicle_acceptance").datepicker({
+                format:'yyyy-mm-dd',
+            });
+        });
+    </script>
+{% endblock %}

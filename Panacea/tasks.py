@@ -18,7 +18,7 @@ def profile_created(user_id):
     return mail_sent
 
 
-#going to need a task for resetting password
+# going to need a task for resetting password
 
 # going to need a task for requesting new permissions
 

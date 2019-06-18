@@ -4,19 +4,17 @@
 {% block content %}
 
     <div class="card shadow mb-4">
-        <div class="card-header py-3">
-             <nav class="navbar navbar-expand-sm bg-light navbar-light">
-  <ul class="navbar-nav">
-    <h6 class="nav-item active">
-      <a class="nav-link" href="{% url 'OrganizationProfile' %}">{{ org_name }}'s Profile</a>
-    </h6>
-    <h6 class="nav-item">
-      <a class="nav-link" href="{% url 'OrganizationProfileUsers' %}">Users for  {{ org_name }}</a>
-    </h6>
-  </ul>
-</nav>
-        </div>
+        <div class="card-header">
+            <ul class="nav nav-tabs card-header-tabs">
+                <li class="nav-item">
+                    <a class="nav-link active" href="{% url 'OrganizationProfile' %}">{{ org_name }}'s Profile</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'OrganizationProfileUsers' %}">Users for  {{ org_name }}</a>
+                </li>
 
+            </ul>
+        </div>
 
         <div class="card-body">
             <div class="container-fluid">
@@ -34,14 +32,14 @@
                             {#                        {{ form }}#}
                             <div class="table-responsive">
                                 <table class="table float-left table-borderless">
-{#                                    <thead>#}
-{#                                    <tr>#}
-{#                                        <th style="white-space: nowrap; width: 1%">30</th>#}
-{#                                        <th>50</th>#}
-{#                                        <th>15</th>#}
-{#                                        <th>25</th>#}
-{#                                    </tr>#}
-{#                                    </thead>#}
+                                    {#                                    <thead>#}
+                                    {#                                    <tr>#}
+                                    {#                                        <th style="white-space: nowrap; width: 1%">30</th>#}
+                                    {#                                        <th>50</th>#}
+                                    {#                                        <th>15</th>#}
+                                    {#                                        <th>25</th>#}
+                                    {#                                    </tr>#}
+                                    {#                                    </thead>#}
                                     <tbody>
                                     <tr class="fieldWrapper">
                                         <td>{{ form.name.label_tag }}</td>
@@ -85,7 +83,7 @@
                                         <td><a href="#" class="edit_profile_field" data-field_name="{{ form.vanshare_program.name }}">(Edit)</a></td>
                                         <td>{{ form.vanshare_program.errors }}</td>
                                     </tr>
-</tbody>
+                                    </tbody>
                                 </table>
                             </div>
                             {{ form.non_field_errors }}
@@ -101,25 +99,25 @@
 
 
 
-    <!-- Modal -->
-    <div class="modal fade" id="ChangeOrgModal" tabindex="-1" role="dialog" aria-labelledby="ChangeOrgModalLabel" aria-hidden="true">
-        <div class="modal-dialog" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="ChangeOrgModalLabel">Change Organization</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    To change your organization please contact the system administrator.
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            <!-- Modal -->
+            <div class="modal fade" id="ChangeOrgModal" tabindex="-1" role="dialog" aria-labelledby="ChangeOrgModalLabel" aria-hidden="true">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="ChangeOrgModalLabel">Change Organization</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            To change your organization please contact the system administrator.
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                        </div>
+                    </div>
                 </div>
             </div>
-        </div>
-    </div>
         </div>
     </div>
 {% endblock %}

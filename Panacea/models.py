@@ -108,11 +108,9 @@ class organization(models.Model):
     zip_code = USZipCodeField(blank=True)
     classification = models.CharField(max_length=50, choices=AGENCY_CLASSIFICATIONS, blank=True, null=True)
     vanshare_program = models.BooleanField(blank=True, null=True)
-    vanpool_expansion = models.BooleanField(blank= True, null = True)
+    vanpool_expansion = models.BooleanField(blank=True, null=True)
     # this is kind of a hack and I hate it; on the other hand, it seems less complex than storing a list
-
-
-
+    # TODO add to agency profile form
     in_jblm_area = models.BooleanField(blank=True, null=True)
     in_puget_sound_area = models.BooleanField(blank=True, null=True)
 
@@ -151,6 +149,7 @@ class vanpool_report(models.Model):
     report_type = models.ForeignKey(ReportType, on_delete=models.PROTECT)
     report_year = models.IntegerField()
     report_month = models.IntegerField(choices=REPORT_MONTH)
+    # TODO we should come back and look at if these need to be here
     # report_due_date = models.DateField()
     #report_day = models.IntegerField(default = 1, null=True)
     report_date = models.DateTimeField(default = None, null=True)
@@ -172,7 +171,7 @@ class vanpool_report(models.Model):
     average_riders_per_van = models.FloatField(blank=True, null=True)
     average_round_trip_miles = models.FloatField(blank=True, null=True)
     data_change_explanation = models.CharField(max_length=5000, blank=True, null=True)
-    data_change_record = models.CharField(max_length=10000, blank=True, null=True) #TODO change to JSONField when/if we hook up MySQL
+    data_change_record = models.CharField(max_length=10000, blank=True, null=True)  # TODO change to JSONField when/if we hook up MySQL
 
     @property
     def status(self):
@@ -188,7 +187,6 @@ class vanpool_report(models.Model):
 
     @property
     def report_due_date(self):
-
         month = self.report_month
         year = self.report_year + month // 12
         month = month % 12 + 1
@@ -221,7 +219,6 @@ class vanpool_report(models.Model):
         return result
 
     def save(self, no_report_date=False, *args, **kwargs):
-
         if not no_report_date and self.report_date is None:
             self.report_date = datetime.datetime.now().date()
         super(vanpool_report, self).save(*args, **kwargs)
@@ -236,9 +233,10 @@ def create_user_profile(sender, instance, created, **kwargs):
         profile.objects.create(custom_user=instance)
 
 
-# @receiver(post_save, sender=custom_user)
-# def save_user_profile(sender, instance, **kwargs):
-#     instance.profile.save()
+@receiver(post_save, sender=custom_user)
+def save_user_profile(sender, instance, **kwargs):
+    instance.profile.save()
+
 
 class vanpool_expansion_analysis(models.Model):
     organization = models.ForeignKey(organization, on_delete=models.PROTECT, related_name = '+')
@@ -262,11 +260,13 @@ class vanpool_expansion_analysis(models.Model):
 
 
     @property
+    # TODO should this be here or a function in utilities also we may want to rewrite this so it works no mater what date we put in
     def calculate_current_biennium(self):
         import datetime
         today = datetime.date.today()
         if today < datetime.date(2019, 6, 1):
             current_biennium = '17-19'
+        # TODO you may want to simplify these as suggested by PyCharm
         elif today >= datetime.date(2019, 6, 1) and today < datetime.date(2021, 6, 1):
             current_biennium = '19-21'
         elif today >= datetime.date(2021, 6, 1) and today < datetime.date(2023, 6, 1):
