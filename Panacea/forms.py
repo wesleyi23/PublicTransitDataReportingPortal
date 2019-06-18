@@ -134,106 +134,81 @@ class ReportSelection(forms.ModelForm):
 class VanpoolMonthlyReport(forms.ModelForm):
 
 
-    def __init__(self, user_organization, record_id, *args, **kwargs):
+    def __init__(self, user_organization, record_id, report_month, report_year, *args, **kwargs):
+        self.report_month = report_month
+        self.report_year = report_year
         self.user_organization = user_organization
         self.record_id = record_id
         super(VanpoolMonthlyReport, self).__init__(*args, **kwargs)
 
 
     new_data_change_explanation = forms.CharField(widget=forms.Textarea(
-        attrs={'required': True, 'class': 'form-control input-sm', 'rows': 3})
+        attrs={'required': True, 'class': 'form-control input-sm', 'rows': 3, 'display': False})
     ),
     acknowledge_validation_errors = forms.BooleanField(label= 'Check this box to confirm that your submitted numbers are correct, even though there are validation errors.',
                                                               widget = forms.CheckboxInput(attrs={'class': 'checkbox form-control'}))
 
 
-    def validate_vanshare_groups_in_operation(self, error_list):
-        data_submitted = self.cleaned_data['vanshare_groups_in_operation']
-        vanop =vanpool_report.objects.all(organization_id = self.user_organization, vanshare_groups_in_operation__isnull = False,
-        vanshare_group_starts__isnull  = False, vanshare_group_folds__isnull = False).latest('id').values('vanshare_groups_in_operation', 'vanshare_group_starts', 'vanshare_group_folds')
-        if data_submitted != (vanop.vanshare_groups_in_operation + vanop.vanshare_group_starts - vanop.vanshare_group_folds):
-            error_list.append('The Vanshare Groups in Operation do not reflect the folds and started recorded last month')
-        return error_list
-
-    def validate_vanshare_miles_traveled(self, error_list):
-        data_submitted = self.cleaned_data['vanshare_miles_traveled']
-        vanmiles = vanpool_report.objects.all(organization_id=self.user_organization, vanshare_miles_traveled__isnull = False).latest('id').values('vanshare_miles_traveled')
-        if (vanmiles.vanshare_miles_traveled - data_submitted)/vanmiles.vanshare_miles_traveled >=.2:
-            error_list.append('Vanshare miles have increased more than 20%. Please confirm this mileage')
-        elif (vanmiles.vanshare_miles_traveled - data_submitted)/vanmiles.vanshare_miles_traveled <= -.2:
-            error_list.append('Vanshare miles have decreased more than 20%. Please confirm this mileage')
-        return error_list
-
-    def validate_vanshare_psgr_trips(self, error_list):
-        data_submitted = self.cleaned_data['vanshare_passenger_trips']
-        vanmiles = vanpool_report.objects.all(organization_id=self.user_organization, vanshare_passenger_trips__isnull = False).latest('id').values('vanshare_passenger_trips')
-        if (vanmiles.vanshare_passenger_trips - data_submitted) / vanmiles.vanshare_passenger_trips >= .2:
-            error_list.append('Vanshare passenger trips have increased more than 20%. Please confirm this trip number')
-        elif (vanmiles.vanshare_passenger_trips - data_submitted) / vanmiles.vanshare_passenger_trips <= -.2:
-            error_list.append('Vanshare passenger trips have decreased more than 20%. Please confirm this trip number')
-        return error_list
-
-    def validate_vanpool_groups_in_operation(self, error_list):
-        data_submitted = self.cleaned_data['vanpool_groups_in_operation']
-        vanop =vanpool_report.objects.filter(organization_id = self.user_organization, vanpool_group_folds__isnull= False, vanpool_groups_in_operation__isnull= False, vanpool_group_starts__isnull=False).latest('id')
-        if data_submitted != (vanop.vanpool_groups_in_operation + vanop.vanpool_group_starts - vanop.vanpool_group_folds):
-            error_list.append('The Vanpool Groups in Operation do not reflect the folds and started recorded last month')
-        return error_list
 
 
-    def validate_vp_miles_traveled(self, error_list):
-        data_submitted = self.cleaned_data['vanpool_miles_traveled']
-        vanmiles = vanpool_report.objects.filter(organization_id=self.user_organization, vanpool_miles_traveled__isnull = False).latest('id')
-        if (data_submitted -vanmiles.vanpool_miles_traveled)/vanmiles.vanpool_miles_traveled >=.2:
-            error_list.append('Vanpool miles have increased more than 20%. Please confirm this mileage')
-        elif (data_submitted - vanmiles.vanpool_miles_traveled)/vanmiles.vanpool_miles_traveled <= -.2:
-            error_list.append('Vanpool miles have decreased more than 20%. Please confirm this mileage')
-        return error_list
+
+    def validator_method(self):
+        # instantiate the error list
+        error_list = []
+        untracked_categories = ['vanpool_group_starts','vanpool_group_folds', 'vans_available', 'loaner_spare_vans_in_fleet', 'average_riders_per_van', 'average_round_trip_miles', 'data_change_explanation', 'data_change_record']
+        report_month = self.report_month
+        report_year = self.report_year
+        if report_month == 1:
+            report_year = report_year - 1
+            report_month = 12
+        else:
+            report_month = report_month - 1
+
+        vp_ops = vanpool_report.objects.filter(organization_id=self.user_organization,report_year=report_year,report_month=report_month).values('vanpool_groups_in_operation')
+        if vp_ops[0]['vanpool_groups_in_operation'] == None:
+            raise forms.ValidationError('You must fill out the data for the previous month first. Please refer to the previous reporting month')
+            error_list.append('You must fill out the data for the previous month first. Please refer to the previous reporting month')
+            return error_list
+        else:
+            for category in self.cleaned_data.keys():
+                if self.cleaned_data[category] == None:
+                    continue
+                if category in untracked_categories:
+                    continue
+                new_data = self.cleaned_data[category]
+                old_data = vanpool_report.objects.filter(organization_id = self.user_organization, vanpool_groups_in_operation__isnull=False, report_year = report_year, report_month = report_month).values(category)
+                old_data = old_data[0][category]
+                if (new_data-old_data)/old_data >=.2:
+                    category = category.replace('_', ' ')
+                    category = category.title()
+                    error_list.append('{} have increased more than 20%. Please confirm this number.'.format(category))
+                elif (new_data-old_data)/old_data <= .2:
+                    category = category.replace('_', ' ')
+                    category = category.title()
+                    error_list.append('{} have decreased more than 20%. Please confirm this number'.format(category))
+                if category == 'vanpool_groups_in_operation':
+                    old_van_number = vanpool_report.objects.filter(organization_id=self.user_organization, report_year = report_year, report_month= report_month).values('vanpool_groups_in_operation', 'vanpool_group_starts', 'vanpool_group_folds')
+                    old_van_number = old_van_number[0]
+                    if new_data != (old_van_number['vanpool_groups_in_operation'] + old_van_number['vanpool_group_starts'] - old_van_number['vanpool_group_folds']):
+                        error_list.append('The Vanpool Groups in Operation do not reflect the folds and started recorded last month')
+            return error_list
 
 
-    def clean_psgr_trips(self, error_list):
-        vanpool_passenger_trips = self.cleaned_data['vanpool_passenger_trips']
-        vanmiles = vanpool_report.objects.filter(organization_id=self.user_organization, vanpool_passenger_trips__isnull= False).latest('id')
-        if (vanpool_passenger_trips - vanmiles.vanpool_passenger_trips) / vanmiles.vanpool_passenger_trips >= .2:
-            error_list.append('Vanpool passenger trips have increased more than 20%. Please confirm this trip number')
-        elif (vanpool_passenger_trips - vanmiles.vanpool_passenger_trips) / vanmiles.vanpool_passenger_trips <= -.2:
-            error_list.append('Vanpool passenger trips have decreased more than 20%. Please confirm this trip number')
-        return error_list
-
-# TODO Have to rework this so I only throw one validation errror per method, and I guess put them in a list or something
 
     def clean(self):
+
         cleaned_data = super(VanpoolMonthlyReport, self).clean()
-        print(cleaned_data)
-        validator_necessary = vanpool_report.objects.get(id=self.record_id).report_date
-        error_list = []
+        # try except block because acknowledge validation errors only exists after the validation has taken place
         try:
-            if cleaned_data['acknowledge_validation_errors'] == False:
-                if validator_necessary == None:
-                    error_list = self.clean_psgr_trips(error_list)
-                    error_list = self.validate_vp_miles_traveled(error_list)
-                    error_list = self.validate_vanpool_groups_in_operation(error_list)
-                    if cleaned_data['vanshare_groups_in_operation'] != None:
-                        error_list = self.validate_vanshare_groups_in_operation(error_list)
-                        error_list = self.validate_vanshare_psgr_trips(error_list)
-                        error_list = self.validate_vanshare_miles_traveled(error_list)
-                if len(error_list) > 0:
-                    raise forms.ValidationError(error_list)
-                return cleaned_data
-            else:
+            if cleaned_data['acknowledge_validation_errors'] == True:
                 return cleaned_data
         except:
-            if validator_necessary == None:
-                error_list = self.clean_psgr_trips(error_list)
-                error_list = self.validate_vp_miles_traveled(error_list)
-                error_list = self.validate_vanpool_groups_in_operation(error_list)
-                if cleaned_data['vanshare_groups_in_operation'] != None:
-                    error_list = self.validate_vanshare_groups_in_operation(error_list)
-                    error_list = self.validate_vanshare_psgr_trips(error_list)
-                    error_list = self.validate_vanshare_miles_traveled(error_list)
+            error_list = self.validator_method()
             if len(error_list) > 0:
                 raise forms.ValidationError(error_list)
             return cleaned_data
+
+
 
     class Meta:
         model = vanpool_report

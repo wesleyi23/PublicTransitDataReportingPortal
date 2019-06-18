@@ -84,11 +84,20 @@
 
                             {%  if form.non_field_errors %}
                            <ul>{% for error in form.non_field_errors %}
-                               <li> {{error}} </li>
-                            {% endfor %} </ul>
+                                  <li> {{error}} </li>
+                                                              {% endfor %}</ul>
+
+
+                            {%  if  'You must fill out the data for the previous month first. Please refer to the previous reporting month' in form.non_field_errors %}
+
+                            {% else %}
                                 {{ form.acknowledge_validation_errors.label }}
-                                <div class = "align-content-left"> {{form.acknowledge_validation_errors}} </div>
-                                {%  endif %}
+                                <div class = "center"> {{form.acknowledge_validation_errors}} </div>
+
+
+
+                            {% endif %}
+                            {%  endif %}
                             {{ form.source.errors }}
                             {{ form.source }}
                             <table style="border-collapse: separate; border-spacing: .25rem">

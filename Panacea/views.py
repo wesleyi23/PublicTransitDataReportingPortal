@@ -163,22 +163,28 @@ def Vanpool_report(request, year=None, month=None):
         new_report = False
 
     if request.method == 'POST':
-        form = VanpoolMonthlyReport(user_organization = user_organization, data=request.POST, instance=form_data, record_id = form_data.id)
+        form = VanpoolMonthlyReport(user_organization = user_organization, data=request.POST, instance=form_data, record_id = form_data.id, report_month=month, report_year=year)
         if form.is_valid():
             form.save()
             successful_submit = True
             new_report = False
         else:
+            form = VanpoolMonthlyReport(user_organization=user_organization, data=request.POST, instance=form_data,
+                                       record_id=form_data.id, report_month=month, report_year=year)
             successful_submit = False
 
     else:
-        form = VanpoolMonthlyReport(user_organization = user_organization, instance=form_data, record_id = form_data.id)
+        form_data.data_change_explanation = None
+        form = VanpoolMonthlyReport(user_organization = user_organization, instance=form_data, record_id = form_data.id, report_month=month, report_year=year)
+
+
+
         successful_submit = False
 
     if not new_report:
         form.fields['data_change_explanation'].required = True
 
-
+        form.data_change_explanation = None
 
     return render(request, 'pages/Vanpool_report.html', {'form': form,
                                                          'past_report_data': past_report_data,
