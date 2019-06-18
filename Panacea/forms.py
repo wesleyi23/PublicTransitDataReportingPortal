@@ -175,13 +175,25 @@ class VanpoolMonthlyReport(forms.ModelForm):
     new_data_change_explanation = forms.CharField(widget=forms.Textarea(
         attrs={'required': True, 'class': 'form-control input-sm', 'rows': 3, 'display': False})
     ),
-    acknowledge_validation_errors = forms.BooleanField(label= 'Check this box to confirm that your submitted numbers are correct, even though there are validation errors.',
-                                                       widget=forms.CheckboxInput(attrs={'class': 'checkbox', 'style': 'zoom:200%;margin-right:.35rem'}), required=False)
+    acknowledge_validation_errors = forms.BooleanField(
+        label='Check this box to confirm that your submitted numbers are correct, even though there are validation errors.',
+        widget=forms.CheckboxInput(attrs={'class': 'checkbox', 'style': 'zoom:200%;margin-right:.35rem'}), required=False)
 
     def validator_method(self):
         # instantiate the error list
         error_list = []
-        untracked_categories = ['vanpool_group_starts','vanpool_group_folds', 'vans_available', 'loaner_spare_vans_in_fleet', 'average_riders_per_van', 'average_round_trip_miles', 'new_data_change_explanation', 'data_change_record', 'acknowledge_validation_errors']
+
+        # Validation is not run on these fields
+        untracked_categories = ['vanpool_group_starts',
+                                'vanpool_group_folds',
+                                'vans_available',
+                                'loaner_spare_vans_in_fleet',
+                                'average_riders_per_van',
+                                'average_round_trip_miles',
+                                'new_data_change_explanation',
+                                'data_change_record',
+                                'acknowledge_validation_errors']
+
         report_month = self.report_month
         report_year = self.report_year
         if report_month == 1:
@@ -190,7 +202,9 @@ class VanpoolMonthlyReport(forms.ModelForm):
         else:
             report_month = report_month - 1
 
-        vp_ops = vanpool_report.objects.filter(organization_id=self.user_organization,report_year=report_year,report_month=report_month).values('vanpool_groups_in_operation')
+        vp_ops = vanpool_report.objects.filter(organization_id=self.user_organization,
+                                               report_year=report_year,
+                                               report_month=report_month).values('vanpool_groups_in_operation')
         if vp_ops[0]['vanpool_groups_in_operation'] == None:
             raise forms.ValidationError('You must fill out the data for the previous month first. Please refer to the previous reporting month')
             error_list.append('You must fill out the data for the previous month first. Please refer to the previous reporting month')
@@ -202,7 +216,10 @@ class VanpoolMonthlyReport(forms.ModelForm):
                 if category in untracked_categories:
                     continue
                 new_data = self.cleaned_data[category]
-                old_data = vanpool_report.objects.filter(organization_id = self.user_organization, vanpool_groups_in_operation__isnull=False, report_year = report_year, report_month = report_month).values(category)
+                old_data = vanpool_report.objects.filter(organization_id=self.user_organization,
+                                                         vanpool_groups_in_operation__isnull=False,
+                                                         report_year=report_year,
+                                                         report_month=report_month).values(category)
                 old_data = old_data[0][category]
                 if new_data >= old_data * 1.2:
                     category = category.replace('_', ' ')
@@ -215,15 +232,16 @@ class VanpoolMonthlyReport(forms.ModelForm):
                     category = category.title()
                     error_list.append('{} have decreased more than 20%. Please confirm this number'.format(category))
                 if category == 'vanpool_groups_in_operation':
-                    old_van_number = vanpool_report.objects.filter(organization_id=self.user_organization, report_year = report_year, report_month= report_month).values('vanpool_groups_in_operation', 'vanpool_group_starts', 'vanpool_group_folds')
+                    old_van_number = vanpool_report.objects.filter(
+                        organization_id=self.user_organization,
+                        report_year=report_year,
+                        report_month=report_month).values('vanpool_groups_in_operation', 'vanpool_group_starts', 'vanpool_group_folds')
                     old_van_number = old_van_number[0]
                     if new_data != (old_van_number['vanpool_groups_in_operation'] + old_van_number['vanpool_group_starts'] - old_van_number['vanpool_group_folds']):
                         error_list.append('The Vanpool Groups in Operation do not reflect the folds and started recorded last month')
             return error_list
 
-
     def clean(self):
-
         cleaned_data = super(VanpoolMonthlyReport, self).clean()
         # try except block because acknowledge validation errors only exists after the validation has taken place
         try:
@@ -238,8 +256,6 @@ class VanpoolMonthlyReport(forms.ModelForm):
                 print(forms.ValidationError)
                 raise forms.ValidationError(error_list)
             return cleaned_data
-
-
 
     class Meta:
         model = vanpool_report
@@ -286,9 +302,9 @@ class VanpoolMonthlyReport(forms.ModelForm):
             if past_explanations is None:
                 past_explanations = ""
             instance.data_change_explanation = past_explanations + \
-                                           "{'edit_date':'" + str(datetime.date.today()) + \
-                                           "','explanation':'" + self.cleaned_data[
-                                               'data_change_explanation'] + "'},"
+                                               "{'edit_date':'" + str(datetime.date.today()) + \
+                                               "','explanation':'" + self.cleaned_data[
+                                                   'data_change_explanation'] + "'},"
 
             past_data_change_record = vanpool_report.objects.get(id=instance.id).data_change_record
             if past_data_change_record is None:
