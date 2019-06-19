@@ -174,7 +174,7 @@ class VanpoolMonthlyReport(forms.ModelForm):
 
     new_data_change_explanation = forms.CharField(widget=forms.Textarea(
         attrs={'required': True, 'class': 'form-control input-sm', 'rows': 3, 'display': False})
-    ),
+    )
     acknowledge_validation_errors = forms.BooleanField(
         label='Check this box to confirm that your submitted numbers are correct, even though there are validation errors.',
         widget=forms.CheckboxInput(attrs={'class': 'checkbox', 'style': 'zoom:200%;margin-right:.35rem'}), required=False)
@@ -221,6 +221,11 @@ class VanpoolMonthlyReport(forms.ModelForm):
                                                          report_year=report_year,
                                                          report_month=report_month).values(category)
                 old_data = old_data[0][category]
+
+                # Should not happen but in case there is old data that is missing a value (came up during testing)
+                if old_data is None:
+                    continue
+
                 if new_data >= old_data * 1.2:
                     category = category.replace('_', ' ')
                     category = category.title()
@@ -251,9 +256,7 @@ class VanpoolMonthlyReport(forms.ModelForm):
                 raise NameError('run_validator')
         except:
             error_list = self.validator_method()
-            print(str(error_list) + " " + str(len(error_list)))
             if len(error_list) > 0:
-                print(forms.ValidationError)
                 raise forms.ValidationError(error_list)
             return cleaned_data
 
@@ -295,16 +298,15 @@ class VanpoolMonthlyReport(forms.ModelForm):
 
     # TODO test how easily the fields can be extracted
     def save(self, commit=True):
-        print("save")
         instance = super(VanpoolMonthlyReport, self).save(commit=False)
-        if self.cleaned_data['data_change_explanation'] != None:
+        if self.cleaned_data['new_data_change_explanation'] != None:
             past_explanations = vanpool_report.objects.get(id=instance.id).data_change_explanation
             if past_explanations is None:
                 past_explanations = ""
             instance.data_change_explanation = past_explanations + \
                                                "{'edit_date':'" + str(datetime.date.today()) + \
                                                "','explanation':'" + self.cleaned_data[
-                                                   'data_change_explanation'] + "'},"
+                                                   'new_data_change_explanation'] + "'},"
 
             past_data_change_record = vanpool_report.objects.get(id=instance.id).data_change_record
             if past_data_change_record is None:
@@ -312,7 +314,6 @@ class VanpoolMonthlyReport(forms.ModelForm):
             instance.data_change_record = past_data_change_record + serializers.serialize('json', [
                 vanpool_report.objects.get(id=instance.id), ])
         if commit:
-            print("save")
             instance.save()
         return instance
 

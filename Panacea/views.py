@@ -141,8 +141,9 @@ def handler404(request, exception):
 @login_required(login_url='/Panacea/login')
 def Vanpool_report(request, year=None, month=None):
     # Set form parameters
-    user_organization = profile.objects.get(custom_user_id=request.user.id).organization_id
-    organization_data = vanpool_report.objects.filter(organization_id=user_organization)
+    user_organization_id = profile.objects.get(custom_user_id=request.user.id).organization_id
+    user_organization = organization.objects.get(id=user_organization_id)
+    organization_data = vanpool_report.objects.filter(organization_id=user_organization_id)
 
     # logic to select the most recent form or the form requested through the URL
     if not year:
@@ -163,10 +164,10 @@ def Vanpool_report(request, year=None, month=None):
     max_year = organization_data.all().aggregate(Max('report_year')).get('report_year__max') == year
 
     # TODO rename to something better (this populates the navigation table)
-    past_report_data = vanpool_report.objects.filter(organization_id=user_organization, report_year=year)
+    past_report_data = vanpool_report.objects.filter(organization_id=user_organization_id, report_year=year)
 
     # Instance data to link form to data
-    form_data = vanpool_report.objects.get(organization_id=user_organization, report_year=year, report_month=month)
+    form_data = vanpool_report.objects.get(organization_id=user_organization_id, report_year=year, report_month=month)
 
     # TODO convert to django message framework
     # Logic if form is a new report or is an existing report (Comments are needed before editing an existing reports)
@@ -177,7 +178,12 @@ def Vanpool_report(request, year=None, month=None):
 
     # Respond to POST request
     if request.method == 'POST':
-        form = VanpoolMonthlyReport(user_organization = user_organization, data=request.POST, instance=form_data, record_id = form_data.id, report_month=month, report_year=year)
+        form = VanpoolMonthlyReport(user_organization=user_organization,
+                                    data=request.POST,
+                                    instance=form_data,
+                                    record_id=form_data.id,
+                                    report_month=month,
+                                    report_year=year)
         if form.is_valid():
             form.save()
             successful_submit = True  # Triggers a modal that says the form was submitted
@@ -185,18 +191,25 @@ def Vanpool_report(request, year=None, month=None):
 
         #TODO Fix this show it shows the form
         else:
-            form = VanpoolMonthlyReport(user_organization=user_organization, data=request.POST, instance=form_data,
-                                       record_id=form_data.id, report_month=month, report_year=year)
+            form = VanpoolMonthlyReport(user_organization=user_organization,
+                                        data=request.POST,
+                                        instance=form_data,
+                                        record_id=form_data.id,
+                                        report_month=month,
+                                        report_year=year)
             successful_submit = False
 
     # If not POST
     else:
-        form = VanpoolMonthlyReport(user_organization = user_organization, instance=form_data, record_id = form_data.id, report_month=month, report_year=year)
+        form = VanpoolMonthlyReport(user_organization=user_organization,
+                                    instance=form_data,
+                                    record_id=form_data.id,
+                                    report_month=month,
+                                    report_year=year)
         successful_submit = False
 
     if not new_report:
         form.fields['data_change_explanation'].required = True
-
 
     return render(request, 'pages/Vanpool_report.html', {'form': form,
                                                          'past_report_data': past_report_data,
