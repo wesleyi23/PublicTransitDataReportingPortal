@@ -188,6 +188,7 @@ def handler404(request, exception):
 def Vanpool_report(request, year=None, month=None):
     # Set form parameters
     user_organization = profile.objects.get(custom_user_id=request.user.id).organization_id
+    user_organization = profile.objects.get(custom_user_id=request.user.id)
     organization_data = vanpool_report.objects.filter(organization_id=user_organization)
 
     # logic to select the most recent form or the form requested through the URL
@@ -243,13 +244,12 @@ def Vanpool_report(request, year=None, month=None):
 
     if not new_report:
         form.fields['data_change_explanation'].required = True
-
-
+    print(organization_data.name)
     return render(request, 'pages/Vanpool_report.html', {'form': form,
                                                          'past_report_data': past_report_data,
                                                          'year': year,
                                                          'month': month,
-                                                         'organization': user_organization,
+                                                         'organization': organization_data,
                                                          'successful_submit': successful_submit,
                                                          'min_year': min_year,
                                                          'max_year': max_year,
