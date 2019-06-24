@@ -46,7 +46,6 @@
                                         </thead>
                                         <tbody>
                                         {% for form in Admin_assignPermissions_all %}
-
                                             <tr>
                                                 <td style="display: none; visibility: hidden;" aria-hidden="true">{{ form.id }}</td>
                                                 <td>{{ form.first_name.value }}</td>
@@ -86,14 +85,9 @@
             </div>
         </div>
     </div>
-
-
-
 {% endblock %}
 
 {% block page_scripts %}
-
-
     <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.19/js/jquery.dataTables.js"></script>
     <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.19/js/dataTables.bootstrap4.min.js "></script>
 
@@ -109,8 +103,5 @@
             $('.dataTables_filter').addClass('form-inline');
             $('.dataTables_filter').css({"float":"left", "margin-bottom":"2px", "margin-left":"2px"})
         });
-
-
-
     </script>
 {% endblock %}

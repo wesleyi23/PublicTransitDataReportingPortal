@@ -66,10 +66,56 @@ def index(request):
 @login_required(login_url='/Panacea/login')
 def dashboard(request):
     current_user_profile = profile.objects.get(custom_user=request.user)
+
+    # If the user is registered and has had permissions assigned
     if current_user_profile.profile_complete is True:
-        return render(request, 'pages/dashboard.html')
+        current_user_id = request.user.id
+        user_org_id = profile.objects.get(custom_user_id=current_user_id).organization_id
+        recent_vanpool_report = vanpool_report.objects. \
+            filter(organization_id=user_org_id, report_date__isnull=False). \
+            order_by('-report_year', '-report_month').first()
+        report_month = recent_vanpool_report.report_month
+        report_year = recent_vanpool_report.report_year - 1
+        last_year_report = vanpool_report.objects.get(organization_id=user_org_id,
+                                   report_year=report_year,
+                                   report_month=report_month)
+
+        def get_most_recent_and_change(measure):
+            """Return a list where first item is the current months stat and the second item is the year over year grouwth"""
+            current_monthly_stat = getattr(recent_vanpool_report, measure)
+            last_year_stat = getattr(last_year_report, measure)
+            if last_year_stat is None:
+                year_over_year_growth = "NA"
+            else:
+                year_over_year_growth = (current_monthly_stat/last_year_stat) - 1
+
+            return [current_monthly_stat, year_over_year_growth]
+
+        def check_status():
+            """Returns the report status (if it is past due) of the report for the report after the most recent report"""
+            def get_month_year_addition(month):
+                if month == 12:
+                    return 0, 1
+                else:
+                    return 1, 0
+            month_add, year_add = get_month_year_addition(recent_vanpool_report.report_month)
+            next_vanpool_report_status = vanpool_report.objects.get(organization_id=user_org_id,
+                                                                    report_month=recent_vanpool_report.report_month + month_add,
+                                                                    report_year=recent_vanpool_report.report_year + year_add).status
+            return next_vanpool_report_status
+        return render(request, 'pages/dashboard.html', {
+            'groups_in_operation': get_most_recent_and_change("total_groups_in_operation"),
+            'total_passenger_trips': get_most_recent_and_change("total_passenger_trips"),
+            'average_riders_per_van': get_most_recent_and_change("average_riders_per_van"),
+            'total_miles_traveled': get_most_recent_and_change("total_miles_traveled"),
+            'reprt_status': check_status()
+        })
+
+    # If the user has completed their profile but has not had permissions assigned
     elif current_user_profile.profile_submitted is True:
         return render(request, 'pages/ProfileComplete.html')
+
+    # If the user is a new user
     else:
         return redirect('ProfileSetup')
 
@@ -135,7 +181,7 @@ def ProfileSetup_ReportSelection(request):
 
 @login_required(login_url='/Panacea/login')
 def handler404(request, exception):
-    return render(request,'pages/error_404.html', status = 404)
+    return render(request,'pages/error_404.html', status=404)
 
 
 @login_required(login_url='/Panacea/login')
@@ -146,6 +192,7 @@ def Vanpool_report(request, year=None, month=None):
 
     # logic to select the most recent form or the form requested through the URL
     if not year:
+
         organization_data_incomplete = organization_data.filter(report_date=None)
         start_year = organization_data_incomplete \
             .aggregate(Min('report_year')) \
@@ -186,7 +233,7 @@ def Vanpool_report(request, year=None, month=None):
         #TODO Fix this show it shows the form
         else:
             form = VanpoolMonthlyReport(user_organization=user_organization, data=request.POST, instance=form_data,
-                                       record_id=form_data.id, report_month=month, report_year=year)
+                                        record_id=form_data.id, report_month=month, report_year=year)
             successful_submit = False
 
     # If not POST

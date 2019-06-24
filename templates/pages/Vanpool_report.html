@@ -162,6 +162,16 @@
                                         <td colspan="3"><b>Program Wide Information</b></td>
                                     </tr>
                                 {% endif %}
+                                  <tr class="fieldWrapper">
+                                    <td>{{ form.vans_available.errors }}</td>
+                                    <td>{{ form.vans_available.label_tag }}</td>
+                                    <td>{{ form.vans_available }}</td>
+                                </tr>
+                                  <tr class="fieldWrapper">
+                                    <td>{{ form.loaner_spare_vans_in_fleet.errors }}</td>
+                                    <td>{{ form.loaner_spare_vans_in_fleet.label_tag }}</td>
+                                    <td>{{ form.loaner_spare_vans_in_fleet }}</td>
+                                </tr>
                                 <tr class="fieldWrapper">
                                     <td>{{ form.average_riders_per_van.errors }}</td>
                                     <td>{{ form.average_riders_per_van.label_tag }}</td>

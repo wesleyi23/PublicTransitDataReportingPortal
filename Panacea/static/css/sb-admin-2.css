@@ -33,8 +33,8 @@
   --primary_tint_1: #33957f;
   --secondary: #669797;
   --success: #1cc88a;
-  --info: #36b9cc;
-  --warning: #f6c23e;
+  --info: #00aec7;
+  --warning: #ABC785;
   --danger: #e74a3b;
   --light: #f8f9fc;
   --dark: #5a5c69;
@@ -11062,7 +11062,7 @@ a:focus {
 }
 
 .topbar {
-  height: 4.375rem;
+  height: 3rem;
 }
 
 .topbar #sidebarToggleTop {
@@ -11089,12 +11089,12 @@ a:focus {
 .topbar .topbar-divider {
   width: 0;
   border-right: 1px solid #e3e6f0;
-  height: calc(4.375rem - 2rem);
+  height: calc(3rem - 2rem);
   margin: auto 1rem;
 }
 
 .topbar .nav-item .nav-link {
-  height: 4.375rem;
+  height: 3rem;
   display: -webkit-box;
   display: -ms-flexbox;
   display: flex;
@@ -12141,7 +12141,7 @@ form.user .btn-user {
 }
 
 footer.sticky-footer {
-  padding: 2rem 0;
+  padding: 1.5rem 0;
   -ms-flex-negative: 0;
   flex-shrink: 0;
 }

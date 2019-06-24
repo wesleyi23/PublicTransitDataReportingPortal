@@ -75,3 +75,16 @@ def get_chart_data(chart_dict_item):
 @register.filter(name='get_chart_dataset_color')
 def get_chart_color(chart_dict_item):
     return chart_dict_item[1]
+
+
+@register.filter(name='print_dashboard_cards_data')
+def print_dashboard_cards_data(data):
+    percent = data[1]
+    if not isinstance(percent, str):
+        percent = round(data[1] * 100, 2)
+        if percent < 0:
+            percent = "<font class='text-danger'>" + str(percent) + "%</font>"
+        else:
+            percent = "<font class='text-success'>" + str(percent) + "%</font>"
+
+    return str(data[0]) + " | (" + str(percent) + ")"
