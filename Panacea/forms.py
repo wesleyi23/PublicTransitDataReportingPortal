@@ -108,7 +108,6 @@ class ProfileSetup_PhoneAndOrg(forms.ModelForm):
 
 
 class user_profile_custom_user(forms.ModelForm):
-
     class Meta:
         model = custom_user
         fields = ('first_name', 'last_name', 'email')
@@ -122,7 +121,6 @@ class user_profile_custom_user(forms.ModelForm):
 
 
 class user_profile_profile(forms.ModelForm):
-
     class Meta:
         model = profile
         queryset = organization.objects.all()
@@ -140,7 +138,8 @@ class PhoneOrgSetup(forms.ModelForm):
 
     telephone_number = PhoneNumberField(widget=forms.TextInput(attrs={'class': 'form-control form-control-user'}),
                                         label=_("Phone number:"), required=True)
-    job_title = forms.CharField(widget=forms.TextInput(attrs={'class': 'form-control form-control-user'}), required=True)
+    job_title = forms.CharField(widget=forms.TextInput(attrs={'class': 'form-control form-control-user'}),
+                                required=True)
     organization = forms.ModelChoiceField(queryset=queryset,
                                           widget=forms.Select(attrs={'class': 'form-control form-control-user'}))
 
@@ -158,11 +157,10 @@ class ReportSelection(forms.ModelForm):
 
     class Meta:
         model = profile
-        fields = ('reports_on', )
+        fields = ('reports_on',)
 
 
 class VanpoolMonthlyReport(forms.ModelForm):
-
 
     def __init__(self, user_organization, record_id, report_month, report_year, *args, **kwargs):
         self.report_month = report_month
@@ -171,15 +169,18 @@ class VanpoolMonthlyReport(forms.ModelForm):
         self.record_id = record_id
         super(VanpoolMonthlyReport, self).__init__(*args, **kwargs)
 
-
-    new_data_change_explanation = forms.CharField(widget=forms.Textarea(
-        attrs={'required': True, 'class': 'form-control input-sm', 'rows': 3, 'display': False})
+    new_data_change_explanation = forms.CharField(required=False, widget=forms.Textarea(
+        attrs={'class': 'form-control input-sm', 'rows': 3, 'display': False})
     )
     acknowledge_validation_errors = forms.BooleanField(
         label='Check this box to confirm that your submitted numbers are correct, even though there are validation errors.',
-        widget=forms.CheckboxInput(attrs={'class': 'checkbox', 'style': 'zoom:200%;margin-right:.35rem'}), required=False)
+        widget=forms.CheckboxInput(attrs={'class': 'checkbox', 'style': 'zoom:200%;margin-right:.35rem'}),
+        required=False)
+
+
 
     def validator_method(self):
+
         # instantiate the error list
         error_list = []
 
@@ -206,8 +207,10 @@ class VanpoolMonthlyReport(forms.ModelForm):
                                                report_year=report_year,
                                                report_month=report_month).values('vanpool_groups_in_operation')
         if vp_ops[0]['vanpool_groups_in_operation'] == None:
-            raise forms.ValidationError('You must fill out the data for the previous month first. Please refer to the previous reporting month')
-            error_list.append('You must fill out the data for the previous month first. Please refer to the previous reporting month')
+            raise forms.ValidationError(
+                'You must fill out the data for the previous month first. Please refer to the previous reporting month')
+            error_list.append(
+                'You must fill out the data for the previous month first. Please refer to the previous reporting month')
             return error_list
         else:
             for category in self.cleaned_data.keys():
@@ -240,23 +243,33 @@ class VanpoolMonthlyReport(forms.ModelForm):
                     old_van_number = vanpool_report.objects.filter(
                         organization_id=self.user_organization,
                         report_year=report_year,
-                        report_month=report_month).values('vanpool_groups_in_operation', 'vanpool_group_starts', 'vanpool_group_folds')
+                        report_month=report_month).values('vanpool_groups_in_operation', 'vanpool_group_starts',
+                                                          'vanpool_group_folds')
                     old_van_number = old_van_number[0]
-                    if new_data != (old_van_number['vanpool_groups_in_operation'] + old_van_number['vanpool_group_starts'] - old_van_number['vanpool_group_folds']):
-                        error_list.append('The Vanpool Groups in Operation do not reflect the folds and started recorded last month')
+                    if new_data != (
+                            old_van_number['vanpool_groups_in_operation'] + old_van_number['vanpool_group_starts'] -
+                            old_van_number['vanpool_group_folds']):
+                        error_list.append(
+                            'The Vanpool Groups in Operation do not reflect the folds and started recorded last month')
             return error_list
 
     def clean(self):
         cleaned_data = super(VanpoolMonthlyReport, self).clean()
         # try except block because acknowledge validation errors only exists after the validation has taken place
+        print("Try if results: " + str(cleaned_data['acknowledge_validation_errors']))
         try:
-            if cleaned_data['acknowledge_validation_errors'] == True:
+            if cleaned_data['acknowledge_validation_errors']:
+                print("clean-return-clean-data")
                 return cleaned_data
             else:
+                print("else")
                 raise NameError('run_validator')
         except:
+            print("except")
             error_list = self.validator_method()
+            print('error list len: ' + str(len(error_list)))
             if len(error_list) > 0:
+                print(error_list)
                 raise forms.ValidationError(error_list)
             return cleaned_data
 
@@ -298,6 +311,7 @@ class VanpoolMonthlyReport(forms.ModelForm):
 
     # TODO test how easily the fields can be extracted
     def save(self, commit=True):
+        print("save")
         instance = super(VanpoolMonthlyReport, self).save(commit=False)
         if self.cleaned_data['new_data_change_explanation'] != None:
             past_explanations = vanpool_report.objects.get(id=instance.id).data_change_explanation
@@ -319,7 +333,6 @@ class VanpoolMonthlyReport(forms.ModelForm):
 
 
 class organization_profile(forms.ModelForm):
-
     class Meta:
         TRUE_FALSE_CHOICES = (
             (False, 'No'),
@@ -337,10 +350,13 @@ class organization_profile(forms.ModelForm):
                 attrs={'class': 'form-control-plaintext', 'readonly': 'True', 'style': "width:350px"}),
             'city': forms.TextInput(
                 attrs={'class': 'form-control-plaintext', 'readonly': 'True'}),
-            'state': forms.Select(attrs={'class': 'form-control form-control-plaintext', 'readonly': 'True', 'style': 'pointer-events: none'}),
+            'state': forms.Select(attrs={'class': 'form-control form-control-plaintext', 'readonly': 'True',
+                                         'style': 'pointer-events: none'}),
             'zip_code': forms.TextInput(
                 attrs={'class': 'form-control-plaintext', 'readonly': 'True'}),
-            'vanshare_program': forms.Select(choices=TRUE_FALSE_CHOICES, attrs={'class': 'form-control form-control-plaintext', 'readonly': 'True', 'style': 'pointer-events: none'})
+            'vanshare_program': forms.Select(choices=TRUE_FALSE_CHOICES,
+                                             attrs={'class': 'form-control form-control-plaintext', 'readonly': 'True',
+                                                    'style': 'pointer-events: none'})
         }
 
 
@@ -352,11 +368,14 @@ class change_user_permissions_group(forms.ModelForm):
             'groups': forms.CheckboxSelectMultiple(attrs={'class': 'form-check-inline no-bullet AJAX_instant_submit',
                                                           'data-form-name': "Admin_assignPermissions_all"}),
             'first_name': forms.TextInput(
-                attrs={'class': 'form-control-plaintext', 'readonly': 'True', 'style': 'display: none; visibility: hidden'}),
+                attrs={'class': 'form-control-plaintext', 'readonly': 'True',
+                       'style': 'display: none; visibility: hidden'}),
             'last_name': forms.TextInput(
-                attrs={'class': 'form-control-plaintext', 'readonly': 'True', 'style': 'display: none; visibility: hidden'}),
+                attrs={'class': 'form-control-plaintext', 'readonly': 'True',
+                       'style': 'display: none; visibility: hidden'}),
             'email': forms.TextInput(
-                attrs={'class': 'form-control-plaintext', 'readonly': 'True', 'style': 'display: none; visibility: hidden'}),
+                attrs={'class': 'form-control-plaintext', 'readonly': 'True',
+                       'style': 'display: none; visibility: hidden'}),
         }
 
 
@@ -412,7 +431,8 @@ class submit_a_new_vanpool_expansion(forms.ModelForm):
                                         widget=forms.DateInput(attrs={'class': 'form-control'}))
     latest_vehicle_acceptance = forms.DateTimeField(input_formats=['%Y-%m-%d'],
                                                     widget=forms.DateInput(attrs={'class': 'form-control'}))
-    #TODO is this used?
+
+    # TODO is this used?
     def as_myp(self):
         return self._html_output(
             normal_row='<p%(html_class_attr)s>%(label)s</p> <p>%(field)s%(help_text)s</p>',
@@ -425,7 +445,7 @@ class submit_a_new_vanpool_expansion(forms.ModelForm):
         model = vanpool_expansion_analysis
 
         fields = ['organization', 'date_of_award', 'expansion_vans_awarded', 'latest_vehicle_acceptance',
-                  'vanpools_in_service_at_time_of_award',  'notes']
+                  'vanpools_in_service_at_time_of_award', 'notes']
         required = ['organization', 'date_of_award', 'expansion_vans_awarded', 'latest_vehicle_acceptance',
                     'extension_granted', 'vanpools_in_service_at_time_of_award', 'expired']
 
@@ -444,7 +464,7 @@ class submit_a_new_vanpool_expansion(forms.ModelForm):
             'latest_vehicle_acceptance': forms.DateInput(attrs={'class': 'form-control'}),
             'expansion_vans_awarded': forms.NumberInput(attrs={'class': 'form-control'}),
             'vanpools_in_service_at_time_of_award': forms.NumberInput(attrs={'class': 'form-control'}),
-            'notes': forms.Textarea(attrs={'class': 'form-control', 'rows':3})
+            'notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 3})
         }
 
 
@@ -456,10 +476,10 @@ class Modify_A_Vanpool_Expansion(forms.ModelForm):
 
         fields = ['expansion_vans_awarded', 'latest_vehicle_acceptance', 'extension_granted', 'expired', 'notes']
         widgets = {'expansion_vans_awarded': forms.NumberInput(attrs={'class': 'form-control'}),
-                   'notes': forms.Textarea(attrs={'class': 'form-control', 'rows':3, 'style': 'max-width:600px'}),
-                   'extension_granted': forms.CheckboxInput(attrs={'class': 'form-control', 'style': 'width:auto;zoom:200%'}),
+                   'notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'style': 'max-width:600px'}),
+                   'extension_granted': forms.CheckboxInput(
+                       attrs={'class': 'form-control', 'style': 'width:auto;zoom:200%'}),
                    'expired': forms.CheckboxInput(attrs={'class': 'form-control',
                                                          'style': 'width:auto;zoom:200%;float:left;margin-right:0.5rem',
                                                          'disabled': 'disabled'})
                    }
-
