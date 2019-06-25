@@ -177,8 +177,6 @@ class VanpoolMonthlyReport(forms.ModelForm):
         widget=forms.CheckboxInput(attrs={'class': 'checkbox', 'style': 'zoom:200%;margin-right:.35rem'}),
         required=False)
 
-
-
     def validator_method(self):
 
         # instantiate the error list
@@ -207,9 +205,9 @@ class VanpoolMonthlyReport(forms.ModelForm):
                                                report_year=report_year,
                                                report_month=report_month).values('vanpool_groups_in_operation')
         if vp_ops[0]['vanpool_groups_in_operation'] == None:
-            raise forms.ValidationError(
-                'You must fill out the data for the previous month first. Please refer to the previous reporting month')
             error_list.append(
+                'You must fill out the data for the previous month first. Please refer to the previous reporting month')
+            raise forms.ValidationError(
                 'You must fill out the data for the previous month first. Please refer to the previous reporting month')
             return error_list
         else:
@@ -234,7 +232,6 @@ class VanpoolMonthlyReport(forms.ModelForm):
                     category = category.title()
                     error_list.append('{} have increased more than 20%. Please confirm this number.'.format(category))
 
-                # Math error here I changed both to be consistent
                 elif new_data <= old_data * 0.8:
                     category = category.replace('_', ' ')
                     category = category.title()

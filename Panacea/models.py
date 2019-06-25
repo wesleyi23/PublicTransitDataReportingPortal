@@ -10,7 +10,6 @@ from phonenumber_field.modelfields import PhoneNumberField
 import datetime
 
 
-# Create your models here.
 class CustomUserManager(BaseUserManager):
     """Define a model manager for User model with no username field."""
 

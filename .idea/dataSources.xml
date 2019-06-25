@@ -35,5 +35,16 @@
         </library>
       </libraries>
     </data-source>
+    <data-source source="LOCAL" name="Django default" uuid="b8d1ef86-599b-4bf3-9b27-f94b57374e31">
+      <driver-ref>sqlite.xerial</driver-ref>
+      <synchronize>true</synchronize>
+      <imported>true</imported>
+      <remarks>$PROJECT_DIR$/TransitData/settings.py</remarks>
+      <jdbc-driver>org.sqlite.JDBC</jdbc-driver>
+      <jdbc-url>jdbc:sqlite:C:\Users\wesleyi\PycharmProjects\PublicTransitDataReportingPortal\db.PanaceaDB</jdbc-url>
+      <driver-properties>
+        <property name="enable_load_extension" value="true" />
+      </driver-properties>
+    </data-source>
   </component>
 </project>

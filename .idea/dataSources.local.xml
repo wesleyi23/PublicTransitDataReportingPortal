@@ -3,8 +3,13 @@
   <component name="dataSourceStorageLocal">
     <data-source name="db" uuid="c19c53b9-1ff7-4b5d-ad78-d0cb430106a9">
       <database-info product="" version="" jdbc-version="" driver-name="" driver-version="" dbms="SQLITE" exact-version="0" />
+      <secret-storage>forget</secret-storage>
     </data-source>
     <data-source name="db [2]" uuid="117ab6fc-caf8-4b75-a3a3-21f9be13f536">
+      <database-info product="" version="" jdbc-version="" driver-name="" driver-version="" dbms="SQLITE" exact-version="0" />
+      <secret-storage>forget</secret-storage>
+    </data-source>
+    <data-source name="Django default" uuid="b8d1ef86-599b-4bf3-9b27-f94b57374e31">
       <database-info product="SQLite" version="3.25.1" jdbc-version="2.1" driver-name="SQLite JDBC" driver-version="3.25.1" dbms="SQLITE" exact-version="3.25.1" exact-driver-version="3.25">
         <identifier-quote-string>&quot;</identifier-quote-string>
       </database-info>

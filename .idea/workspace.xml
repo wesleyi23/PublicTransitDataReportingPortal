@@ -1,19 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="d0261508-4096-4214-bf0c-cd87915e08fa" name="Default Changelist" comment="">
+    <list default="true" id="d0261508-4096-4214-bf0c-cd87915e08fa" name="Default Changelist" comment="Ready for mgt team">
       <change beforePath="$PROJECT_DIR$/.idea/dataSources.local.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources.local.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/dataSources.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources/846ba314-c849-4625-851a-d1da97c2bab2.xml" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Panacea/static/css/sb-admin-2.css" beforeDir="false" afterPath="$PROJECT_DIR$/Panacea/static/css/sb-admin-2.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Panacea/templatetags/custom_tags.py" beforeDir="false" afterPath="$PROJECT_DIR$/Panacea/templatetags/custom_tags.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Panacea/views.py" beforeDir="false" afterPath="$PROJECT_DIR$/Panacea/views.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/db.PanaceaDB" beforeDir="false" afterPath="$PROJECT_DIR$/db.PanaceaDB" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/templates/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/index.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/templates/pages/AssignPermissions.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/pages/AssignPermissions.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/templates/pages/Vanpool_report.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/pages/Vanpool_report.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/templates/pages/dashboard.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/pages/dashboard.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Panacea/forms.py" beforeDir="false" afterPath="$PROJECT_DIR$/Panacea/forms.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Panacea/models.py" beforeDir="false" afterPath="$PROJECT_DIR$/Panacea/models.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Panacea/utilities.py" beforeDir="false" afterPath="$PROJECT_DIR$/Panacea/utilities.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -69,14 +63,30 @@
       <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/Panacea/views.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="135">
-              <caret line="125" column="68" lean-forward="true" selection-start-line="125" selection-start-column="68" selection-end-line="125" selection-end-column="68" />
+            <state relative-caret-position="646">
+              <caret line="544" lean-forward="true" selection-start-line="544" selection-end-line="544" />
               <folding>
                 <element signature="e#1845#2234#0" />
                 <element signature="e#1882#2111#0" />
                 <element signature="e#1966#2111#0" />
                 <element signature="e#2305#2345#0" />
-                <element signature="e#2420#5394#0" />
+                <element signature="e#2420#5400#0" />
+                <element signature="e#5519#6112#0" />
+                <element signature="e#6197#6646#0" />
+                <element signature="e#6736#7242#0" />
+                <element signature="e#7336#7961#0" />
+                <element signature="e#8048#8105#0" />
+                <element signature="e#8208#11994#0" />
+                <element signature="e#12088#12605#0" />
+                <element signature="e#12697#16442#0" />
+                <element signature="e#16541#17461#0" />
+                <element signature="e#17540#20227#0" />
+                <element signature="e#20437#21692#0" />
+                <element signature="e#21782#22397#0" />
+                <element signature="e#22482#23602#0" />
+                <element signature="e#24091#25292#0" />
+                <element signature="e#25859#26402#0" />
+                <element signature="e#26485#29666#0" />
               </folding>
             </state>
           </provider>
@@ -85,44 +95,103 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/templates/pages/Vanpool_report.html">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-118">
-              <caret line="172" column="74" selection-start-line="172" selection-start-column="74" selection-end-line="172" selection-end-column="74" />
+            <state relative-caret-position="1700">
+              <caret line="100" column="52" lean-forward="true" selection-start-line="100" selection-start-column="52" selection-end-line="100" selection-end-column="52" />
             </state>
           </provider>
         </entry>
       </file>
       <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/templates/pages/AssignPermissions.html">
+        <entry file="file://$PROJECT_DIR$/Panacea/forms.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="1020">
-              <caret line="96" column="32" selection-start-line="96" selection-start-column="32" selection-end-line="96" selection-end-column="32" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="das://117ab6fc-caf8-4b75-a3a3-21f9be13f536/schema/main/table/Panacea_vanpool_report">
-          <provider selected="true" editor-type-id="com.intellij.database.editor.DatabaseTableFileEditorProvider">
-            <state>
-              <filtering enabled="true" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/templates/pages/dashboard.html">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-391">
-              <caret line="46" column="78" selection-start-line="46" selection-start-column="78" selection-end-line="46" selection-end-column="78" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/Panacea/static/html_templates/cards.html">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="6902">
-              <caret line="406" column="71" selection-start-line="406" selection-start-column="64" selection-end-line="406" selection-end-column="71" />
+            <state relative-caret-position="454">
+              <caret line="467" selection-start-line="467" selection-end-line="467" />
+              <folding>
+                <element signature="e#653#3282#0" />
+                <element signature="e#653#758#1" />
+                <element signature="e#780#860#0" />
+                <element signature="e#1427#1617#0" />
+                <element signature="e#1658#2002#0" />
+                <element signature="e#1835#1977#0" />
+                <element signature="e#2039#2433#0" />
+                <element signature="e#2069#2138#0" />
+                <element signature="e#2248#2433#0" />
+                <element signature="e#2476#2631#0" />
+                <element signature="e#2657#3282#0" />
+                <element signature="e#2748#2852#0" />
+                <element signature="e#2871#3282#0" />
+                <element signature="e#3336#3859#0" />
+                <element signature="e#3356#3859#0" />
+                <element signature="e#3448#3859#0" />
+                <element signature="e#3915#4150#0" />
+                <element signature="e#3935#4150#0" />
+                <element signature="e#4023#4150#0" />
+                <element signature="e#4206#4656#0" />
+                <element signature="e#4226#4656#0" />
+                <element signature="e#4318#4656#0" />
+                <element signature="e#4708#5120#0" />
+                <element signature="e#4728#5120#0" />
+                <element signature="e#4859#5120#0" />
+                <element signature="e#5165#5853#0" />
+                <element signature="e#5771#5853#0" />
+                <element signature="e#5900#6310#0" />
+                <element signature="e#6262#6310#0" />
+                <element signature="e#6363#15290#0" />
+                <element signature="e#6465#6690#0" />
+                <element signature="e#7222#11185#0" />
+                <element signature="e#7355#7846#0" />
+                <element signature="e#7970#8029#0" />
+                <element signature="e#8433#8764#0" />
+                <element signature="e#8790#11122#0" />
+                <element signature="e#8848#11092#0" />
+                <element signature="e#9733#9937#0" />
+                <element signature="e#10010#10213#0" />
+                <element signature="e#10361#11155#0" />
+                <element signature="e#11017#11155#0" />
+                <element signature="e#11216#12042#0" />
+                <element signature="e#11499#11730#0" />
+                <element signature="e#11565#11633#0" />
+                <element signature="e#11668#11730#0" />
+                <element signature="e#11759#12042#0" />
+                <element signature="e#11937#12010#0" />
+                <element signature="e#12068#14149#0" />
+                <element signature="e#12110#12236#0" />
+                <element signature="e#12256#14149#0" />
+                <element signature="e#14247#15353#0" />
+                <element signature="e#14414#15282#0" />
+                <element signature="e#15218#15281#0" />
+                <element signature="e#15405#16826#0" />
+                <element signature="e#15425#16826#0" />
+                <element signature="e#15460#15500#0" />
+                <element signature="e#15670#16826#0" />
+                <element signature="e#16272#16414#0" />
+                <element signature="e#16662#16815#0" />
+                <element signature="e#16887#17819#0" />
+                <element signature="e#16907#17819#0" />
+                <element signature="e#17011#17819#0" />
+                <element signature="e#17070#17237#0" />
+                <element signature="e#17305#17429#0" />
+                <element signature="e#17496#17620#0" />
+                <element signature="e#17683#17807#0" />
+                <element signature="e#17856#19992#0" />
+                <element signature="e#17879#18301#0" />
+                <element signature="e#18335#18755#0" />
+                <element signature="e#18866#19045#0" />
+                <element signature="e#19196#19333#0" />
+                <element signature="e#19567#19696#0" />
+                <element signature="e#19850#19990#0" />
+                <element signature="e#20054#22551#0" />
+                <element signature="e#20676#20956#0" />
+                <element signature="e#20982#22551#0" />
+                <element signature="e#21035#21190#0" />
+                <element signature="e#21210#21390#0" />
+                <element signature="e#21409#22074#0" />
+                <element signature="e#22094#22551#0" />
+                <element signature="e#22609#23645#0" />
+                <element signature="e#22629#23645#0" />
+                <element signature="e#22994#23645#0" />
+                <element signature="e#23396#23623#0" />
+              </folding>
             </state>
           </provider>
         </entry>
@@ -130,8 +199,8 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/Panacea/models.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="102">
-              <caret line="200" column="28" selection-start-line="200" selection-start-column="8" selection-end-line="200" selection-end-column="28" />
+            <state relative-caret-position="182">
+              <caret line="263" selection-start-line="263" selection-end-line="274" selection-end-column="31" />
               <folding>
                 <element signature="e#578#1961#0" />
                 <element signature="e#746#1080#0" />
@@ -148,6 +217,7 @@
                 <element signature="e#3474#3490#0" />
                 <element signature="e#4154#4254#0" />
                 <element signature="e#4459#5195#0" />
+                <element signature="e#5238#9134#0" />
                 <element signature="e#5263#5535#0" />
                 <element signature="e#5722#5785#0" />
                 <element signature="e#7481#7783#0" />
@@ -159,11 +229,29 @@
                 <element signature="e#8633#8802#0" />
                 <element signature="e#8871#9042#0" />
                 <element signature="e#9068#9134#0" />
-                <element signature="e#9485#11223#0" />
+                <element signature="e#9244#9308#0" />
+                <element signature="e#9407#9430#0" />
                 <element signature="e#10207#10303#0" />
                 <element signature="e#10358#10406#0" />
-                <element signature="e#10605#11223#0" />
               </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/Panacea/utilities.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="182">
+              <caret line="39" selection-start-line="39" selection-end-line="39" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$APPLICATION_CONFIG_DIR$/scratches/scratch.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state>
+              <caret selection-end-line="20" />
             </state>
           </provider>
         </entry>
@@ -171,11 +259,8 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/templates/index.html">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="1207">
-              <caret line="71" column="51" selection-start-line="71" selection-start-column="51" selection-end-line="71" selection-end-column="77" />
-              <folding>
-                <element signature="n#style#0;n#div#0;n#div#0;n#div#0;n#div#0;n#body#0;n#html#0;n#!!top" expanded="true" />
-              </folding>
+            <state relative-caret-position="2108">
+              <caret line="124" column="137" selection-start-line="124" selection-start-column="137" selection-end-line="124" selection-end-column="137" />
             </state>
           </provider>
         </entry>
@@ -197,7 +282,6 @@
       <find>report</find>
       <find>email</find>
       <find>notes</find>
-      <find>user_organization</find>
       <find>data_change_explanation</find>
       <find>acces</find>
       <find>sticky-footer</find>
@@ -206,6 +290,9 @@
       <find>text-wa</find>
       <find>warning</find>
       <find>calc</find>
+      <find>organization</find>
+      <find>user_organization</find>
+      <find>change_explanation</find>
     </findStrings>
   </component>
   <component name="Git.Settings">
@@ -242,27 +329,28 @@
         <option value="$PROJECT_DIR$/TransitData/__init__.py" />
         <option value="$PROJECT_DIR$/templates/pages/Vanpool_expansion_submission.html" />
         <option value="$PROJECT_DIR$/Panacea/tasks.py" />
-        <option value="$APPLICATION_CONFIG_DIR$/scratches/scratch.py" />
         <option value="$PROJECT_DIR$/TransitData/settings.py" />
         <option value="$PROJECT_DIR$/templates/pages/Vanpool_expansion.html" />
-        <option value="$PROJECT_DIR$/Panacea/models.py" />
         <option value="$PROJECT_DIR$/Panacea/migrations/0001_initial.py" />
-        <option value="$PROJECT_DIR$/Panacea/forms.py" />
-        <option value="$PROJECT_DIR$/templates/pages/Vanpool_report.html" />
         <option value="$PROJECT_DIR$/Panacea/static/css/sb-admin-2.css" />
-        <option value="$PROJECT_DIR$/templates/index.html" />
         <option value="$PROJECT_DIR$/Panacea/templatetags/custom_tags.py" />
         <option value="$PROJECT_DIR$/templates/pages/AssignPermissions.html" />
-        <option value="$PROJECT_DIR$/Panacea/views.py" />
         <option value="$PROJECT_DIR$/templates/pages/dashboard.html" />
+        <option value="$PROJECT_DIR$/Panacea/views.py" />
+        <option value="$PROJECT_DIR$/templates/pages/Vanpool_report.html" />
+        <option value="$PROJECT_DIR$/templates/index.html" />
+        <option value="$PROJECT_DIR$/Panacea/forms.py" />
+        <option value="$PROJECT_DIR$/Panacea/models.py" />
+        <option value="$APPLICATION_CONFIG_DIR$/scratches/scratch.py" />
+        <option value="$PROJECT_DIR$/Panacea/utilities.py" />
       </list>
     </option>
   </component>
   <component name="ProjectFrameBounds" extendedState="6">
-    <option name="x" value="531" />
-    <option name="y" value="298" />
-    <option name="width" value="2067" />
-    <option name="height" value="1103" />
+    <option name="x" value="354" />
+    <option name="y" value="198" />
+    <option name="width" value="1378" />
+    <option name="height" value="736" />
   </component>
   <component name="ProjectLevelVcsManager">
     <ConfirmationsSetting value="2" id="Add" />
@@ -288,39 +376,7 @@
             <path>
               <item name="PublicTransitDataReportingPortal" type="b2602c69:ProjectViewProjectNode" />
               <item name="PublicTransitDataReportingPortal" type="462c0819:PsiDirectoryNode" />
-              <item name="Panacea" type="462c0819:PsiDirectoryNode" />
-              <item name="static" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="PublicTransitDataReportingPortal" type="b2602c69:ProjectViewProjectNode" />
-              <item name="PublicTransitDataReportingPortal" type="462c0819:PsiDirectoryNode" />
-              <item name="Panacea" type="462c0819:PsiDirectoryNode" />
-              <item name="static" type="462c0819:PsiDirectoryNode" />
-              <item name="css" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="PublicTransitDataReportingPortal" type="b2602c69:ProjectViewProjectNode" />
-              <item name="PublicTransitDataReportingPortal" type="462c0819:PsiDirectoryNode" />
-              <item name="Panacea" type="462c0819:PsiDirectoryNode" />
-              <item name="static" type="462c0819:PsiDirectoryNode" />
-              <item name="html_templates" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="PublicTransitDataReportingPortal" type="b2602c69:ProjectViewProjectNode" />
-              <item name="PublicTransitDataReportingPortal" type="462c0819:PsiDirectoryNode" />
-              <item name="Panacea" type="462c0819:PsiDirectoryNode" />
-              <item name="templatetags" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="PublicTransitDataReportingPortal" type="b2602c69:ProjectViewProjectNode" />
-              <item name="PublicTransitDataReportingPortal" type="462c0819:PsiDirectoryNode" />
               <item name="templates" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="PublicTransitDataReportingPortal" type="b2602c69:ProjectViewProjectNode" />
-              <item name="PublicTransitDataReportingPortal" type="462c0819:PsiDirectoryNode" />
-              <item name="templates" type="462c0819:PsiDirectoryNode" />
-              <item name="pages" type="462c0819:PsiDirectoryNode" />
             </path>
             <path>
               <item name="PublicTransitDataReportingPortal" type="b2602c69:ProjectViewProjectNode" />
@@ -330,6 +386,15 @@
             <path>
               <item name="PublicTransitDataReportingPortal" type="b2602c69:ProjectViewProjectNode" />
               <item name="External Libraries" type="cb654da1:ExternalLibrariesNode" />
+            </path>
+            <path>
+              <item name="PublicTransitDataReportingPortal" type="b2602c69:ProjectViewProjectNode" />
+              <item name="Scratches and Consoles" type="1a2a3e82:ScratchProjectViewPane$MyProjectNode" />
+            </path>
+            <path>
+              <item name="PublicTransitDataReportingPortal" type="b2602c69:ProjectViewProjectNode" />
+              <item name="Scratches and Consoles" type="1a2a3e82:ScratchProjectViewPane$MyProjectNode" />
+              <item name="Scratches" type="d62648e6:ScratchProjectViewPane$MyRootNode" />
             </path>
           </expand>
           <select />
@@ -374,6 +439,28 @@
     </option>
   </component>
   <component name="RunManager" selected="Django server.Unnamed">
+    <configuration name="scratch" type="PythonConfigurationType" factoryName="Python" temporary="true">
+      <module name="TransitData" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$APPLICATION_CONFIG_DIR$/scratches" />
+      <option name="IS_MODULE_SDK" value="false" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$APPLICATION_CONFIG_DIR$/scratches/scratch.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
     <configuration name="settings" type="PythonConfigurationType" factoryName="Python" temporary="true">
       <module name="TransitData" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -451,9 +538,11 @@
     <list>
       <item itemvalue="Django server.Unnamed" />
       <item itemvalue="Python.settings" />
+      <item itemvalue="Python.scratch" />
     </list>
     <recent_temporary>
       <list>
+        <item itemvalue="Python.scratch" />
         <item itemvalue="Python.settings" />
         <item itemvalue="Python.settings" />
         <item itemvalue="Python.settings" />
@@ -510,7 +599,9 @@
       <workItem from="1559593749488" duration="27000" />
       <workItem from="1561128111296" duration="1554000" />
       <workItem from="1561130973915" duration="129000" />
-      <workItem from="1561131124484" duration="7520000" />
+      <workItem from="1561131124484" duration="8041000" />
+      <workItem from="1561406737307" duration="4839000" />
+      <workItem from="1561473994609" duration="6029000" />
     </task>
     <task id="LOCAL-00001" summary="updated db with historical data">
       <created>1556229956897</created>
@@ -610,11 +701,32 @@
       <option name="project" value="LOCAL" />
       <updated>1560898135236</updated>
     </task>
-    <option name="localTasksCounter" value="17" />
+    <task id="LOCAL-00017" summary="Fixed report form to have correct check boxes and update info">
+      <created>1561405910949</created>
+      <option name="number" value="00017" />
+      <option name="presentableId" value="LOCAL-00017" />
+      <option name="project" value="LOCAL" />
+      <updated>1561405910949</updated>
+    </task>
+    <task id="LOCAL-00018" summary="Fixed report form to have correct check boxes and update info">
+      <created>1561406200575</created>
+      <option name="number" value="00018" />
+      <option name="presentableId" value="LOCAL-00018" />
+      <option name="project" value="LOCAL" />
+      <updated>1561406200575</updated>
+    </task>
+    <task id="LOCAL-00019" summary="Ready for mgt team">
+      <created>1561411049020</created>
+      <option name="number" value="00019" />
+      <option name="presentableId" value="LOCAL-00019" />
+      <option name="project" value="LOCAL" />
+      <updated>1561411049020</updated>
+    </task>
+    <option name="localTasksCounter" value="20" />
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="354332000" />
+    <option name="totallyTimeSpent" value="365721000" />
   </component>
   <component name="TodoView">
     <todo-panel id="selected-file">
@@ -626,16 +738,16 @@
     </todo-panel>
   </component>
   <component name="ToolWindowManager">
-    <frame x="-7" y="-7" width="1295" height="695" extended-state="6" />
+    <frame x="-8" y="-8" width="1936" height="1056" extended-state="6" />
     <editor active="true" />
     <layout>
-      <window_info content_ui="combo" id="Project" order="0" sideWeight="0.49919224" visible="true" weight="0.23282135" />
+      <window_info content_ui="combo" id="Project" order="0" sideWeight="0.49919224" visible="true" weight="0.11140725" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info id="Favorites" order="2" sideWeight="0.50080776" side_tool="true" weight="0.29957357" />
       <window_info anchor="bottom" id="Messages" order="0" sideWeight="0.4989339" weight="0.32936078" />
       <window_info anchor="bottom" id="Message" order="1" />
       <window_info anchor="bottom" id="Find" order="2" weight="0.32916147" />
-      <window_info active="true" anchor="bottom" id="Run" order="3" sideWeight="0.4977307" visible="true" weight="0.19408503" />
+      <window_info active="true" anchor="bottom" id="Run" order="3" sideWeight="0.4977307" visible="true" weight="0.31" />
       <window_info anchor="bottom" id="Debug" order="4" weight="0.3997833" />
       <window_info anchor="bottom" id="Cvs" order="5" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="6" weight="0.4" />
@@ -643,9 +755,9 @@
       <window_info anchor="bottom" id="Docker" order="8" show_stripe_button="false" />
       <window_info anchor="bottom" id="Database Changes" order="9" show_stripe_button="false" sideWeight="0.49946696" weight="0.32936078" />
       <window_info anchor="bottom" id="Event Log" order="10" sideWeight="0.5030257" side_tool="true" weight="0.3282313" />
-      <window_info anchor="bottom" id="Version Control" order="11" sideWeight="0.4969743" weight="0.11666667" />
+      <window_info anchor="bottom" id="Version Control" order="11" sideWeight="0.4969743" weight="0.11645102" />
       <window_info anchor="bottom" id="Terminal" order="12" sideWeight="0.4978678" weight="0.33444443" />
-      <window_info anchor="bottom" id="manage.py@TransitData" order="13" visible="true" weight="0.036666665" />
+      <window_info anchor="bottom" id="manage.py@TransitData" order="13" weight="0.054444443" />
       <window_info anchor="bottom" id="Python Console" order="14" sideWeight="0.49840087" weight="0.3279099" />
       <window_info anchor="bottom" id="Database Console" order="15" sideWeight="0.49946696" weight="0.32936078" />
       <window_info anchor="right" id="Commander" internal_type="SLIDING" order="0" type="SLIDING" weight="0.4" />
@@ -751,10 +863,12 @@
     <MESSAGE value="trying not to lose my good forms" />
     <MESSAGE value="Fixed validator error" />
     <MESSAGE value="Fixed report form to have correct check boxes and update info" />
-    <option name="LAST_COMMIT_MESSAGE" value="Fixed report form to have correct check boxes and update info" />
+    <MESSAGE value="Ready for mgt team" />
+    <option name="LAST_COMMIT_MESSAGE" value="Ready for mgt team" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/PublicTransitDataReportingPortal$settings.coverage" NAME="settings Coverage Results" MODIFIED="1559071647760" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/TransitData" />
+    <SUITE FILE_PATH="coverage/PublicTransitDataReportingPortal$scratch.coverage" NAME="scratch Coverage Results" MODIFIED="1561479050440" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$APPLICATION_CONFIG_DIR$/scratches" />
   </component>
   <component name="editorHistoryManager">
     <entry file="file://$USER_HOME$/AppData/Local/Continuum/anaconda3/Lib/site-packages/Django-2.2b1-py3.7.egg/django/db/models/query.py" />
@@ -860,13 +974,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$APPLICATION_CONFIG_DIR$/scratches/scratch.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="255">
-          <caret line="15" column="15" lean-forward="true" selection-start-line="14" selection-end-line="15" selection-end-column="15" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$USER_HOME$/AppData/Local/Microsoft/Windows/INetCache/Content.Outlook/QTG47F0U/forms.py" />
     <entry file="das://e957fb1e-32b7-40f9-82ac-16dbbce271c0/schema/main/table/Panacea_profile" />
     <entry file="das://e957fb1e-32b7-40f9-82ac-16dbbce271c0/schema/main/table/Panacea_custom_user" />
@@ -913,77 +1020,6 @@
       </provider>
     </entry>
     <entry file="das://117ab6fc-caf8-4b75-a3a3-21f9be13f536/schema/main/table/Panacea_profile" />
-    <entry file="file://$PROJECT_DIR$/Panacea/forms.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-63">
-          <caret line="282" column="39" selection-start-line="282" selection-start-column="13" selection-end-line="282" selection-end-column="39" />
-          <folding>
-            <element signature="e#653#3282#0" />
-            <element signature="e#653#758#1" />
-            <element signature="e#780#860#0" />
-            <element signature="e#1427#1617#0" />
-            <element signature="e#1658#2002#0" />
-            <element signature="e#1835#1977#0" />
-            <element signature="e#2039#2433#0" />
-            <element signature="e#2069#2138#0" />
-            <element signature="e#2248#2433#0" />
-            <element signature="e#2476#2631#0" />
-            <element signature="e#2657#3282#0" />
-            <element signature="e#2748#2852#0" />
-            <element signature="e#2871#3282#0" />
-            <element signature="e#3336#3859#0" />
-            <element signature="e#3356#3859#0" />
-            <element signature="e#3448#3859#0" />
-            <element signature="e#3915#4150#0" />
-            <element signature="e#3935#4150#0" />
-            <element signature="e#4023#4150#0" />
-            <element signature="e#4207#4657#0" />
-            <element signature="e#4227#4657#0" />
-            <element signature="e#4319#4657#0" />
-            <element signature="e#4710#5122#0" />
-            <element signature="e#4730#5122#0" />
-            <element signature="e#4861#5122#0" />
-            <element signature="e#5167#5823#0" />
-            <element signature="e#5741#5823#0" />
-            <element signature="e#5870#6281#0" />
-            <element signature="e#6232#6281#0" />
-            <element signature="e#13925#15208#0" />
-            <element signature="e#13945#15208#0" />
-            <element signature="e#13980#14020#0" />
-            <element signature="e#14190#15208#0" />
-            <element signature="e#15269#16132#0" />
-            <element signature="e#15289#16132#0" />
-            <element signature="e#15393#16132#0" />
-            <element signature="e#15452#15619#0" />
-            <element signature="e#16169#18305#0" />
-            <element signature="e#16192#16614#0" />
-            <element signature="e#16648#17068#0" />
-            <element signature="e#17179#17358#0" />
-            <element signature="e#17509#17646#0" />
-            <element signature="e#17880#18009#0" />
-            <element signature="e#18163#18303#0" />
-            <element signature="e#18367#20862#0" />
-            <element signature="e#18987#19267#0" />
-            <element signature="e#19293#20862#0" />
-            <element signature="e#19346#19502#0" />
-            <element signature="e#19522#19702#0" />
-            <element signature="e#19721#20386#0" />
-            <element signature="e#20406#20862#0" />
-            <element signature="e#20920#21931#0" />
-            <element signature="e#20940#21931#0" />
-            <element signature="e#21305#21931#0" />
-            <element signature="e#21682#21909#0" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/Panacea/utilities.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="323">
-          <caret line="34" column="21" lean-forward="true" selection-start-line="34" selection-start-column="21" selection-end-line="34" selection-end-column="28" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/Panacea/static/css/sb-admin-2.css">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="135">
@@ -995,16 +1031,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="6902">
           <caret line="406" column="71" selection-start-line="406" selection-start-column="64" selection-end-line="406" selection-end-column="71" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/templates/index.html">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1207">
-          <caret line="71" column="51" selection-start-line="71" selection-start-column="51" selection-end-line="71" selection-end-column="77" />
-          <folding>
-            <element signature="n#style#0;n#div#0;n#div#0;n#div#0;n#div#0;n#body#0;n#html#0;n#!!top" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -1026,13 +1052,7 @@
         </state>
       </provider>
     </entry>
-    <entry file="das://117ab6fc-caf8-4b75-a3a3-21f9be13f536/schema/main/table/Panacea_vanpool_report">
-      <provider selected="true" editor-type-id="com.intellij.database.editor.DatabaseTableFileEditorProvider">
-        <state>
-          <filtering enabled="true" />
-        </state>
-      </provider>
-    </entry>
+    <entry file="das://117ab6fc-caf8-4b75-a3a3-21f9be13f536/schema/main/table/Panacea_vanpool_report" />
     <entry file="file://$PROJECT_DIR$/templates/pages/AssignPermissions.html">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="1020">
@@ -1040,10 +1060,45 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/templates/pages/dashboard.html">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-391">
+          <caret line="46" column="78" selection-start-line="46" selection-start-column="78" selection-end-line="46" selection-end-column="78" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/templates/index.html">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="2108">
+          <caret line="124" column="137" selection-start-line="124" selection-start-column="137" selection-end-line="124" selection-end-column="137" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/templates/pages/Vanpool_report.html">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1700">
+          <caret line="100" column="52" lean-forward="true" selection-start-line="100" selection-start-column="52" selection-end-line="100" selection-end-column="52" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$APPLICATION_CONFIG_DIR$/scratches/scratch.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state>
+          <caret selection-end-line="20" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Panacea/utilities.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="182">
+          <caret line="39" selection-start-line="39" selection-end-line="39" />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/Panacea/models.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="102">
-          <caret line="200" column="28" selection-start-line="200" selection-start-column="8" selection-end-line="200" selection-end-column="28" />
+        <state relative-caret-position="182">
+          <caret line="263" selection-start-line="263" selection-end-line="274" selection-end-column="31" />
           <folding>
             <element signature="e#578#1961#0" />
             <element signature="e#746#1080#0" />
@@ -1060,6 +1115,7 @@
             <element signature="e#3474#3490#0" />
             <element signature="e#4154#4254#0" />
             <element signature="e#4459#5195#0" />
+            <element signature="e#5238#9134#0" />
             <element signature="e#5263#5535#0" />
             <element signature="e#5722#5785#0" />
             <element signature="e#7481#7783#0" />
@@ -1071,38 +1127,133 @@
             <element signature="e#8633#8802#0" />
             <element signature="e#8871#9042#0" />
             <element signature="e#9068#9134#0" />
-            <element signature="e#9485#11223#0" />
+            <element signature="e#9244#9308#0" />
+            <element signature="e#9407#9430#0" />
             <element signature="e#10207#10303#0" />
             <element signature="e#10358#10406#0" />
-            <element signature="e#10605#11223#0" />
           </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/templates/pages/Vanpool_report.html">
+    <entry file="file://$PROJECT_DIR$/Panacea/forms.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-118">
-          <caret line="172" column="74" selection-start-line="172" selection-start-column="74" selection-end-line="172" selection-end-column="74" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/templates/pages/dashboard.html">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-391">
-          <caret line="46" column="78" selection-start-line="46" selection-start-column="78" selection-end-line="46" selection-end-column="78" />
+        <state relative-caret-position="454">
+          <caret line="467" selection-start-line="467" selection-end-line="467" />
+          <folding>
+            <element signature="e#653#3282#0" />
+            <element signature="e#653#758#1" />
+            <element signature="e#780#860#0" />
+            <element signature="e#1427#1617#0" />
+            <element signature="e#1658#2002#0" />
+            <element signature="e#1835#1977#0" />
+            <element signature="e#2039#2433#0" />
+            <element signature="e#2069#2138#0" />
+            <element signature="e#2248#2433#0" />
+            <element signature="e#2476#2631#0" />
+            <element signature="e#2657#3282#0" />
+            <element signature="e#2748#2852#0" />
+            <element signature="e#2871#3282#0" />
+            <element signature="e#3336#3859#0" />
+            <element signature="e#3356#3859#0" />
+            <element signature="e#3448#3859#0" />
+            <element signature="e#3915#4150#0" />
+            <element signature="e#3935#4150#0" />
+            <element signature="e#4023#4150#0" />
+            <element signature="e#4206#4656#0" />
+            <element signature="e#4226#4656#0" />
+            <element signature="e#4318#4656#0" />
+            <element signature="e#4708#5120#0" />
+            <element signature="e#4728#5120#0" />
+            <element signature="e#4859#5120#0" />
+            <element signature="e#5165#5853#0" />
+            <element signature="e#5771#5853#0" />
+            <element signature="e#5900#6310#0" />
+            <element signature="e#6262#6310#0" />
+            <element signature="e#6363#15290#0" />
+            <element signature="e#6465#6690#0" />
+            <element signature="e#7222#11185#0" />
+            <element signature="e#7355#7846#0" />
+            <element signature="e#7970#8029#0" />
+            <element signature="e#8433#8764#0" />
+            <element signature="e#8790#11122#0" />
+            <element signature="e#8848#11092#0" />
+            <element signature="e#9733#9937#0" />
+            <element signature="e#10010#10213#0" />
+            <element signature="e#10361#11155#0" />
+            <element signature="e#11017#11155#0" />
+            <element signature="e#11216#12042#0" />
+            <element signature="e#11499#11730#0" />
+            <element signature="e#11565#11633#0" />
+            <element signature="e#11668#11730#0" />
+            <element signature="e#11759#12042#0" />
+            <element signature="e#11937#12010#0" />
+            <element signature="e#12068#14149#0" />
+            <element signature="e#12110#12236#0" />
+            <element signature="e#12256#14149#0" />
+            <element signature="e#14247#15353#0" />
+            <element signature="e#14414#15282#0" />
+            <element signature="e#15218#15281#0" />
+            <element signature="e#15405#16826#0" />
+            <element signature="e#15425#16826#0" />
+            <element signature="e#15460#15500#0" />
+            <element signature="e#15670#16826#0" />
+            <element signature="e#16272#16414#0" />
+            <element signature="e#16662#16815#0" />
+            <element signature="e#16887#17819#0" />
+            <element signature="e#16907#17819#0" />
+            <element signature="e#17011#17819#0" />
+            <element signature="e#17070#17237#0" />
+            <element signature="e#17305#17429#0" />
+            <element signature="e#17496#17620#0" />
+            <element signature="e#17683#17807#0" />
+            <element signature="e#17856#19992#0" />
+            <element signature="e#17879#18301#0" />
+            <element signature="e#18335#18755#0" />
+            <element signature="e#18866#19045#0" />
+            <element signature="e#19196#19333#0" />
+            <element signature="e#19567#19696#0" />
+            <element signature="e#19850#19990#0" />
+            <element signature="e#20054#22551#0" />
+            <element signature="e#20676#20956#0" />
+            <element signature="e#20982#22551#0" />
+            <element signature="e#21035#21190#0" />
+            <element signature="e#21210#21390#0" />
+            <element signature="e#21409#22074#0" />
+            <element signature="e#22094#22551#0" />
+            <element signature="e#22609#23645#0" />
+            <element signature="e#22629#23645#0" />
+            <element signature="e#22994#23645#0" />
+            <element signature="e#23396#23623#0" />
+          </folding>
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/Panacea/views.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="135">
-          <caret line="125" column="68" lean-forward="true" selection-start-line="125" selection-start-column="68" selection-end-line="125" selection-end-column="68" />
+        <state relative-caret-position="646">
+          <caret line="544" lean-forward="true" selection-start-line="544" selection-end-line="544" />
           <folding>
             <element signature="e#1845#2234#0" />
             <element signature="e#1882#2111#0" />
             <element signature="e#1966#2111#0" />
             <element signature="e#2305#2345#0" />
-            <element signature="e#2420#5394#0" />
+            <element signature="e#2420#5400#0" />
+            <element signature="e#5519#6112#0" />
+            <element signature="e#6197#6646#0" />
+            <element signature="e#6736#7242#0" />
+            <element signature="e#7336#7961#0" />
+            <element signature="e#8048#8105#0" />
+            <element signature="e#8208#11994#0" />
+            <element signature="e#12088#12605#0" />
+            <element signature="e#12697#16442#0" />
+            <element signature="e#16541#17461#0" />
+            <element signature="e#17540#20227#0" />
+            <element signature="e#20437#21692#0" />
+            <element signature="e#21782#22397#0" />
+            <element signature="e#22482#23602#0" />
+            <element signature="e#24091#25292#0" />
+            <element signature="e#25859#26402#0" />
+            <element signature="e#26485#29666#0" />
           </folding>
         </state>
       </provider>
