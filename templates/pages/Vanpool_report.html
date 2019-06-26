@@ -83,6 +83,9 @@
                             {% csrf_token %}
 
                             {%  if form.non_field_errors %}
+                                 {%  if  'You must fill out the data for the previous month first. Please refer to the previous reporting month' in form.non_field_errors %}
+                                    <p>Please revise the previous data</p>
+                                {% else %}
                                 <b>Validation Issues:</b>
                                 <ul>{% for error in form.non_field_errors %}
                                     <li> {{error}} </li>
@@ -90,9 +93,7 @@
 
                                 <div class = "d-flex w-100 align-content-left align-middle text-danger"> {{form.acknowledge_validation_errors}} Check this box to confirm that your submitted numbers are correct, even though there are validation errors.</div>
 
-                                {%  if  'You must fill out the data for the previous month first. Please refer to the previous reporting month' in form.non_field_errors %}
 
-                                {% else %}
 
                                 {% endif %}
                             {%  endif %}

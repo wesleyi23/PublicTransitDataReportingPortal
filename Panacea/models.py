@@ -239,14 +239,32 @@ def save_user_profile(sender, instance, **kwargs):
 
 
 class vanpool_expansion_analysis(models.Model):
+    CHOICES = (
+        ('11-13', '11-13'),
+        ('13-15', '13-15'),
+        ('15-17', '15-17'),
+        ('17-19', '17-19'),
+        ('19-21', '19-21'),
+        ('21-23', '21-23'),
+        ('23-25', '23-25'),
+        ('25-27', '25-27')
+    )
+
+
     organization = models.ForeignKey(organization, on_delete=models.PROTECT, related_name = '+')
     vanpools_in_service_at_time_of_award = models.IntegerField(blank=True, null=True)
     date_of_award = models.DateField(blank = True, null = True)
     expansion_vans_awarded = models.IntegerField(blank= True, null = True)
     latest_vehicle_acceptance = models.DateField(blank =True, null=True)
     extension_granted = models.BooleanField(blank = False, null = True)
+    vanpool_goal_met = models.BooleanField(blank=False, null = True)
     expired = models.BooleanField(blank=False, null = True)
     notes = models.TextField(blank = False, null = True)
+    awarded_biennium = models.CharField(max_length=50, choices=CHOICES, blank=True, null=True)
+    expansion_goal = models.IntegerField(blank = True, null = True)
+    deadline = models.DateField(blank = True, null = True)
+
+
     # going to need to add a loan thing here once I figure out what the story is
 
 
@@ -254,9 +272,10 @@ class vanpool_expansion_analysis(models.Model):
     def adjusted_service_goal(self):
         return int(self.vanpools_in_service_at_time_of_award + round(self.expansion_vans_awarded*.8, 0))
 
-    @property
-    def spare_allowance(self):
-        return round(self. expansion_vans_awarded*.2, 1)
+
+
+
+#TODO Change all the forms so we get good data, put various checks into the views page,
 
 
     @property

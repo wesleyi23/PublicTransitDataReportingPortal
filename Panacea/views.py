@@ -197,7 +197,9 @@ def Vanpool_report(request, year=None, month=None):
                                         record_id=form_data.id,
                                         report_month=month,
                                         report_year=year)
+
             successful_submit = False
+
 
     # If not POST
     else:
@@ -207,6 +209,7 @@ def Vanpool_report(request, year=None, month=None):
                                     report_month=month,
                                     report_year=year)
         successful_submit = False
+
 
     if not new_report:
         form.fields['data_change_explanation'].required = True
@@ -226,16 +229,22 @@ def Vanpool_report(request, year=None, month=None):
 @login_required(login_url='/Panacea/login')
 def Vanpool_expansion_submission(request):
     if request.method == 'POST':
-        form = submit_a_new_vanpool_expansion(request.POST)
+        form = submit_a_new_vanpool_expansion(data = request.POST)
         if form.is_valid():
+            print(form.fields)
+            form.cleaned_data['expansion_goal'] = int(round(form.cleaned_data['expansion_vans_awarded'] * .8, 0) + \
+                                                  form.cleaned_data['vanpools_in_service_at_time_of_award'])
+            form.cleaned_data['deadline'] = form.cleaned_data['latest_vehicle_acceptance'] + relativedelta(months=+18)
+
             form.save()
             # TODO Do you use AJAX on this - What is this for?
             return JsonResponse({'redirect': '../Expansion/'})
         else:
             return render(request, 'pages/Vanpool_expansion_submission.html', {'form':form})
     else:
-        form = submit_a_new_vanpool_expansion()
+        form = submit_a_new_vanpool_expansion(data=request.POST)
     return render(request, 'pages/Vanpool_expansion_submission.html', {'form': form})
+
 
 
 @login_required(login_url='/Panacea/login')
@@ -311,14 +320,13 @@ def Vanpool_expansion_modify(request, id=None):
     if request.method == 'POST':
         form = Modify_A_Vanpool_Expansion(data=request.POST, instance=form_data)
         if form.is_valid():
+            form.cleaned_data['deadline'] = form.cleaned_data['latest_vehicle_acceptance'] + relativedelta(months=+18)
             form.save()
-            successful_submit = True
         else:
-            successful_submit = False
+            form = Modify_A_Vanpool_Expansion(instance=form_data)
+
     else:
         form = Modify_A_Vanpool_Expansion(instance=form_data)
-        successful_submit = False
-
     zipped = zip(organization_name, vea)
     return render(request, 'pages/Vanpool_expansion_modify.html', {'zipped':zipped, 'id': id, 'form':form, 'successful_submit': successful_submit})
 
