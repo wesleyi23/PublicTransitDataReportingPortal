@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="d0261508-4096-4214-bf0c-cd87915e08fa" name="Default Changelist" comment="Ready for mgt team">
+    <list default="true" id="d0261508-4096-4214-bf0c-cd87915e08fa" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/db.PanaceaDB" beforeDir="false" afterPath="$PROJECT_DIR$/db.PanaceaDB" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/templates/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/index.html" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -47,7 +48,28 @@
         <item name="Django default" type="feb32156:DbDataSourceImpl" />
         <item name="schemas" type="d4e8921:DatabaseStructure$FamilyGroup" />
         <item name="main: schema" type="981a47c2:SqliteImplModel$Schema" />
+        <item name="auth_group: table" type="3d80ac25:SqliteImplModel$Table" />
+      </path>
+      <path>
+        <item name="Database" type="3277223f:DatabaseStructure$DbRootGroup" />
+        <item name="Django default" type="feb32156:DbDataSourceImpl" />
+        <item name="schemas" type="d4e8921:DatabaseStructure$FamilyGroup" />
+        <item name="main: schema" type="981a47c2:SqliteImplModel$Schema" />
         <item name="Panacea_custom_user: table" type="3d80ac25:SqliteImplModel$Table" />
+      </path>
+      <path>
+        <item name="Database" type="3277223f:DatabaseStructure$DbRootGroup" />
+        <item name="Django default" type="feb32156:DbDataSourceImpl" />
+        <item name="schemas" type="d4e8921:DatabaseStructure$FamilyGroup" />
+        <item name="main: schema" type="981a47c2:SqliteImplModel$Schema" />
+        <item name="Panacea_custom_user_groups: table" type="3d80ac25:SqliteImplModel$Table" />
+      </path>
+      <path>
+        <item name="Database" type="3277223f:DatabaseStructure$DbRootGroup" />
+        <item name="Django default" type="feb32156:DbDataSourceImpl" />
+        <item name="schemas" type="d4e8921:DatabaseStructure$FamilyGroup" />
+        <item name="main: schema" type="981a47c2:SqliteImplModel$Schema" />
+        <item name="Panacea_profile: table" type="3d80ac25:SqliteImplModel$Table" />
       </path>
       <path>
         <item name="Database" type="3277223f:DatabaseStructure$DbRootGroup" />
@@ -70,7 +92,7 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/TransitData/settings.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="46">
+            <state relative-caret-position="1938">
               <caret line="114" column="6" selection-start-line="114" selection-start-column="6" selection-end-line="115" selection-end-column="5" />
             </state>
           </provider>
@@ -79,7 +101,7 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/TransitData/celery.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="272">
+            <state relative-caret-position="221">
               <caret line="16" column="21" selection-start-line="16" selection-start-column="21" selection-end-line="16" selection-end-column="21" />
               <folding>
                 <element signature="e#0#38#0" expanded="true" />
@@ -91,7 +113,7 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/Panacea/forms.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="5151">
+            <state relative-caret-position="5508">
               <caret line="467" selection-start-line="467" selection-end-line="467" />
               <folding>
                 <element signature="e#653#3282#0" />
@@ -129,14 +151,11 @@
           </provider>
         </entry>
       </file>
-      <file pinned="false" current-in-tab="true">
+      <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/templates/pages/UserProfile.html">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="442">
-              <caret line="65" column="16" selection-start-line="65" selection-start-column="16" selection-end-line="65" selection-end-column="22" />
-              <folding>
-                <element signature="e#547#566#0#HTML" expanded="true" />
-              </folding>
+            <state relative-caret-position="204">
+              <caret line="12" column="18" selection-start-line="12" selection-start-column="18" selection-end-line="12" selection-end-column="18" />
             </state>
           </provider>
         </entry>
@@ -144,8 +163,8 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/templates/pages/OrganizationProfile.html">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-867">
-              <caret line="18" selection-start-line="18" selection-end-line="18" />
+            <state relative-caret-position="544">
+              <caret line="32" column="57" selection-start-line="32" selection-start-column="33" selection-end-line="32" selection-end-column="57" />
             </state>
           </provider>
         </entry>
@@ -153,7 +172,7 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/Panacea/models.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="205">
+            <state relative-caret-position="4318">
               <caret line="263" selection-start-line="263" selection-end-line="274" selection-end-column="31" />
             </state>
           </provider>
@@ -162,7 +181,7 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/TransitData/urls.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="573">
+            <state relative-caret-position="612">
               <caret line="38" column="26" selection-start-line="38" selection-start-column="16" selection-end-line="38" selection-end-column="26" />
               <folding>
                 <element signature="e#635#667#0" expanded="true" />
@@ -171,17 +190,17 @@
           </provider>
         </entry>
       </file>
-      <file pinned="false" current-in-tab="false">
+      <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/templates/index.html">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="367">
-              <caret line="44" column="41" selection-start-line="44" selection-start-column="41" selection-end-line="44" selection-end-column="41" />
+            <state relative-caret-position="5219">
+              <caret line="310" selection-start-line="310" selection-end-line="310" />
             </state>
           </provider>
         </entry>
       </file>
       <file pinned="false" current-in-tab="false">
-        <entry file="das://b8d1ef86-599b-4bf3-9b27-f94b57374e31/schema/main/table/auth_group_permissions">
+        <entry file="das://b8d1ef86-599b-4bf3-9b27-f94b57374e31/schema/main/table/Panacea_profile">
           <provider selected="true" editor-type-id="com.intellij.database.editor.DatabaseTableFileEditorProvider">
             <state>
               <filtering enabled="true" />
@@ -271,12 +290,12 @@
         <option value="$PROJECT_DIR$/templates/pages/dashboard.html" />
         <option value="$PROJECT_DIR$/Panacea/views.py" />
         <option value="$PROJECT_DIR$/templates/pages/Vanpool_report.html" />
-        <option value="$PROJECT_DIR$/templates/index.html" />
         <option value="$PROJECT_DIR$/Panacea/forms.py" />
         <option value="$PROJECT_DIR$/Panacea/models.py" />
         <option value="$APPLICATION_CONFIG_DIR$/scratches/scratch.py" />
         <option value="$PROJECT_DIR$/Panacea/utilities.py" />
         <option value="$PROJECT_DIR$/templates/pages/UserProfile.html" />
+        <option value="$PROJECT_DIR$/templates/index.html" />
       </list>
     </option>
   </component>
@@ -542,6 +561,7 @@
       <workItem from="1561131124484" duration="8041000" />
       <workItem from="1561406737307" duration="4839000" />
       <workItem from="1561473994609" duration="6029000" />
+      <workItem from="1561648938634" duration="366000" />
     </task>
     <task id="LOCAL-00001" summary="updated db with historical data">
       <created>1556229956897</created>
@@ -666,7 +686,7 @@
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="365869000" />
+    <option name="totallyTimeSpent" value="366846000" />
   </component>
   <component name="TodoView">
     <todo-panel id="selected-file">
@@ -681,13 +701,13 @@
     <frame x="-8" y="-8" width="1936" height="1056" extended-state="6" />
     <editor active="true" />
     <layout>
-      <window_info active="true" content_ui="combo" id="Project" order="0" sideWeight="0.49919224" visible="true" weight="0.17110874" />
+      <window_info content_ui="combo" id="Project" order="0" sideWeight="0.49919224" visible="true" weight="0.17270789" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info id="Favorites" order="2" sideWeight="0.50080776" side_tool="true" weight="0.29957357" />
       <window_info anchor="bottom" id="Messages" order="0" sideWeight="0.4989339" weight="0.32936078" />
       <window_info anchor="bottom" id="Message" order="1" />
       <window_info anchor="bottom" id="Find" order="2" weight="0.32916147" />
-      <window_info anchor="bottom" id="Run" order="3" sideWeight="0.4977307" visible="true" weight="0.31" />
+      <window_info anchor="bottom" id="Run" order="3" sideWeight="0.4977307" weight="0.2735294" />
       <window_info anchor="bottom" id="Debug" order="4" weight="0.3997833" />
       <window_info anchor="bottom" id="Cvs" order="5" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="6" weight="0.4" />
@@ -704,7 +724,7 @@
       <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
       <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.25" />
       <window_info anchor="right" id="SciView" order="3" weight="0.32995737" />
-      <window_info anchor="right" id="Database" order="4" sideWeight="0.49919224" weight="0.33306387" />
+      <window_info anchor="right" id="Database" order="4" sideWeight="0.49919224" weight="0.3326226" />
       <window_info anchor="right" id="Coverage" order="5" side_tool="true" />
       <window_info anchor="right" x="0" y="0" width="434" height="856" id="Documentation" order="6" sideWeight="0.50080776" side_tool="true" weight="0.1988273" />
       <window_info anchor="right" id="R Graphics" order="7" weight="0.32995737" />
@@ -811,16 +831,6 @@
     <SUITE FILE_PATH="coverage/PublicTransitDataReportingPortal$scratch.coverage" NAME="scratch Coverage Results" MODIFIED="1561479050440" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$APPLICATION_CONFIG_DIR$/scratches" />
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/templates/pages/error_404.html">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="238">
-          <caret line="14" column="7" lean-forward="true" selection-start-line="14" selection-start-column="7" selection-end-line="14" selection-end-column="7" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/Panacea/__init__.py">
-      <provider selected="true" editor-type-id="text-editor" />
-    </entry>
     <entry file="file://$PROJECT_DIR$/TransitData/__init__.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="34">
@@ -862,32 +872,12 @@
       </provider>
     </entry>
     <entry file="das://e957fb1e-32b7-40f9-82ac-16dbbce271c0/schema/main/table/Panacea_organization" />
-    <entry file="file://$PROJECT_DIR$/TransitData/urls.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="573">
-          <caret line="38" column="26" selection-start-line="38" selection-start-column="16" selection-end-line="38" selection-end-column="26" />
-          <folding>
-            <element signature="e#635#667#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/templates/pages/Vanpool_expansion_submission.html">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="697">
           <caret line="41" column="37" selection-start-line="41" selection-start-column="37" selection-end-line="41" selection-end-column="37" />
           <folding>
             <element signature="n#style#0;n#input#0;n#form#0;n#table#0;n#div#0;n#div#0;n#div#0;n#div#0;n#body#0;n#!!top" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/TransitData/celery.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="272">
-          <caret line="16" column="21" selection-start-line="16" selection-start-column="21" selection-end-line="16" selection-end-column="21" />
-          <folding>
-            <element signature="e#0#38#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -904,13 +894,6 @@
     <entry file="das://e957fb1e-32b7-40f9-82ac-16dbbce271c0/schema/main/table/Panacea_custom_user" />
     <entry file="file://$APPLICATION_CONFIG_DIR$/consoles/db/cdd970b8-218a-4283-9229-b1a8279f409e/console.sql" />
     <entry file="das://b862a953-fb72-47ba-8629-142f3273eb06/schema/main/table/Panacea_reporttype" />
-    <entry file="file://$PROJECT_DIR$/TransitData/settings.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="46">
-          <caret line="114" column="6" selection-start-line="114" selection-start-column="6" selection-end-line="115" selection-end-column="5" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/db.PanaceaDB">
       <provider selected="true" editor-type-id="text-editor" />
     </entry>
@@ -992,13 +975,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/templates/index.html">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="367">
-          <caret line="44" column="41" selection-start-line="44" selection-start-column="41" selection-end-line="44" selection-end-column="41" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/templates/pages/Vanpool_report.html">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="1700">
@@ -1050,16 +1026,29 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/Panacea/models.py">
+    <entry file="file://$PROJECT_DIR$/TransitData/Dev.py">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/TransitData/settings.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="205">
-          <caret line="263" selection-start-line="263" selection-end-line="274" selection-end-column="31" />
+        <state relative-caret-position="1938">
+          <caret line="114" column="6" selection-start-line="114" selection-start-column="6" selection-end-line="115" selection-end-column="5" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/TransitData/celery.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="221">
+          <caret line="16" column="21" selection-start-line="16" selection-start-column="21" selection-end-line="16" selection-end-column="21" />
+          <folding>
+            <element signature="e#0#38#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/Panacea/forms.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="5151">
+        <state relative-caret-position="5508">
           <caret line="467" selection-start-line="467" selection-end-line="467" />
           <folding>
             <element signature="e#653#3282#0" />
@@ -1096,23 +1085,55 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/TransitData/Dev.py">
-      <provider selected="true" editor-type-id="text-editor" />
-    </entry>
-    <entry file="file://$PROJECT_DIR$/templates/pages/OrganizationProfile.html">
+    <entry file="file://$PROJECT_DIR$/templates/pages/UserProfile.html">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-867">
-          <caret line="18" selection-start-line="18" selection-end-line="18" />
+        <state relative-caret-position="204">
+          <caret line="12" column="18" selection-start-line="12" selection-start-column="18" selection-end-line="12" selection-end-column="18" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/templates/pages/UserProfile.html">
+    <entry file="file://$PROJECT_DIR$/templates/pages/OrganizationProfile.html">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="442">
-          <caret line="65" column="16" selection-start-line="65" selection-start-column="16" selection-end-line="65" selection-end-column="22" />
+        <state relative-caret-position="544">
+          <caret line="32" column="57" selection-start-line="32" selection-start-column="33" selection-end-line="32" selection-end-column="57" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Panacea/models.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="4318">
+          <caret line="263" selection-start-line="263" selection-end-line="274" selection-end-column="31" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/TransitData/urls.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="612">
+          <caret line="38" column="26" selection-start-line="38" selection-start-column="16" selection-end-line="38" selection-end-column="26" />
           <folding>
-            <element signature="e#547#566#0#HTML" expanded="true" />
+            <element signature="e#635#667#0" expanded="true" />
           </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="das://b8d1ef86-599b-4bf3-9b27-f94b57374e31/schema/main/table/Panacea_profile">
+      <provider selected="true" editor-type-id="com.intellij.database.editor.DatabaseTableFileEditorProvider">
+        <state>
+          <filtering enabled="true" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="das://b8d1ef86-599b-4bf3-9b27-f94b57374e31/schema/main/table/auth_group">
+      <provider selected="true" editor-type-id="com.intellij.database.editor.DatabaseTableFileEditorProvider">
+        <state>
+          <filtering enabled="true" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/templates/index.html">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="5219">
+          <caret line="310" selection-start-line="310" selection-end-line="310" />
         </state>
       </provider>
     </entry>
