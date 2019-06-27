@@ -1,5 +1,5 @@
 from django.contrib.auth import get_user_model
-from django.contrib.auth.models import AbstractUser, BaseUserManager  ## A new class is imported. ##
+from django.contrib.auth.models import AbstractUser, BaseUserManager, Group  ## A new class is imported. ##
 from django.db import models
 from django.db.models.functions import datetime
 from django.utils.translation import ugettext_lazy as _
@@ -8,6 +8,7 @@ from django.dispatch import receiver
 from localflavor.us.models import USStateField, USZipCodeField
 from phonenumber_field.modelfields import PhoneNumberField
 import datetime
+
 
 
 class CustomUserManager(BaseUserManager):
@@ -126,7 +127,14 @@ class profile(models.Model):
     city = models.CharField(max_length=50, blank=True)
     state = USStateField(blank=True)
     zip_code = USZipCodeField(blank=True)
-    reports_on = models.ManyToManyField(ReportType, blank=True)
+    reports_on = models.ManyToManyField(ReportType, blank=True)  # TODO rename this to
+
+
+class permissions_requests(models.Model):
+    custom_user = models.OneToOneField(get_user_model(), on_delete=models.PROTECT)
+    permissions_group = models.ManyToManyField(Group)
+    request_date = models.DateTimeField(auto_now=True, blank=True, null=True)
+    is_active_request = models.BooleanField(blank=True, null=True, default=True)
 
 
 class vanpool_report(models.Model):
@@ -151,7 +159,7 @@ class vanpool_report(models.Model):
     # TODO we should come back and look at if these need to be here
     # report_due_date = models.DateField()
     #report_day = models.IntegerField(default = 1, null=True)
-    report_date = models.DateTimeField(default = None, null=True)
+    report_date = models.DateTimeField(default=None, null=True)
     updated_date = models.DateTimeField(auto_now=True, blank=True, null=True)
     report_by = models.ForeignKey(custom_user, on_delete=models.PROTECT, blank=True, null=True)
     organization = models.ForeignKey(organization, on_delete=models.PROTECT)

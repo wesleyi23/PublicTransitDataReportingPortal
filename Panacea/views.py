@@ -29,6 +29,7 @@ from django.core.exceptions import ValidationError
 from django.forms.widgets import CheckboxInput
 from .utilities import monthdelta, get_wsdot_color
 from django.http import Http404
+from .decorators import group_required
 
 from .forms import CustomUserCreationForm, \
     custom_user_ChangeForm, \
@@ -44,6 +45,7 @@ from .forms import CustomUserCreationForm, \
     Modify_A_Vanpool_Expansion
 from django.utils.translation import ugettext_lazy as _
 from .models import profile, vanpool_report, custom_user,  vanpool_expansion_analysis, organization
+from django.contrib.auth.models import Group
 
 
 def register(request):
@@ -75,9 +77,9 @@ def dashboard(request):
             filter(organization_id=user_org_id, report_date__isnull=False). \
             order_by('-report_year', '-report_month').first()
         report_month = recent_vanpool_report.report_month
-        report_year = recent_vanpool_report.report_year - 1
+        previous_report_year = recent_vanpool_report.report_year - 1
         last_year_report = vanpool_report.objects.get(organization_id=user_org_id,
-                                   report_year=report_year,
+                                   report_year=previous_report_year,
                                    report_month=report_month)
 
         def get_most_recent_and_change(measure):
@@ -95,7 +97,7 @@ def dashboard(request):
             """Returns the report status (if it is past due) of the report for the report after the most recent report"""
             def get_month_year_addition(month):
                 if month == 12:
-                    return 0, 1
+                    return -11, 1
                 else:
                     return 1, 0
             month_add, year_add = get_month_year_addition(recent_vanpool_report.report_month)
@@ -108,7 +110,7 @@ def dashboard(request):
             'total_passenger_trips': get_most_recent_and_change("total_passenger_trips"),
             'average_riders_per_van': get_most_recent_and_change("average_riders_per_van"),
             'total_miles_traveled': get_most_recent_and_change("total_miles_traveled"),
-            'reprt_status': check_status()
+            'report_status': check_status()
         })
 
     # If the user has completed their profile but has not had permissions assigned
@@ -181,10 +183,11 @@ def ProfileSetup_ReportSelection(request):
 
 @login_required(login_url='/Panacea/login')
 def handler404(request, exception):
-    return render(request,'pages/error_404.html', status=404)
+    return render(request, 'pages/error_404.html', status=404)
 
 
 @login_required(login_url='/Panacea/login')
+@group_required('Vanpool reporter')
 def Vanpool_report(request, year=None, month=None):
     # Set form parameters
     user_organization_id = profile.objects.get(custom_user_id=request.user.id).organization_id
@@ -263,6 +266,7 @@ def Vanpool_report(request, year=None, month=None):
 
 
 @login_required(login_url='/Panacea/login')
+@group_required('WSDOT staff')
 def Vanpool_expansion_submission(request):
     if request.method == 'POST':
         form = submit_a_new_vanpool_expansion(request.POST)
@@ -278,6 +282,7 @@ def Vanpool_expansion_submission(request):
 
 
 @login_required(login_url='/Panacea/login')
+@group_required('WSDOT staff')
 def Vanpool_expansion_analysis(request):
     # pulls the latest vanpool data
     orgs = vanpool_expansion_analysis.objects.filter(expired = False).values('organization_id')
@@ -339,6 +344,7 @@ def Vanpool_expansion_analysis(request):
 
 
 @login_required(login_url='/Panacea/login')
+@group_required('WSDOT staff')
 def Vanpool_expansion_modify(request, id=None):
     if not id:
         id = 1
@@ -363,6 +369,7 @@ def Vanpool_expansion_modify(request, id=None):
 
 
 @login_required(login_url='/Panacea/login')
+@group_required('Vanpool reporter', 'WSDOT staff')
 def Vanpool_data(request):
 
     # If it is a request for a chart
@@ -414,6 +421,7 @@ def Vanpool_data(request):
 
 
 @login_required(login_url='/Panacea/login')
+@group_required('Vanpool reporter', 'WSDOT staff')
 def Vanpool_other(request):
     return render(request, 'pages/Vanpool_other.html', {})
 
@@ -459,6 +467,7 @@ def OrganizationProfileUsers(request):
 
 
 @login_required(login_url='/Panacea/login')
+@group_required('Vanpool reporter', 'WSDOT staff', 'Summary reporter')
 def OrganizationProfile(request):
     user_profile_data = profile.objects.get(custom_user=request.user.id)
     org = user_profile_data.organization
@@ -488,20 +497,27 @@ def OrganizationProfile(request):
 
 @login_required(login_url='/Panacea/login')
 def Permissions(request):
-    return render(request, 'pages/Permissions.html', {})
+    user = request.user
+    auth_groups = Group.objects.all()
+
+    return render(request, 'pages/Permissions.html', {'auth_groups': auth_groups,
+                                                      'user_name': request.user.get_full_name()})
 
 
 @login_required(login_url='/Panacea/login')
+@group_required('WSDOT staff')
 def Admin_reports(request):
     return render(request, 'pages/AdminReports.html', {})
 
 
 @login_required(login_url='/Panacea/login')
+@group_required('WSDOT staff')
 def Admin_ReminderEmail(request):
     return render(request, 'pages/ReminderEmail.html', {})
 
 
 @login_required(login_url='/Panacea/login')
+# @group_required('WSDOT staff')
 def Admin_assignPermissions(request):
     profile_data = profile.objects.all()
     Admin_assignPermissions_all = modelformset_factory(custom_user, change_user_permissions_group, extra=0)
