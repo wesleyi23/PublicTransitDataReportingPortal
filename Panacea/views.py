@@ -30,6 +30,7 @@ from django.forms.widgets import CheckboxInput
 from .utilities import monthdelta, get_wsdot_color
 from django.http import Http404
 from .decorators import group_required
+from django.template.loader import render_to_string
 
 from .forms import CustomUserCreationForm, \
     custom_user_ChangeForm, \
@@ -42,7 +43,8 @@ from .forms import CustomUserCreationForm, \
     change_user_permissions_group, \
     chart_form, \
     submit_a_new_vanpool_expansion, \
-    Modify_A_Vanpool_Expansion
+    Modify_A_Vanpool_Expansion, \
+    request_user_permissions
 from django.utils.translation import ugettext_lazy as _
 from .models import profile, vanpool_report, custom_user,  vanpool_expansion_analysis, organization
 from django.contrib.auth.models import Group
@@ -79,8 +81,8 @@ def dashboard(request):
         report_month = recent_vanpool_report.report_month
         previous_report_year = recent_vanpool_report.report_year - 1
         last_year_report = vanpool_report.objects.get(organization_id=user_org_id,
-                                   report_year=previous_report_year,
-                                   report_month=report_month)
+                                                      report_year=previous_report_year,
+                                                      report_month=report_month)
 
         def get_most_recent_and_change(measure):
             """Return a list where first item is the current months stat and the second item is the year over year grouwth"""
@@ -497,11 +499,43 @@ def OrganizationProfile(request):
 
 @login_required(login_url='/Panacea/login')
 def Permissions(request):
+    if request.POST:
+        form = request_user_permissions(data=request.POST)
+        if form.is_valid():
+
+            groups = ' & '.join(str(s[1]) for s in form.cleaned_data['groups'].values_list())
+
+            msg_html = render_to_string('emails/request_permissions_email.html',
+                                        {'user_name': request.user.get_full_name(), 'groups': groups})
+            msg_plain = render_to_string('emails/request_permissions_email.txt',
+                                         {'user_name': request.user.get_full_name(), 'groups': groups})
+            send_mail(
+                subject='Permissions Request - Public Transportation Reporting Portal',
+                message=msg_plain,
+                from_email='some@sender.com',  # TODO change this to the correct email address
+                recipient_list=['wesleyi@wsdot.wa.gov', ],  # TODO change this to the correct email address
+                html_message=msg_html,
+            )
+            msg_html = "There is an active permissions request in the Public Transportation Reporting Portal"  # TODO add link
+            msg_plain = "There is an active permissions request in the Public Transportation Reporting Portal"  # TODO add link
+            send_mail(
+                subject='Active Permissions Request - Public Transportation Reporting Portal',
+                message=msg_plain,
+                from_email='some@sender.com',  # TODO change this to the correct email address
+                recipient_list=['wesleyi@wsdot.wa.gov', ],  # TODO change this to the correct email address
+                html_message=msg_html,
+            )
+            profile.objects.get(id=request.user.id).requested_permissions = form.cleaned_data['groups']
+
+
+
     user = request.user
     auth_groups = Group.objects.all()
+    form = request_user_permissions(instance=user)
 
     return render(request, 'pages/Permissions.html', {'auth_groups': auth_groups,
-                                                      'user_name': request.user.get_full_name()})
+                                                      'user_name': request.user.get_full_name(),
+                                                      'form': form})
 
 
 @login_required(login_url='/Panacea/login')

@@ -128,14 +128,8 @@ class profile(models.Model):
     state = USStateField(blank=True)
     zip_code = USZipCodeField(blank=True)
     reports_on = models.ManyToManyField(ReportType, blank=True)  # TODO rename this to
-
-
-class permissions_requests(models.Model):
-    custom_user = models.OneToOneField(get_user_model(), on_delete=models.PROTECT)
-    permissions_group = models.ManyToManyField(Group)
-    request_date = models.DateTimeField(auto_now=True, blank=True, null=True)
-    is_active_request = models.BooleanField(blank=True, null=True, default=True)
-
+    requested_permissions = models.ManyToManyField(Group)
+    active_permissions_request = models.BooleanField(blank=True)
 
 class vanpool_report(models.Model):
     REPORT_MONTH = (

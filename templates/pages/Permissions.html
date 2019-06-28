@@ -56,15 +56,21 @@
                             <div>
                                 <img class="img-fluid px-3 px-sm-4 mt-3 mb-4" style="width: 20rem; float: left" src="{% static 'img/undraw_security.svg' %}" alt="Drawing of a user profile picture.">
                             </div>
+                            <div>
+                            <h5>Which permissions would you like to request:</h5>
                             <form action="{% url 'Permissions' %}" method="post">
                                 {% csrf_token  %}
-
+                                {{ form.groups }}
                                 {{ form.non_field_errors }}
                                 {{ form.source.errors }}
                                 {{ form.source }}
-                            </form>
+
+
+                            </div>
+
                         </div>
-                        <input type="submit" value="Submit"  class="btn btn-primary float-right mt-3">
+                            <input type="submit" value="Submit"  class="btn btn-primary float-right mt-3">
+                            </form>
                     </div>
 
                 </div>

@@ -171,7 +171,7 @@ class VanpoolMonthlyReport(forms.ModelForm):
 
     new_data_change_explanation = forms.CharField(required=False, widget=forms.Textarea(
         attrs={'class': 'form-control input-sm', 'rows': 3, 'display': False})
-    )
+                                                  )
     acknowledge_validation_errors = forms.BooleanField(
         label='Check this box to confirm that your submitted numbers are correct, even though there are validation errors.',
         widget=forms.CheckboxInput(attrs={'class': 'checkbox', 'style': 'zoom:200%;margin-right:.35rem'}),
@@ -374,6 +374,15 @@ class change_user_permissions_group(forms.ModelForm):
                 attrs={'class': 'form-control-plaintext', 'readonly': 'True',
                        'style': 'display: none; visibility: hidden'}),
         }
+
+class request_user_permissions(forms.ModelForm):
+    class Meta:
+        model = custom_user
+        fields = ['groups', ]
+        widgets = {
+            'groups': forms.CheckboxSelectMultiple(attrs={'class': 'form-check'})
+        }
+
 
 
 class chart_form(forms.Form):
