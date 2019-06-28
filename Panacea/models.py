@@ -127,7 +127,7 @@ class profile(models.Model):
     state = USStateField(blank=True)
     zip_code = USZipCodeField(blank=True)
     reports_on = models.ManyToManyField(ReportType, blank=True)
-
+#bla
 
 class vanpool_report(models.Model):
     REPORT_MONTH = (
