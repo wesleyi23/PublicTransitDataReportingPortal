@@ -57,36 +57,32 @@
                             </tr>
                             </thead>
                             <tbody>
-                            {%  for orgname, latest_van, max_van,van_expand, acceptance, eg in zipped_data %}
+                            {%  for organizationNames, latestVanpool, maxVanpool, remainingMonths, expansionGoalList, vea in zipped_data %}
                                 <tr>
-                                    <td class="d-none d-md-table-cell"> {{ orgname.name}}</td>
-                                    <td class="d-none d-md-table-cell" align="center" > {{ latest_van.vanpool_groups_in_operation}}</td>
-                                    <td class="d-none d-md-table-cell" >  {{ latest_van.report_month }}/1/{{ latest_van.report_year }}</td>
-                                    <td class="d-none d-md-table-cell" align="center"> {{ van_expand.vanpools_in_service_at_time_of_award}}
-                                    <td class="d-none d-md-table-cell" > {{ van_expand.date_of_award|date:'m/d/y'}} </td>
-                                    <td class="d-none d-md-table-cell" align="center" > {{ van_expand.expansion_vans_awarded }} </td>
-                                    <td class="d-none d-md-table-cell" > {{ van_expand.latest_vehicle_acceptance|date:'m/d/y'}} </td>
-                                    <td class="d-none d-md-table-cell" align="center"> {{ van_expand.adjusted_service_goal}} </td>
-                                    <td class="d-none d-md-table-cell" > {{ acceptance.latest_date|date:'m/d/y'}} </td>
-                                    {%  if eg != '' %}
-                                        <td class = "d-none d-md-table-cell" align="center"> <b class="text-success">YES</b> </td>
-                                    {%  else %}
-                                        <td class = "d-none d-md-table-cell" align="center" > TBD </td>
-                                    {%  endif %}
+                                    <td class="d-none d-md-table-cell"> {{ organizationNames.name}}</td>
+                                    <td class="d-none d-md-table-cell" align="center" > {{ latestVanpool.vanpool_groups_in_operation}}</td>
+                                    <td class="d-none d-md-table-cell" >  {{ latestVanpool.report_month }}/1/{{ latestVanpool.report_year }}</td>
+                                    <td class="d-none d-md-table-cell" align="center"> {{ vea.vanpools_in_service_at_time_of_award}}
+                                    <td class="d-none d-md-table-cell" > {{ vea.date_of_award|date:'m/d/y'}} </td>
+                                    <td class="d-none d-md-table-cell" align="center" > {{ vea.expansion_vans_awarded }} </td>
+                                    <td class="d-none d-md-table-cell" > {{ vea.latest_vehicle_acceptance|date:'m/d/y'}} </td>
+                                    <td class="d-none d-md-table-cell" align="center"> {{ vea.expansion_goal}} </td>
+                                    <td class="d-none d-md-table-cell" > {{ vea.deadline|date:'m/d/y'}} </td>
+                                    <td class = "d-none d-md-table-cell" align="center"> <b class="text-success"> {{ vea.vanpool_goal_met }}</b> </td>
                                     {%  if eg != ''%}
-                                        <td class = "d-none d-md-table-cell" > {{ eg.report_month }}/1/{{ eg.report_year }}</td>
+                                        <td class = "d-none d-md-table-cell" > {{ expansionGoalList.report_month }}/1/{{ expansionGoalList.report_year }}</td>
                                     {%  else %}
                                         <td class = "d-none d-md-table-cell" > </td>
                                     {%  endif %}
-                                    <td class = "d-none d-md-table-cell"  align="center"> {{ max_van.vanpool_groups_in_operation }}  </td>
-                                    <td class = "d-none d-md-table-cell" > {{ max_van.report_month }}/1/{{ max_van.report_year }}</td>
-                                    {%  if acceptance.remaining_months < 0 %}
+                                    <td class = "d-none d-md-table-cell"  align="center"> {{ maxVanpool.vanpool_groups_in_operation }}  </td>
+                                    <td class = "d-none d-md-table-cell" > {{ maxVanpool.report_month }}/1/{{ maxVanpool.report_year }}</td>
+                                    {%  if remainingMonths < 0 %}
                                         <td class = "d-none d-md-table-cell" align="center"> Deadline Expired </td>
                                     {%  else %}
-                                        <td class = "d-none d-md-table-cell" align="center" > {{ acceptance.remaining_months }} Months </td>
+                                        <td class = "d-none d-md-table-cell" align="center" > {{ remainingMonths }} Months </td>
                                     {%  endif %}
 
-                                    <td class = "d-none d-md-table-cell" align="center" >{{van_expand.notes}} </td>
+                                    <td class = "d-none d-md-table-cell" align="center" >{{vea.notes}} </td>
 
                                 </tr>
                             {%  endfor %}

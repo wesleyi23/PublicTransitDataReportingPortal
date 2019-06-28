@@ -44,6 +44,7 @@ from .forms import CustomUserCreationForm, \
     Modify_A_Vanpool_Expansion
 from django.utils.translation import ugettext_lazy as _
 from .models import profile, vanpool_report, custom_user,  vanpool_expansion_analysis, organization
+from .utilities import calculate_latest_vanpool, find_organizations_name, find_maximum_vanpool, calculate_remaining_months, calculate_if_goal_has_been_reached
 
 
 def register(request):
@@ -247,65 +248,23 @@ def Vanpool_expansion_submission(request):
 
 
 
+
+
 @login_required(login_url='/Panacea/login')
 def Vanpool_expansion_analysis(request):
     # pulls the latest vanpool data
-    orgs = vanpool_expansion_analysis.objects.filter(expired = False).values('organization_id')
-    organization_name = organization.objects.filter(id__in=orgs).values('name')
-    vp = vanpool_report.objects.all()
-    pv = vp.filter(organization_id__in = orgs, organization = OuterRef('organization'), report_month__isnull = False, vanpool_groups_in_operation__isnull=False).order_by('-id').values('id')
-    latest_vanpool = vp.annotate(latest = Subquery(pv[:1])).filter(id = F('latest')).values('report_year', 'report_month', 'vanpool_groups_in_operation', 'organization_id').order_by('organization_id')
-    print(latest_vanpool)
-    # filters out the max vanpool
-    award_date = vanpool_expansion_analysis.objects.filter(expired=False).dates('date_of_award', 'month')
-    award_date = award_date[0]
-    award_month = award_date.month
-    award_year = award_date.year
-    van_max = vanpool_report.objects.filter(organization_id__in= orgs, report_year__gte=award_year,report_month__gte=award_month).values('organization').annotate(max_van = Max('vanpool_groups_in_operation')).order_by('organization')
-    van_max_list = []
-    # had to use a for loop since there's nothing easier really
-    for i in van_max:
-        vpr = vanpool_report.objects.filter(organization_id = i['organization'], vanpool_groups_in_operation = i['max_van'], report_year__gte=award_year,report_month__gte=award_month).values('id','report_year', 'report_month', 'vanpool_groups_in_operation')
-        if len(vpr) > 1:
-            vpr = vpr.latest('id')
-            van_max_list.append(vpr)
-        else:
-            van_max_list.append(vpr[0])
-    vea = vanpool_expansion_analysis.objects.filter(expired = False).order_by('organization_id')
-    vea2 = vanpool_expansion_analysis.objects.filter(expired = False).values('latest_vehicle_acceptance').order_by('organization_id')
-    # this bit does some logic to ascertain the remaining months and the deadline
-
-    # this is a method for calculating the deadline and how many months remain
-    acceptance_list = []
-    for j in vea2:
-        result_dic = {}
-        latest_date = j['latest_vehicle_acceptance']
-        latest_date =latest_date + relativedelta(months=+18)
-        r = relativedelta(latest_date, datetime.date.today())
-        remaining_months = r.months
-
-        result_dic['latest_date'] = latest_date
-        result_dic['remaining_months'] = remaining_months
-        acceptance_list.append(result_dic)
-
-    # this is a method for calculating the date when the service expansion was met
-    vanexpand = vanpool_expansion_analysis.objects.filter(expired=False).order_by('organization_id').values('date_of_award', 'expansion_vans_awarded', 'vanpools_in_service_at_time_of_award', 'organization_id')
-    expansion_goal = []
-    for org in vanexpand:
-        award_month = org['date_of_award'].month
-        award_year = org['date_of_award'].year
-        goal = round(org['expansion_vans_awarded']*.8, 0) + org['vanpools_in_service_at_time_of_award']
-        org_id = org['organization_id']
-        goal = vanpool_report.objects.filter(organization_id = org_id, report_year__gte=award_year,report_month__gte=award_month, vanpool_groups_in_operation__gte=goal).values('id','report_year', 'report_month', 'vanpool_groups_in_operation', 'organization_id')
-        if goal.exists():
-            expansion_goal.append(goal.earliest('id'))
-        else:
-            expansion_goal.append('')
-
-    # put them in an iterator to move
-    current_biennium = vea
-    zipped = zip(organization_name, latest_vanpool, van_max_list, vea, acceptance_list, expansion_goal)
-    return render(request, 'pages/Vanpool_expansion.html', {'zipped_data': zipped, 'current_biennium': current_biennium})
+    organizationIds = vanpool_expansion_analysis.objects.filter().values('organization_id')
+    print(organizationIds)
+    veaIds = vanpool_expansion_analysis.objects.values('id')
+    organizationNames = find_organizations_name(organizationIds)
+    latestVanpool = calculate_latest_vanpool(organizationIds)
+    print(latestVanpool)
+    maxVanpool = find_maximum_vanpool(organizationIds)
+    remainingMonths = calculate_remaining_months()
+    expansionGoalList = calculate_if_goal_has_been_reached()
+    vea = vanpool_expansion_analysis.objects.all().order_by('organization_id')
+    zipped = zip(organizationNames, latestVanpool, maxVanpool, remainingMonths, expansionGoalList, vea)
+    return render(request, 'pages/Vanpool_expansion.html', {'zipped_data': zipped})
 
 
 @login_required(login_url='/Panacea/login')
