@@ -1,4 +1,5 @@
 from django import template
+from django.conf import settings
 
 register = template.Library()
 
@@ -88,3 +89,12 @@ def print_dashboard_cards_data(data):
             percent = "<font class='text-success'>" + str(percent) + "%</font>"
 
     return str(data[0]) + " | (" + str(percent) + ")"
+
+
+@register.filter(name='has_group')
+def has_group(user, group_name):
+    if not settings.ENABLE_PERMISSIONS:
+        return True
+    return user.groups.filter(name=group_name).exists()
+
+

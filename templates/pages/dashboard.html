@@ -5,6 +5,7 @@
     <div class="container-fluid">
         <!-- Page Heading -->
         <h1 class="h3 mb-2 text-gray-800">Dashboard</h1>
+    {% if request.user|has_group:"Vanpool reporter" %}
         <div class="row">
             <!-- Groups In Operation -->
             <div class="col-xl-3 col-md-6 mb-4">
@@ -72,7 +73,7 @@
                 </div>
             </div>
         </div>
-        {% if reprt_status == "Past due" %}
+        {% if report_status == "Past due" %}
             <!-- Past Due -->
             <div class="row">
                 <div class="col-xl-12 col-md-12 mb-4">
@@ -85,4 +86,5 @@
                 </div>
             </div>
         {% endif %}
+    {% endif %}
 {% endblock %}

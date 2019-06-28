@@ -1,10 +1,83 @@
 {% extends 'index.html' %}
+{% load static %}
+{% load custom_tags %}
 
 {% block content %}
-    <div class="container-fluid">
 
-        <!-- Page Heading -->
-        <h1 class="h3 mb-2 text-gray-800">Permissions</h1>
+    <div id="carouselIndicators" class="carousel slide" data-ride="carousel" data-interval="false">
+        <ol class="carousel-indicators">
+            <li data-target="#carouselIndicators" data-slide-to="0" class="active"></li>
+            <li data-target="#carouselIndicators" data-slide-to="1"></li>
+        </ol>
+        <div class="carousel-inner">
+            <div class="carousel-item active">
+                <!-- Page Heading -->
+                <div class="card shadow mb-4">
+                    <div class="card-header">
+                        <ul class="nav nav-tabs card-header-tabs">
+                            <li class="nav-item">
+                                <a class="nav-link " href="{% url 'UserProfile' %}">{{ user_name }}'s Profile</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link active" href="{% url 'Permissions' %}">Permissions for {{ user_name }}</a>
+                            </li>
+
+                        </ul>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div>
+                                <img class="img-fluid px-3 px-sm-4 mt-3 mb-4" style="width: 20rem; float: left" src="{% static 'img/undraw_security.svg' %}" alt="Drawing of a user profile picture.">
+                            </div>
+                            <div style="float: left">
+                                <h5>Your current permissions are set to:</h5>
+                                <table style="border-collapse: separate; border-spacing: .5rem">
+                                    {% for group in auth_groups %}
+                                        <tr>
+                                            <td style="padding-right: 1.5rem">{{ group.name }}</td>
+                                            <td>{% if request.user|has_group:group.name %}True{% else %}False{% endif %}</td>
+                                        </tr>
+                                    {% endfor %}
+                                </table>
+                            </div>
+                        </div>
+                        <a href="#carouselIndicators" data-slide="next" class="btn btn-primary float-right">Request New Permissions</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="carousel-item">
+                <div class="card shadow mb-4">
+                    <div class="card-header py-3">
+                        <h6 class="m-0 font-weight-bold text-primary">Request Permissions</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div>
+                                <img class="img-fluid px-3 px-sm-4 mt-3 mb-4" style="width: 20rem; float: left" src="{% static 'img/undraw_security.svg' %}" alt="Drawing of a user profile picture.">
+                            </div>
+                            <div>
+                            <h5>Which permissions would you like to request:</h5>
+                            <form action="{% url 'Permissions' %}" method="post">
+                                {% csrf_token  %}
+                                {{ form.groups }}
+                                {{ form.non_field_errors }}
+                                {{ form.source.errors }}
+                                {{ form.source }}
+
+
+                            </div>
+
+                        </div>
+                            <input type="submit" value="Submit"  class="btn btn-primary float-right mt-3">
+                            </form>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+    </div>
 
 
 
