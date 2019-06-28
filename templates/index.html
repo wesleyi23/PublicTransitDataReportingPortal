@@ -34,7 +34,7 @@
     <ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion" id="accordionSidebar" >
 
         <!-- Sidebar - Brand -->
-        <a class="sidebar-brand d-flex align-items-center justify-content-center" href="index.html">
+        <a class="sidebar-brand d-flex align-items-center justify-content-center" href="{% url 'dashboard' %}">
             <div class="sidebar-brand-icon">
                 <i class="fas fa-bus"></i>
             </div>
@@ -71,7 +71,6 @@
                     <h6 class="collapse-header">Vanpool:</h6>
                     <a class="collapse-item" href="{% url 'Vanpool_report' %}">Submit monthly report</a>
                     <a class="collapse-item" href="{% url 'Vanpool_data' %}">View reported data</a>
-                    <a class="collapse-item" href="{% url 'Vanpool_other' %}">....</a>
                 </div>
             </div>
         </li>
@@ -94,7 +93,7 @@
                 <div class="bg-white py-2 collapse-inner rounded">
                     <a class="collapse-item" href="{% url 'UserProfile' %}">User Profile</a>
                     <a class="collapse-item" href="{% url 'OrganizationProfile' %}">Organization Profile</a>
-                    <a class="collapse-item" href="{% url 'Permissions' %}">Permissions</a>
+                    <!--- <a class="collapse-item" href="{% url 'Permissions' %}">Permissions</a> --->
                 </div>
             </div>
         </li>
@@ -115,8 +114,8 @@
             <div id="collapseVanpoolAdmin" class="collapse" data-parent="#accordionSidebar">
                 <div class="bg-white py-2 collapse-inner rounded">
                     <a class="collapse-item" href="{% url 'Vanpool_expansion_analysis' %}">Vanpool Expansion</a>
-                    <a class = "collapse-item" href = "{%  url 'Operation_Summary' %}"> Operation Summary </a>
-                    <a class = "collapse-item" href = "{%  url 'Vanpool_Growth' %}"> Vanpool Growth </a>
+                    <!--- <a class = "collapse-item" href = "{%  url 'Operation_Summary' %}"> Operation Summary </a>
+                    <a class = "collapse-item" href = "{%  url 'Vanpool_Growth' %}"> Vanpool Growth </a> -->
                 </div>
             </div>
         </li>
@@ -129,8 +128,8 @@
             </a>
             <div id="collapseAdmin" class="collapse" data-parent="#accordionSidebar">
                 <div class="bg-white py-2 collapse-inner rounded">
-                    <a class="collapse-item" href="{% url 'Admin_reports' %}">Reports</a>
-                    <a class="collapse-item" href="{% url 'Admin_ReminderEmail' %}">Reminder Emails</a>
+                    <!--- <a class="collapse-item" href="{% url 'Admin_reports' %}">Reports</a>
+                    <a class="collapse-item" href="{% url 'Admin_ReminderEmail' %}">Reminder Emails</a> --->
                     <a class="collapse-item" href="{% url 'Admin_assignPermissions' %}">Assign Permissions</a>
                 </div>
             </div>
@@ -308,14 +307,12 @@
                             </a>
                         </div>
                     </li>
-
                 </ul>
-
             </nav>
             <!-- End of Topbar -->
 
             <!-- Begin Page Content -->
-            <div class="container" style="height: calc(100% - 7rem); max-width: none">
+            <div class="container" style="height: calc(100% - 8.4rem); max-width: none">
                 <a id="page_content_start"></a>
                 {% block content %}
                 {% endblock %}

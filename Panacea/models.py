@@ -10,7 +10,6 @@ from phonenumber_field.modelfields import PhoneNumberField
 import datetime
 
 
-# Create your models here.
 class CustomUserManager(BaseUserManager):
     """Define a model manager for User model with no username field."""
 
@@ -128,7 +127,7 @@ class profile(models.Model):
     state = USStateField(blank=True)
     zip_code = USZipCodeField(blank=True)
     reports_on = models.ManyToManyField(ReportType, blank=True)
-
+#bla
 
 class vanpool_report(models.Model):
     REPORT_MONTH = (

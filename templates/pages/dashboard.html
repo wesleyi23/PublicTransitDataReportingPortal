@@ -1,12 +1,88 @@
 {% extends 'index.html' %}
+{% load custom_tags %}
 
 {% block content %}
     <div class="container-fluid">
-
         <!-- Page Heading -->
         <h1 class="h3 mb-2 text-gray-800">Dashboard</h1>
+        <div class="row">
+            <!-- Groups In Operation -->
+            <div class="col-xl-3 col-md-6 mb-4">
+                <div class="card border-left-primary shadow h-100 py-2">
+                    <div class="card-body">
+                        <div class="row no-gutters align-items-center">
+                            <div class="col mr-2">
+                                <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Groups In Operation | 1 Year Growth</div>
+                                <div class="h5 mb-0 font-weight-bold text-gray-800">{{groups_in_operation | print_dashboard_cards_data | safe}}</div>
+                            </div>
+                            <div class="col-auto">
+                                <i class="fas fa-chart-line fa-2x text-gray-300"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Passenger Trips -->
+            <div class="col-xl-3 col-md-6 mb-4">
+                <div class="card border-left-success shadow h-100 py-2">
+                    <div class="card-body">
+                        <div class="row no-gutters align-items-center">
+                            <div class="col mr-2">
+                                <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Passenger Trips | 1 Year Growth</div>
+                                <div class="h5 mb-0 font-weight-bold text-gray-800">{{total_passenger_trips | print_dashboard_cards_data | safe}}</div>
+                            </div>
+                            <div class="col-auto">
+                                <i class="fas fa-road fa-2x text-gray-300"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- total_miles_traveled  -->
+            <div class="col-xl-3 col-md-6 mb-4">
+                <div class="card border-left-info shadow h-100 py-2">
+                    <div class="card-body">
+                        <div class="row no-gutters align-items-center">
+                            <div class="col mr-2">
+                                <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Passenger Miles Traveled | 1 Year Growth</div>
+                                <div class="h5 mb-0 font-weight-bold text-gray-800">{{total_miles_traveled | print_dashboard_cards_data | safe}}</div>
+                            </div>
+                            <div class="col-auto">
+                                <i class="fas fa-shuttle-van fa-2x text-gray-300"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-
-
-    </div>
+            <!-- Average Riders Per Van -->
+            <div class="col-xl-3 col-md-6 mb-4">
+                <div class="card border-left-warning shadow h-100 py-2">
+                    <div class="card-body">
+                        <div class="row no-gutters align-items-center">
+                            <div class="col mr-2">
+                                <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Average Riders Per Van | 1 Year Growth</div>
+                                <div class="h5 mb-0 font-weight-bold text-gray-800">{{average_riders_per_van | print_dashboard_cards_data | safe}}</div>
+                            </div>
+                            <div class="col-auto">
+                                <i class="fas fa-users fa-2x text-gray-300"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% if reprt_status == "Past due" %}
+            <!-- Past Due -->
+            <div class="row">
+                <div class="col-xl-12 col-md-12 mb-4">
+                    <div class="card border-left-warning shadow h-100 ">
+                        <div class="card-header text-warning"><b>Vanpool Report Past Due</b></div>
+                        <div class="card-body">
+                            It looks like your vanpool report is past due.  <a href="{% url 'Vanpool_report' %}">Click here to complete it.</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
 {% endblock %}

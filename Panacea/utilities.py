@@ -37,4 +37,23 @@ def get_wsdot_color(i):
     j = i % 8
     return wsdot_colors[j]
 
+def calculate_biennium(date):
+    import datetime
+
+    if not isinstance(date, datetime.date):
+        raise TypeError("date must be a datetime.date object")
+
+    def biennium_str(first_year):
+        return str(first_year)[-2:]+ "-" + str(first_year + 2)[-2:]
+
+    reference_biennium_start_year = 2017
+    if (date.year - reference_biennium_start_year) % 2 == 0:
+        start_year = reference_biennium_start_year + (date.year - reference_biennium_start_year)
+        if date > datetime.date(start_year, 6, 1):
+            return biennium_str(start_year)
+        else:
+            return biennium_str(start_year - 2)
+    else:
+        start_year = reference_biennium_start_year + (date.year - reference_biennium_start_year) - 1
+        return biennium_str(start_year)
 
