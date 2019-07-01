@@ -40,7 +40,11 @@
                     <div class="row">
                         <div class="col-lg-6 d-none d-lg-block bg-login-image"></div>
                         <div class="col-lg-6">
+
                             <div class="p-5">
+                            <div>
+                                <img class="mx-auto d-block mb-3" src="{% static 'img/WSDOT_logo_Green.png' %}">
+                            </div>
                                 <div class="text-center">
                                     <h1 class="h4 text-gray-900 mb-4">Washington Public Transportation Data Reporting Portal</h1>
                                 </div>
@@ -64,7 +68,6 @@
                                         </div>
                                         {{form.non_field_errors}}
                                         <button type="submit" class="btn btn-primary btn-user">Submit</button>
-                                        <hr>
                                     </form>
                                 {% endblock %}
                                 {#### FORM#}
