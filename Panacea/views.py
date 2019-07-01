@@ -29,6 +29,8 @@ from django.core.exceptions import ValidationError
 from django.forms.widgets import CheckboxInput
 from .utilities import monthdelta, get_wsdot_color
 from django.http import Http404
+from .decorators import group_required
+from django.template.loader import render_to_string
 
 from .forms import CustomUserCreationForm, \
     custom_user_ChangeForm, \
@@ -41,9 +43,11 @@ from .forms import CustomUserCreationForm, \
     change_user_permissions_group, \
     chart_form, \
     submit_a_new_vanpool_expansion, \
-    Modify_A_Vanpool_Expansion
+    Modify_A_Vanpool_Expansion, \
+    request_user_permissions
 from django.utils.translation import ugettext_lazy as _
 from .models import profile, vanpool_report, custom_user,  vanpool_expansion_analysis, organization
+from django.contrib.auth.models import Group
 
 
 def register(request):
@@ -75,10 +79,10 @@ def dashboard(request):
             filter(organization_id=user_org_id, report_date__isnull=False). \
             order_by('-report_year', '-report_month').first()
         report_month = recent_vanpool_report.report_month
-        report_year = recent_vanpool_report.report_year - 1
+        previous_report_year = recent_vanpool_report.report_year - 1
         last_year_report = vanpool_report.objects.get(organization_id=user_org_id,
-                                   report_year=report_year,
-                                   report_month=report_month)
+                                                      report_year=previous_report_year,
+                                                      report_month=report_month)
 
         def get_most_recent_and_change(measure):
             """Return a list where first item is the current months stat and the second item is the year over year grouwth"""
@@ -95,7 +99,7 @@ def dashboard(request):
             """Returns the report status (if it is past due) of the report for the report after the most recent report"""
             def get_month_year_addition(month):
                 if month == 12:
-                    return 0, 1
+                    return -11, 1
                 else:
                     return 1, 0
             month_add, year_add = get_month_year_addition(recent_vanpool_report.report_month)
@@ -108,7 +112,7 @@ def dashboard(request):
             'total_passenger_trips': get_most_recent_and_change("total_passenger_trips"),
             'average_riders_per_van': get_most_recent_and_change("average_riders_per_van"),
             'total_miles_traveled': get_most_recent_and_change("total_miles_traveled"),
-            'reprt_status': check_status()
+            'report_status': check_status()
         })
 
     # If the user has completed their profile but has not had permissions assigned
@@ -181,10 +185,11 @@ def ProfileSetup_ReportSelection(request):
 
 @login_required(login_url='/Panacea/login')
 def handler404(request, exception):
-    return render(request,'pages/error_404.html', status=404)
+    return render(request, 'pages/error_404.html', status=404)
 
 
 @login_required(login_url='/Panacea/login')
+@group_required('Vanpool reporter')
 def Vanpool_report(request, year=None, month=None):
     # Set form parameters
     user_organization_id = profile.objects.get(custom_user_id=request.user.id).organization_id
@@ -263,6 +268,7 @@ def Vanpool_report(request, year=None, month=None):
 
 
 @login_required(login_url='/Panacea/login')
+@group_required('WSDOT staff')
 def Vanpool_expansion_submission(request):
     if request.method == 'POST':
         form = submit_a_new_vanpool_expansion(request.POST)
@@ -278,6 +284,7 @@ def Vanpool_expansion_submission(request):
 
 
 @login_required(login_url='/Panacea/login')
+@group_required('WSDOT staff')
 def Vanpool_expansion_analysis(request):
     # pulls the latest vanpool data
     orgs = vanpool_expansion_analysis.objects.filter(expired = False).values('organization_id')
@@ -339,6 +346,7 @@ def Vanpool_expansion_analysis(request):
 
 
 @login_required(login_url='/Panacea/login')
+@group_required('WSDOT staff')
 def Vanpool_expansion_modify(request, id=None):
     if not id:
         id = 1
@@ -363,6 +371,7 @@ def Vanpool_expansion_modify(request, id=None):
 
 
 @login_required(login_url='/Panacea/login')
+@group_required('Vanpool reporter', 'WSDOT staff')
 def Vanpool_data(request):
 
     # If it is a request for a chart
@@ -414,6 +423,7 @@ def Vanpool_data(request):
 
 
 @login_required(login_url='/Panacea/login')
+@group_required('Vanpool reporter', 'WSDOT staff')
 def Vanpool_other(request):
     return render(request, 'pages/Vanpool_other.html', {})
 
@@ -459,6 +469,7 @@ def OrganizationProfileUsers(request):
 
 
 @login_required(login_url='/Panacea/login')
+@group_required('Vanpool reporter', 'WSDOT staff', 'Summary reporter')
 def OrganizationProfile(request):
     user_profile_data = profile.objects.get(custom_user=request.user.id)
     org = user_profile_data.organization
@@ -488,25 +499,76 @@ def OrganizationProfile(request):
 
 @login_required(login_url='/Panacea/login')
 def Permissions(request):
-    return render(request, 'pages/Permissions.html', {})
+    submit_success = False
+    if request.POST:
+        form = request_user_permissions(data=request.POST)
+        if form.is_valid():
+
+            groups = ' & '.join(str(s[1]) for s in form.cleaned_data['groups'].values_list())
+
+            msg_html = render_to_string('emails/request_permissions_email.html',
+                                        {'user_name': request.user.get_full_name(), 'groups': groups})
+            msg_plain = render_to_string('emails/request_permissions_email.txt',
+                                         {'user_name': request.user.get_full_name(), 'groups': groups})
+            send_mail(
+                subject='Permissions Request - Public Transportation Reporting Portal',
+                message=msg_plain,
+                from_email='some@sender.com',  # TODO change this to the correct email address
+                recipient_list=['wesleyi@wsdot.wa.gov', ],  # TODO change this to the correct email address
+                html_message=msg_html,
+            )
+            msg_html = "There is an active permissions request in the Public Transportation Reporting Portal"  # TODO add link
+            msg_plain = "There is an active permissions request in the Public Transportation Reporting Portal"  # TODO add link
+            send_mail(
+                subject='Active Permissions Request - Public Transportation Reporting Portal',
+                message=msg_plain,
+                from_email='some@sender.com',  # TODO change this to the correct email address
+                recipient_list=['wesleyi@wsdot.wa.gov', ],  # TODO change this to the correct email address
+                html_message=msg_html,
+            )
+            current_user_profile = profile.objects.get(custom_user_id=request.user.id)
+            current_user_profile.requested_permissions.set(form.cleaned_data['groups'])
+            current_user_profile.active_permissions_request = True
+            current_user_profile.save()
+            submit_success = True
+
+    user = request.user
+    auth_groups = Group.objects.all()
+    form = request_user_permissions(instance=user)
+
+    return render(request, 'pages/Permissions.html', {'auth_groups': auth_groups,
+                                                      'user_name': request.user.get_full_name(),
+                                                      'form': form,
+                                                      'submit_success': submit_success})
 
 
 @login_required(login_url='/Panacea/login')
+@group_required('WSDOT staff')
 def Admin_reports(request):
     return render(request, 'pages/AdminReports.html', {})
 
 
 @login_required(login_url='/Panacea/login')
+@group_required('WSDOT staff')
 def Admin_ReminderEmail(request):
     return render(request, 'pages/ReminderEmail.html', {})
 
 
 @login_required(login_url='/Panacea/login')
-def Admin_assignPermissions(request):
-    profile_data = profile.objects.all()
-    Admin_assignPermissions_all = modelformset_factory(custom_user, change_user_permissions_group, extra=0)
+# @group_required('WSDOT staff')
+def Admin_assignPermissions(request, active=None):
+    if not active:
+        active = 'active'
+    active_requests = profile.objects.filter(active_permissions_request=True).exists()
+    if active_requests and active == 'active':
+        profile_data = profile.objects.filter(active_permissions_request=True).all()
+    else:
+        profile_data = profile.objects.all()
+
+    assign_permissions_formset = modelformset_factory(custom_user, change_user_permissions_group, extra=0)
+
     if request.method == 'POST':
-        formset = Admin_assignPermissions_all(request.POST)
+        formset = assign_permissions_formset(request.POST)
         # if formset.is_valid():
         #     formset.save()
         #     return JsonResponse({'success': True})
@@ -519,14 +581,21 @@ def Admin_assignPermissions(request):
                     this_user_id = custom_user.objects.get(email=email).id
                     my_profile = profile.objects.get(custom_user_id=this_user_id)
                     my_profile.profile_complete = True
+                    my_profile.active_permissions_request = False
                     my_profile.save()
                     print(email)
                 form.save()
 
         return JsonResponse({'success': True})
     else:
-        formset = Admin_assignPermissions_all(queryset=custom_user.objects.filter(id__in=profile_data.values_list('custom_user_id')))
-        return render(request, 'pages/AssignPermissions.html', {'Admin_assignPermissions_all': formset, 'profile_data': profile_data})
+        formset = assign_permissions_formset(queryset=custom_user.objects.filter(id__in=profile_data.values_list('custom_user_id')))
+        if active_requests and active == 'active':
+            return render(request, 'pages/assign_permissions_active_requests.html', {'Admin_assignPermissions_all': formset,
+                                                                                     'profile_data': profile_data})
+        else:
+            return render(request, 'pages/AssignPermissions.html', {'Admin_assignPermissions_all': formset,
+                                                                    'profile_data': profile_data,
+                                                                    'active_requests': active_requests})
 
 
 @login_required(login_url='/Panacea/login')

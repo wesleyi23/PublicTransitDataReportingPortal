@@ -43,7 +43,7 @@ urlpatterns = [
     path('Admin/Vanpool_expansion_modify/<int:id>', views.Vanpool_expansion_modify, name="Vanpool_expansion_modify"),
     path('Admin/Vanpool_expansion_submission/', views.Vanpool_expansion_submission, name="Vanpool_expansion_submission"),
     path('Admin/ReminderEmail/', views.Admin_ReminderEmail, name="Admin_ReminderEmail"),
-    path('Admin/AssignPermissions/', views.Admin_assignPermissions, name="Admin_assignPermissions"),
+    path('Admin/AssignPermissions/<active>', views.Admin_assignPermissions, name="Admin_assignPermissions"),
     path('Help/', views.help_page, name="Help"),
     path('Panacea/register/', views.register, name='register'),
     path('admin/', admin.site.urls),
