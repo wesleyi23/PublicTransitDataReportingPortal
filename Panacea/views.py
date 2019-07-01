@@ -499,6 +499,7 @@ def OrganizationProfile(request):
 
 @login_required(login_url='/Panacea/login')
 def Permissions(request):
+    submit_success = False
     if request.POST:
         form = request_user_permissions(data=request.POST)
         if form.is_valid():
@@ -525,9 +526,11 @@ def Permissions(request):
                 recipient_list=['wesleyi@wsdot.wa.gov', ],  # TODO change this to the correct email address
                 html_message=msg_html,
             )
-            profile.objects.get(id=request.user.id).requested_permissions = form.cleaned_data['groups']
-
-
+            current_user_profile = profile.objects.get(custom_user_id=request.user.id)
+            current_user_profile.requested_permissions.set(form.cleaned_data['groups'])
+            current_user_profile.active_permissions_request = True
+            current_user_profile.save()
+            submit_success = True
 
     user = request.user
     auth_groups = Group.objects.all()
@@ -535,7 +538,8 @@ def Permissions(request):
 
     return render(request, 'pages/Permissions.html', {'auth_groups': auth_groups,
                                                       'user_name': request.user.get_full_name(),
-                                                      'form': form})
+                                                      'form': form,
+                                                      'submit_success': submit_success})
 
 
 @login_required(login_url='/Panacea/login')
@@ -552,11 +556,19 @@ def Admin_ReminderEmail(request):
 
 @login_required(login_url='/Panacea/login')
 # @group_required('WSDOT staff')
-def Admin_assignPermissions(request):
-    profile_data = profile.objects.all()
-    Admin_assignPermissions_all = modelformset_factory(custom_user, change_user_permissions_group, extra=0)
+def Admin_assignPermissions(request, active=None):
+    if not active:
+        active = 'active'
+    active_requests = profile.objects.filter(active_permissions_request=True).exists()
+    if active_requests and active == 'active':
+        profile_data = profile.objects.filter(active_permissions_request=True).all()
+    else:
+        profile_data = profile.objects.all()
+
+    assign_permissions_formset = modelformset_factory(custom_user, change_user_permissions_group, extra=0)
+
     if request.method == 'POST':
-        formset = Admin_assignPermissions_all(request.POST)
+        formset = assign_permissions_formset(request.POST)
         # if formset.is_valid():
         #     formset.save()
         #     return JsonResponse({'success': True})
@@ -569,14 +581,21 @@ def Admin_assignPermissions(request):
                     this_user_id = custom_user.objects.get(email=email).id
                     my_profile = profile.objects.get(custom_user_id=this_user_id)
                     my_profile.profile_complete = True
+                    my_profile.active_permissions_request = False
                     my_profile.save()
                     print(email)
                 form.save()
 
         return JsonResponse({'success': True})
     else:
-        formset = Admin_assignPermissions_all(queryset=custom_user.objects.filter(id__in=profile_data.values_list('custom_user_id')))
-        return render(request, 'pages/AssignPermissions.html', {'Admin_assignPermissions_all': formset, 'profile_data': profile_data})
+        formset = assign_permissions_formset(queryset=custom_user.objects.filter(id__in=profile_data.values_list('custom_user_id')))
+        if active_requests and active == 'active':
+            return render(request, 'pages/assign_permissions_active_requests.html', {'Admin_assignPermissions_all': formset,
+                                                                                     'profile_data': profile_data})
+        else:
+            return render(request, 'pages/AssignPermissions.html', {'Admin_assignPermissions_all': formset,
+                                                                    'profile_data': profile_data,
+                                                                    'active_requests': active_requests})
 
 
 @login_required(login_url='/Panacea/login')

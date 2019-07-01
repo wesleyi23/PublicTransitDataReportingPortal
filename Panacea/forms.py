@@ -375,6 +375,7 @@ class change_user_permissions_group(forms.ModelForm):
                        'style': 'display: none; visibility: hidden'}),
         }
 
+
 class request_user_permissions(forms.ModelForm):
     class Meta:
         model = custom_user
@@ -382,7 +383,6 @@ class request_user_permissions(forms.ModelForm):
         widgets = {
             'groups': forms.CheckboxSelectMultiple(attrs={'class': 'form-check'})
         }
-
 
 
 class chart_form(forms.Form):

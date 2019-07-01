@@ -19,7 +19,7 @@
                                 <a class="nav-link " href="{% url 'UserProfile' %}">{{ user_name }}'s Profile</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link active" href="{% url 'Permissions' %}">Permissions for {{ user_name }}</a>
+                                <a class="nav-link active" href="{% url 'Permissions' %}">Permissions</a>
                             </li>
 
                         </ul>
@@ -57,20 +57,20 @@
                                 <img class="img-fluid px-3 px-sm-4 mt-3 mb-4" style="width: 20rem; float: left" src="{% static 'img/undraw_security.svg' %}" alt="Drawing of a user profile picture.">
                             </div>
                             <div>
-                            <h5>Which permissions would you like to request:</h5>
-                            <form action="{% url 'Permissions' %}" method="post">
-                                {% csrf_token  %}
-                                {{ form.groups }}
-                                {{ form.non_field_errors }}
-                                {{ form.source.errors }}
-                                {{ form.source }}
+                                <h5>Which permissions would you like to request:</h5>
+                                <form action="{% url 'Permissions' %}" method="post">
+                                    {% csrf_token  %}
+                                    {{ form.groups }}
+                                    {{ form.non_field_errors }}
+                                    {{ form.source.errors }}
+                                    {{ form.source }}
 
 
                             </div>
 
                         </div>
-                            <input type="submit" value="Submit"  class="btn btn-primary float-right mt-3">
-                            </form>
+                        <input type="submit" value="Submit"  class="btn btn-primary float-right mt-3">
+                        </form>
                     </div>
 
                 </div>
@@ -79,6 +79,37 @@
 
     </div>
 
+    <div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">Your permissions request has been sent</h5>
+                </div>
+                <div class="modal-body">
+                    <p>The site administrator has been notified of your permissions request.  Once they have reviewed it,
+                    you will be notified of the outcome.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
+
+{% endblock %}
+
+{% block page_scripts %}
+
+    <script type="application/javascript">
+        {% if submit_success %}
+            show_modal = true
+        {% else %}
+            show_modal = false
+        {% endif %}
+        $(document).ready(function(){
+            $('#exampleModal').modal({show:show_modal});
+        });
+    </script>
 
 {% endblock %}
