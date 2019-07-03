@@ -254,11 +254,8 @@ def Vanpool_expansion_submission(request):
 def Vanpool_expansion_analysis(request):
     # pulls the latest vanpool data
     organizationIds = vanpool_expansion_analysis.objects.filter().values('organization_id')
-    print(organizationIds)
-    veaIds = vanpool_expansion_analysis.objects.values('id')
     organizationNames = find_organizations_name(organizationIds)
-    latestVanpool = calculate_latest_vanpool(organizationIds)
-    print(latestVanpool)
+    latestVanpool = calculate_latest_vanpool()
     maxVanpool = find_maximum_vanpool(organizationIds)
     remainingMonths = calculate_remaining_months()
     expansionGoalList = calculate_if_goal_has_been_reached()

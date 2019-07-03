@@ -59,7 +59,7 @@
                             <tbody>
                             {%  for organizationNames, latestVanpool, maxVanpool, remainingMonths, expansionGoalList, vea in zipped_data %}
                                 <tr>
-                                    <td class="d-none d-md-table-cell"> {{ organizationNames.name}}</td>
+                                    <td class="d-none d-md-table-cell  align=center"> {{ organizationNames}}</td>
                                     <td class="d-none d-md-table-cell" align="center" > {{ latestVanpool.vanpool_groups_in_operation}}</td>
                                     <td class="d-none d-md-table-cell" >  {{ latestVanpool.report_month }}/1/{{ latestVanpool.report_year }}</td>
                                     <td class="d-none d-md-table-cell" align="center"> {{ vea.vanpools_in_service_at_time_of_award}}

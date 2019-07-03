@@ -263,6 +263,9 @@ class vanpool_expansion_analysis(models.Model):
     awarded_biennium = models.CharField(max_length=50, choices=CHOICES, blank=True, null=True)
     expansion_goal = models.IntegerField(blank = True, null = True)
     deadline = models.DateField(blank = True, null = True)
+    service_goal_met_date = models.DateField(blank = True, null=True)
+    max_vanpool_numbers = models.IntegerField(blank=True, null= True)
+    max_vanpool_date = models.DateField(blank = True, null=True)
 
 
     # going to need to add a loan thing here once I figure out what the story is
