@@ -2,17 +2,24 @@
 {% load static %}
 
 {% block content %}
-
     <div class="card shadow mb-4">
-        <div class="card-header py-3">
-            <h6 class="m-0 font-weight-bold text-primary">{{  user_name }}'s User Profile</h6>
+        <div class="card-header">
+            <ul class="nav nav-tabs card-header-tabs">
+                <li class="nav-item">
+                    <a class="nav-link active" href="{% url 'UserProfile' %}">{{ user_name }}'s Profile</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'Permissions' %}">Permissions</a>
+                </li>
+
+            </ul>
         </div>
         <div class="card-body">
             <div>
                 <img class="img-fluid px-3 px-sm-4 mt-3 mb-4" style="width: 20rem; float: left" src="{% static 'img/undraw_creative_team.svg' %}" alt="Drawing of a user profile picture.">
             </div>
-            <div>
-                <div style="float: left">
+            <div class="row">
+                <div class="table-responsive">
                     <form action="/UserProfile/" method="post">
                         {% csrf_token  %}
                         <table style="border-collapse: separate; border-spacing: .5rem">
