@@ -57,32 +57,32 @@
         <hr class="sidebar-divider">
 
         <!-- Heading -->
-    {% if request.user|has_group:"Vanpool reporter" or request.user|has_group:"WSDOT staff" %}
-        <div class="sidebar-heading">
-            Data Reporting
-        </div>
-
-        <!-- Nav Item - Asset Inventory Reports Menu -->
-
-        <li class="nav-item">
-            <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseVanpoolReport" aria-expanded="true" aria-controls="collapseVanpoolReport">
-                <i class="fas fa-fw fa-clipboard-check"></i>
-                <span>Vanpool Reporting</span>
-            </a>
-            <div id="collapseVanpoolReport" class="collapse" data-parent="#accordionSidebar">
-                <div class="bg-white py-2 collapse-inner rounded">
-                    <h6 class="collapse-header">Vanpool:</h6>
-                    {% if request.user|has_group:"Vanpool reporter" %}
-                    <a class="collapse-item" href="{% url 'Vanpool_report' %}">Submit monthly report</a>
-                    {% endif %}
-                    <a class="collapse-item" href="{% url 'Vanpool_data' %}">View reported data</a>
-                </div>
+        {% if request.user|has_group:"Vanpool reporter" or request.user|has_group:"WSDOT staff" %}
+            <div class="sidebar-heading">
+                Data Reporting
             </div>
-        </li>
 
-        <!-- Divider -->
-        <hr class="sidebar-divider">
-{% endif %}
+            <!-- Nav Item - Asset Inventory Reports Menu -->
+
+            <li class="nav-item">
+                <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseVanpoolReport" aria-expanded="true" aria-controls="collapseVanpoolReport">
+                    <i class="fas fa-fw fa-clipboard-check"></i>
+                    <span>Vanpool Reporting</span>
+                </a>
+                <div id="collapseVanpoolReport" class="collapse" data-parent="#accordionSidebar">
+                    <div class="bg-white py-2 collapse-inner rounded">
+                        <h6 class="collapse-header">Vanpool:</h6>
+                        {% if request.user|has_group:"Vanpool reporter" %}
+                            <a class="collapse-item" href="{% url 'Vanpool_report' %}">Submit monthly report</a>
+                        {% endif %}
+                        <a class="collapse-item" href="{% url 'Vanpool_data' %}">View reported data</a>
+                    </div>
+                </div>
+            </li>
+
+            <!-- Divider -->
+            <hr class="sidebar-divider">
+        {% endif %}
         <!-- Heading -->
         <div class="sidebar-heading">
             Settings
@@ -98,7 +98,7 @@
                 <div class="bg-white py-2 collapse-inner rounded">
                     <a class="collapse-item" href="{% url 'UserProfile' %}">User Profile</a>
                     {% if request.user|has_group:"Vanpool reporter" or request.user|has_group:"WSDOT staff" or request.user|has_group:"Summary reporter"%}
-                    <a class="collapse-item" href="{% url 'OrganizationProfile' %}">Organization Profile</a>
+                        <a class="collapse-item" href="{% url 'OrganizationProfile' %}">Organization Profile</a>
                     {% endif %}
                 </div>
             </div>
@@ -108,43 +108,43 @@
         <hr class="sidebar-divider">
         <!-- Heading -->
         {% if request.user|has_group:"WSDOT staff" %}
-        <div class="sidebar-heading">
-            Admin
-        </div>
-        <!-- Nav Item - Admin Tools -->
-        <li class="nav-item">
-            <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseVanpoolAdmin" aria-expanded="true" aria-controls="collapseAdmin">
-                <i class="fas fa-fw fa-shuttle-van"></i>
-                <span>Vanpool Admin</span>
-            </a>
-            <div id="collapseVanpoolAdmin" class="collapse" data-parent="#accordionSidebar">
-                <div class="bg-white py-2 collapse-inner rounded">
-                    <a class="collapse-item" href="{% url 'Vanpool_expansion_analysis' %}">Vanpool Expansion</a>
-                    <!--- <a class = "collapse-item" href = "{%  url 'Operation_Summary' %}"> Operation Summary </a>
+            <div class="sidebar-heading">
+                Admin
+            </div>
+            <!-- Nav Item - Admin Tools -->
+            <li class="nav-item">
+                <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseVanpoolAdmin" aria-expanded="true" aria-controls="collapseAdmin">
+                    <i class="fas fa-fw fa-shuttle-van"></i>
+                    <span>Vanpool Admin</span>
+                </a>
+                <div id="collapseVanpoolAdmin" class="collapse" data-parent="#accordionSidebar">
+                    <div class="bg-white py-2 collapse-inner rounded">
+                        <a class="collapse-item" href="{% url 'Vanpool_expansion_analysis' %}">Vanpool Expansion</a>
+                        <!--- <a class = "collapse-item" href = "{%  url 'Operation_Summary' %}"> Operation Summary </a>
                     <a class = "collapse-item" href = "{%  url 'Vanpool_Growth' %}"> Vanpool Growth </a> -->
+                    </div>
                 </div>
-            </div>
-        </li>
+            </li>
 
-        <!-- Nav Item - Admin Tools -->
-        <li class="nav-item">
-            <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseAdmin" aria-expanded="true" aria-controls="collapseAdmin">
-                <i class="fas fa-fw fa-tools"></i>
-                <span>Admin Tools</span>
-            </a>
-            <div id="collapseAdmin" class="collapse" data-parent="#accordionSidebar">
-                <div class="bg-white py-2 collapse-inner rounded">
-                    <!--- <a class="collapse-item" href="{% url 'Admin_reports' %}">Reports</a>
+            <!-- Nav Item - Admin Tools -->
+            <li class="nav-item">
+                <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseAdmin" aria-expanded="true" aria-controls="collapseAdmin">
+                    <i class="fas fa-fw fa-tools"></i>
+                    <span>Admin Tools</span>
+                </a>
+                <div id="collapseAdmin" class="collapse" data-parent="#accordionSidebar">
+                    <div class="bg-white py-2 collapse-inner rounded">
+                        <!--- <a class="collapse-item" href="{% url 'Admin_reports' %}">Reports</a>
                     <a class="collapse-item" href="{% url 'Admin_ReminderEmail' %}">Reminder Emails</a> --->
-                    <a class="collapse-item" href="{% url 'Admin_assignPermissions' "active"%}">Assign Permissions</a>
+                        <a class="collapse-item" href="{% url 'Admin_assignPermissions' "active"%}">Assign Permissions</a>
+                    </div>
                 </div>
-            </div>
-        </li>
+            </li>
 
 
-        <!-- Divider -->
-        <hr class="sidebar-divider d-none d-md-block">
-{% endif %}
+            <!-- Divider -->
+            <hr class="sidebar-divider d-none d-md-block">
+        {% endif %}
         <!-- Heading -->
         <li class="nav-item">
             <a class="nav-link" href="/Help">
@@ -227,11 +227,16 @@
 
         <!-- Footer -->
         <footer class="sticky-footer bg-white">
+
             <div class="container my-auto">
-                <div class="copyright text-center my-auto">
+                <div class="copyright text-center my-auto" style="width: 100%">
                     <span><a href="{% url 'accessibility' %}">Accessibility</a> | <a href="{% url 'public_disclosure' %}">Public Disclosure</a> | Contact Us | <a class="collapse-item" href="{% url 'Admin_assignPermissions' 'active'%}">Assign Permissions</a></span>
                 </div>
+
             </div>
+                <div class="d-none d-sm-block" style="position: fixed; bottom: 1.25rem; right: 1.5rem">
+                    <img style="height: 1.5rem" src="{% static 'img/WSDOT_logo_Green.png' %}">
+                </div>
         </footer>
         <!-- End of Footer -->
 
