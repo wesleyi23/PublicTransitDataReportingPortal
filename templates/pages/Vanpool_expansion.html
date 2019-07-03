@@ -69,14 +69,14 @@
                                     <td class="d-none d-md-table-cell" align="center"> {{ vea.expansion_goal}} </td>
                                     <td class="d-none d-md-table-cell" > {{ vea.deadline|date:'m/d/y'}} </td>
                                     <td class = "d-none d-md-table-cell" align="center"> <b class="text-success"> {{ vea.vanpool_goal_met }}</b> </td>
-                                    {%  if eg != ''%}
+                                    {%  if vea.vanpool_goal_met == True %}
                                         <td class = "d-none d-md-table-cell" > {{ expansionGoalList.report_month }}/1/{{ expansionGoalList.report_year }}</td>
                                     {%  else %}
                                         <td class = "d-none d-md-table-cell" > </td>
                                     {%  endif %}
                                     <td class = "d-none d-md-table-cell"  align="center"> {{ maxVanpool.vanpool_groups_in_operation }}  </td>
                                     <td class = "d-none d-md-table-cell" > {{ maxVanpool.report_month }}/1/{{ maxVanpool.report_year }}</td>
-                                    {%  if remainingMonths < 0 %}
+                                    {%  if remainingMonths == 'Deadline Expired' %}
                                         <td class = "d-none d-md-table-cell" align="center"> Deadline Expired </td>
                                     {%  else %}
                                         <td class = "d-none d-md-table-cell" align="center" > {{ remainingMonths }} Months </td>

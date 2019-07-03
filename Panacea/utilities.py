@@ -52,21 +52,23 @@ def find_maximum_vanpool(organizationIds):
         orgId = van['organization_id']
         dates = vanpool_report.objects.filter(organization_id=orgId,
                                               report_month__isnull=False, vanpool_groups_in_operation__gte=0,
-                                              report_year__gte=awardYear, report_year__lte=deadlineYear).values('vanpool_groups_in_operation', 'report_year', 'report_month', 'id')
+                                              report_year__gte=awardYear, report_year__lte=deadlineYear)
         qs1 = dates.all().filter(report_year=awardYear, report_month__gte=awardMonth)
         qs2 = dates.all().filter(report_year=deadlineYear, report_month__lte=deadlineMonth)
         qs3 = dates.all().filter(report_year__gt=awardYear, report_year__lt=deadlineYear)
         van_max = qs3.union(qs1, qs2)
-        print(type(van_max[0]['vanpool_groups_in_operation']))
-
-
-        van_maximum = vanpool_report.objects.filter(id__in = vanMaxIds).annotate(maxvan = Max('vanpool_groups_in_operation'))
-        if len(van_maximum) > 1:
-            van_maximum = van_maximum.latest('id')
-            vanMaxList.append(van_maximum)
-        else:
-            vanMaxList.append(van_maximum)
-    print(len(vanMaxList))
+        van_max_list = list(van_max.values('id', 'vanpool_groups_in_operation'))
+        max_value = 0
+        max_id = 0
+        for i in van_max_list:
+            if i['vanpool_groups_in_operation'] > max_value:
+                max_value = i['vanpool_groups_in_operation']
+                max_id = i['id']
+            elif i['vanpool_groups_in_operation'] == max_value:
+                if i['id'] > max_id:
+                    max_id = i['id']
+        van_maximum = vanpool_report.objects.get(id= max_id)
+        vanMaxList.append(van_maximum)
     return vanMaxList
 
 
@@ -87,7 +89,6 @@ def calculate_if_goal_has_been_reached():
         qs2 = dates.all().filter(report_year=deadlineYear, report_month__lte=deadlineMonth)
         qs3 = dates.all().filter(report_year__gt=awardYear, report_year__lt=deadlineYear)
         goalMet = qs3.union(qs1, qs2)
-
         if goalMet.exists():
             expansionGoalList.append(goalMet.earliest('id'))
             vanpool_expansion_analysis.objects.filter(id = org['id']).update(vanpool_goal_met = True)
