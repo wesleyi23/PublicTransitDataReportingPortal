@@ -34,6 +34,16 @@
                 </div>
 {#                <h1 class="h3 mb-2 text-gray-800" align = "center"> {{ current_biennium.calculate_current_biennium }}Vanpool Expansion Report </h1>#}
                 <div class="card-body">
+                <div class = "text-left">
+                    <div class="btn-group">
+                        <button class="btn btn-default filter">Table Filters</button>
+                <button id="serviceexpansiongoal" class="btn btn-default filter">Service Expansion Goal Met</button>
+                <button id="expired" class="btn btn-default filter">Expired</button>
+                        <button id="awardedbiennium" class="btn btn-default filter">Awarded Biennium</button>
+                <button id="all" class="btn btn-default filter">All</button>
+                    </div>
+                </div>
+
 
                     <div class="dataTable_wrapper">
                         <table id="vanpool_expansion_analysis_tbl" class='table tdt-bootstrap4 dataTable dataTable_wrapper'>
@@ -53,6 +63,8 @@
                                 <th scope="col">Max Number of Vanpools</th>
                                 <th scope="col">Max Vanpools Date</th>
                                 <th scope="col">Months Remaining</th>
+                                <th scope="col">Expired</th>
+                                <th scope="col">Awarded Biennium</th>
                                 <th scope="col">Notes</th>
                             </tr>
                             </thead>
@@ -81,7 +93,8 @@
                                     {%  else %}
                                         <td class = "d-none d-md-table-cell" align="center" > {{ remainingMonths }} Months </td>
                                     {%  endif %}
-
+                                    <td class = "d-none d-md-table-cell" align="center" >{{vea.expired}} </td>
+                                    <td class = "d-none d-md-table-cell" align="center" >{{vea.awarded_biennium}} </td>
                                     <td class = "d-none d-md-table-cell" align="center" >{{vea.notes}} </td>
 
                                 </tr>
@@ -118,17 +131,27 @@
 
     <script type="text/javascript">
         $(document).ready( function () {
-            $('#vanpool_expansion_analysis_tbl').DataTable({
+            var dataTables = $('#vanpool_expansion_analysis_tbl').DataTable({
+                "colReorder": true,
                 "scrollX": true,
                 "sScrollX": "100%",
                 "sScrollXInner": "100%",
                 "bLengthChange": false,
+                 "bInfo": false,
+                "bFilter": false,
                 "bSort": true,
-                "dom": '<"top"fl>rt<"bottom"ip><"clear">'
+                "dom": 'Bfrtip',
+                "buttons": ['excel', 'csv']
+
             });
             $('.dataTables_filter').addClass('form-inline');
             $('.dataTables_filter').css({"float":"left", "margin-bottom":"2px", "margin-left":"2px"})
+
+
+
+
         });
+
 
 
 
