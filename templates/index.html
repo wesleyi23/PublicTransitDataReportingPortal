@@ -48,7 +48,7 @@
         <!-- Nav Item - Dashboard -->
         <li class="nav-item active">
             <a class="nav-link" href="{% url 'dashboard' %}">
-                <i class="fas fa-fw fa-tachometer-alt"></i>
+                {#                <i class="fas fa-fw fa-tachometer-alt"></i>#}
                 <span>Dashboard</span>
             </a>
         </li>
@@ -66,12 +66,11 @@
 
             <li class="nav-item">
                 <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseVanpoolReport" aria-expanded="true" aria-controls="collapseVanpoolReport">
-                    <i class="fas fa-fw fa-clipboard-check"></i>
+                    {#                    <i class="fas fa-fw fa-clipboard-check"></i>#}
                     <span>Vanpool Reporting</span>
                 </a>
                 <div id="collapseVanpoolReport" class="collapse" data-parent="#accordionSidebar">
                     <div class="bg-white py-2 collapse-inner rounded">
-                        <h6 class="collapse-header">Vanpool:</h6>
                         {% if request.user|has_group:"Vanpool reporter" %}
                             <a class="collapse-item" href="{% url 'Vanpool_report' %}">Submit monthly report</a>
                         {% endif %}
@@ -91,7 +90,7 @@
         <!-- Nav Item - Settings Collapse Menu -->
         <li class="nav-item">
             <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseSettings" aria-expanded="true" aria-controls="collapseSettings">
-                <i class="fas fa-fw fa-user"></i>
+                {#                <i class="fas fa-fw fa-user"></i>#}
                 <span>Settings</span>
             </a>
             <div id="collapseSettings" class="collapse" data-parent="#accordionSidebar">
@@ -114,14 +113,16 @@
             <!-- Nav Item - Admin Tools -->
             <li class="nav-item">
                 <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseVanpoolAdmin" aria-expanded="true" aria-controls="collapseAdmin">
-                    <i class="fas fa-fw fa-shuttle-van"></i>
+                    {#                    <i class="fas fa-fw fa-shuttle-van"></i>#}
                     <span>Vanpool Admin</span>
                 </a>
                 <div id="collapseVanpoolAdmin" class="collapse" data-parent="#accordionSidebar">
                     <div class="bg-white py-2 collapse-inner rounded">
                         <a class="collapse-item" href="{% url 'Vanpool_expansion_analysis' %}">Vanpool Expansion</a>
-                        <!--- <a class = "collapse-item" href = "{%  url 'Operation_Summary' %}"> Operation Summary </a>
-                    <a class = "collapse-item" href = "{%  url 'Vanpool_Growth' %}"> Vanpool Growth </a> -->
+                        {% comment %}
+                        <a class = "collapse-item" href = "{%  url 'Operation_Summary' %}"> Operation Summary </a>
+                        <a class = "collapse-item" href = "{%  url 'Vanpool_Growth' %}"> Vanpool Growth </a>
+                        {% endcomment %}
                     </div>
                 </div>
             </li>
@@ -129,13 +130,15 @@
             <!-- Nav Item - Admin Tools -->
             <li class="nav-item">
                 <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseAdmin" aria-expanded="true" aria-controls="collapseAdmin">
-                    <i class="fas fa-fw fa-tools"></i>
+                    {#                    <i class="fas fa-fw fa-tools"></i>#}
                     <span>Admin Tools</span>
                 </a>
                 <div id="collapseAdmin" class="collapse" data-parent="#accordionSidebar">
                     <div class="bg-white py-2 collapse-inner rounded">
-                        <!--- <a class="collapse-item" href="{% url 'Admin_reports' %}">Reports</a>
-                    <a class="collapse-item" href="{% url 'Admin_ReminderEmail' %}">Reminder Emails</a> --->
+                        {% comment %}
+                         <a class="collapse-item" href="{% url 'Admin_reports' %}">Reports</a>
+                         <a class="collapse-item" href="{% url 'Admin_ReminderEmail' %}">Reminder Emails</a>
+                        {% endcomment %}
                         <a class="collapse-item" href="{% url 'Admin_assignPermissions' "active"%}">Assign Permissions</a>
                     </div>
                 </div>
@@ -148,7 +151,7 @@
         <!-- Heading -->
         <li class="nav-item">
             <a class="nav-link" href="/Help">
-                <i class="fas fa-fw fa-question-circle"></i>
+                {#                <i class="fas fa-fw fa-question-circle"></i>#}
                 <span>Help</span></a>
         </li>
 
@@ -214,7 +217,7 @@
             <!-- End of Topbar -->
 
             <!-- Begin Page Content -->
-            <div class="container" style="height: calc(100% - 8.4rem); max-width: none">
+            <div class="container" style="height: calc(100% - 8.4rem); max-width: none; min-height: 0">
                 <a id="page_content_start"></a>
                 {% block content %}
                 {% endblock %}
@@ -234,9 +237,9 @@
                 </div>
 
             </div>
-                <div class="d-none d-sm-block" style="position: fixed; bottom: 1.25rem; right: 1.5rem">
-                    <img style="height: 1.5rem" src="{% static 'img/WSDOT_logo_Green.png' %}">
-                </div>
+            <div class="d-none d-sm-block" style="position: absolute; bottom: 1.25rem; right: 1.5rem">
+                <img style="height:1.5rem" src="{% static 'img/WSDOT_logo_Green.png' %}">
+            </div>
         </footer>
         <!-- End of Footer -->
 

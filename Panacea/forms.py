@@ -420,7 +420,7 @@ class chart_form(forms.Form):
     chart_measure = forms.CharField(widget=forms.Select(choices=MEASURE_CHOICES,
                                                         attrs={'class': 'form-control my_chart_control',
                                                                'data-form-name': "chart_form"}))
-    chart_organizations = forms.ModelChoiceField(queryset=organization.objects.all(),
+    chart_organizations = forms.ModelChoiceField(queryset=organization.objects.all().order_by('name'), empty_label=None,
                                                  widget=forms.CheckboxSelectMultiple(
                                                      attrs={'class': 'form-check checkbox-grid',
                                                             'data-form-name': "chart_form"}))
