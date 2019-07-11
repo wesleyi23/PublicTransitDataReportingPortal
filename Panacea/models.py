@@ -266,9 +266,10 @@ class vanpool_expansion_analysis(models.Model):
     service_goal_met_date = models.DateField(blank = True, null=True)
     max_vanpool_numbers = models.IntegerField(blank=True, null= True)
     max_vanpool_date = models.DateField(blank = True, null=True)
-
-
-    # going to need to add a loan thing here once I figure out what the story is
+    latest_vanpool_number = models.IntegerField(blank = True, null=True)
+    latest_report_date = models.DateField(blank=True, null=True)
+    months_remaining = models.CharField(blank = True, null = True, max_length=20)
+    organization_name = models.CharField(blank = True, null = True, max_length=50)
 
 
     @property

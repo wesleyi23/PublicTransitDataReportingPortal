@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'Panacea.apps.PanaceaConfig',
     'django.forms',
+    'django_filters',
 ]
 
 MIDDLEWARE = [

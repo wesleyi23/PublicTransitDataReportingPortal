@@ -29,6 +29,7 @@ from django.core.exceptions import ValidationError
 from django.forms.widgets import CheckboxInput
 from .utilities import monthdelta, get_wsdot_color
 from django.http import Http404
+from .filters import VanpoolExpansionFilter
 
 from .forms import CustomUserCreationForm, \
     custom_user_ChangeForm, \
@@ -254,14 +255,13 @@ def Vanpool_expansion_submission(request):
 def Vanpool_expansion_analysis(request):
     # pulls the latest vanpool data
     organizationIds = vanpool_expansion_analysis.objects.filter().values('organization_id')
-    organizationNames = find_organizations_name(organizationIds)
-    latestVanpool = calculate_latest_vanpool()
-    maxVanpool = find_maximum_vanpool(organizationIds)
-    remainingMonths = calculate_remaining_months()
-    expansionGoalList = calculate_if_goal_has_been_reached()
-    vea = vanpool_expansion_analysis.objects.all().order_by('organization_id')
-    zipped = zip(organizationNames, latestVanpool, maxVanpool, remainingMonths, expansionGoalList, vea)
-    return render(request, 'pages/Vanpool_expansion.html', {'zipped_data': zipped})
+    find_organizations_name(organizationIds)
+    calculate_latest_vanpool()
+    find_maximum_vanpool(organizationIds)
+    calculate_remaining_months()
+    calculate_if_goal_has_been_reached()
+    f = VanpoolExpansionFilter(request.GET, queryset=vanpool_expansion_analysis.objects.all())
+    return render(request, 'pages/Vanpool_expansion.html', {'filter': f})
 
 
 @login_required(login_url='/Panacea/login')

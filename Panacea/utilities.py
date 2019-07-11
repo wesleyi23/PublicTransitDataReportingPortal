@@ -9,22 +9,24 @@ from dateutil.relativedelta import relativedelta
 
 #
 
-def find_organizations_name(organizationIds):
-    organization_names = []
-    for i in organizationIds:
-        orgname = organization.objects.get(id = i['organization_id'])
-        organization_names.append(orgname)
-    return organization_names
+def find_organizations_name(o):
+    veaOrgs = vanpool_expansion_analysis.objects.values('organization_id').distinct()
+    print(veaOrgs)
+    for i in veaOrgs:
+        name = organization.objects.filter(id = i).name
+        print(name)
+        vanpool_expansion_analysis.objects.filter(organization_id=i).update(organization_name = name)
+
 
 def calculate_latest_vanpool():
-    latestVanpoolList = []
-    latestVanData = vanpool_expansion_analysis.objects.values('date_of_award', 'deadline', 'organization_id').order_by('organization_id')
+    latestVanData = vanpool_expansion_analysis.objects.values('id', 'date_of_award', 'deadline', 'organization_id').order_by('organization_id')
     for van in latestVanData:
         awardMonth = van['date_of_award'].month
         awardYear = van['date_of_award'].year
         deadlineYear = van['deadline'].year
         deadlineMonth = van['deadline'].month
         orgId = van['organization_id']
+        veaId = van['id']
 
         dates = vanpool_report.objects.filter(organization_id =orgId,
                    report_month__isnull=False, vanpool_groups_in_operation__gte=0, report_year__gte = awardYear, report_year__lte = deadlineYear).values('id','report_year', 'report_month',
@@ -35,15 +37,18 @@ def calculate_latest_vanpool():
         latest_vanpool = qs3.union(qs1, qs2)
         if len(latest_vanpool) > 1:
             latest_vanpool = latest_vanpool.latest('id')
-            latestVanpoolList.append(latest_vanpool)
+            latestVanDate = datetime.date(latest_vanpool['report_year'], latest_vanpool['report_month'], 1)
+            vanpool_expansion_analysis.objects.filter(id=veaId).update(latest_report_date=latestVanDate,
+                                                                           latest_vanpool_number=latest_vanpool['vanpool_groups_in_operation'])
         else:
-            latestVanpoolList.append(latest_vanpool)
-    return latestVanpoolList
+            latestVanDate = datetime.date(latest_vanpool.report_year, latest_vanpool.report_month, 1)
+            vanpool_expansion_analysis.objects.filter(id=veaId).update(latest_report_date=latestVanDate,
+                                                                           latest_vanpool_number=latest_vanpool.vanpool_groups_in_operation)
+
 
 
 def find_maximum_vanpool(organizationIds):
-    vanMaxList = []
-    vanMaxData = vanpool_expansion_analysis.objects.values('date_of_award', 'deadline', 'organization_id').order_by('organization_id')
+    vanMaxData = vanpool_expansion_analysis.objects.values('id', 'date_of_award', 'deadline', 'organization_id').order_by('organization_id')
     for van in vanMaxData:
         awardMonth = van['date_of_award'].month
         awardYear = van['date_of_award'].year
@@ -68,13 +73,14 @@ def find_maximum_vanpool(organizationIds):
                 if i['id'] > max_id:
                     max_id = i['id']
         van_maximum = vanpool_report.objects.get(id= max_id)
-        vanMaxList.append(van_maximum)
-    return vanMaxList
+        max_van_date = datetime.date(van_maximum.report_year, van_maximum.report_month, 1)
+        #TODO pull vanpool groups in operation and date out of here, input them into the db
+        vanpool_expansion_analysis.objects.filter(id=van['id']).update(max_vanpool_date=max_van_date, max_vanpool_numbers = van_maximum.vanpool_groups_in_operation)
+
 
 
 def calculate_if_goal_has_been_reached():
     vanExpansion = vanpool_expansion_analysis.objects.order_by('organization_id').values('id', 'expansion_goal', 'organization_id', 'date_of_award', 'deadline')
-    expansionGoalList = []
     for org in vanExpansion:
         awardMonth = org['date_of_award'].month
         awardYear = org['date_of_award'].year
@@ -90,27 +96,20 @@ def calculate_if_goal_has_been_reached():
         qs3 = dates.all().filter(report_year__gt=awardYear, report_year__lt=deadlineYear)
         goalMet = qs3.union(qs1, qs2)
         if goalMet.exists():
-            expansionGoalList.append(goalMet.earliest('id'))
             vanpool_expansion_analysis.objects.filter(id = org['id']).update(vanpool_goal_met = True)
-        else:
-            expansionGoalList.append('')
-    return expansionGoalList
 
 
 def calculate_remaining_months():
-    remainingMonthsList = []
     expansionDeadlines = vanpool_expansion_analysis.objects.values('deadline', 'id').order_by('organization_id')
-    print(expansionDeadlines)
     for vea in expansionDeadlines:
         deadline = vea['deadline']
         remainder = relativedelta(deadline, datetime.date.today())
         remainingMonths = remainder.months
         if remainingMonths < 0:
             vanpool_expansion_analysis.objects.filter(id = vea['id']).update(expired = True)
-            remainingMonthsList.append('Deadline Expired')
+            vanpool_expansion_analysis.objects.filter(id=vea['id']).update(months_remaining='Expired')
         else:
-            remainingMonthsList.append(remainingMonths)
-    return remainingMonthsList
+            vanpool_expansion_analysis.objects.filter(id=vea['id']).update(months_remaining= '{} months'.format(remainingMonths))
 
 
 
