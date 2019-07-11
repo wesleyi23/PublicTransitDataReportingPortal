@@ -128,7 +128,7 @@ class profile(models.Model):
     zip_code = USZipCodeField(blank=True)
     reports_on = models.ManyToManyField(ReportType, blank=True)  # TODO rename this to
     requested_permissions = models.ManyToManyField(Group)
-    active_permissions_request = models.BooleanField(blank=True)
+    active_permissions_request = models.BooleanField(blank=True, null=True)
 
 class vanpool_report(models.Model):
     REPORT_MONTH = (

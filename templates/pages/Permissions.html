@@ -34,8 +34,7 @@
                                 <table style="border-collapse: separate; border-spacing: .5rem">
                                     {% for group in auth_groups %}
                                         <tr>
-                                            <td style="padding-right: 1.5rem">{{ group.name }}</td>
-                                            <td>{% if request.user|has_group:group.name %}True{% else %}False{% endif %}</td>
+                                            <td>{% if request.user|has_group:group.name %}{{group.name}}{% else %}&nbsp;{% endif %}</td>
                                         </tr>
                                     {% endfor %}
                                 </table>
@@ -64,12 +63,10 @@
                                     {{ form.non_field_errors }}
                                     {{ form.source.errors }}
                                     {{ form.source }}
-
-
                             </div>
-
                         </div>
                         <input type="submit" value="Submit"  class="btn btn-primary float-right mt-3">
+                        <a href="."  class="btn btn-secondary float-right mr-2 mt-3" >Cancel</a>
                         </form>
                     </div>
 

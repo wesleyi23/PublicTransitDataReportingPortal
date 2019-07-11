@@ -34,6 +34,8 @@ ALLOWED_HOSTS = []
 # pip install phonenumbers
 # pip install django-localflavor
 # pip install celery 4.3.0
+# pip install django-widget-tweaks
+# pip install django-tempus-dominus
 
 INSTALLED_APPS = [
     'bootstrap4',
