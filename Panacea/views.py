@@ -254,10 +254,9 @@ def Vanpool_expansion_submission(request):
 @login_required(login_url='/Panacea/login')
 def Vanpool_expansion_analysis(request):
     # pulls the latest vanpool data
-    organizationIds = vanpool_expansion_analysis.objects.filter().values('organization_id')
-    find_organizations_name(organizationIds)
+    find_organizations_name()
     calculate_latest_vanpool()
-    find_maximum_vanpool(organizationIds)
+    find_maximum_vanpool()
     calculate_remaining_months()
     calculate_if_goal_has_been_reached()
     f = VanpoolExpansionFilter(request.GET, queryset=vanpool_expansion_analysis.objects.all())
@@ -284,7 +283,7 @@ def Vanpool_expansion_modify(request, id=None):
     else:
         form = Modify_A_Vanpool_Expansion(instance=form_data)
     zipped = zip(organization_name, vea)
-    return render(request, 'pages/Vanpool_expansion_modify.html', {'zipped':zipped, 'id': id, 'form':form, 'successful_submit': successful_submit})
+    return render(request, 'pages/Vanpool_expansion_modify.html', {'zipped':zipped, 'id': id, 'form':form})
 
 
 @login_required(login_url='/Panacea/login')

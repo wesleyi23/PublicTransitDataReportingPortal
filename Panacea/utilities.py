@@ -9,13 +9,13 @@ from dateutil.relativedelta import relativedelta
 
 #
 
-def find_organizations_name(o):
+def find_organizations_name():
     veaOrgs = vanpool_expansion_analysis.objects.values('organization_id').distinct()
-    print(veaOrgs)
     for i in veaOrgs:
-        name = organization.objects.filter(id = i).name
-        print(name)
-        vanpool_expansion_analysis.objects.filter(organization_id=i).update(organization_name = name)
+        orgId = i['organization_id']
+        orgName = organization.objects.get(id = orgId)
+        orgName = str(orgName)
+        vanpool_expansion_analysis.objects.filter(organization_id=orgId).update(organization_name = orgName)
 
 
 def calculate_latest_vanpool():
@@ -47,7 +47,7 @@ def calculate_latest_vanpool():
 
 
 
-def find_maximum_vanpool(organizationIds):
+def find_maximum_vanpool():
     vanMaxData = vanpool_expansion_analysis.objects.values('id', 'date_of_award', 'deadline', 'organization_id').order_by('organization_id')
     for van in vanMaxData:
         awardMonth = van['date_of_award'].month

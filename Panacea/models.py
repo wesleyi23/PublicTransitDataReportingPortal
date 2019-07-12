@@ -269,7 +269,7 @@ class vanpool_expansion_analysis(models.Model):
     latest_vanpool_number = models.IntegerField(blank = True, null=True)
     latest_report_date = models.DateField(blank=True, null=True)
     months_remaining = models.CharField(blank = True, null = True, max_length=20)
-    organization_name = models.CharField(blank = True, null = True, max_length=50)
+    organization_name = models.CharField(blank = True, null = True, max_length=100)
 
 
     @property

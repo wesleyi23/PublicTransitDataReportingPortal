@@ -2,6 +2,7 @@
 {% load humanize %}
 {% load custom_tags %}
 {% load static %}
+{%  load widget_tweaks %}
 
 {% block head_content %}
 <link href="{% static 'vendor/datatables/dataTables.bootstrap4.css' %}" rel="stylesheet" type="text/css">
@@ -33,11 +34,30 @@
                     </ul>
                 </div>
 {#                <h1 class="h3 mb-2 text-gray-800" align = "center"> {{ current_biennium.calculate_current_biennium }}Vanpool Expansion Report </h1>#}
-                <div class="card-body">
+                <div class="card-body" style="font-size: 0.8rem">
                         <form action="" method="get">
-                        {{ filter.form.as_p }}
-                        <input type="submit" />
+                            <div class="well">
+                              <h4 style="margin-top: 0">Create a New Report</h4>
+                                  <div class="row">
+                                <div class="form-group col-sm-4 col-md-3">
+                                    {{ filter.form.vanpool_goal_met.label_tag }}
+                                    {{ filter.form.vanpool_goal_met }}
+                                </div>
+                                      <div class="form-group col-sm-4 col-md-3">
+                                    {{ filter.form.expired.label_tag }}
+                                    {{ filter.form.expired }}
+                                </div>
+                                      <div class="form-group col-sm-4 col-md-3">
+                                    {{ filter.form.awarded_biennium.label_tag}}
+                                    {{ filter.form.awarded_biennium }}
+                                </div>
+                                  </div>
+                            </div>
+                            <div align = "right">
+                        <input type="submit" value = "Submit" />
+                                </div>
                     </form>
+                        <p> Select these buttons to download the table as an excel or csv file</p>
                     <div class="dataTable_wrapper">
                         <table id="vanpool_expansion_analysis_tbl" class='table tdt-bootstrap4 dataTable dataTable_wrapper'>
                             <thead class="table-secondary" style="font-size: 0.8rem">
@@ -64,7 +84,7 @@
                             <tbody>
                             {%  for obj in filter.qs %}
                                 <tr>
-                                    <td class="d-none d-md-table-cell  align=center"> {{ organizationNames}}</td>
+                                    <td class="d-none d-md-table-cell  align=center"> {{ obj.organization_name}}</td>
                                     <td class="d-none d-md-table-cell" align="center" > {{ obj.latest_vanpool_number}}</td>
                                     <td class="d-none d-md-table-cell" >  {{obj.latest_report_date|date:'m/d/y' }}</td>
                                     <td class="d-none d-md-table-cell" align="center"> {{obj.vanpools_in_service_at_time_of_award}}
@@ -74,8 +94,8 @@
                                     <td class="d-none d-md-table-cell" align="center"> {{ obj.expansion_goal}} </td>
                                     <td class="d-none d-md-table-cell" > {{ obj.deadline|date:'m/d/y'}} </td>
                                     <td class = "d-none d-md-table-cell" align="center"> <b class="text-success"> {{ obj.vanpool_goal_met }}</b> </td>
-                                    {%  if vea.vanpool_goal_met == True %}
-                                        <td class = "d-none d-md-table-cell" > {{ obj.service_goal_met_date }}</td>
+                                    {%  if obj.vanpool_goal_met == True %}
+                                        <td class = "d-none d-md-table-cell" > {{ obj.service_goal_met_date|date:'m/d/y' }}</td>
                                     {%  else %}
                                         <td class = "d-none d-md-table-cell" > </td>
                                     {%  endif %}
@@ -129,7 +149,7 @@
                  "bInfo": false,
                 "bFilter": false,
                 "bSort": true,
-                "dom": 'Bfrtip',
+                "dom": 'B<"top"i>rt<"bottom"flp><"clear">',
                 "buttons": ['excel', 'csv']
 
             });
