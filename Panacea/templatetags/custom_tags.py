@@ -1,4 +1,5 @@
 from django import template
+from django.conf import settings
 
 register = template.Library()
 
@@ -53,12 +54,17 @@ def get_org_by_custom_user(profile_data, id):
     return output
 
 
-@register.filter(name='get_reports_on_by_custom_user')
-def get_reports_on_by_custom_user(profile_data, id):
-    requested_permisions = profile_data.get(custom_user_id=id).reports_on.all()
+@register.filter(name='get_requested_permissions_by_custom_user')
+def get_requested_permissions_by_custom_user(profile_data, id):
+    user_data = profile_data.get(custom_user_id=id)
+
+    if user_data.requested_permissions.exists():
+        requested_permissions = user_data.requested_permissions.all()
+    else:
+        requested_permissions = user_data.reports_on.all()
     output = ""
     i = 0
-    for item in requested_permisions:
+    for item in requested_permissions:
         if i == 0:
             output = item.name
             i += 1
@@ -75,3 +81,25 @@ def get_chart_data(chart_dict_item):
 @register.filter(name='get_chart_dataset_color')
 def get_chart_color(chart_dict_item):
     return chart_dict_item[1]
+
+
+@register.filter(name='print_dashboard_cards_data')
+def print_dashboard_cards_data(data):
+    percent = data[1]
+    if not isinstance(percent, str):
+        percent = round(data[1] * 100, 2)
+        if percent < 0:
+            percent = "<font class='text-danger'>" + str(percent) + "%</font>"
+        else:
+            percent = "<font class='text-success'>" + str(percent) + "%</font>"
+
+    return str(data[0]) + " | (" + str(percent) + ")"
+
+
+@register.filter(name='has_group')
+def has_group(user, group_name):
+    if not settings.ENABLE_PERMISSIONS:
+        return True
+    return user.groups.filter(name=group_name).exists()
+
+

@@ -1,5 +1,5 @@
 from django.contrib.auth import get_user_model
-from django.contrib.auth.models import AbstractUser, BaseUserManager  ## A new class is imported. ##
+from django.contrib.auth.models import AbstractUser, BaseUserManager, Group  ## A new class is imported. ##
 from django.db import models
 from django.db.models.functions import datetime
 from django.utils.translation import ugettext_lazy as _
@@ -10,7 +10,6 @@ from phonenumber_field.modelfields import PhoneNumberField
 import datetime
 
 
-# Create your models here.
 class CustomUserManager(BaseUserManager):
     """Define a model manager for User model with no username field."""
 
@@ -127,8 +126,9 @@ class profile(models.Model):
     city = models.CharField(max_length=50, blank=True)
     state = USStateField(blank=True)
     zip_code = USZipCodeField(blank=True)
-    reports_on = models.ManyToManyField(ReportType, blank=True)
-
+    reports_on = models.ManyToManyField(ReportType, blank=True)  # TODO rename this to
+    requested_permissions = models.ManyToManyField(Group)
+    active_permissions_request = models.BooleanField(blank=True)
 
 class vanpool_report(models.Model):
     REPORT_MONTH = (
@@ -152,7 +152,7 @@ class vanpool_report(models.Model):
     # TODO we should come back and look at if these need to be here
     # report_due_date = models.DateField()
     #report_day = models.IntegerField(default = 1, null=True)
-    report_date = models.DateTimeField(default = None, null=True)
+    report_date = models.DateTimeField(default=None, null=True)
     updated_date = models.DateTimeField(auto_now=True, blank=True, null=True)
     report_by = models.ForeignKey(custom_user, on_delete=models.PROTECT, blank=True, null=True)
     organization = models.ForeignKey(organization, on_delete=models.PROTECT)

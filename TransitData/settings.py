@@ -141,6 +141,8 @@ STATIC_URL = '/static/'
 
 AUTH_USER_MODEL = 'Panacea.custom_user'
 
+ENABLE_PERMISSIONS = True
+
 PHONENUMBER_DEFAULT_REGION = 'US'
 
 CELERY_BROKER_URL = 'amqp://localhost'

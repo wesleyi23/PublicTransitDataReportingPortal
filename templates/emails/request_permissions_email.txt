@@ -1,0 +1,10 @@
+{{ user_name }},
+
+You have requested that your permissions be updated to include:
+
+{{ groups }}
+
+The Public Transportation Division has been notified of your request and will review it.  You will receive an email
+after your request has been resolved.
+
+-WSDOT | Public Transportation Division | Data Team
