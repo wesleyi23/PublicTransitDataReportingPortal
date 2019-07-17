@@ -232,8 +232,6 @@ def Vanpool_report(request, year=None, month=None):
     # Respond to POST request
     if request.method == 'POST':
         form = VanpoolMonthlyReport(user_organization = user_organization, data=request.POST, instance=form_data, record_id = form_data.id, report_month=month, report_year=year)
-        print("form is valid: " + str(form.is_valid()))
-        print(form.errors)
         if form.is_valid():
             form.save()
             successful_submit = True  # Triggers a modal that says the form was submitted
@@ -250,12 +248,10 @@ def Vanpool_report(request, year=None, month=None):
         form = VanpoolMonthlyReport(user_organization=user_organization, instance=form_data, record_id = form_data.id, report_month=month, report_year=year)
         successful_submit = False
 
-    print("new report: " + str(new_report))
     if new_report == False:
         form.fields['new_data_change_explanation'].required = True
     else:
         form.fields['new_data_change_explanation'].required = False
-    print(form.fields['new_data_change_explanation'].required)
 
     return render(request, 'pages/Vanpool_report.html', {'form': form,
                                                          'past_report_data': past_report_data,
@@ -440,7 +436,6 @@ def vanpool_statewide_summary(request):
     include_years = 3
 
     if request.POST:
-        print("POST")
         settings_form = statewide_summary_settings(data=request.POST)
         include_agency_classifications = request.POST.getlist("include_agency_classifications")
         include_years = int(settings_form.data['include_years'])
@@ -587,9 +582,7 @@ def OrganizationProfile(request):
         if form.is_valid():
             # TODO figure out why is this here
             if not 'state' in form.data:
-                print(user_profile_data.organization.state)
                 form.data['state'] = user_profile_data.organization.state
-                print(form.data['state'])
             form.save()
             return redirect('OrganizationProfile')
         else:
@@ -690,7 +683,7 @@ def Admin_assignPermissions(request, active=None):
                     my_profile.profile_complete = True
                     my_profile.active_permissions_request = False
                     my_profile.save()
-                    print(email)
+                    # print(email)
                 form.save()
 
         return JsonResponse({'success': True})
