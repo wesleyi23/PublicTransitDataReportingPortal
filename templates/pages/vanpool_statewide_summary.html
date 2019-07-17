@@ -99,14 +99,14 @@
                                         <td>{{ year.table_total_miles_traveled | floatformat:"0" | intcomma}}</td>
                                         <td>{{ year.table_total_passenger_trips | floatformat:"0" | intcomma }}</td>
                                         <td>{{ year.table_total_groups_in_operation | floatformat:"0" | intcomma }}</td>
-                                        <td><b>{{ year.green_house_gas_prevented | floatformat:"0" | intcomma }}</b></td>
+                                        <td>{{ year.green_house_gas_prevented | floatformat:"0" | intcomma }}</td>
                                     </tr>
                                 {% endfor %}
                                 <tr>
                                     <td><b>Total</b></td>
                                     <td><b>{{ summary_table_data_total.table_total_miles_traveled | floatformat:"0" | intcomma }}</b></td>
                                     <td><b>{{ summary_table_data_total.table_total_passenger_trips | floatformat:"0" | intcomma }}</b></td>
-                                    <td><b>{{ summary_table_data_total.table_avg_groups_in_operation | floatformat:"0" | intcomma }}</b></td>
+                                    <td><i>N/A</i></td>
                                     <td><b>{{ summary_table_data_total.green_house_gas_prevented | floatformat:"0" | intcomma }}</b></td>
                                 </tr>
                                 </tbody>

@@ -491,16 +491,18 @@ def vanpool_statewide_summary(request):
                                                            vanpool_passenger_trips__isnull=False).values('report_year').annotate(
             table_total_miles_traveled=Sum(F(MEASURES[0][0]) + F(MEASURES[0][1])),
             table_total_passenger_trips=Sum(F(MEASURES[1][0]) + F(MEASURES[2][1])),
-            table_total_groups_in_operation=Sum(F(MEASURES[2][0]) + F(MEASURES[2][1])) / Count('report_month',  distinct=True),
+            table_total_groups_in_operation=Sum(F(MEASURES[2][0]) + F(MEASURES[2][1])) / Count('report_month', distinct=True),
             green_house_gas_prevented=Sum((F(MEASURES[0][0]) + F(MEASURES[0][1])) * (F('average_riders_per_van') - 1)) * green_house_gas_per_sov_mile() - Sum(F(MEASURES[0][0]) + F(MEASURES[0][1])) * green_house_gas_per_vanpool_mile()
         )
-
-
+        # TODO once the final data is in we need to confirm that the greenhouse gas calculations are correct
         summary_table_data_total = vanpool_report.objects.filter(report_year__gte=datetime.datetime.today().year - (include_years - 1),
                                                                  report_year__lte=datetime.datetime.today().year,
                                                                  organization_id__in=orgs_to_include).aggregate(
             table_total_miles_traveled=Sum(F(MEASURES[0][0]) + F(MEASURES[0][1])),
-            table_total_passenger_trips=Sum(F(MEASURES[1][0]) + F(MEASURES[2][1]))
+            table_total_passenger_trips=Sum(F(MEASURES[1][0]) + F(MEASURES[2][1])),
+            green_house_gas_prevented=Sum((F(MEASURES[0][0]) + F(MEASURES[0][1])) * (
+                    F('average_riders_per_van') - 1)) * green_house_gas_per_sov_mile() - Sum(
+                F(MEASURES[0][0]) + F(MEASURES[0][1])) * green_house_gas_per_vanpool_mile()
         )
 
         all_charts = list()

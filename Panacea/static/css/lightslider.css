@@ -73,7 +73,7 @@
 
 /* Pager */
 .lSSlideOuter .lSPager.lSpg {
-    margin: 10px 0 0;
+    margin: 0rem 0 2rem !important;
     padding: 0;
     text-align: center;
 }
@@ -96,7 +96,7 @@
     transition: all 0.5s linear 0s;
 }
 .lSSlideOuter .lSPager.lSpg > li:hover a, .lSSlideOuter .lSPager.lSpg > li.active a {
-    background-color: #428bca;
+    background-color: var(--WSDOT_green);
 }
 .lSSlideOuter .media {
     opacity: 0.8;
