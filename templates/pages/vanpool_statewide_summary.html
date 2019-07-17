@@ -1,0 +1,339 @@
+{% extends 'index.html' %}
+{% load static %}
+{% load custom_tags %}
+{% load humanize %}
+
+{%  block head_content %}
+
+    <link type="text/css" rel="stylesheet" href="{% static 'css/lightslider.css'%}" />
+
+{% endblock %}
+
+{% block content %}
+    <div class="container-fluid">
+
+        <!-- Page Heading -->
+        <h1 class="h3 mb-3 text-gray-800">{{ include_regions }} Summary | {{ include_agency_classifications | clean_classifications }}</h1>
+        <div class="row justify-content-center">
+            <div class="row align-items-center">
+                <div class="col-1">
+                    <i id="previous_chart" class="fas fa-chevron-left float-left my-auto pb-5 fa-2x" style="cursor: pointer"></i>
+                </div>
+            </div>
+            <div class="col-11">
+                <ul id="lightSlider">
+                    <li>
+                        <div class="mb-4">
+                            <div id="chart_measure_1" class="card shadow-sm p-2 mb-4 card-highlight chart_measure">
+                                <div class="card-body pb-0">
+                                    <h5 class="card-title">Total miles traveled</h5>
+                                    <div class="chart-container" style="position: relative; height:20rem; width: 100%">
+                                        <canvas id="myChart_1"></canvas>
+                                    </div>
+
+                                </div>
+                            </div>
+                        </div>
+                    </li>
+                    <li>
+                        <div class="mb-4">
+                            <div class="card shadow-sm p-2 mb-4 card-highlight">
+                                <div class="card-body pb-0">
+                                    <h5 class="card-title">Total passenger trips</h5>
+                                    <div class="chart-container" style="position: relative; height:20rem; width: 100%">
+                                        <canvas id="myChart_2"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </li>
+                    <li>
+                        <div class="mb-4">
+                            <div class="card shadow-sm p-2 mb-4 card-highlight">
+                                <div class="card-body pb-0">
+                                    <h5 class="card-title">Total groups in operation</h5>
+                                    <div class="chart-container" style="position: relative; height:20rem; width: 100%">
+                                        <canvas id="myChart_3"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </li>
+
+                </ul>
+            </div>
+
+            <div class="row align-items-center">
+                <div class="col-1">
+
+                    <i id="next_chart" class="fas fa-chevron-right my-auto pb-5 fa-2x" style="cursor: pointer" ></i>
+
+                </div>
+            </div>
+
+        </div>
+        <div class="row justify-content-center">
+            <div class="col-9">
+                <div class="card">
+                    <div class="card-body ">
+                        <div class="col clearfix align-items-center">
+                            <h5 class="float-left pt-2"><b>Summary Statistics</b>   </h5>
+                            <button type="button" class="btn btn-secondary btn float-right "data-toggle="modal" data-target="#settings_modal">Update Summary Settings</button>
+                        </div>
+                        <hr>
+                        <div class="dataTable_wrapper">
+                            <table id="summary_statistics_tbl" class="table tdt-bootstrap4 dataTable dataTable_wrapper">
+                                <thead class="table-secondary" style="font-size: 0.8rem">
+                                <tr>
+                                    <th>Year</th>
+                                    <th>Total miles traveled</th>
+                                    <th>Total passenger trips</th>
+                                    <th>Average groups in operation</th>
+                                    <th>Green house gasses avoided</th>
+                                </tr>
+                                </thead>
+                                {% for year in summary_table_data %}
+                                    <tr>
+                                        <td>{{ year.report_year }}</td>
+                                        <td>{{ year.table_total_miles_traveled | floatformat:"0" | intcomma}}</td>
+                                        <td>{{ year.table_total_passenger_trips | floatformat:"0" | intcomma }}</td>
+                                        <td>{{ year.table_total_groups_in_operation | floatformat:"0" | intcomma }}</td>
+                                        <td><b>{{ year.green_house_gas_prevented | floatformat:"0" | intcomma }}</b></td>
+                                    </tr>
+                                {% endfor %}
+                                <tr>
+                                    <td><b>Total</b></td>
+                                    <td><b>{{ summary_table_data_total.table_total_miles_traveled | floatformat:"0" | intcomma }}</b></td>
+                                    <td><b>{{ summary_table_data_total.table_total_passenger_trips | floatformat:"0" | intcomma }}</b></td>
+                                    <td><b>{{ summary_table_data_total.table_avg_groups_in_operation | floatformat:"0" | intcomma }}</b></td>
+                                    <td><b>{{ summary_table_data_total.green_house_gas_prevented | floatformat:"0" | intcomma }}</b></td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div class="modal fade" id="settings_modal" tabindex="-1" role="dialog" aria-labelledby="settings_modal" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="settings_modalLongTitle">Update the setting for the statewide summary</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <form action="{% url 'vanpool_statewide_summary' %}" method="post">
+                    {% csrf_token %}
+                    <div class="modal-body">
+                        {{ settings_form.as_p }}
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary">Update Charts and Statistics</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}
+
+{% block page_scripts %}
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@2.8.0"></script>
+    <script src="{% static "js/lightslider.js" %}"></script>
+
+
+
+    <script type="text/javascript">
+        var slider
+        $(document).ready(function() {
+            slider = $("#lightSlider").lightSlider({
+                item: 2,
+                autoWidth: false,
+                slideMove: 1, // slidemove will be 1 if loop is true
+                slideMargin: 10,
+
+                addClass: '',
+                mode: "slide",
+                useCSS: true,
+                cssEasing: 'ease', //'cubic-bezier(0.25, 0, 0.25, 1)',//
+                easing: 'linear', //'for jquery animation',////
+
+                speed: 400, //ms'
+                auto: false,
+                loop: false,
+                slideEndAnimation: true,
+                pause: 2000,
+
+                keyPress: false,
+                controls: false,
+                prevHtml: '',
+                nextHtml: '',
+
+                rtl:false,
+                adaptiveHeight:false,
+
+                vertical:false,
+                verticalHeight:500,
+                vThumbWidth:100,
+
+                thumbItem:10,
+                pager: true,
+                gallery: false,
+                galleryMargin: 5,
+                thumbMargin: 5,
+                currentPagerPosition: 'middle',
+
+                enableTouch:true,
+                enableDrag:true,
+                freeMove:true,
+                swipeThreshold: 40,
+
+                responsive : [],
+
+                onBeforeStart: function (el) {},
+                onSliderLoad: function (el) {},
+                onBeforeSlide: function (el) {},
+                onAfterSlide: function (el) {},
+                onBeforeNextSlide: function (el) {},
+                onBeforePrevSlide: function (el) {}
+            });
+        });
+        $(document).on('click', '#next_chart', function () {
+            slider.goToNextSlide();
+        });
+        $(document).on('click', '#previous_chart', function () {
+            slider.goToPrevSlide();
+        });
+        $(document).on('click', '#sidebarToggle', function () {
+            slider.refresh();
+        });
+    </script>
+
+    {% comment %}    <script type="text/javascript">
+        $(document).ready(function() {
+            // executes when HTML-Document is loaded and DOM is ready
+            console.log("document is ready");
+
+
+            $( ".card-highlight" ).hover(
+                function() {
+                    $(this).addClass('shadow').css('cursor', 'pointer');
+                }, function() {
+                    $(this).removeClass('shadow');
+
+                }
+            );
+
+// document ready
+        });
+
+    </script>{% endcomment %}
+
+    <script type="text/javascript">
+        var ctx_1 = document.getElementById('myChart_1').getContext('2d');
+        var myChart_1 = new Chart(ctx_1, {
+            type: 'line',
+            data: {
+                labels: {{ chart_label | safe }},
+                datasets: [
+                    {% for key, value in all_charts.0.items %}
+                        {
+                            label: "{{ key | safe }}",
+                            borderColor: "{{ value | get_chart_dataset_color | safe }}",
+                            borderDash: {{ value | get_boarder_dash |safe }},
+                            fill: false,
+                            data: {{ value | get_chart_dataset_data | safe }}
+                        },
+                    {% endfor %}
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                title: {
+                    display: false,
+                    text: 'World population per region (in millions)'
+                }
+            }
+        });
+
+        var ctx_2 = document.getElementById('myChart_2').getContext('2d');
+        var myChart_2 = new Chart(ctx_2, {
+            type: 'line',
+            data: {
+                labels: {{ chart_label | safe }},
+                datasets: [
+                    {% for key, value in all_charts.1.items %}
+                        {
+                            label: "{{ key | safe }}",
+                            borderColor: "{{ value | get_chart_dataset_color | safe }}",
+                            borderDash: {{ value | get_boarder_dash |safe }},
+                            fill: false,
+                            data: {{ value | get_chart_dataset_data | safe }}
+                        },
+                    {% endfor %}
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                title: {
+                    display: false,
+                    text: 'World population per region (in millions)'
+                }
+            }
+        });
+
+        var ctx_3 = document.getElementById('myChart_3').getContext('2d');
+        var myChart_3 = new Chart(ctx_3, {
+            type: 'line',
+            data: {
+                labels: {{ chart_label | safe }},
+                datasets: [
+                    {% for key, value in all_charts.2.items %}
+                        {
+                            label: "{{ key | safe }}",
+                            borderColor: "{{ value | get_chart_dataset_color | safe }}",
+                            borderDash: {{ value | get_boarder_dash |safe }},
+                            fill: false,
+                            data: {{ value | get_chart_dataset_data | safe }}
+                        },
+                    {% endfor %}
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                title: {
+                    display: false,
+                    text: 'World population per region (in millions)'
+                }
+            }
+        });
+
+    </script>
+    <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.19/js/jquery.dataTables.js"></script>
+    <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.19/js/dataTables.bootstrap4.min.js "></script>
+    <script type="text/javascript">
+        $(document).ready( function () {
+            $('#summary_statistics_tbl').DataTable({
+                "searching": false,
+                "scrollX": true,
+                "sScrollX": "100%",
+                "sScrollXInner": "100%",
+                "bLengthChange": false,
+                "bSort": true,
+                "dom": '<"top"fl>rt<"bottom"ip><"clear">'
+            });
+            $('.dataTables_filter').addClass('form-inline');
+            $('.dataTables_filter').css({"float":"left", "margin-bottom":"2px", "margin-left":"2px"})
+        });
+    </script>
+{% endblock %}
+

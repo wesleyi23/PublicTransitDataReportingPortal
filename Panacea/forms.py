@@ -337,7 +337,7 @@ class organization_profile(forms.ModelForm):
         )
 
         model = organization
-        fields = ('name', 'address_line_1', 'address_line_2', 'city', 'state', 'zip_code', 'vanshare_program')
+        fields = ('name', 'address_line_1', 'address_line_2', 'city', 'state', 'zip_code', 'vanshare_program', 'in_puget_sound_area')
         widgets = {
             'name': forms.TextInput(
                 attrs={'class': 'form-control-plaintext', 'readonly': 'True', 'style': "width:350px"}),
@@ -353,7 +353,10 @@ class organization_profile(forms.ModelForm):
                 attrs={'class': 'form-control-plaintext', 'readonly': 'True'}),
             'vanshare_program': forms.Select(choices=TRUE_FALSE_CHOICES,
                                              attrs={'class': 'form-control form-control-plaintext', 'readonly': 'True',
-                                                    'style': 'pointer-events: none'})
+                                                    'style': 'pointer-events: none'}),
+            'in_puget_sound_area': forms.Select(choices=TRUE_FALSE_CHOICES,
+                                                attrs={'class': 'form-control-plaintext', 'readonly': 'True',
+                                                       'style': 'pointer-events: none'})
         }
 
 
@@ -385,6 +388,7 @@ class request_user_permissions(forms.ModelForm):
         }
 
 
+# TODO rename this form to something less generic
 class chart_form(forms.Form):
     MEASURE_CHOICES_DICT = {
         "total_miles_traveled": "Total Miles Traveled",
@@ -427,6 +431,41 @@ class chart_form(forms.Form):
     chart_time_frame = forms.CharField(widget=forms.Select(choices=TIMEFRAME_CHOICES,
                                                            attrs={'class': 'form-control my_chart_control',
                                                                   'data-form-name': "chart_form"}))
+
+
+class statewide_summary_settings(forms.Form):
+    INCLUDE_YEARS_CHOICES = (
+        (1, "One Year"),
+        (2, "Two Years"),
+        (3, "Three Years"),
+        (5, "Five Years"),
+        (10, "Ten Years"),
+        (99, "All")
+    )
+
+    INCLUDE_REGION_CHOICES = (
+        ("Puget Sound", "Puget Sound"),
+        ("Outside Puget Sound", "Outside Puget Sound"),
+        ("Statewide", "Statewide")
+    )
+
+    include_years = forms.CharField(widget=forms.Select(choices=INCLUDE_YEARS_CHOICES,
+                                                        attrs={'class': 'form-control',
+                                                               'data-form-name': "chart_form"}))
+
+    include_regions = forms.CharField(widget=forms.Select(choices=INCLUDE_REGION_CHOICES,
+                                                        attrs={'class': 'form-control ',
+                                                               'data-form-name': "chart_form"}))
+    include_agency_classifications = forms.MultipleChoiceField(choices=organization.AGENCY_CLASSIFICATIONS,
+                                                       widget=forms.CheckboxSelectMultiple(
+            attrs={'class': 'form-check',
+                   'data-form-name': "chart_form"}))
+
+
+
+
+
+
 
 
 class submit_a_new_vanpool_expansion(forms.ModelForm):
