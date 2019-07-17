@@ -123,9 +123,9 @@
             $('.dataTables_filter').css({"float":"left", "margin-bottom":"2px", "margin-left":"2px"})
 
 
-        $(document).on('click', '#sidebarToggle', function () {
-            table.ajax.reload());
-        });
+            $(document).on('click', '#sidebarToggle', function () {
+                table.draw();
+            });
         });
     </script>
 

@@ -91,11 +91,13 @@
                 "dom": '<"top"fl>rt<"bottom"ip><"clear">'
             });
             $('.dataTables_filter').addClass('form-inline');
-            $('.dataTables_filter').css({"float":"left", "margin-bottom":"2px", "margin-left":"2px"})
+            $('.dataTables_filter').css({"float":"left", "margin-bottom":"2px", "margin-left":"2px"});
 
             $(document).on('click', '#sidebarToggle', function () {
-                table.ajax.reload());
+                table.draw();
             });
+
         });
+
     </script>
 {% endblock %}

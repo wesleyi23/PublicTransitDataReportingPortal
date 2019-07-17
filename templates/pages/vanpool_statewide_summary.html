@@ -109,7 +109,7 @@
                                     <td><b>{{ summary_table_data_total.table_avg_groups_in_operation | floatformat:"0" | intcomma }}</b></td>
                                     <td><b>{{ summary_table_data_total.green_house_gas_prevented | floatformat:"0" | intcomma }}</b></td>
                                 </tr>
-                            </tbody>
+                                </tbody>
                             </table>
                         </div>
                     </div>
@@ -336,8 +336,10 @@
             $('.pagination').css({"float":"right", "margin-bottom":"2px", "margin-left":"2px"})
 
             $(document).on('click', '#sidebarToggle', function () {
-                table.ajax.reload());
-            })
+                table.draw();
+                $('.dataTables_filter').addClass('form-inline');
+                $('.pagination').css({"float":"right", "margin-bottom":"2px", "margin-left":"2px"})
+            });
         });
 
 
