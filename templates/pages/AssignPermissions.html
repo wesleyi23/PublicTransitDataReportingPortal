@@ -83,7 +83,7 @@
     <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.19/js/dataTables.bootstrap4.min.js "></script>
     <script type="text/javascript">
         $(document).ready( function () {
-            $('#permissions_datatable').DataTable({
+            var table = $('#permissions_datatable').DataTable({
                 "scrollX": true,
                 "sScrollX": "100%",
                 "sScrollXInner": "100%",
@@ -92,6 +92,10 @@
             });
             $('.dataTables_filter').addClass('form-inline');
             $('.dataTables_filter').css({"float":"left", "margin-bottom":"2px", "margin-left":"2px"})
+
+            $(document).on('click', '#sidebarToggle', function () {
+                table.ajax.reload());
+            });
         });
     </script>
 {% endblock %}

@@ -483,7 +483,7 @@ def vanpool_statewide_summary(request):
                                                  organization_id__in=orgs_to_include).order_by('report_year',
                                                                                                'report_month').all()
 
-
+        # TODO once the final data is in we need to confirm that the greenhouse gas calculations are correct
         summary_table_data = vanpool_report.objects.filter(report_year__gte=datetime.datetime.today().year - (include_years - 1),
                                                            report_year__lte=datetime.datetime.today().year,
                                                            organization_id__in=orgs_to_include,

@@ -82,8 +82,8 @@
                         </div>
                         <hr>
                         <div class="dataTable_wrapper">
-                            <table id="summary_statistics_tbl" class="table tdt-bootstrap4 dataTable dataTable_wrapper">
-                                <thead class="table-secondary" style="font-size: 0.8rem">
+                            <table id="summary_statistics_tbl" class='table tdt-bootstrap4 dataTable dataTable_wrapper' style="margin-bottom:0px !important;">
+                                <thead class="table-secondary">
                                 <tr>
                                     <th>Year</th>
                                     <th>Total miles traveled</th>
@@ -92,6 +92,7 @@
                                     <th>Green house gasses avoided</th>
                                 </tr>
                                 </thead>
+                                <tbody class="mb-1">
                                 {% for year in summary_table_data %}
                                     <tr>
                                         <td>{{ year.report_year }}</td>
@@ -108,6 +109,7 @@
                                     <td><b>{{ summary_table_data_total.table_avg_groups_in_operation | floatformat:"0" | intcomma }}</b></td>
                                     <td><b>{{ summary_table_data_total.green_house_gas_prevented | floatformat:"0" | intcomma }}</b></td>
                                 </tr>
+                            </tbody>
                             </table>
                         </div>
                     </div>
@@ -322,18 +324,23 @@
     <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.19/js/dataTables.bootstrap4.min.js "></script>
     <script type="text/javascript">
         $(document).ready( function () {
-            $('#summary_statistics_tbl').DataTable({
+            var table = $('#summary_statistics_tbl').DataTable({
                 "searching": false,
                 "scrollX": true,
                 "sScrollX": "100%",
                 "sScrollXInner": "100%",
                 "bLengthChange": false,
-                "bSort": true,
                 "dom": '<"top"fl>rt<"bottom"ip><"clear">'
             });
             $('.dataTables_filter').addClass('form-inline');
-            $('.dataTables_filter').css({"float":"left", "margin-bottom":"2px", "margin-left":"2px"})
+            $('.pagination').css({"float":"right", "margin-bottom":"2px", "margin-left":"2px"})
+
+            $(document).on('click', '#sidebarToggle', function () {
+                table.ajax.reload());
+            })
         });
+
+
     </script>
 {% endblock %}
 
