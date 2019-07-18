@@ -88,7 +88,7 @@ def get_boarder_dash(chart_dict_item):
     if chart_dict_item[2]:
         return '[]'
     else:
-        return '[10, 10]'
+        return '[]'
 
 
 @register.filter(name='clean_classifications')

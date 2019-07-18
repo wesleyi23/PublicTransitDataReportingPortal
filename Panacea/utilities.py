@@ -20,22 +20,41 @@ def monthdelta(date, delta):
 
 
 #
-def get_wsdot_color(i):
+def get_wsdot_color(i, hex_or_rgb="hex", alpha=99):
     """
-    function to generate and incremented WSDOT color scheme primarily for charts
+    function to generate and incremented WSDOT color scheme primarily for charts.  If alpha is provided it will return a hex color with an alpha component
     :param i: int
+    :param alpha: int
+    :param hex_or_rgb: str either 'hex' or 'rgb' selects the output format
     :return: a string representing a WSDOT hex color
     """
-    wsdot_colors = ["#2C8470",
-                    "#97d700",
-                    "#00aec7",
-                    "#5F615E",
-                    "#00b140",
-                    "#007fa3",
-                    "#ABC785",
-                    "#593160"]
     j = i % 8
-    return wsdot_colors[j]
+    if hex_or_rgb == 'hex':
+        wsdot_colors = ["#2C8470",
+                        "#97d700",
+                        "#00aec7",
+                        "#5F615E",
+                        "#00b140",
+                        "#007fa3",
+                        "#ABC785",
+                        "#593160"]
+        color = wsdot_colors[j]
+        # HEX with alpha is not compatible with chart js.
+
+    elif hex_or_rgb == 'rgb':
+        if alpha == 100:
+            alpha = 99
+        wsdot_colors = ["rgba(44,132,112,0.{})".format(alpha),
+                        "rgba(151,215,0,0.{})".format(alpha),
+                        "rgba(0,174,199,0.{})".format(alpha),
+                        "rgba(95,97,94,0.{})".format(alpha),
+                        "rgba(0,177,64,0.{})".format(alpha),
+                        "rgba(0,127,163,0.{})".format(alpha),
+                        "rgba(171,199,133,0.{})".format(alpha),
+                        "rgba(89,49,96,0.{})".format(alpha)]
+        color = wsdot_colors[j]
+    print(color)
+    return color
 
 def calculate_biennium(date):
     import datetime

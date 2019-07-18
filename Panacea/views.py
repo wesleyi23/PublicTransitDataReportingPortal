@@ -513,12 +513,14 @@ def vanpool_statewide_summary(request):
             for year in years:
                 if year == datetime.datetime.today().year:
                     current_year = True
+                    line_color = get_wsdot_color(color_i, hex_or_rgb='rgb')
                 else:
                     current_year = False
+                    line_color = get_wsdot_color(color_i, alpha=50, hex_or_rgb='rgb')
                 chart_dataset = all_chart_data.filter(report_year=year)
                 if chart_dataset.count() >= 1:
                     chart_dataset = [result["result"] for result in chart_dataset]
-                chart_datasets[year] = [json.dumps(list(chart_dataset)), get_wsdot_color(color_i), current_year]
+                chart_datasets[year] = [json.dumps(list(chart_dataset)), line_color, current_year]
                 color_i = color_i + 1
 
             all_charts.append(chart_datasets)
