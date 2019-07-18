@@ -53,7 +53,6 @@ def get_wsdot_color(i, hex_or_rgb="hex", alpha=99):
                         "rgba(171,199,133,0.{})".format(alpha),
                         "rgba(89,49,96,0.{})".format(alpha)]
         color = wsdot_colors[j]
-    print(color)
     return color
 
 def calculate_biennium(date):
