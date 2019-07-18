@@ -520,8 +520,8 @@ def vanpool_statewide_summary(request):
                 chart_dataset = all_chart_data.filter(report_year=year)
                 if chart_dataset.count() >= 1:
                     chart_dataset = [result["result"] for result in chart_dataset]
-                chart_datasets[year] = [json.dumps(list(chart_dataset)), line_color, current_year]
-                color_i = color_i + 1
+                    chart_datasets[year] = [json.dumps(list(chart_dataset)), line_color, current_year]
+                    color_i = color_i + 1
 
             all_charts.append(chart_datasets)
 
