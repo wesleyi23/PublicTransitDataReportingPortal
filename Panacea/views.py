@@ -430,11 +430,6 @@ def vanpool_statewide_summary(request):
         ("vanpool_groups_in_operation", "vanshare_groups_in_operation"),
     ]
 
-    def get_summary_chart(measure):
-        return "test"
-
-    include_years = 3
-
     if request.POST:
         settings_form = statewide_summary_settings(data=request.POST)
         include_agency_classifications = request.POST.getlist("include_agency_classifications")
@@ -447,8 +442,8 @@ def vanpool_statewide_summary(request):
         include_agency_classifications = [classification[0] for classification in organization.AGENCY_CLASSIFICATIONS]
 
         settings_form = statewide_summary_settings(initial={
-            "include_years": 1,
-            "include_regions": "Statewide",
+            "include_years": include_years,
+            "include_regions": include_regions,
             "include_agency_classifications": include_agency_classifications
         })
 
@@ -489,6 +484,7 @@ def vanpool_statewide_summary(request):
             table_total_groups_in_operation=Sum(F(MEASURES[2][0]) + F(MEASURES[2][1])) / Count('report_month', distinct=True),
             green_house_gas_prevented=Sum((F(MEASURES[0][0]) + F(MEASURES[0][1])) * (F('average_riders_per_van') - 1)) * green_house_gas_per_sov_mile() - Sum(F(MEASURES[0][0]) + F(MEASURES[0][1])) * green_house_gas_per_vanpool_mile()
         )
+
         # TODO once the final data is in we need to confirm that the greenhouse gas calculations are correct
         summary_table_data_total = vanpool_report.objects.filter(report_year__gte=datetime.datetime.today().year - (include_years - 1),
                                                                  report_year__lte=datetime.datetime.today().year,
@@ -501,9 +497,16 @@ def vanpool_statewide_summary(request):
         )
 
         all_charts = list()
-        for i in range(len(MEASURES)):
-            all_chart_data = all_data.values('report_year', 'report_month').annotate(
-                result=Sum(F(MEASURES[i][0]) + F(MEASURES[i][1])))
+        for i in range(len(MEASURES) + 1):
+            # to include green house gasses
+            if i == len(MEASURES):
+                all_chart_data = all_data.values('report_year', 'report_month').annotate(
+                    result=Sum((F(MEASURES[0][0]) + F(MEASURES[0][1])) * (F('average_riders_per_van') - 1)) * green_house_gas_per_sov_mile() - Sum(F(MEASURES[0][0]) + F(MEASURES[0][1])) * green_house_gas_per_vanpool_mile()
+                )
+            else:
+                all_chart_data = all_data.values('report_year', 'report_month').annotate(
+                    result=Sum(F(MEASURES[i][0]) + F(MEASURES[i][1]))
+                )
 
             chart_datasets = {}
             color_i = 0
@@ -517,7 +520,8 @@ def vanpool_statewide_summary(request):
                     chart_dataset = [result["result"] for result in chart_dataset]
                 chart_datasets[year] = [json.dumps(list(chart_dataset)), get_wsdot_color(color_i), current_year]
                 color_i = color_i + 1
-                all_charts.append(chart_datasets)
+
+            all_charts.append(chart_datasets)
 
     return render(request, 'pages/vanpool_statewide_summary.html', {'settings_form': settings_form,
                                                                     'chart_label': x_axis_labels,

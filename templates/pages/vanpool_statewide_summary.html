@@ -13,20 +13,20 @@
     <div class="container-fluid">
 
         <!-- Page Heading -->
-        <h1 class="h3 mb-3 text-gray-800">{{ include_regions }} Summary | {{ include_agency_classifications | clean_classifications }}</h1>
+        <h1 class="h3 mb-2 mb-xl-3 text-gray-800">{{ include_regions }} Summary | {{ include_agency_classifications | clean_classifications }}</h1>
         <div class="row justify-content-center">
             <div class="row align-items-center">
                 <div class="col-1">
-                    <i id="previous_chart" class="fas fa-chevron-left float-left my-auto pb-5 fa-2x" style="cursor: pointer"></i>
+                    <i id="previous_chart" class="fas fa-chevron-left float-left my-auto fa-2x" style="cursor: pointer; padding-bottom: 5rem"></i>
                 </div>
             </div>
             <div class="col-11">
                 <ul id="lightSlider">
                     <li>
-                        <div class="mb-4">
-                            <div id="chart_measure_1" class="card shadow-sm p-2 mb-4 card-highlight chart_measure">
+                        <div class="mb-2">
+                            <div id="chart_measure_1" class="card shadow-sm p-2 mb-2 mr-2 card-highlight chart_measure">
                                 <div class="card-body pb-0">
-                                    <h5 class="card-title">Total miles traveled</h5>
+                                    <h5>Total miles traveled</h5>
                                     <div class="chart-container" style="position: relative; height:20rem; width: 100%">
                                         <canvas id="myChart_1"></canvas>
                                     </div>
@@ -36,10 +36,10 @@
                         </div>
                     </li>
                     <li>
-                        <div class="mb-4">
-                            <div class="card shadow-sm p-2 mb-4 card-highlight">
+                        <div class="mb-2">
+                            <div class="card shadow-sm p-2 mb-2 mr-2 card-highlight">
                                 <div class="card-body pb-0">
-                                    <h5 class="card-title">Total passenger trips</h5>
+                                    <h5>Total passenger trips</h5>
                                     <div class="chart-container" style="position: relative; height:20rem; width: 100%">
                                         <canvas id="myChart_2"></canvas>
                                     </div>
@@ -48,10 +48,10 @@
                         </div>
                     </li>
                     <li>
-                        <div class="mb-4">
-                            <div class="card shadow-sm p-2 mb-4 card-highlight">
+                        <div class="mb-2">
+                            <div class="card shadow-sm p-2 mb-2 mr-2 card-highlight">
                                 <div class="card-body pb-0">
-                                    <h5 class="card-title">Total groups in operation</h5>
+                                    <h5>Total groups in operation</h5>
                                     <div class="chart-container" style="position: relative; height:20rem; width: 100%">
                                         <canvas id="myChart_3"></canvas>
                                     </div>
@@ -59,14 +59,25 @@
                             </div>
                         </div>
                     </li>
-
+                    <li>
+                        <div class="mb-2">
+                            <div class="card shadow-sm p-2 mb-2 mr-2 card-highlight">
+                                <div class="card-body pb-0">
+                                    <h5>Green house gasses avoided (Mt CO<sup>2</sup>e)</h5>
+                                    <div class="chart-container" style="position: relative; height:20rem; width: 100%">
+                                        <canvas id="myChart_4"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </li>
                 </ul>
             </div>
 
             <div class="row align-items-center">
                 <div class="col-1">
 
-                    <i id="next_chart" class="fas fa-chevron-right my-auto pb-5 fa-2x" style="cursor: pointer" ></i>
+                    <i id="next_chart" class="fas fa-chevron-right my-auto fa-2x" style="cursor: pointer; padding-bottom: 5rem" ></i>
 
                 </div>
             </div>
@@ -75,12 +86,12 @@
         <div class="row justify-content-center">
             <div class="col-9">
                 <div class="card">
-                    <div class="card-body ">
+                    <div class="card-body p-3">
                         <div class="col clearfix align-items-center">
-                            <h5 class="float-left pt-2"><b>Summary Statistics</b>   </h5>
+                            <h5 class="float-left pt-2"><b>Summary Statistics</b></h5>
                             <button type="button" class="btn btn-secondary btn float-right "data-toggle="modal" data-target="#settings_modal">Update Summary Settings</button>
                         </div>
-                        <hr>
+                        <hr class="mb-1 mt-1">
                         <div class="dataTable_wrapper">
                             <table id="summary_statistics_tbl" class='table tdt-bootstrap4 dataTable dataTable_wrapper' style="margin-bottom:0px !important;">
                                 <thead class="table-secondary">
@@ -89,7 +100,7 @@
                                     <th>Total miles traveled</th>
                                     <th>Total passenger trips</th>
                                     <th>Average groups in operation</th>
-                                    <th>Green house gasses avoided</th>
+                                    <th>Green house gasses avoided (Mt CO<sup>2</sup>e)</th>
                                 </tr>
                                 </thead>
                                 <tbody class="mb-1">
@@ -319,6 +330,32 @@
             }
         });
 
+        var ctx_4 = document.getElementById('myChart_4').getContext('2d');
+        var myChart_4 = new Chart(ctx_4, {
+            type: 'line',
+            data: {
+                labels: {{ chart_label | safe }},
+                datasets: [
+                    {% for key, value in all_charts.3.items %}
+                        {
+                            label: "{{ key | safe }}",
+                            borderColor: "{{ value | get_chart_dataset_color | safe }}",
+                            borderDash: {{ value | get_boarder_dash |safe }},
+                            fill: false,
+                            data: {{ value | get_chart_dataset_data | safe }}
+                        },
+                    {% endfor %}
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                title: {
+                    display: false,
+                    text: 'World population per region (in millions)'
+                }
+            }
+        });
     </script>
     <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.19/js/jquery.dataTables.js"></script>
     <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.19/js/dataTables.bootstrap4.min.js "></script>

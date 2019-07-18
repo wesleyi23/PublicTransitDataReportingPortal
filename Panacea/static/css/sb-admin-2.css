@@ -52,16 +52,19 @@
 /* Small devices (landscape phones, 544px and up) */
 @media (min-width: 544px) {
   html {font-size:11px;}
+  th {font-size: 10px}
 }
 
 /* Medium devices (tablets, 768px and up) The navbar toggle appears at this breakpoint */
 @media (min-width: 768px) {
   html {font-size:12px;}
+  th {font-size: 11px}
 }
 
 /* Large devices (desktops, 992px and up) */
 @media (min-width: 992px) {
   html {font-size:13px;}
+  th {font-size: 12px}
 }
 
 /* Extra large devices (large desktops, 1200px and up) */
@@ -156,6 +159,12 @@ input[type=number] {
     );
 }
 
+div.dataTables_info {
+   font-size: .8rem !important;
+ }
+.pagination{
+  font-size: .8rem;
+ }
 /*! END ADDITIONS
  */
 

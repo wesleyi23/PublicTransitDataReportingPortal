@@ -67,8 +67,6 @@ def green_house_gas_per_vanpool_mile():
     large_van_mpg = 17.40
     co2e_per_gallon = 0.008887  # units = metric tones
 
-    print(co2e_per_gallon)
-
     fleet_fuel_efficiency = (small_van_mpg * percent_small_van) + (large_van_mpg * (1 - percent_small_van))
     co2_per_vanpool_mile_traveled = (1 / fleet_fuel_efficiency) * co2e_per_gallon
 
