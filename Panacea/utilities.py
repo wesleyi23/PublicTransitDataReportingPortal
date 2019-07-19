@@ -9,13 +9,6 @@ from dateutil.relativedelta import relativedelta
 
 #
 
-def find_organizations_name():
-    veaOrgs = vanpool_expansion_analysis.objects.values('organization_id').distinct()
-    for i in veaOrgs:
-        orgId = i['organization_id']
-        orgName = organization.objects.get(id = orgId)
-        orgName = str(orgName)
-        vanpool_expansion_analysis.objects.filter(organization_id=orgId).update(organization_name = orgName)
 
 
 def calculate_latest_vanpool():

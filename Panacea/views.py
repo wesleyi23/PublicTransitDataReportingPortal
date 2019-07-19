@@ -45,7 +45,7 @@ from .forms import CustomUserCreationForm, \
     Modify_A_Vanpool_Expansion
 from django.utils.translation import ugettext_lazy as _
 from .models import profile, vanpool_report, custom_user,  vanpool_expansion_analysis, organization
-from .utilities import calculate_latest_vanpool, find_organizations_name, find_maximum_vanpool, calculate_remaining_months, calculate_if_goal_has_been_reached
+from .utilities import calculate_latest_vanpool, find_maximum_vanpool, calculate_remaining_months, calculate_if_goal_has_been_reached
 
 
 def register(request):
@@ -254,7 +254,6 @@ def Vanpool_expansion_submission(request):
 @login_required(login_url='/Panacea/login')
 def Vanpool_expansion_analysis(request):
     # pulls the latest vanpool data
-    find_organizations_name()
     calculate_latest_vanpool()
     find_maximum_vanpool()
     calculate_remaining_months()

@@ -84,7 +84,7 @@
                             <tbody>
                             {%  for obj in filter.qs %}
                                 <tr>
-                                    <td class="d-none d-md-table-cell  align=center"> {{ obj.organization_name}}</td>
+                                    <td class="d-none d-md-table-cell  align=center"> {% get_org_name obj.organization_id %} </td>
                                     <td class="d-none d-md-table-cell" align="center" > {{ obj.latest_vanpool_number}}</td>
                                     <td class="d-none d-md-table-cell" >  {{obj.latest_report_date|date:'m/d/y' }}</td>
                                     <td class="d-none d-md-table-cell" align="center"> {{obj.vanpools_in_service_at_time_of_award}}
