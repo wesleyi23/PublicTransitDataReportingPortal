@@ -111,7 +111,7 @@
     <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.19/js/dataTables.bootstrap4.min.js "></script>
     <script type="text/javascript">
         $(document).ready( function () {
-            $('#vanpool_expansion_analysis_tbl').DataTable({
+            var table = $('#vanpool_expansion_analysis_tbl').DataTable({
                 "scrollX": true,
                 "sScrollX": "100%",
                 "sScrollXInner": "100%",
@@ -121,10 +121,12 @@
             });
             $('.dataTables_filter').addClass('form-inline');
             $('.dataTables_filter').css({"float":"left", "margin-bottom":"2px", "margin-left":"2px"})
+
+
+            $(document).on('click', '#sidebarToggle', function () {
+                table.draw();
+            });
         });
-
-
-
     </script>
 
 

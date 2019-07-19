@@ -81,7 +81,7 @@
 
     <script type="text/javascript">
         $(document).ready( function () {
-            $('#permissions_datatable').DataTable({
+            var table = $('#permissions_datatable').DataTable({
                 "scrollX": true,
                 "sScrollX": "100%",
                 "sScrollXInner": "100%",
@@ -89,7 +89,11 @@
                 "dom": '<"top"fl>rt<"bottom"ip><"clear">'
             });
             $('.dataTables_filter').addClass('form-inline');
-            $('.dataTables_filter').css({"float":"left", "margin-bottom":"2px", "margin-left":"2px"})
+            $('.dataTables_filter').css({"float":"left", "margin-bottom":"2px", "margin-left":"2px"});
+
+            $(document).on('click', '#sidebarToggle', function () {
+                table.draw();
+            });
         });
     </script>
 {% endblock %}

@@ -110,7 +110,7 @@ class organization(models.Model):
     vanpool_expansion = models.BooleanField(blank=True, null=True)
     # this is kind of a hack and I hate it; on the other hand, it seems less complex than storing a list
     # TODO add to agency profile form
-    in_jblm_area = models.BooleanField(blank=True, null=True)
+    in_jblm_area = models.BooleanField(blank=True, null=True)  # TODO confirm this is no longer needed
     in_puget_sound_area = models.BooleanField(blank=True, null=True)
 
 

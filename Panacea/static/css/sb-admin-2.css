@@ -52,26 +52,36 @@
 /* Small devices (landscape phones, 544px and up) */
 @media (min-width: 544px) {
   html {font-size:11px;}
+  th {font-size: 10px}
 }
 
 /* Medium devices (tablets, 768px and up) The navbar toggle appears at this breakpoint */
 @media (min-width: 768px) {
-  html {font-size:12px;} /*1rem = 16px*/
+  html {font-size:12px;}
+  th {font-size: 11px}
 }
 
 /* Large devices (desktops, 992px and up) */
 @media (min-width: 992px) {
-  html {font-size:13px;} /*1rem = 16px*/
+  html {font-size:13px;}
+  th {font-size: 12px}
 }
 
 /* Extra large devices (large desktops, 1200px and up) */
-@media (min-width: 1200px) {
-  html {font-size:16px;} /*1rem = 16px*/
+@media (min-width: 1300px) {
+  html {font-size:14px;}
 }
 
+#bullet-kill > ul li {
+  list-style-type: none;
+}
 
-#bullet-kill > ul li { // notice how I have targeted the li element(s) rather than the whole parent container
-    list-style-type: none; // also, there is no need for !important
+#bullet-kill > ul {
+  display: flex;
+  flex-direction: column;
+  flex-wrap: wrap;
+  height: 300px;
+  margin-bottom: 0 !important;
 }
 
 
@@ -127,6 +137,34 @@ margin: 0px;
   width: 1px;
 }
 
+input[type=number]::-webkit-outer-spin-button,
+input[type=number]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+input[type=number] {
+    -moz-appearance:textfield;
+}
+
+.fade {
+    height: 100%;
+    width: 100%;
+    position:absolute;
+    background: -webkit-linear-gradient(left,
+                rgba(0,0,0,0.65) 0%,
+                rgba(0,0,0,0) 20%,
+                rgba(0,0,0,0) 80%,
+                rgba(0,0,0,0.65) 100%
+    );
+}
+
+div.dataTables_info {
+   font-size: .8rem !important;
+ }
+.pagination{
+  font-size: .8rem;
+ }
 /*! END ADDITIONS
  */
 
@@ -1766,7 +1804,7 @@ pre code {
 
 .table th,
 .table td {
-  padding: 0.5rem;
+  padding: 0.35rem;
   vertical-align: top;
   border-top: 1px solid #e3e6f0;
 }
@@ -11734,12 +11772,13 @@ a:focus {
 .bg-login-image {
   background: url("../img/Login.jpg");
   background-size: cover;
+  background-position: right bottom;
 }
 
 .bg-register-image {
-  background: url("../img/register.jpg");
-  background-size: cover;
-  background-position: right;
+  background: url("../img/Welcome_bus_tall.jpg");
+  background-size: cover ;
+  background-position: right bottom;
 }
 
 .bg-password-image {

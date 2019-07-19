@@ -1,3 +1,4 @@
+import calendar
 import decimal
 import json
 
@@ -5,7 +6,7 @@ from django.contrib import messages
 from django.core.mail import send_mail
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
-from django.db.models import Min, Max, Value, Sum, Avg
+from django.db.models import Min, Max, Value, Sum, Avg, Count
 from django.forms import modelformset_factory
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render, redirect
@@ -27,7 +28,7 @@ import datetime
 from .tasks import profile_created
 from django.core.exceptions import ValidationError
 from django.forms.widgets import CheckboxInput
-from .utilities import monthdelta, get_wsdot_color
+from .utilities import monthdelta, get_wsdot_color, green_house_gas_per_vanpool_mile, green_house_gas_per_sov_mile
 from django.http import Http404
 from .decorators import group_required
 from django.template.loader import render_to_string
@@ -44,7 +45,8 @@ from .forms import CustomUserCreationForm, \
     chart_form, \
     submit_a_new_vanpool_expansion, \
     Modify_A_Vanpool_Expansion, \
-    request_user_permissions
+    request_user_permissions, \
+    statewide_summary_settings
 from django.utils.translation import ugettext_lazy as _
 from .models import profile, vanpool_report, custom_user,  vanpool_expansion_analysis, organization
 from django.contrib.auth.models import Group
@@ -230,8 +232,6 @@ def Vanpool_report(request, year=None, month=None):
     # Respond to POST request
     if request.method == 'POST':
         form = VanpoolMonthlyReport(user_organization = user_organization, data=request.POST, instance=form_data, record_id = form_data.id, report_month=month, report_year=year)
-        print("form is valid: " + str(form.is_valid()))
-        print(form.errors)
         if form.is_valid():
             form.save()
             successful_submit = True  # Triggers a modal that says the form was submitted
@@ -248,12 +248,10 @@ def Vanpool_report(request, year=None, month=None):
         form = VanpoolMonthlyReport(user_organization=user_organization, instance=form_data, record_id = form_data.id, report_month=month, report_year=year)
         successful_submit = False
 
-    print("new report: " + str(new_report))
     if new_report == False:
         form.fields['new_data_change_explanation'].required = True
     else:
         form.fields['new_data_change_explanation'].required = False
-    print(form.fields['new_data_change_explanation'].required)
 
     return render(request, 'pages/Vanpool_report.html', {'form': form,
                                                          'past_report_data': past_report_data,
@@ -424,8 +422,118 @@ def Vanpool_data(request):
 
 @login_required(login_url='/Panacea/login')
 @group_required('Vanpool reporter', 'WSDOT staff')
-def Vanpool_other(request):
-    return render(request, 'pages/Vanpool_other.html', {})
+def vanpool_statewide_summary(request):
+
+    MEASURES = [
+        ("vanpool_miles_traveled", "vanshare_miles_traveled"),
+        ("vanpool_passenger_trips", "vanshare_passenger_trips"),
+        ("vanpool_groups_in_operation", "vanshare_groups_in_operation"),
+    ]
+
+    if request.POST:
+        settings_form = statewide_summary_settings(data=request.POST)
+        include_agency_classifications = request.POST.getlist("include_agency_classifications")
+        include_years = int(settings_form.data['include_years'])
+        include_regions = settings_form.data['include_regions']
+
+    else:
+        include_years = 3
+        include_regions = "Statewide"
+        include_agency_classifications = [classification[0] for classification in organization.AGENCY_CLASSIFICATIONS]
+
+        settings_form = statewide_summary_settings(initial={
+            "include_years": include_years,
+            "include_regions": include_regions,
+            "include_agency_classifications": include_agency_classifications
+        })
+
+    if settings_form.is_valid:
+        all_chart_data = [report for report in
+                          vanpool_report.objects.order_by('report_year', 'report_month').all() if
+                          report.report_year >= datetime.datetime.today().year - include_years]
+        x_axis_labels = [report.report_month for report in all_chart_data]
+        x_axis_labels = list(dict.fromkeys(x_axis_labels))
+        x_axis_labels = list(map(lambda x: calendar.month_name[x], x_axis_labels))
+
+
+        if include_regions != "Statewide":
+            if include_regions == "Puget Sound":
+                orgs_to_include = organization.objects.filter(classification__in=include_agency_classifications).filter(
+                    in_puget_sound_area=True).values_list('id')
+            else:
+                orgs_to_include = organization.objects.filter(classification__in=include_agency_classifications).filter(
+                    in_puget_sound_area=False).values_list('id')
+        else:
+            orgs_to_include = organization.objects.filter(classification__in=include_agency_classifications).values_list('id')
+
+        years = range(datetime.datetime.today().year - include_years + 1, datetime.datetime.today().year + 1)
+
+        all_data = vanpool_report.objects.filter(report_year__gte=datetime.datetime.today().year - (include_years - 1),
+                                                 report_year__lte=datetime.datetime.today().year,
+                                                 organization_id__in=orgs_to_include).order_by('report_year',
+                                                                                               'report_month').all()
+
+        # TODO once the final data is in we need to confirm that the greenhouse gas calculations are correct
+        summary_table_data = vanpool_report.objects.filter(report_year__gte=datetime.datetime.today().year - (include_years - 1),
+                                                           report_year__lte=datetime.datetime.today().year,
+                                                           organization_id__in=orgs_to_include,
+                                                           report_date__isnull=False,
+                                                           vanpool_passenger_trips__isnull=False).values('report_year').annotate(
+            table_total_miles_traveled=Sum(F(MEASURES[0][0]) + F(MEASURES[0][1])),
+            table_total_passenger_trips=Sum(F(MEASURES[1][0]) + F(MEASURES[2][1])),
+            table_total_groups_in_operation=Sum(F(MEASURES[2][0]) + F(MEASURES[2][1])) / Count('report_month', distinct=True),
+            green_house_gas_prevented=Sum((F(MEASURES[0][0]) + F(MEASURES[0][1])) * (F('average_riders_per_van') - 1)) * green_house_gas_per_sov_mile() - Sum(F(MEASURES[0][0]) + F(MEASURES[0][1])) * green_house_gas_per_vanpool_mile()
+        )
+
+        # TODO once the final data is in we need to confirm that the greenhouse gas calculations are correct
+        summary_table_data_total = vanpool_report.objects.filter(report_year__gte=datetime.datetime.today().year - (include_years - 1),
+                                                                 report_year__lte=datetime.datetime.today().year,
+                                                                 organization_id__in=orgs_to_include).aggregate(
+            table_total_miles_traveled=Sum(F(MEASURES[0][0]) + F(MEASURES[0][1])),
+            table_total_passenger_trips=Sum(F(MEASURES[1][0]) + F(MEASURES[2][1])),
+            green_house_gas_prevented=Sum((F(MEASURES[0][0]) + F(MEASURES[0][1])) * (
+                    F('average_riders_per_van') - 1)) * green_house_gas_per_sov_mile() - Sum(
+                F(MEASURES[0][0]) + F(MEASURES[0][1])) * green_house_gas_per_vanpool_mile()
+        )
+
+        all_charts = list()
+        for i in range(len(MEASURES) + 1):
+            # to include green house gasses
+            if i == len(MEASURES):
+                all_chart_data = all_data.values('report_year', 'report_month').annotate(
+                    result=Sum((F(MEASURES[0][0]) + F(MEASURES[0][1])) * (F('average_riders_per_van') - 1)) * green_house_gas_per_sov_mile() - Sum(F(MEASURES[0][0]) + F(MEASURES[0][1])) * green_house_gas_per_vanpool_mile()
+                )
+            else:
+                all_chart_data = all_data.values('report_year', 'report_month').annotate(
+                    result=Sum(F(MEASURES[i][0]) + F(MEASURES[i][1]))
+                )
+
+            chart_datasets = {}
+            color_i = 0
+            for year in years:
+                if year == datetime.datetime.today().year:
+                    current_year = True
+                    line_color = get_wsdot_color(color_i, hex_or_rgb='rgb')
+                else:
+                    current_year = False
+                    line_color = get_wsdot_color(color_i, alpha=50, hex_or_rgb='rgb')
+                chart_dataset = all_chart_data.filter(report_year=year)
+                if chart_dataset.count() >= 1:
+                    chart_dataset = [result["result"] for result in chart_dataset]
+                    chart_datasets[year] = [json.dumps(list(chart_dataset)), line_color, current_year]
+                    color_i = color_i + 1
+
+            all_charts.append(chart_datasets)
+
+    return render(request, 'pages/vanpool_statewide_summary.html', {'settings_form': settings_form,
+                                                                    'chart_label': x_axis_labels,
+                                                                    'all_charts': all_charts,
+                                                                    'summary_table_data': summary_table_data,
+                                                                    'summary_table_data_total': summary_table_data_total,
+                                                                    'include_regions': include_regions,
+                                                                    'include_agency_classifications': include_agency_classifications
+                                                                    }
+                  )
 
 
 @login_required(login_url='/Panacea/login')
@@ -480,9 +588,7 @@ def OrganizationProfile(request):
         if form.is_valid():
             # TODO figure out why is this here
             if not 'state' in form.data:
-                print(user_profile_data.organization.state)
                 form.data['state'] = user_profile_data.organization.state
-                print(form.data['state'])
             form.save()
             return redirect('OrganizationProfile')
         else:
@@ -583,7 +689,7 @@ def Admin_assignPermissions(request, active=None):
                     my_profile.profile_complete = True
                     my_profile.active_permissions_request = False
                     my_profile.save()
-                    print(email)
+                    # print(email)
                 form.save()
 
         return JsonResponse({'success': True})

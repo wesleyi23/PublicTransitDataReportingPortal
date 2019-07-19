@@ -83,6 +83,24 @@ def get_chart_color(chart_dict_item):
     return chart_dict_item[1]
 
 
+@register.filter(name='get_boarder_dash')
+def get_boarder_dash(chart_dict_item):
+    if chart_dict_item[2]:
+        return '[]'
+    else:
+        return '[]'
+
+
+@register.filter(name='clean_classifications')
+def clean_classifications(classifications):
+    if len(classifications) == 1:
+        return classifications[0] + " Systems"
+    if len(classifications) == 2:
+        return classifications[0] + " & " + classifications[1] + " Systems"
+    if len(classifications) == 3:
+        return classifications[0] + ", " + classifications[1] + ", & " + classifications[2] + " Systems"
+
+
 @register.filter(name='print_dashboard_cards_data')
 def print_dashboard_cards_data(data):
     percent = data[1]
