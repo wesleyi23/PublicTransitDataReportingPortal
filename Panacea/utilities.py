@@ -160,13 +160,18 @@ def get_wsdot_color(i, hex_or_rgb="hex", alpha=99):
     return color
 
 def calculate_biennium(date):
+    """
+    calculates the biennium that the provided data is in
+    :param date: a datetime.date object
+    :return: str - last two digits of the start year followed by a '-' and then the last two digits of the end year
+    """
     import datetime
 
     if not isinstance(date, datetime.date):
         raise TypeError("date must be a datetime.date object")
 
     def biennium_str(first_year):
-        return str(first_year)[-2:]+ "-" + str(first_year + 2)[-2:]
+        return str(first_year)[-2:] + "-" + str(first_year + 2)[-2:]
 
     reference_biennium_start_year = 2017
     if (date.year - reference_biennium_start_year) % 2 == 0:

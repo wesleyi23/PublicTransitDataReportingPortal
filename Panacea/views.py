@@ -25,6 +25,8 @@ from django.db.models import Max, Subquery, F, OuterRef
 from django.db.models.expressions import RawSQL
 from dateutil.relativedelta import relativedelta
 import datetime
+
+from Panacea.decorators import group_required
 from .tasks import profile_created
 from django.core.exceptions import ValidationError
 from django.forms.widgets import CheckboxInput
