@@ -8,6 +8,7 @@ from django.dispatch import receiver
 from localflavor.us.models import USStateField, USZipCodeField
 from phonenumber_field.modelfields import PhoneNumberField
 import datetime
+from simple_history.models import HistoricalRecords
 
 
 class CustomUserManager(BaseUserManager):
@@ -130,6 +131,7 @@ class profile(models.Model):
     requested_permissions = models.ManyToManyField(Group)
     active_permissions_request = models.BooleanField(blank=True, null=True)
 
+
 class vanpool_report(models.Model):
     REPORT_MONTH = (
         (1, 'January'),
@@ -170,8 +172,7 @@ class vanpool_report(models.Model):
     vanpool_miles_traveled = models.FloatField(blank=True, null=True)
     average_riders_per_van = models.FloatField(blank=True, null=True)
     average_round_trip_miles = models.FloatField(blank=True, null=True)
-    data_change_explanation = models.CharField(max_length=5000, blank=True, null=True)
-    data_change_record = models.CharField(max_length=10000, blank=True, null=True)  # TODO change to JSONField when/if we hook up MySQL
+    history = HistoricalRecords()
 
     @property
     def status(self):

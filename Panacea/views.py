@@ -252,9 +252,9 @@ def Vanpool_report(request, year=None, month=None):
         successful_submit = False
 
     if new_report == False:
-        form.fields['new_data_change_explanation'].required = True
+        form.fields['changeReason'].required = True
     else:
-        form.fields['new_data_change_explanation'].required = False
+        form.fields['changeReason'].required = False
 
     return render(request, 'pages/Vanpool_report.html', {'form': form,
                                                          'past_report_data': past_report_data,

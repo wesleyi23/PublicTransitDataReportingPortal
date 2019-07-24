@@ -172,9 +172,10 @@ class VanpoolMonthlyReport(forms.ModelForm):
         self.record_id = record_id
         super(VanpoolMonthlyReport, self).__init__(*args, **kwargs)
 
-    new_data_change_explanation = forms.CharField(required=False, widget=forms.Textarea(
+    changeReason = forms.CharField(required=False, widget=forms.Textarea(
         attrs={'class': 'form-control input-sm', 'rows': 3, 'display': False})
                                                   )
+
     acknowledge_validation_errors = forms.BooleanField(
         label='Check this box to confirm that your submitted numbers are correct, even though there are validation errors.',
         widget=forms.CheckboxInput(attrs={'class': 'checkbox', 'style': 'zoom:200%;margin-right:.35rem'}),
@@ -192,7 +193,7 @@ class VanpoolMonthlyReport(forms.ModelForm):
                                 'loaner_spare_vans_in_fleet',
                                 'average_riders_per_van',
                                 'average_round_trip_miles',
-                                'new_data_change_explanation',
+                                'changeReason',
                                 'data_change_record',
                                 'acknowledge_validation_errors']
 
@@ -217,6 +218,7 @@ class VanpoolMonthlyReport(forms.ModelForm):
                     continue
                 if category in untracked_categories:
                     continue
+
                 new_data = self.cleaned_data[category]
                 old_data = vanpool_report.objects.filter(organization_id=self.user_organization,
                                                          vanpool_groups_in_operation__isnull=False,
@@ -233,19 +235,21 @@ class VanpoolMonthlyReport(forms.ModelForm):
                     category = category.title()
                     error_list.append('{} have increased more than 20%. Please confirm this number.'.format(category))
 
-                # Math error here I changed both to be consistent
                 elif new_data <= old_data * 0.8:
                     category = category.replace('_', ' ')
                     category = category.title()
                     error_list.append('{} have decreased more than 20%. Please confirm this number'.format(category))
+
                 if category == 'vanpool_groups_in_operation':
                     old_van_number = vanpool_report.objects.filter(
                         organization_id=self.user_organization,
                         report_year=report_year,
                         report_month=report_month).values('vanpool_groups_in_operation', 'vanpool_group_starts', 'vanpool_group_folds')
                     old_van_number = old_van_number[0]
+
                     if new_data != (old_van_number['vanpool_groups_in_operation'] + old_van_number['vanpool_group_starts'] - old_van_number['vanpool_group_folds']):
                         error_list.append('The Vanpool Groups in Operation do not reflect the folds and started recorded last month')
+
             return error_list
 
     def clean(self):
@@ -301,20 +305,6 @@ class VanpoolMonthlyReport(forms.ModelForm):
     # TODO test how easily the fields can be extracted
     def save(self, commit=True):
         instance = super(VanpoolMonthlyReport, self).save(commit=False)
-        if self.cleaned_data['new_data_change_explanation'] != None:
-            past_explanations = vanpool_report.objects.get(id=instance.id).data_change_explanation
-            if past_explanations is None:
-                past_explanations = ""
-            instance.data_change_explanation = past_explanations + \
-                                               "{'edit_date':'" + str(datetime.date.today()) + \
-                                               "','explanation':'" + self.cleaned_data[
-                                                   'new_data_change_explanation'] + "'},"
-
-            past_data_change_record = vanpool_report.objects.get(id=instance.id).data_change_record
-            if past_data_change_record is None:
-                past_data_change_record = ""
-            instance.data_change_record = past_data_change_record + serializers.serialize('json', [
-                vanpool_report.objects.get(id=instance.id), ])
         if commit:
             instance.save()
         return instance
@@ -452,12 +442,6 @@ class statewide_summary_settings(forms.Form):
                    'data-form-name': "chart_form"}))
 
 
-
-
-
-
-
-
 class submit_a_new_vanpool_expansion(forms.ModelForm):
     CHOICES = (
         ('11-13', '11-13'),
@@ -523,7 +507,6 @@ class submit_a_new_vanpool_expansion(forms.ModelForm):
         if commit:
             instance.save()
         return instance
-
 
 
 class Modify_A_Vanpool_Expansion(forms.ModelForm):
