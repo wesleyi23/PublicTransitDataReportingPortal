@@ -274,7 +274,6 @@ def Vanpool_expansion_submission(request):
     if request.method == 'POST':
         form = submit_a_new_vanpool_expansion(data = request.POST)
         if form.is_valid():
-            print(form.fields)
             form.cleaned_data['expansion_goal'] = int(round(form.cleaned_data['expansion_vans_awarded'] * .8, 0) + \
                                                   form.cleaned_data['vanpools_in_service_at_time_of_award'])
             form.cleaned_data['deadline'] = form.cleaned_data['latest_vehicle_acceptance'] + relativedelta(months=+18)
