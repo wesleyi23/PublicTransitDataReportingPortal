@@ -1,8 +1,14 @@
 from django import template
 from django.conf import settings
+from Panacea.models import organization
 
 register = template.Library()
 
+
+@register.simple_tag(name = 'get_org_name')
+def print_org_name(organization_id):
+    name = organization.objects.get(id = organization_id).name
+    return name
 
 @register.filter(name='print_long_date_name')
 def print_long_date_name(int_month):
@@ -81,6 +87,24 @@ def get_chart_data(chart_dict_item):
 @register.filter(name='get_chart_dataset_color')
 def get_chart_color(chart_dict_item):
     return chart_dict_item[1]
+
+
+@register.filter(name='get_boarder_dash')
+def get_boarder_dash(chart_dict_item):
+    if chart_dict_item[2]:
+        return '[]'
+    else:
+        return '[]'
+
+
+@register.filter(name='clean_classifications')
+def clean_classifications(classifications):
+    if len(classifications) == 1:
+        return classifications[0] + " Systems"
+    if len(classifications) == 2:
+        return classifications[0] + " & " + classifications[1] + " Systems"
+    if len(classifications) == 3:
+        return classifications[0] + ", " + classifications[1] + ", & " + classifications[2] + " Systems"
 
 
 @register.filter(name='print_dashboard_cards_data')

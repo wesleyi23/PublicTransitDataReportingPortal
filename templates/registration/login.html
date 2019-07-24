@@ -41,6 +41,9 @@
                         <div class="col-lg-6 d-none d-lg-block bg-login-image"></div>
                         <div class="col-lg-6">
                             <div class="p-5">
+                                <div>
+                                    <img class="mx-auto d-block mb-5" src="{% static 'img/WSDOT_logo_Green.png' %}">
+                                </div>
                                 <div class="text-center">
                                     <h1 class="h4 text-gray-900 mb-4">Washington Public Transportation Data Reporting Portal</h1>
                                 </div>
@@ -51,7 +54,6 @@
                                 {% block content %}
                                     <form method="post" class="user">
                                         {% csrf_token %}
-
                                         <div class="form-group">
                                             <label for="id_username" class="visuallyhidden">Email Address</label>
                                             {% render_field form.username class="form-control form-control-user" placeholder="Email Address" %}
@@ -63,8 +65,9 @@
                                             {{form.password.errors}}
                                         </div>
                                         {{form.non_field_errors}}
-                                        <button type="submit" class="btn btn-primary btn-user">Submit</button>
-                                        <hr>
+                                        <div style="display: flex">
+                                            <button type="submit" class="mx-auto d-block btn btn-primary btn-user" style="flex: 1">Submit</button>
+                                        </div>
                                     </form>
                                 {% endblock %}
                                 {#### FORM#}

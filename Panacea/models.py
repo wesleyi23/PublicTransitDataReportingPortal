@@ -110,7 +110,7 @@ class organization(models.Model):
     vanpool_expansion = models.BooleanField(blank=True, null=True)
     # this is kind of a hack and I hate it; on the other hand, it seems less complex than storing a list
     # TODO add to agency profile form
-    in_jblm_area = models.BooleanField(blank=True, null=True)
+    in_jblm_area = models.BooleanField(blank=True, null=True)  # TODO confirm this is no longer needed
     in_puget_sound_area = models.BooleanField(blank=True, null=True)
 
 
@@ -239,24 +239,47 @@ def save_user_profile(sender, instance, **kwargs):
 
 
 class vanpool_expansion_analysis(models.Model):
+    CHOICES = (
+        ('11-13', '11-13'),
+        ('13-15', '13-15'),
+        ('15-17', '15-17'),
+        ('17-19', '17-19'),
+        ('19-21', '19-21'),
+        ('21-23', '21-23'),
+        ('23-25', '23-25'),
+        ('25-27', '25-27')
+    )
+
+
     organization = models.ForeignKey(organization, on_delete=models.PROTECT, related_name = '+')
     vanpools_in_service_at_time_of_award = models.IntegerField(blank=True, null=True)
     date_of_award = models.DateField(blank = True, null = True)
     expansion_vans_awarded = models.IntegerField(blank= True, null = True)
     latest_vehicle_acceptance = models.DateField(blank =True, null=True)
     extension_granted = models.BooleanField(blank = False, null = True)
+    vanpool_goal_met = models.BooleanField(blank=False, null = True)
     expired = models.BooleanField(blank=False, null = True)
     notes = models.TextField(blank = False, null = True)
-    # going to need to add a loan thing here once I figure out what the story is
+    awarded_biennium = models.CharField(max_length=50, choices=CHOICES, blank=True, null=True)
+    expansion_goal = models.IntegerField(blank = True, null = True)
+    deadline = models.DateField(blank = True, null = True)
+    service_goal_met_date = models.DateField(blank = True, null=True)
+    max_vanpool_numbers = models.IntegerField(blank=True, null= True)
+    max_vanpool_date = models.DateField(blank = True, null=True)
+    latest_vanpool_number = models.IntegerField(blank = True, null=True)
+    latest_report_date = models.DateField(blank=True, null=True)
+    months_remaining = models.CharField(blank = True, null = True, max_length=20)
+    organization_name = models.CharField(blank = True, null = True, max_length=100)
 
 
     @property
     def adjusted_service_goal(self):
         return int(self.vanpools_in_service_at_time_of_award + round(self.expansion_vans_awarded*.8, 0))
 
-    @property
-    def spare_allowance(self):
-        return round(self. expansion_vans_awarded*.2, 1)
+
+
+
+#TODO Change all the forms so we get good data, put various checks into the views page,
 
 
     @property

@@ -1,3 +1,4 @@
+import calendar
 import decimal
 import json
 
@@ -5,7 +6,7 @@ from django.contrib import messages
 from django.core.mail import send_mail
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
-from django.db.models import Min, Max, Value, Sum, Avg
+from django.db.models import Min, Max, Value, Sum, Avg, Count
 from django.forms import modelformset_factory
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render, redirect
@@ -24,13 +25,14 @@ from django.db.models import Max, Subquery, F, OuterRef
 from django.db.models.expressions import RawSQL
 from dateutil.relativedelta import relativedelta
 import datetime
+
+from Panacea.decorators import group_required
 from .tasks import profile_created
 from django.core.exceptions import ValidationError
 from django.forms.widgets import CheckboxInput
-from .utilities import monthdelta, get_wsdot_color
+from .utilities import monthdelta, get_wsdot_color, green_house_gas_per_vanpool_mile, green_house_gas_per_sov_mile
 from django.http import Http404
-from .decorators import group_required
-from django.template.loader import render_to_string
+from .filters import VanpoolExpansionFilter
 
 from .forms import CustomUserCreationForm, \
     custom_user_ChangeForm, \
@@ -44,10 +46,13 @@ from .forms import CustomUserCreationForm, \
     chart_form, \
     submit_a_new_vanpool_expansion, \
     Modify_A_Vanpool_Expansion, \
-    request_user_permissions
+    request_user_permissions, \
+    statewide_summary_settings, \
+    Modify_A_Vanpool_Expansion
 from django.utils.translation import ugettext_lazy as _
 from .models import profile, vanpool_report, custom_user,  vanpool_expansion_analysis, organization
 from django.contrib.auth.models import Group
+from .utilities import calculate_latest_vanpool, find_maximum_vanpool, calculate_remaining_months, calculate_if_goal_has_been_reached
 
 
 def register(request):
@@ -185,7 +190,7 @@ def ProfileSetup_ReportSelection(request):
 
 @login_required(login_url='/Panacea/login')
 def handler404(request, exception):
-    return render(request, 'pages/error_404.html', status=404)
+    return render(request, 'pages/error_404.html', status = 404)
 
 
 @login_required(login_url='/Panacea/login')
@@ -230,8 +235,6 @@ def Vanpool_report(request, year=None, month=None):
     # Respond to POST request
     if request.method == 'POST':
         form = VanpoolMonthlyReport(user_organization = user_organization, data=request.POST, instance=form_data, record_id = form_data.id, report_month=month, report_year=year)
-        print("form is valid: " + str(form.is_valid()))
-        print(form.errors)
         if form.is_valid():
             form.save()
             successful_submit = True  # Triggers a modal that says the form was submitted
@@ -248,12 +251,10 @@ def Vanpool_report(request, year=None, month=None):
         form = VanpoolMonthlyReport(user_organization=user_organization, instance=form_data, record_id = form_data.id, report_month=month, report_year=year)
         successful_submit = False
 
-    print("new report: " + str(new_report))
     if new_report == False:
         form.fields['new_data_change_explanation'].required = True
     else:
         form.fields['new_data_change_explanation'].required = False
-    print(form.fields['new_data_change_explanation'].required)
 
     return render(request, 'pages/Vanpool_report.html', {'form': form,
                                                          'past_report_data': past_report_data,
@@ -271,78 +272,32 @@ def Vanpool_report(request, year=None, month=None):
 @group_required('WSDOT staff')
 def Vanpool_expansion_submission(request):
     if request.method == 'POST':
-        form = submit_a_new_vanpool_expansion(request.POST)
+        form = submit_a_new_vanpool_expansion(data = request.POST)
         if form.is_valid():
+            print(form.fields)
+            form.cleaned_data['expansion_goal'] = int(round(form.cleaned_data['expansion_vans_awarded'] * .8, 0) + \
+                                                  form.cleaned_data['vanpools_in_service_at_time_of_award'])
+            form.cleaned_data['deadline'] = form.cleaned_data['latest_vehicle_acceptance'] + relativedelta(months=+18)
+
             form.save()
             # TODO Do you use AJAX on this - What is this for?
             return JsonResponse({'redirect': '../Expansion/'})
         else:
             return render(request, 'pages/Vanpool_expansion_submission.html', {'form':form})
     else:
-        form = submit_a_new_vanpool_expansion()
+        form = submit_a_new_vanpool_expansion(data=request.POST)
     return render(request, 'pages/Vanpool_expansion_submission.html', {'form': form})
 
 
 @login_required(login_url='/Panacea/login')
-@group_required('WSDOT staff')
 def Vanpool_expansion_analysis(request):
     # pulls the latest vanpool data
-    orgs = vanpool_expansion_analysis.objects.filter(expired = False).values('organization_id')
-    organization_name = organization.objects.filter(id__in=orgs).values('name')
-    vp = vanpool_report.objects.all()
-    pv = vp.filter(organization_id__in = orgs, organization = OuterRef('organization'), report_month__isnull = False, vanpool_groups_in_operation__isnull=False).order_by('-id').values('id')
-    latest_vanpool = vp.annotate(latest = Subquery(pv[:1])).filter(id = F('latest')).values('report_year', 'report_month', 'vanpool_groups_in_operation', 'organization_id').order_by('organization_id')
-    print(latest_vanpool)
-    # filters out the max vanpool
-    award_date = vanpool_expansion_analysis.objects.filter(expired=False).dates('date_of_award', 'month')
-    award_date = award_date[0]
-    award_month = award_date.month
-    award_year = award_date.year
-    van_max = vanpool_report.objects.filter(organization_id__in= orgs, report_year__gte=award_year,report_month__gte=award_month).values('organization').annotate(max_van = Max('vanpool_groups_in_operation')).order_by('organization')
-    van_max_list = []
-    # had to use a for loop since there's nothing easier really
-    for i in van_max:
-        vpr = vanpool_report.objects.filter(organization_id = i['organization'], vanpool_groups_in_operation = i['max_van'], report_year__gte=award_year,report_month__gte=award_month).values('id','report_year', 'report_month', 'vanpool_groups_in_operation')
-        if len(vpr) > 1:
-            vpr = vpr.latest('id')
-            van_max_list.append(vpr)
-        else:
-            van_max_list.append(vpr[0])
-    vea = vanpool_expansion_analysis.objects.filter(expired = False).order_by('organization_id')
-    vea2 = vanpool_expansion_analysis.objects.filter(expired = False).values('latest_vehicle_acceptance').order_by('organization_id')
-    # this bit does some logic to ascertain the remaining months and the deadline
-
-    # this is a method for calculating the deadline and how many months remain
-    acceptance_list = []
-    for j in vea2:
-        result_dic = {}
-        latest_date = j['latest_vehicle_acceptance']
-        latest_date =latest_date + relativedelta(months=+18)
-        r = relativedelta(latest_date, datetime.date.today())
-        remaining_months = r.months
-
-        result_dic['latest_date'] = latest_date
-        result_dic['remaining_months'] = remaining_months
-        acceptance_list.append(result_dic)
-
-    # this is a method for calculating the date when the service expansion was met
-    vanexpand = vanpool_expansion_analysis.objects.filter(expired=False).order_by('organization_id').values('date_of_award', 'expansion_vans_awarded', 'vanpools_in_service_at_time_of_award', 'organization_id')
-    expansion_goal = []
-    for org in vanexpand:
-        award_month = org['date_of_award'].month
-        award_year = org['date_of_award'].year
-        goal = round(org['expansion_vans_awarded']*.8, 0) + org['vanpools_in_service_at_time_of_award']
-        org_id = org['organization_id']
-        goal = vanpool_report.objects.filter(organization_id = org_id, report_year__gte=award_year,report_month__gte=award_month, vanpool_groups_in_operation__gte=goal).values('id','report_year', 'report_month', 'vanpool_groups_in_operation', 'organization_id')
-        if goal.exists():
-            expansion_goal.append(goal.earliest('id'))
-        else:
-            expansion_goal.append('')
-
-    # put them in an iterator to move
-    current_biennium = vea
-    zipped = zip(organization_name, latest_vanpool, van_max_list, vea, acceptance_list, expansion_goal)
-    return render(request, 'pages/Vanpool_expansion.html', {'zipped_data': zipped, 'current_biennium': current_biennium})
+    calculate_latest_vanpool()
+    find_maximum_vanpool()
+    calculate_remaining_months()
+    calculate_if_goal_has_been_reached()
+    f = VanpoolExpansionFilter(request.GET, queryset=vanpool_expansion_analysis.objects.all())
+    return render(request, 'pages/Vanpool_expansion.html', {'filter': f})
 
 
 @login_required(login_url='/Panacea/login')
@@ -358,16 +313,15 @@ def Vanpool_expansion_modify(request, id=None):
     if request.method == 'POST':
         form = Modify_A_Vanpool_Expansion(data=request.POST, instance=form_data)
         if form.is_valid():
+            form.cleaned_data['deadline'] = form.cleaned_data['latest_vehicle_acceptance'] + relativedelta(months=+18)
             form.save()
-            successful_submit = True
         else:
-            successful_submit = False
+            form = Modify_A_Vanpool_Expansion(instance=form_data)
+
     else:
         form = Modify_A_Vanpool_Expansion(instance=form_data)
-        successful_submit = False
-
     zipped = zip(organization_name, vea)
-    return render(request, 'pages/Vanpool_expansion_modify.html', {'zipped':zipped, 'id': id, 'form':form, 'successful_submit': successful_submit})
+    return render(request, 'pages/Vanpool_expansion_modify.html', {'zipped':zipped, 'id': id, 'form':form})
 
 
 @login_required(login_url='/Panacea/login')
@@ -424,8 +378,118 @@ def Vanpool_data(request):
 
 @login_required(login_url='/Panacea/login')
 @group_required('Vanpool reporter', 'WSDOT staff')
-def Vanpool_other(request):
-    return render(request, 'pages/Vanpool_other.html', {})
+def vanpool_statewide_summary(request):
+
+    MEASURES = [
+        ("vanpool_miles_traveled", "vanshare_miles_traveled"),
+        ("vanpool_passenger_trips", "vanshare_passenger_trips"),
+        ("vanpool_groups_in_operation", "vanshare_groups_in_operation"),
+    ]
+
+    if request.POST:
+        settings_form = statewide_summary_settings(data=request.POST)
+        include_agency_classifications = request.POST.getlist("include_agency_classifications")
+        include_years = int(settings_form.data['include_years'])
+        include_regions = settings_form.data['include_regions']
+
+    else:
+        include_years = 3
+        include_regions = "Statewide"
+        include_agency_classifications = [classification[0] for classification in organization.AGENCY_CLASSIFICATIONS]
+
+        settings_form = statewide_summary_settings(initial={
+            "include_years": include_years,
+            "include_regions": include_regions,
+            "include_agency_classifications": include_agency_classifications
+        })
+
+    if settings_form.is_valid:
+        all_chart_data = [report for report in
+                          vanpool_report.objects.order_by('report_year', 'report_month').all() if
+                          report.report_year >= datetime.datetime.today().year - include_years]
+        x_axis_labels = [report.report_month for report in all_chart_data]
+        x_axis_labels = list(dict.fromkeys(x_axis_labels))
+        x_axis_labels = list(map(lambda x: calendar.month_name[x], x_axis_labels))
+
+
+        if include_regions != "Statewide":
+            if include_regions == "Puget Sound":
+                orgs_to_include = organization.objects.filter(classification__in=include_agency_classifications).filter(
+                    in_puget_sound_area=True).values_list('id')
+            else:
+                orgs_to_include = organization.objects.filter(classification__in=include_agency_classifications).filter(
+                    in_puget_sound_area=False).values_list('id')
+        else:
+            orgs_to_include = organization.objects.filter(classification__in=include_agency_classifications).values_list('id')
+
+        years = range(datetime.datetime.today().year - include_years + 1, datetime.datetime.today().year + 1)
+
+        all_data = vanpool_report.objects.filter(report_year__gte=datetime.datetime.today().year - (include_years - 1),
+                                                 report_year__lte=datetime.datetime.today().year,
+                                                 organization_id__in=orgs_to_include).order_by('report_year',
+                                                                                               'report_month').all()
+
+        # TODO once the final data is in we need to confirm that the greenhouse gas calculations are correct
+        summary_table_data = vanpool_report.objects.filter(report_year__gte=datetime.datetime.today().year - (include_years - 1),
+                                                           report_year__lte=datetime.datetime.today().year,
+                                                           organization_id__in=orgs_to_include,
+                                                           report_date__isnull=False,
+                                                           vanpool_passenger_trips__isnull=False).values('report_year').annotate(
+            table_total_miles_traveled=Sum(F(MEASURES[0][0]) + F(MEASURES[0][1])),
+            table_total_passenger_trips=Sum(F(MEASURES[1][0]) + F(MEASURES[2][1])),
+            table_total_groups_in_operation=Sum(F(MEASURES[2][0]) + F(MEASURES[2][1])) / Count('report_month', distinct=True),
+            green_house_gas_prevented=Sum((F(MEASURES[0][0]) + F(MEASURES[0][1])) * (F('average_riders_per_van') - 1)) * green_house_gas_per_sov_mile() - Sum(F(MEASURES[0][0]) + F(MEASURES[0][1])) * green_house_gas_per_vanpool_mile()
+        )
+
+        # TODO once the final data is in we need to confirm that the greenhouse gas calculations are correct
+        summary_table_data_total = vanpool_report.objects.filter(report_year__gte=datetime.datetime.today().year - (include_years - 1),
+                                                                 report_year__lte=datetime.datetime.today().year,
+                                                                 organization_id__in=orgs_to_include).aggregate(
+            table_total_miles_traveled=Sum(F(MEASURES[0][0]) + F(MEASURES[0][1])),
+            table_total_passenger_trips=Sum(F(MEASURES[1][0]) + F(MEASURES[2][1])),
+            green_house_gas_prevented=Sum((F(MEASURES[0][0]) + F(MEASURES[0][1])) * (
+                    F('average_riders_per_van') - 1)) * green_house_gas_per_sov_mile() - Sum(
+                F(MEASURES[0][0]) + F(MEASURES[0][1])) * green_house_gas_per_vanpool_mile()
+        )
+
+        all_charts = list()
+        for i in range(len(MEASURES) + 1):
+            # to include green house gasses
+            if i == len(MEASURES):
+                all_chart_data = all_data.values('report_year', 'report_month').annotate(
+                    result=Sum((F(MEASURES[0][0]) + F(MEASURES[0][1])) * (F('average_riders_per_van') - 1)) * green_house_gas_per_sov_mile() - Sum(F(MEASURES[0][0]) + F(MEASURES[0][1])) * green_house_gas_per_vanpool_mile()
+                )
+            else:
+                all_chart_data = all_data.values('report_year', 'report_month').annotate(
+                    result=Sum(F(MEASURES[i][0]) + F(MEASURES[i][1]))
+                )
+
+            chart_datasets = {}
+            color_i = 0
+            for year in years:
+                if year == datetime.datetime.today().year:
+                    current_year = True
+                    line_color = get_wsdot_color(color_i, hex_or_rgb='rgb')
+                else:
+                    current_year = False
+                    line_color = get_wsdot_color(color_i, alpha=50, hex_or_rgb='rgb')
+                chart_dataset = all_chart_data.filter(report_year=year)
+                if chart_dataset.count() >= 1:
+                    chart_dataset = [result["result"] for result in chart_dataset]
+                    chart_datasets[year] = [json.dumps(list(chart_dataset)), line_color, current_year]
+                    color_i = color_i + 1
+
+            all_charts.append(chart_datasets)
+
+    return render(request, 'pages/vanpool_statewide_summary.html', {'settings_form': settings_form,
+                                                                    'chart_label': x_axis_labels,
+                                                                    'all_charts': all_charts,
+                                                                    'summary_table_data': summary_table_data,
+                                                                    'summary_table_data_total': summary_table_data_total,
+                                                                    'include_regions': include_regions,
+                                                                    'include_agency_classifications': include_agency_classifications
+                                                                    }
+                  )
 
 
 @login_required(login_url='/Panacea/login')
@@ -480,9 +544,7 @@ def OrganizationProfile(request):
         if form.is_valid():
             # TODO figure out why is this here
             if not 'state' in form.data:
-                print(user_profile_data.organization.state)
                 form.data['state'] = user_profile_data.organization.state
-                print(form.data['state'])
             form.save()
             return redirect('OrganizationProfile')
         else:
@@ -583,7 +645,7 @@ def Admin_assignPermissions(request, active=None):
                     my_profile.profile_complete = True
                     my_profile.active_permissions_request = False
                     my_profile.save()
-                    print(email)
+                    # print(email)
                 form.save()
 
         return JsonResponse({'success': True})

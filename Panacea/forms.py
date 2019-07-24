@@ -7,6 +7,7 @@ from django.utils.translation import gettext, gettext_lazy as _
 from phonenumber_field.formfields import PhoneNumberField
 from localflavor.us.forms import USStateSelect, USZipCodeField
 from django.core import serializers
+from dateutil.relativedelta import relativedelta
 from tempus_dominus.widgets import DatePicker
 from .widgets import FengyuanChenDatePickerInput
 
@@ -108,6 +109,7 @@ class ProfileSetup_PhoneAndOrg(forms.ModelForm):
 
 
 class user_profile_custom_user(forms.ModelForm):
+
     class Meta:
         model = custom_user
         fields = ('first_name', 'last_name', 'email')
@@ -121,6 +123,7 @@ class user_profile_custom_user(forms.ModelForm):
 
 
 class user_profile_profile(forms.ModelForm):
+
     class Meta:
         model = profile
         queryset = organization.objects.all()
@@ -157,7 +160,7 @@ class ReportSelection(forms.ModelForm):
 
     class Meta:
         model = profile
-        fields = ('reports_on',)
+        fields = ('reports_on', )
 
 
 class VanpoolMonthlyReport(forms.ModelForm):
@@ -205,10 +208,8 @@ class VanpoolMonthlyReport(forms.ModelForm):
                                                report_year=report_year,
                                                report_month=report_month).values('vanpool_groups_in_operation')
         if vp_ops[0]['vanpool_groups_in_operation'] == None:
-            error_list.append(
-                'You must fill out the data for the previous month first. Please refer to the previous reporting month')
-            raise forms.ValidationError(
-                'You must fill out the data for the previous month first. Please refer to the previous reporting month')
+            raise forms.ValidationError('You must fill out the data for the previous month first. Please refer to the previous reporting month')
+            error_list.append('You must fill out the data for the previous month first. Please refer to the previous reporting month')
             return error_list
         else:
             for category in self.cleaned_data.keys():
@@ -232,6 +233,7 @@ class VanpoolMonthlyReport(forms.ModelForm):
                     category = category.title()
                     error_list.append('{} have increased more than 20%. Please confirm this number.'.format(category))
 
+                # Math error here I changed both to be consistent
                 elif new_data <= old_data * 0.8:
                     category = category.replace('_', ' ')
                     category = category.title()
@@ -240,33 +242,23 @@ class VanpoolMonthlyReport(forms.ModelForm):
                     old_van_number = vanpool_report.objects.filter(
                         organization_id=self.user_organization,
                         report_year=report_year,
-                        report_month=report_month).values('vanpool_groups_in_operation', 'vanpool_group_starts',
-                                                          'vanpool_group_folds')
+                        report_month=report_month).values('vanpool_groups_in_operation', 'vanpool_group_starts', 'vanpool_group_folds')
                     old_van_number = old_van_number[0]
-                    if new_data != (
-                            old_van_number['vanpool_groups_in_operation'] + old_van_number['vanpool_group_starts'] -
-                            old_van_number['vanpool_group_folds']):
-                        error_list.append(
-                            'The Vanpool Groups in Operation do not reflect the folds and started recorded last month')
+                    if new_data != (old_van_number['vanpool_groups_in_operation'] + old_van_number['vanpool_group_starts'] - old_van_number['vanpool_group_folds']):
+                        error_list.append('The Vanpool Groups in Operation do not reflect the folds and started recorded last month')
             return error_list
 
     def clean(self):
         cleaned_data = super(VanpoolMonthlyReport, self).clean()
         # try except block because acknowledge validation errors only exists after the validation has taken place
-        print("Try if results: " + str(cleaned_data['acknowledge_validation_errors']))
         try:
-            if cleaned_data['acknowledge_validation_errors']:
-                print("clean-return-clean-data")
+            if cleaned_data['acknowledge_validation_errors'] == True:
                 return cleaned_data
             else:
-                print("else")
                 raise NameError('run_validator')
         except:
-            print("except")
             error_list = self.validator_method()
-            print('error list len: ' + str(len(error_list)))
             if len(error_list) > 0:
-                print(error_list)
                 raise forms.ValidationError(error_list)
             return cleaned_data
 
@@ -308,7 +300,6 @@ class VanpoolMonthlyReport(forms.ModelForm):
 
     # TODO test how easily the fields can be extracted
     def save(self, commit=True):
-        print("save")
         instance = super(VanpoolMonthlyReport, self).save(commit=False)
         if self.cleaned_data['new_data_change_explanation'] != None:
             past_explanations = vanpool_report.objects.get(id=instance.id).data_change_explanation
@@ -337,7 +328,7 @@ class organization_profile(forms.ModelForm):
         )
 
         model = organization
-        fields = ('name', 'address_line_1', 'address_line_2', 'city', 'state', 'zip_code', 'vanshare_program')
+        fields = ('name', 'address_line_1', 'address_line_2', 'city', 'state', 'zip_code', 'vanshare_program', 'in_puget_sound_area')
         widgets = {
             'name': forms.TextInput(
                 attrs={'class': 'form-control-plaintext', 'readonly': 'True', 'style': "width:350px"}),
@@ -347,13 +338,15 @@ class organization_profile(forms.ModelForm):
                 attrs={'class': 'form-control-plaintext', 'readonly': 'True', 'style': "width:350px"}),
             'city': forms.TextInput(
                 attrs={'class': 'form-control-plaintext', 'readonly': 'True'}),
-            'state': forms.Select(attrs={'class': 'form-control form-control-plaintext', 'readonly': 'True',
-                                         'style': 'pointer-events: none'}),
+            'state': forms.Select(attrs={'class': 'form-control form-control-plaintext', 'readonly': 'True', 'style': 'pointer-events: none'}),
             'zip_code': forms.TextInput(
                 attrs={'class': 'form-control-plaintext', 'readonly': 'True'}),
             'vanshare_program': forms.Select(choices=TRUE_FALSE_CHOICES,
                                              attrs={'class': 'form-control form-control-plaintext', 'readonly': 'True',
-                                                    'style': 'pointer-events: none'})
+                                                    'style': 'pointer-events: none'}),
+            'in_puget_sound_area': forms.Select(choices=TRUE_FALSE_CHOICES,
+                                                attrs={'class': 'form-control-plaintext', 'readonly': 'True',
+                                                       'style': 'pointer-events: none'})
         }
 
 
@@ -385,6 +378,7 @@ class request_user_permissions(forms.ModelForm):
         }
 
 
+# TODO rename this form to something less generic
 class chart_form(forms.Form):
     MEASURE_CHOICES_DICT = {
         "total_miles_traveled": "Total Miles Traveled",
@@ -420,7 +414,7 @@ class chart_form(forms.Form):
     chart_measure = forms.CharField(widget=forms.Select(choices=MEASURE_CHOICES,
                                                         attrs={'class': 'form-control my_chart_control',
                                                                'data-form-name': "chart_form"}))
-    chart_organizations = forms.ModelChoiceField(queryset=organization.objects.all(),
+    chart_organizations = forms.ModelChoiceField(queryset=organization.objects.all().order_by('name'), empty_label=None,
                                                  widget=forms.CheckboxSelectMultiple(
                                                      attrs={'class': 'form-check checkbox-grid',
                                                             'data-form-name': "chart_form"}))
@@ -429,7 +423,53 @@ class chart_form(forms.Form):
                                                                   'data-form-name': "chart_form"}))
 
 
+class statewide_summary_settings(forms.Form):
+    INCLUDE_YEARS_CHOICES = (
+        (1, "One Year"),
+        (2, "Two Years"),
+        (3, "Three Years"),
+        (5, "Five Years"),
+        (10, "Ten Years"),
+        (99, "All")
+    )
+
+    INCLUDE_REGION_CHOICES = (
+        ("Puget Sound", "Puget Sound"),
+        ("Outside Puget Sound", "Outside Puget Sound"),
+        ("Statewide", "Statewide")
+    )
+
+    include_years = forms.CharField(widget=forms.Select(choices=INCLUDE_YEARS_CHOICES,
+                                                        attrs={'class': 'form-control',
+                                                               'data-form-name': "chart_form"}))
+
+    include_regions = forms.CharField(widget=forms.Select(choices=INCLUDE_REGION_CHOICES,
+                                                        attrs={'class': 'form-control ',
+                                                               'data-form-name': "chart_form"}))
+    include_agency_classifications = forms.MultipleChoiceField(choices=organization.AGENCY_CLASSIFICATIONS,
+                                                       widget=forms.CheckboxSelectMultiple(
+            attrs={'class': 'form-check',
+                   'data-form-name': "chart_form"}))
+
+
+
+
+
+
+
+
 class submit_a_new_vanpool_expansion(forms.ModelForm):
+    CHOICES = (
+        ('11-13', '11-13'),
+        ('13-15', '13-15'),
+        ('15-17', '15-17'),
+        ('17-19', '17-19'),
+        ('19-21', '19-21'),
+        ('21-23', '21-23'),
+        ('23-25', '23-25'),
+        ('25-27', '25-27')
+    )
+
     queryset = organization.objects.all().order_by('name')
     organization = forms.ModelChoiceField(queryset=queryset,
                                           widget=forms.Select(attrs={'class': 'form-control'}))
@@ -438,24 +478,29 @@ class submit_a_new_vanpool_expansion(forms.ModelForm):
     latest_vehicle_acceptance = forms.DateTimeField(input_formats=['%Y-%m-%d'],
                                                     widget=forms.DateInput(attrs={'class': 'form-control'}))
 
-    # TODO is this used?
-    def as_myp(self):
+    awarded_biennium = forms.CharField(widget=forms.Select(choices = CHOICES, attrs = {'class': 'form-control'}))
+
+    notes = forms.CharField(widget = forms.Textarea(attrs={'class': 'form-control', 'rows':3}), required = False)
+
+
+
+    ''' def as_myp(self):
         return self._html_output(
             normal_row='<p%(html_class_attr)s>%(label)s</p> <p>%(field)s%(help_text)s</p>',
             error_row='%s',
             row_ender='</p>',
             help_text_html=' <span class="helptext">%s</span>',
-            errors_on_separate_row=True)
+            errors_on_separate_row=True)'''
 
     class Meta:
         model = vanpool_expansion_analysis
 
         fields = ['organization', 'date_of_award', 'expansion_vans_awarded', 'latest_vehicle_acceptance',
-                  'vanpools_in_service_at_time_of_award', 'notes']
+                  'vanpools_in_service_at_time_of_award', 'notes', 'awarded_biennium', 'expansion_goal', 'deadline']
         required = ['organization', 'date_of_award', 'expansion_vans_awarded', 'latest_vehicle_acceptance',
-                    'extension_granted', 'vanpools_in_service_at_time_of_award', 'expired']
+                    'extension_granted', 'vanpools_in_service_at_time_of_award', 'expired', 'vanpool_goal_met']
 
-        labels = {'organization': False,
+        labels = {'organization': "Please Select Your Agency",
                   'date_of_award': 'When was the vanpool expansion awarded? Use format YYYY-MM-DD',
                   'expansion_vans_awarded': 'Number of vans awarded in the expansion',
                   'latest_vehicle_acceptance': 'Latest date that vehicle was accepted? Use format YYYY-MM-DD',
@@ -470,8 +515,15 @@ class submit_a_new_vanpool_expansion(forms.ModelForm):
             'latest_vehicle_acceptance': forms.DateInput(attrs={'class': 'form-control'}),
             'expansion_vans_awarded': forms.NumberInput(attrs={'class': 'form-control'}),
             'vanpools_in_service_at_time_of_award': forms.NumberInput(attrs={'class': 'form-control'}),
-            'notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 3})
+
         }
+
+    def save(self, commit=True):
+        instance = super(submit_a_new_vanpool_expansion, self).save(commit=False)
+        if commit:
+            instance.save()
+        return instance
+
 
 
 class Modify_A_Vanpool_Expansion(forms.ModelForm):
@@ -482,10 +534,19 @@ class Modify_A_Vanpool_Expansion(forms.ModelForm):
 
         fields = ['expansion_vans_awarded', 'latest_vehicle_acceptance', 'extension_granted', 'expired', 'notes']
         widgets = {'expansion_vans_awarded': forms.NumberInput(attrs={'class': 'form-control'}),
-                   'notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'style': 'max-width:600px'}),
-                   'extension_granted': forms.CheckboxInput(
-                       attrs={'class': 'form-control', 'style': 'width:auto;zoom:200%'}),
+                   'notes': forms.Textarea(attrs={'class': 'form-control', 'rows':3, 'style': 'max-width:600px'}),
+                   'extension_granted': forms.CheckboxInput(attrs={'class': 'form-control', 'style': 'width:auto;zoom:200%'}),
                    'expired': forms.CheckboxInput(attrs={'class': 'form-control',
                                                          'style': 'width:auto;zoom:200%;float:left;margin-right:0.5rem',
                                                          'disabled': 'disabled'})
                    }
+
+        #TODO a modal form here for if an extension is granted and one wnated to change the deadline, since at this point the deadline already exists
+    def save(self, commit=True):
+        instance = super(Modify_A_Vanpool_Expansion, self).save(commit=False)
+        self.cleaned_data['deadline'] = self.cleaned_data['latest_vehicle_acceptance'] + relativedelta(months=+18)
+        if commit:
+            instance.save()
+        return instance
+
+
