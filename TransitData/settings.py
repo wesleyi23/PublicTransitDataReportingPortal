@@ -52,6 +52,7 @@ INSTALLED_APPS = [
     'Panacea.apps.PanaceaConfig',
     'django.forms',
     'django_filters',
+    'simple_history',
 ]
 
 MIDDLEWARE = [
@@ -62,6 +63,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'simple_history.middleware.HistoryRequestMiddleware',
 ]
 
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'  # During development only
