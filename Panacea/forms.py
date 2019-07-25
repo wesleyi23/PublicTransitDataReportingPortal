@@ -468,14 +468,6 @@ class submit_a_new_vanpool_expansion(forms.ModelForm):
 
 
 
-    ''' def as_myp(self):
-        return self._html_output(
-            normal_row='<p%(html_class_attr)s>%(label)s</p> <p>%(field)s%(help_text)s</p>',
-            error_row='%s',
-            row_ender='</p>',
-            help_text_html=' <span class="helptext">%s</span>',
-            errors_on_separate_row=True)'''
-
     class Meta:
         model = vanpool_expansion_analysis
 
@@ -502,11 +494,6 @@ class submit_a_new_vanpool_expansion(forms.ModelForm):
 
         }
 
-    def save(self, commit=True):
-        instance = super(submit_a_new_vanpool_expansion, self).save(commit=False)
-        if commit:
-            instance.save()
-        return instance
 
 
 class Modify_A_Vanpool_Expansion(forms.ModelForm):

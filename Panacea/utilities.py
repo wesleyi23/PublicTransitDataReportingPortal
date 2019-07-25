@@ -14,6 +14,7 @@ from dateutil.relativedelta import relativedelta
 def calculate_latest_vanpool():
     latestVanData = vanpool_expansion_analysis.objects.values('id', 'date_of_award', 'deadline', 'organization_id').order_by('organization_id')
     for van in latestVanData:
+        print(van)
         awardMonth = van['date_of_award'].month
         awardYear = van['date_of_award'].year
         deadlineYear = van['deadline'].year
