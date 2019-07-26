@@ -380,12 +380,6 @@ def Vanpool_data(request):
 @login_required(login_url='/Panacea/login')
 @group_required('Vanpool reporter', 'WSDOT staff')
 def vanpool_organization_summary(request, org_id=None):
-    # TODO refactor these two Don't Repeat Yourself (DRY)
-    MEASURES = [
-        ("vanpool_miles_traveled", "vanshare_miles_traveled"),
-        ("vanpool_passenger_trips", "vanshare_passenger_trips"),
-        ("vanpool_groups_in_operation", "vanshare_groups_in_operation"),
-    ]
 
     if request.POST:
         settings_form = organisation_summary_settings(data=request.POST)
@@ -422,7 +416,6 @@ def vanpool_organization_summary(request, org_id=None):
 @login_required(login_url='/Panacea/login')
 @group_required('Vanpool reporter', 'WSDOT staff')
 def vanpool_statewide_summary(request):
-    # TODO refactor these two Don't Repeat Yourself (DRY)
 
     if request.POST:
         settings_form = statewide_summary_settings(data=request.POST)
