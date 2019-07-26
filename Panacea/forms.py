@@ -413,7 +413,6 @@ class chart_form(forms.Form):
                                                                   'data-form-name': "chart_form"}))
 
 
-# TODO refactor these two Don't Repeat Yourself (DRY)
 class statewide_summary_settings(forms.Form):
     INCLUDE_YEARS_CHOICES = (
         (1, "One Year"),
@@ -443,7 +442,6 @@ class statewide_summary_settings(forms.Form):
                                                                           'data-form-name': "chart_form"}))
 
 
-# TODO refactor these two Don't Repeat Yourself (DRY)
 class organisation_summary_settings(forms.Form):
     INCLUDE_YEARS_CHOICES = (
         (1, "One Year"),
