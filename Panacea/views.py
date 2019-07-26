@@ -48,7 +48,7 @@ from .forms import CustomUserCreationForm, \
     Modify_A_Vanpool_Expansion, \
     request_user_permissions, \
     statewide_summary_settings, \
-    Modify_A_Vanpool_Expansion
+    Modify_A_Vanpool_Expansion, organisation_summary_settings
 from django.utils.translation import ugettext_lazy as _
 from .models import profile, vanpool_report, custom_user,  vanpool_expansion_analysis, organization
 from django.contrib.auth.models import Group
@@ -374,6 +374,110 @@ def Vanpool_data(request):
                                                            })
     else:
         raise Http404
+
+
+@login_required(login_url='/Panacea/login')
+@group_required('Vanpool reporter', 'WSDOT staff')
+def vanpool_organization_summary(request, org_id=None):
+
+
+
+
+
+    MEASURES = [
+        ("vanpool_miles_traveled", "vanshare_miles_traveled"),
+        ("vanpool_passenger_trips", "vanshare_passenger_trips"),
+        ("vanpool_groups_in_operation", "vanshare_groups_in_operation"),
+    ]
+
+    if request.POST:
+        settings_form = organisation_summary_settings(data=request.POST)
+        include_years = int(settings_form.data['include_years'])
+        org_id = settings_form.data['summary_org']
+
+    else:
+        include_years = 3
+        org_id = profile.objects.get(custom_user_id=request.user.id).organization_id
+        settings_form = organisation_summary_settings(initial={
+            "include_years": include_years,
+            "summary_org": org_id
+        })
+
+    if settings_form.is_valid:
+        org_name = organization.objects.get(id=org_id).name
+        all_chart_data = [report for report in
+                          vanpool_report.objects.order_by('report_year', 'report_month').all() if
+                          report.report_year >= datetime.datetime.today().year - include_years]
+        x_axis_labels = [report.report_month for report in all_chart_data]
+        x_axis_labels = list(dict.fromkeys(x_axis_labels))
+        x_axis_labels = list(map(lambda x: calendar.month_name[x], x_axis_labels))
+
+        years = range(datetime.datetime.today().year - include_years + 1, datetime.datetime.today().year + 1)
+
+        all_data = vanpool_report.objects.filter(report_year__gte=datetime.datetime.today().year - (include_years - 1),
+                                                 report_year__lte=datetime.datetime.today().year,
+                                                 organization_id=org_id).order_by('report_year', 'report_month').all()
+
+        # TODO once the final data is in we need to confirm that the greenhouse gas calculations are correct
+        summary_table_data = vanpool_report.objects.filter(report_year__gte=datetime.datetime.today().year - (include_years - 1),
+                                                           report_year__lte=datetime.datetime.today().year,
+                                                           organization_id=org_id,
+                                                           report_date__isnull=False,
+                                                           vanpool_passenger_trips__isnull=False).values('report_year').annotate(
+            table_total_miles_traveled=Sum(F(MEASURES[0][0]) + F(MEASURES[0][1])),
+            table_total_passenger_trips=Sum(F(MEASURES[1][0]) + F(MEASURES[2][1])),
+            table_total_groups_in_operation=Sum(F(MEASURES[2][0]) + F(MEASURES[2][1])) / Count('report_month', distinct=True),
+            green_house_gas_prevented=Sum((F(MEASURES[0][0]) + F(MEASURES[0][1])) * (F('average_riders_per_van') - 1)) * green_house_gas_per_sov_mile() - Sum(F(MEASURES[0][0]) + F(MEASURES[0][1])) * green_house_gas_per_vanpool_mile()
+        )
+
+        # TODO once the final data is in we need to confirm that the greenhouse gas calculations are correct
+        summary_table_data_total = vanpool_report.objects.filter(report_year__gte=datetime.datetime.today().year - (include_years - 1),
+                                                                 report_year__lte=datetime.datetime.today().year,
+                                                                 organization_id=org_id).aggregate(
+            table_total_miles_traveled=Sum(F(MEASURES[0][0]) + F(MEASURES[0][1])),
+            table_total_passenger_trips=Sum(F(MEASURES[1][0]) + F(MEASURES[2][1])),
+            green_house_gas_prevented=Sum((F(MEASURES[0][0]) + F(MEASURES[0][1])) * (
+                    F('average_riders_per_van') - 1)) * green_house_gas_per_sov_mile() - Sum(
+                F(MEASURES[0][0]) + F(MEASURES[0][1])) * green_house_gas_per_vanpool_mile()
+        )
+
+        all_charts = list()
+        for i in range(len(MEASURES) + 1):
+            # to include green house gasses
+            if i == len(MEASURES):
+                all_chart_data = all_data.values('report_year', 'report_month').annotate(
+                    result=Sum((F(MEASURES[0][0]) + F(MEASURES[0][1])) * (F('average_riders_per_van') - 1)) * green_house_gas_per_sov_mile() - Sum(F(MEASURES[0][0]) + F(MEASURES[0][1])) * green_house_gas_per_vanpool_mile()
+                )
+            else:
+                all_chart_data = all_data.values('report_year', 'report_month').annotate(
+                    result=Sum(F(MEASURES[i][0]) + F(MEASURES[i][1]))
+                )
+
+            chart_datasets = {}
+            color_i = 0
+            for year in years:
+                if year == datetime.datetime.today().year:
+                    current_year = True
+                    line_color = get_wsdot_color(color_i, hex_or_rgb='rgb')
+                else:
+                    current_year = False
+                    line_color = get_wsdot_color(color_i, alpha=50, hex_or_rgb='rgb')
+                chart_dataset = all_chart_data.filter(report_year=year)
+                if chart_dataset.count() >= 1:
+                    chart_dataset = [result["result"] for result in chart_dataset]
+                    chart_datasets[year] = [json.dumps(list(chart_dataset)), line_color, current_year]
+                    color_i = color_i + 1
+
+            all_charts.append(chart_datasets)
+
+    return render(request, 'pages/vanpool_organization_summary.html', {'settings_form': settings_form,
+                                                                    'chart_label': x_axis_labels,
+                                                                    'all_charts': all_charts,
+                                                                    'summary_table_data': summary_table_data,
+                                                                    'summary_table_data_total': summary_table_data_total,
+                                                                    'organization_name': org_name
+                                                                    }
+                  )
 
 
 @login_required(login_url='/Panacea/login')

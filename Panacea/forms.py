@@ -174,7 +174,7 @@ class VanpoolMonthlyReport(forms.ModelForm):
 
     changeReason = forms.CharField(required=False, widget=forms.Textarea(
         attrs={'class': 'form-control input-sm', 'rows': 3, 'display': False})
-                                                  )
+                                   )
 
     acknowledge_validation_errors = forms.BooleanField(
         label='Check this box to confirm that your submitted numbers are correct, even though there are validation errors.',
@@ -413,6 +413,7 @@ class chart_form(forms.Form):
                                                                   'data-form-name': "chart_form"}))
 
 
+# TODO refactor these two Don't Repeat Yourself (DRY)
 class statewide_summary_settings(forms.Form):
     INCLUDE_YEARS_CHOICES = (
         (1, "One Year"),
@@ -434,12 +435,32 @@ class statewide_summary_settings(forms.Form):
                                                                'data-form-name': "chart_form"}))
 
     include_regions = forms.CharField(widget=forms.Select(choices=INCLUDE_REGION_CHOICES,
-                                                        attrs={'class': 'form-control ',
-                                                               'data-form-name': "chart_form"}))
+                                                          attrs={'class': 'form-control ',
+                                                                 'data-form-name': "chart_form"}))
     include_agency_classifications = forms.MultipleChoiceField(choices=organization.AGENCY_CLASSIFICATIONS,
-                                                       widget=forms.CheckboxSelectMultiple(
-            attrs={'class': 'form-check',
-                   'data-form-name': "chart_form"}))
+                                                               widget=forms.CheckboxSelectMultiple(
+                                                                   attrs={'class': 'form-check',
+                                                                          'data-form-name': "chart_form"}))
+
+
+# TODO refactor these two Don't Repeat Yourself (DRY)
+class organisation_summary_settings(forms.Form):
+    INCLUDE_YEARS_CHOICES = (
+        (1, "One Year"),
+        (2, "Two Years"),
+        (3, "Three Years"),
+        (5, "Five Years"),
+        (10, "Ten Years"),
+        (99, "All")
+    )
+
+    include_years = forms.CharField(widget=forms.Select(choices=INCLUDE_YEARS_CHOICES,
+                                                        attrs={'class': 'form-control',
+                                                               'data-form-name': "chart_form"}))
+    summary_org = forms.ModelChoiceField(queryset=organization.objects.all(),
+                                         widget=forms.Select(choices=organization.objects.all(),
+                                                             attrs={'class': 'form-control',
+                                                                    'data-form-name': "chart_form"}))
 
 
 class submit_a_new_vanpool_expansion(forms.ModelForm):
