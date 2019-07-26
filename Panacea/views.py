@@ -33,6 +33,7 @@ from django.forms.widgets import CheckboxInput
 from .utilities import monthdelta, get_wsdot_color, green_house_gas_per_vanpool_mile, green_house_gas_per_sov_mile
 from django.http import Http404
 from .filters import VanpoolExpansionFilter
+from django.conf import settings
 
 from .forms import CustomUserCreationForm, \
     custom_user_ChangeForm, \
@@ -182,7 +183,12 @@ def ProfileSetup_ReportSelection(request):
                 form.save()
                 current_user_instance.profile_submitted = True
                 current_user_instance.save()
-                profile_created.delay(request.user.id)
+                emailRecipient = custom_user.objects.filter(id = request.user.id).values('first_name','last_name')
+                name = emailRecipient.values_list('first_name', flat=True)
+                emailAddress = custom_user.objects.filter(id = request.user.id).values_list('email', flat = True)
+                msg_plain = render_to_string('emails/registration_email.txt', {'firstname':name[0]})
+                msg_html = render_to_string('emails/registration_email.html', {'firstname': name[0]})
+                send_mail('Welcome to WSDOT\'s Public Transit Data Reporting Portal', msg_plain, settings.EMAIL_HOST_USER, [emailAddress[0]], html_message=msg_html,)
                 return JsonResponse({'redirect': '../dashboard'})
             else:
                 return JsonResponse({'error': form.errors})

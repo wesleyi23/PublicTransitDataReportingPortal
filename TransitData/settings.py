@@ -37,6 +37,7 @@ ALLOWED_HOSTS = []
 # pip install django-widget-tweaks
 # pip install django-tempus-dominus
 
+
 INSTALLED_APPS = [
     'bootstrap4',
     'phonenumber_field',
@@ -53,6 +54,8 @@ INSTALLED_APPS = [
     'django.forms',
     'django_filters',
     'simple_history',
+    'djcelery',
+
 ]
 
 MIDDLEWARE = [
@@ -66,7 +69,12 @@ MIDDLEWARE = [
     'simple_history.middleware.HistoryRequestMiddleware',
 ]
 
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'  # During development only
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_HOST_USER = 'ptddatateam@gmail.com'
+EMAIL_HOST_PASSWORD = 'flyyzcoccfrxyaap'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+DEFAULT_FROM_EMAIL = 'ptddatateam@gmail.com'
 
 ROOT_URLCONF = 'TransitData.urls'
 
