@@ -117,7 +117,7 @@ def print_dashboard_cards_data(data):
         else:
             percent = "<font class='text-success'>" + str(percent) + "%</font>"
 
-    return str(data[0]) + " | (" + str(percent) + ")"
+    return f'{data[0]:,}' + " | " + str(percent)
 
 
 @register.filter(name='has_group')
