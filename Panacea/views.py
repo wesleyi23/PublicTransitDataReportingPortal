@@ -274,13 +274,15 @@ def Vanpool_expansion_submission(request):
     if request.method == 'POST':
         form = submit_a_new_vanpool_expansion(data = request.POST)
         if form.is_valid():
-            print(form.fields)
-            form.cleaned_data['expansion_goal'] = int(round(form.cleaned_data['expansion_vans_awarded'] * .8, 0) + \
-                                                  form.cleaned_data['vanpools_in_service_at_time_of_award'])
-            form.cleaned_data['deadline'] = form.cleaned_data['latest_vehicle_acceptance'] + relativedelta(months=+18)
-
-            form.save()
-            # TODO Do you use AJAX on this - What is this for?
+            instance = form.save(commit = False)
+            instance.deadline = instance.latest_vehicle_acceptance + relativedelta(months=+18)
+            instance.expansion_goal = int(round(instance.expansion_vans_awarded * .8, 0) + \
+                                                      instance.vanpools_in_service_at_time_of_award)
+            instance.expired = False
+            instance.vanpool_goal_met = False
+            instance.extension_granted = False
+            instance.save()
+            # the redirect here is to the expansion page, which triggers the sqlite queries to populate the rest of the data
             return JsonResponse({'redirect': '../Expansion/'})
         else:
             return render(request, 'pages/Vanpool_expansion_submission.html', {'form':form})
