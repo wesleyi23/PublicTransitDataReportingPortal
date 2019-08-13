@@ -27,7 +27,6 @@ from dateutil.relativedelta import relativedelta
 import datetime
 
 from Panacea.decorators import group_required
-from .tasks import profile_created
 from django.core.exceptions import ValidationError
 from django.forms.widgets import CheckboxInput
 from .utilities import monthdelta, get_wsdot_color, green_house_gas_per_vanpool_mile, green_house_gas_per_sov_mile
@@ -52,7 +51,7 @@ from .forms import CustomUserCreationForm, \
     Modify_A_Vanpool_Expansion
 from django.utils.translation import ugettext_lazy as _
 from .models import profile, vanpool_report, custom_user,  vanpool_expansion_analysis, organization
-from django.contrib.auth.models import Group
+from django.contrib.auth.models import Group, Permission
 from .utilities import calculate_latest_vanpool, find_maximum_vanpool, calculate_remaining_months, calculate_if_goal_has_been_reached
 
 
@@ -112,6 +111,7 @@ def dashboard(request):
             next_vanpool_report_status = vanpool_report.objects.get(organization_id=user_org_id,
                                                                     report_month=recent_vanpool_report.report_month + month_add,
                                                                     report_year=recent_vanpool_report.report_year + year_add).status
+
             return next_vanpool_report_status
         return render(request, 'pages/dashboard.html', {
             'groups_in_operation': get_most_recent_and_change("total_groups_in_operation"),
@@ -583,7 +583,7 @@ def Permissions(request):
             send_mail(
                 subject='Permissions Request - Public Transportation Reporting Portal',
                 message=msg_plain,
-                from_email='some@sender.com',  # TODO change this to the correct email address
+                from_email=settings.EMAIL_HOST_USER,  # TODO change this to the correct email address
                 recipient_list=['wesleyi@wsdot.wa.gov', ],  # TODO change this to the correct email address
                 html_message=msg_html,
             )
@@ -592,7 +592,7 @@ def Permissions(request):
             send_mail(
                 subject='Active Permissions Request - Public Transportation Reporting Portal',
                 message=msg_plain,
-                from_email='some@sender.com',  # TODO change this to the correct email address
+                from_email=settings.EMAIL_HOST_USER,  # TODO change this to the correct email address
                 recipient_list=['wesleyi@wsdot.wa.gov', ],  # TODO change this to the correct email address
                 html_message=msg_html,
             )
@@ -648,12 +648,23 @@ def Admin_assignPermissions(request, active=None):
                 if len(form.changed_data) > 0:
                     data = form.cleaned_data
                     email = data['email']
+                    print(email)
                     this_user_id = custom_user.objects.get(email=email).id
+                    groupList = []
+                    customGroup = custom_user.objects.filter(id = this_user_id)
+                    for i in customGroup:
+                        groupList.append(list(i.groups.all()))
+                    groupList = groupList[0]
                     my_profile = profile.objects.get(custom_user_id=this_user_id)
                     my_profile.profile_complete = True
                     my_profile.active_permissions_request = False
                     my_profile.save()
-                    # print(email)
+                    print(groupList)
+                    msg_plain = render_to_string('emails/permissions_update.txt', {'permissions': groupList})
+                    msg_html = render_to_string('emails/permissions_update.html', {'permissions': groupList})
+                    send_mail('Your permissions at WSDOT\'s Public Transit Data Reporting Portal have been upddated', msg_plain,
+                             settings.EMAIL_HOST_USER, [email,], html_message=msg_html, )
+
                 form.save()
 
         return JsonResponse({'success': True})

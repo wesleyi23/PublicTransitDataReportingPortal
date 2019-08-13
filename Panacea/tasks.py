@@ -6,26 +6,6 @@ from .models import custom_user, organization, vanpool_report, profile
 import datetime
 from dateutil import relativedelta
 
-@task
-def profile_created(user_id):
-    user = custom_user.objects.filter(id=user_id).values('first_name', 'last_name', 'email')
-    registration_email = '''Dear {} {},
-                Thank you for creating a profile on the Public Transportation Division Reporting Terminal. Your submission is being processed
-                and we will update your permissions shortly. Once we have done this, you will receive an email with additional information on 
-                how to submit your data.'''.format(user[0]['first_name'], user[0]['last_name'])
-    mail_sent = send_mail('Thank you for setting up your profile on WA Transit Data', registration_email,
-              'webmaster@watransitdata.wa.gov', [user[0]['email']], fail_silently=False)
-    return mail_sent
-
-
-# going to need a task for resetting password
-
-# going to need a task for requesting new permissions
-
-# going to need a periodic task that emails shamus whenever anyone's deadline for vanpool expanison is night
-
-
-
 
 @periodic_task(run_every = crontab(minute=0, hour=7, day_of_month="mon"), name = "week_late", ignore_result = True)
 def week_late():
