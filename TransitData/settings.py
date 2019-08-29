@@ -11,6 +11,9 @@ https://docs.djangoproject.com/en/2.1/ref/settings/
 """
 
 import os
+from celery.schedules import crontab
+
+os.environ.setdefault('FORKED_BY_MULTIPROCESSING', '1')
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -37,6 +40,8 @@ ALLOWED_HOSTS = []
 # pip install django-widget-tweaks
 # pip install django-tempus-dominus
 
+# pip install eventlet
+
 
 INSTALLED_APPS = [
     'bootstrap4',
@@ -54,7 +59,7 @@ INSTALLED_APPS = [
     'django.forms',
     'django_filters',
     'simple_history',
-    'djcelery',
+    'django_celery_beat',
 
 ]
 
@@ -69,6 +74,7 @@ MIDDLEWARE = [
     'simple_history.middleware.HistoryRequestMiddleware',
 ]
 
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_HOST_USER = 'ptddatateam@gmail.com'
 EMAIL_HOST_PASSWORD = 'flyyzcoccfrxyaap'
@@ -157,4 +163,13 @@ ENABLE_PERMISSIONS = True
 
 PHONENUMBER_DEFAULT_REGION = 'US'
 
-CELERY_BROKER_URL = 'amqp://localhost'
+CELERY_BROKER_URL = 'redis://localhost:6379'
+CELERY_RESULT_BACKEND = 'redis://localhost:6379'
+CELERY_ACCEPT_CONTENT = ['application/json']
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TASK_SERIALIZER = 'json'
+
+CELERY_BEAT_SCHEDULE = {'send_emails_now': {'task': 'Panacea.tasks.send_nathan_email',
+                                             'schedule': crontab(minute="*")}
+
+}

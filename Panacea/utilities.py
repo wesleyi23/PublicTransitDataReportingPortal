@@ -1,6 +1,7 @@
-from .models import organization, vanpool_expansion_analysis, vanpool_report
+from .models import organization, vanpool_expansion_analysis, vanpool_report, custom_user, profile
 from django.db.models import Max, Subquery, F, OuterRef, Case, CharField, Value, When
-
+from django.core.mail import send_mail
+from TransitData import settings
 import datetime
 from dateutil.relativedelta import relativedelta
 #####
@@ -105,6 +106,9 @@ def calculate_remaining_months():
         else:
             vanpool_expansion_analysis.objects.filter(id=vea['id']).update(months_remaining= '{} months'.format(remainingMonths))
 
+
+def get_latest_report():
+    vanpool_report.objects.all()
 
 
 
