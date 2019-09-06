@@ -1,0 +1,26 @@
+
+The following emails exist and are sent based on the outlined prompts below:
+
+* Email Type: Registration Email
+  Prompt: Logging and Registering in the System
+  Method of Sending: governed by the send_mail function in the views sheet
+  Email's Role: Tells a user that they are in the system and that they are registered
+
+ * Email Type: Permissions Update
+   Prompt: Any changes to permissions
+   Method of Sending: governed by the send_mail function which is in views, and is connected to any change in permissions (so 3 changes = 3 emails)
+   Email's Role: Tells a user that they have updated permissions
+
+ * Email Type: Past Due Email
+   Prompt: Due date is approaching/vanpool report submissions is due
+   Method of Sending: governed by celery/crontab, boots on deployment from a container, it's a repurposed email that is sent 5 day before the submission is due,
+   one week after it is late (this week late one will send a reminder for every week after it is late), on the day of the due date, one day after it is due, and two days after it is due.
+
+ * Email Type: Monthly Rollup of Vanpool Expansion Analysis
+   Prompt: First of the month check in on where the vanpool expansions are, which have met their goals, and which have not
+   Method of Sending: governed by celery/crontab, email is sent to Shamus at the beginning of every month.
+
+  * Email Type: Monthly Rollup of Vanpool Reporters
+    Prompt: first of the month check in for Shamus on where vanpool reporters are
+    Method of Sending: governed by celery/crontab, email is sent to Shamus at the beginning of every month with a list of missed deadlines for vanpool reportin
+

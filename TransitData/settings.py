@@ -169,7 +169,7 @@ CELERY_ACCEPT_CONTENT = ['application/json']
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TASK_SERIALIZER = 'json'
 
-CELERY_BEAT_SCHEDULE = {'send_emails_now': {'task': 'Panacea.tasks.send_nathan_email',
+CELERY_BEAT_SCHEDULE = {'send_emails_now': {'task': 'Panacea.tasks.send_emails_now',
                                              'schedule': crontab(minute="*")}
 
 }

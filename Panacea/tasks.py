@@ -10,6 +10,9 @@ from TransitData import settings
 from django.template.loader import render_to_string
 
 
+@shared_task()
+def send_emails_now():
+    send_mail('Late Vanpool Reporting Notice', 'It is an automated email', settings.EMAIL_HOST_USER, ['wesleyi@wsdot.wa.gov'], fail_silently=False)
 
 
 @periodic_task(run_every = crontab(hour=7, minute=30, day_of_week= 'monday'), name = "week_late", ignore_result = True)
