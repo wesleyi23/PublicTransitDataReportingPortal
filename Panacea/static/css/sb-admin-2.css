@@ -165,6 +165,10 @@ div.dataTables_info {
 .pagination{
   font-size: .8rem;
  }
+
+.help-popover{
+  cursor: pointer;
+}
 /*! END ADDITIONS
  */
 
