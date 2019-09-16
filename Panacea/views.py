@@ -27,7 +27,6 @@ from dateutil.relativedelta import relativedelta
 import datetime
 
 from Panacea.decorators import group_required
-from .tasks import profile_created
 from django.core.exceptions import ValidationError
 from django.forms.widgets import CheckboxInput
 from .utilities import monthdelta, get_wsdot_color, green_house_gas_per_vanpool_mile, green_house_gas_per_sov_mile, \
