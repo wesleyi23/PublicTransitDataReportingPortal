@@ -329,3 +329,20 @@ def get_vanpool_summary_charts_and_table(include_years,
         all_charts.append(chart_datasets)
 
     return x_axis_labels, all_charts, summary_table_data, summary_table_data_total
+
+
+def percent_change_calculation(totals, label):
+    percent_change = []
+    count = 0
+    # calculating the percent change in this for loop because its messy as hell otherwise
+    for idx, val in enumerate(totals):
+        if count == 0:
+            percent_change.append('N/A')
+            count += 1
+        else:
+            try:
+                percent = round(((val[label] - totals[idx - 1][label]) / totals[idx - 1][label]) * 100, 2)
+                percent_change.append(percent)
+            except ZeroDivisionError:
+                percent_change.append('N/A')
+    return percent_change

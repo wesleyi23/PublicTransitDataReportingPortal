@@ -12,7 +12,7 @@ from django.db.models import Max
 from dateutil.relativedelta import relativedelta
 import datetime
 from Panacea.decorators import group_required
-from .utilities import monthdelta, get_wsdot_color, get_vanpool_summary_charts_and_table
+from .utilities import monthdelta, get_wsdot_color, get_vanpool_summary_charts_and_table, percent_change_calculation
 from django.http import Http404
 from .filters import VanpoolExpansionFilter
 from django.conf import settings
@@ -38,6 +38,7 @@ from django.contrib.auth.models import Group
 from .utilities import calculate_latest_vanpool, find_maximum_vanpool, calculate_remaining_months, calculate_if_goal_has_been_reached
 
 
+# region shared_views
 def register(request):
     if request.method == 'POST':
         form = CustomUserCreationForm(request.POST)
@@ -53,6 +54,7 @@ def register(request):
 @login_required(login_url='/Panacea/login')
 def index(request):
     return render(request, 'index.html', {})
+
 
 
 @login_required(login_url='/Panacea/login')
@@ -180,6 +182,182 @@ def ProfileSetup_ReportSelection(request):
 def handler404(request, exception):
     return render(request, 'pages/error_404.html', status = 404)
 
+@login_required(login_url='/Panacea/login')
+def UserProfile(request):
+    user_name = request.user.get_full_name()
+    form_custom_user = user_profile_custom_user(instance=request.user)
+    profile_data = profile.objects.get(custom_user=request.user.id)
+    form_profile = user_profile_profile(instance=profile_data)
+    user_org = profile_data.organization.name
+
+    if request.POST:
+        form_custom_user = user_profile_custom_user(data=request.POST.copy(), instance=request.user)
+        form_profile = user_profile_profile(data=request.POST.copy(), instance=profile_data)
+        if form_custom_user.is_valid() & form_profile.is_valid():
+            form_custom_user.save()
+            form_profile.save()
+            return redirect('UserProfile')
+        else:
+            form_custom_user.data['first_name'] = request.user.first_name
+            form_custom_user.data['last_name'] = request.user.last_name
+            form_profile.data['telephone_number'] = profile_data.telephone_number
+
+    return render(request, 'pages/UserProfile.html', {'user_name': user_name,
+                                                      'form_custom_user': form_custom_user,
+                                                      'form_profile': form_profile,
+                                                      'user_org': user_org})
+
+
+@login_required(login_url='/Panacea/login')
+def OrganizationProfileUsers(request):
+    user_profile_data = profile.objects.get(custom_user=request.user.id)
+    org = user_profile_data.organization
+    org_id = organization.objects.filter(name=org).values('id')
+    org_id = org_id[0]['id']
+    # TODO could this be valueslist?
+    vals = profile.objects.filter(organization_id=org_id).values('custom_user')
+    vals = [i['custom_user'] for i in vals]
+    cust = custom_user.objects.filter(id__in=vals).values('first_name', 'last_name', 'email', 'date_joined', 'last_login')
+    org_name = org.name
+    return render(request, 'pages/OrganizationProfileUsers.html', {'org_name': org_name, 'users': cust})
+
+
+@login_required(login_url='/Panacea/login')
+@group_required('Vanpool reporter', 'WSDOT staff', 'Summary reporter')
+def OrganizationProfile(request):
+    user_profile_data = profile.objects.get(custom_user=request.user.id)
+    org = user_profile_data.organization
+    org_name = org.name
+    form = organization_profile(instance=org)
+    if request.POST:
+        form = organization_profile(data=request.POST.copy(), instance=org)
+        if form.is_valid():
+            # TODO figure out why is this here
+            if not 'state' in form.data:
+                form.data['state'] = user_profile_data.organization.state
+            form.save()
+            return redirect('OrganizationProfile')
+        else:
+            form.data['name'] = org.name
+            form.data['address_line_1'] = org.address_line_1
+            form.data['address_line_2'] = org.address_line_2
+            form.data['city'] = org.city
+            # form.data['state'] = org.state
+            form.data['zip_code'] = org.zip_code
+            form.data['vanshare_program'] = org.vanshare_program
+
+    return render(request, 'pages/OrganizationProfile.html', {'org_name': org_name, 'form': form})
+
+
+@login_required(login_url='/Panacea/login')
+def Permissions(request):
+    submit_success = False
+    if request.POST:
+        form = request_user_permissions(data=request.POST)
+        if form.is_valid():
+
+            groups = ' & '.join(str(s[1]) for s in form.cleaned_data['groups'].values_list())
+
+            msg_html = render_to_string('emails/request_permissions_email.html',
+                                        {'user_name': request.user.get_full_name(), 'groups': groups})
+            msg_plain = render_to_string('emails/request_permissions_email.txt',
+                                         {'user_name': request.user.get_full_name(), 'groups': groups})
+            send_mail(
+                subject='Permissions Request - Public Transportation Reporting Portal',
+                message=msg_plain,
+                from_email='some@sender.com',  # TODO change this to the correct email address
+                recipient_list=['wesleyi@wsdot.wa.gov', ],  # TODO change this to the correct email address
+                html_message=msg_html,
+            )
+            msg_html = "There is an active permissions request in the Public Transportation Reporting Portal"  # TODO add link
+            msg_plain = "There is an active permissions request in the Public Transportation Reporting Portal"  # TODO add link
+            send_mail(
+                subject='Active Permissions Request - Public Transportation Reporting Portal',
+                message=msg_plain,
+                from_email='some@sender.com',  # TODO change this to the correct email address
+                recipient_list=['wesleyi@wsdot.wa.gov', ],  # TODO change this to the correct email address
+                html_message=msg_html,
+            )
+            current_user_profile = profile.objects.get(custom_user_id=request.user.id)
+            current_user_profile.requested_permissions.set(form.cleaned_data['groups'])
+            current_user_profile.active_permissions_request = True
+            current_user_profile.save()
+            submit_success = True
+
+    user = request.user
+    auth_groups = Group.objects.all()
+    form = request_user_permissions(instance=user)
+
+    return render(request, 'pages/Permissions.html', {'auth_groups': auth_groups,
+                                                      'user_name': request.user.get_full_name(),
+                                                      'form': form,
+                                                      'submit_success': submit_success})
+@login_required(login_url='/Panacea/login')
+# @group_required('WSDOT staff')
+def Admin_assignPermissions(request, active=None):
+    if not active:
+        active = 'active'
+    active_requests = profile.objects.filter(active_permissions_request=True).exists()
+    if active_requests and active == 'active':
+        profile_data = profile.objects.filter(active_permissions_request=True).all()
+    else:
+        profile_data = profile.objects.all()
+
+    assign_permissions_formset = modelformset_factory(custom_user, change_user_permissions_group, extra=0)
+
+    if request.method == 'POST':
+        formset = assign_permissions_formset(request.POST)
+        # if formset.is_valid():
+        #     formset.save()
+        #     return JsonResponse({'success': True})
+        # else:
+        for form in formset:
+            if form.is_valid():
+                if len(form.changed_data) > 0:
+                    data = form.cleaned_data
+                    email = data['email']
+                    this_user_id = custom_user.objects.get(email=email).id
+                    my_profile = profile.objects.get(custom_user_id=this_user_id)
+                    my_profile.profile_complete = True
+                    my_profile.active_permissions_request = False
+                    my_profile.save()
+                    # print(email)
+                form.save()
+
+        return JsonResponse({'success': True})
+    else:
+        formset = assign_permissions_formset(queryset=custom_user.objects.filter(id__in=profile_data.values_list('custom_user_id')))
+        if active_requests and active == 'active':
+            return render(request, 'pages/assign_permissions_active_requests.html', {'Admin_assignPermissions_all': formset,
+                                                                                     'profile_data': profile_data})
+        else:
+            return render(request, 'pages/AssignPermissions.html', {'Admin_assignPermissions_all': formset,
+                                                                    'profile_data': profile_data,
+                                                                    'active_requests': active_requests})
+
+
+@login_required(login_url='/Panacea/login')
+def accessibility(request):
+    return render(request, 'pages/accessibility.html', {})
+
+
+@login_required(login_url='/Panacea/login')
+def public_disclosure(request):
+    return render(request, 'pages/PublicDisclosure.html', {})
+
+
+@login_required(login_url='/Panacea/login')
+def help_page(request):
+    return render(request, 'pages/Help.html', {})
+
+
+@login_required(login_url='/Panacea/login')
+def logout_view(request):
+    logout(request)
+
+# endregion
+
+# region vanpool
 
 @login_required(login_url='/Panacea/login')
 @group_required('Vanpool reporter')
@@ -441,212 +619,9 @@ def vanpool_statewide_summary(request):
                                                                     }
                   )
 
-
 @login_required(login_url='/Panacea/login')
-def UserProfile(request):
-    user_name = request.user.get_full_name()
-    form_custom_user = user_profile_custom_user(instance=request.user)
-    profile_data = profile.objects.get(custom_user=request.user.id)
-    form_profile = user_profile_profile(instance=profile_data)
-    user_org = profile_data.organization.name
-
-    if request.POST:
-        form_custom_user = user_profile_custom_user(data=request.POST.copy(), instance=request.user)
-        form_profile = user_profile_profile(data=request.POST.copy(), instance=profile_data)
-        if form_custom_user.is_valid() & form_profile.is_valid():
-            form_custom_user.save()
-            form_profile.save()
-            return redirect('UserProfile')
-        else:
-            form_custom_user.data['first_name'] = request.user.first_name
-            form_custom_user.data['last_name'] = request.user.last_name
-            form_profile.data['telephone_number'] = profile_data.telephone_number
-
-    return render(request, 'pages/UserProfile.html', {'user_name': user_name,
-                                                      'form_custom_user': form_custom_user,
-                                                      'form_profile': form_profile,
-                                                      'user_org': user_org})
-
-
-@login_required(login_url='/Panacea/login')
-def OrganizationProfileUsers(request):
-    user_profile_data = profile.objects.get(custom_user=request.user.id)
-    org = user_profile_data.organization
-    org_id = organization.objects.filter(name=org).values('id')
-    org_id = org_id[0]['id']
-    # TODO could this be valueslist?
-    vals = profile.objects.filter(organization_id=org_id).values('custom_user')
-    vals = [i['custom_user'] for i in vals]
-    cust = custom_user.objects.filter(id__in=vals).values('first_name', 'last_name', 'email', 'date_joined', 'last_login')
-    org_name = org.name
-    return render(request, 'pages/OrganizationProfileUsers.html', {'org_name': org_name, 'users': cust})
-
-
-@login_required(login_url='/Panacea/login')
-@group_required('Vanpool reporter', 'WSDOT staff', 'Summary reporter')
-def OrganizationProfile(request):
-    user_profile_data = profile.objects.get(custom_user=request.user.id)
-    org = user_profile_data.organization
-    org_name = org.name
-    form = organization_profile(instance=org)
-    if request.POST:
-        form = organization_profile(data=request.POST.copy(), instance=org)
-        if form.is_valid():
-            # TODO figure out why is this here
-            if not 'state' in form.data:
-                form.data['state'] = user_profile_data.organization.state
-            form.save()
-            return redirect('OrganizationProfile')
-        else:
-            form.data['name'] = org.name
-            form.data['address_line_1'] = org.address_line_1
-            form.data['address_line_2'] = org.address_line_2
-            form.data['city'] = org.city
-            # form.data['state'] = org.state
-            form.data['zip_code'] = org.zip_code
-            form.data['vanshare_program'] = org.vanshare_program
-
-    return render(request, 'pages/OrganizationProfile.html', {'org_name': org_name, 'form': form})
-
-
-@login_required(login_url='/Panacea/login')
-def Permissions(request):
-    submit_success = False
-    if request.POST:
-        form = request_user_permissions(data=request.POST)
-        if form.is_valid():
-
-            groups = ' & '.join(str(s[1]) for s in form.cleaned_data['groups'].values_list())
-
-            msg_html = render_to_string('emails/request_permissions_email.html',
-                                        {'user_name': request.user.get_full_name(), 'groups': groups})
-            msg_plain = render_to_string('emails/request_permissions_email.txt',
-                                         {'user_name': request.user.get_full_name(), 'groups': groups})
-            send_mail(
-                subject='Permissions Request - Public Transportation Reporting Portal',
-                message=msg_plain,
-                from_email='some@sender.com',  # TODO change this to the correct email address
-                recipient_list=['wesleyi@wsdot.wa.gov', ],  # TODO change this to the correct email address
-                html_message=msg_html,
-            )
-            msg_html = "There is an active permissions request in the Public Transportation Reporting Portal"  # TODO add link
-            msg_plain = "There is an active permissions request in the Public Transportation Reporting Portal"  # TODO add link
-            send_mail(
-                subject='Active Permissions Request - Public Transportation Reporting Portal',
-                message=msg_plain,
-                from_email='some@sender.com',  # TODO change this to the correct email address
-                recipient_list=['wesleyi@wsdot.wa.gov', ],  # TODO change this to the correct email address
-                html_message=msg_html,
-            )
-            current_user_profile = profile.objects.get(custom_user_id=request.user.id)
-            current_user_profile.requested_permissions.set(form.cleaned_data['groups'])
-            current_user_profile.active_permissions_request = True
-            current_user_profile.save()
-            submit_success = True
-
-    user = request.user
-    auth_groups = Group.objects.all()
-    form = request_user_permissions(instance=user)
-
-    return render(request, 'pages/Permissions.html', {'auth_groups': auth_groups,
-                                                      'user_name': request.user.get_full_name(),
-                                                      'form': form,
-                                                      'submit_success': submit_success})
-
-
-@login_required(login_url='/Panacea/login')
-@group_required('WSDOT staff')
-def Admin_reports(request):
-    return render(request, 'pages/AdminReports.html', {})
-
-
-@login_required(login_url='/Panacea/login')
-@group_required('WSDOT staff')
-def Admin_ReminderEmail(request):
-    return render(request, 'pages/ReminderEmail.html', {})
-
-
-@login_required(login_url='/Panacea/login')
-# @group_required('WSDOT staff')
-def Admin_assignPermissions(request, active=None):
-    if not active:
-        active = 'active'
-    active_requests = profile.objects.filter(active_permissions_request=True).exists()
-    if active_requests and active == 'active':
-        profile_data = profile.objects.filter(active_permissions_request=True).all()
-    else:
-        profile_data = profile.objects.all()
-
-    assign_permissions_formset = modelformset_factory(custom_user, change_user_permissions_group, extra=0)
-
-    if request.method == 'POST':
-        formset = assign_permissions_formset(request.POST)
-        # if formset.is_valid():
-        #     formset.save()
-        #     return JsonResponse({'success': True})
-        # else:
-        for form in formset:
-            if form.is_valid():
-                if len(form.changed_data) > 0:
-                    data = form.cleaned_data
-                    email = data['email']
-                    this_user_id = custom_user.objects.get(email=email).id
-                    my_profile = profile.objects.get(custom_user_id=this_user_id)
-                    my_profile.profile_complete = True
-                    my_profile.active_permissions_request = False
-                    my_profile.save()
-                    # print(email)
-                form.save()
-
-        return JsonResponse({'success': True})
-    else:
-        formset = assign_permissions_formset(queryset=custom_user.objects.filter(id__in=profile_data.values_list('custom_user_id')))
-        if active_requests and active == 'active':
-            return render(request, 'pages/assign_permissions_active_requests.html', {'Admin_assignPermissions_all': formset,
-                                                                                     'profile_data': profile_data})
-        else:
-            return render(request, 'pages/AssignPermissions.html', {'Admin_assignPermissions_all': formset,
-                                                                    'profile_data': profile_data,
-                                                                    'active_requests': active_requests})
-
-
-@login_required(login_url='/Panacea/login')
-def accessibility(request):
-    return render(request, 'pages/accessibility.html', {})
-
-
-@login_required(login_url='/Panacea/login')
-def public_disclosure(request):
-    return render(request, 'pages/PublicDisclosure.html', {})
-
-
-@login_required(login_url='/Panacea/login')
-def help_page(request):
-    return render(request, 'pages/Help.html', {})
-
-
-@login_required(login_url='/Panacea/login')
-def logout_view(request):
-    logout(request)
-
-
-# TODO move to utilities.py
-def percent_change_calculation(totals, label):
-    percent_change = []
-    count = 0
-    # calculating the percent change in this for loop because its messy as hell otherwise
-    for idx, val in enumerate(totals):
-        if count == 0:
-            percent_change.append('N/A')
-            count += 1
-        else:
-            try:
-                percent = round(((val[label] - totals[idx - 1][label]) / totals[idx - 1][label]) * 100, 2)
-                percent_change.append(percent)
-            except ZeroDivisionError:
-                percent_change.append('N/A')
-    return percent_change
-
+def Vanpool_Growth(request):
+    return render(request, 'pages/VanpoolGrowth.html', {})
 
 @login_required(login_url='/Panacea/login')
 def Operation_Summary(request):
@@ -693,8 +668,13 @@ def Operation_Summary(request):
     return render(request, 'pages/OperationSummary.html', {'vp_totals': vp_totals, 'vs_totals': vs_totals, 'starts':starts, 'folds': folds, 'starts_as_a_percent': starts_as_percent,
                                                            'folds_as_percent': folds_as_percent, 'net_vans': net_vans, 'average_riders': average_riders, 'average_miles': average_miles, 'years':years})
 
+# endregion
 
-@login_required(login_url='/Panacea/login')
-def Vanpool_Growth(request):
 
-    return render(request, 'pages/VanpoolGrowth.html', {})
+
+
+
+
+
+
+
