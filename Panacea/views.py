@@ -422,7 +422,7 @@ def Vanpool_report(request, year=None, month=None):
     else:
         form.fields['changeReason'].required = False
 
-    return render(request, 'pages/Vanpool_report.html', {'form': form,
+    return render(request, 'pages/vanpool/Vanpool_report.html', {'form': form,
                                                          'past_report_data': past_report_data,
                                                          'year': year,
                                                          'month': month,
@@ -454,7 +454,7 @@ def Vanpool_expansion_submission(request):
             return render(request, 'pages/Vanpool_expansion_submission.html', {'form':form})
     else:
         form = submit_a_new_vanpool_expansion(data=request.POST)
-    return render(request, 'pages/Vanpool_expansion_submission.html', {'form': form})
+    return render(request, 'pages/vanpool/Vanpool_expansion_submission.html', {'form': form})
 
 
 @login_required(login_url='/Panacea/login')
@@ -465,7 +465,7 @@ def Vanpool_expansion_analysis(request):
     calculate_remaining_months()
     calculate_if_goal_has_been_reached()
     f = VanpoolExpansionFilter(request.GET, queryset=vanpool_expansion_analysis.objects.all())
-    return render(request, 'pages/Vanpool_expansion.html', {'filter': f})
+    return render(request, 'pages/vanpool/Vanpool_expansion.html', {'filter': f})
 
 
 @login_required(login_url='/Panacea/login')
@@ -489,7 +489,7 @@ def Vanpool_expansion_modify(request, id=None):
     else:
         form = Modify_A_Vanpool_Expansion(instance=form_data)
     zipped = zip(organization_name, vea)
-    return render(request, 'pages/Vanpool_expansion_modify.html', {'zipped':zipped, 'id': id, 'form':form})
+    return render(request, 'pages/vanpool/Vanpool_expansion_modify.html', {'zipped':zipped, 'id': id, 'form':form})
 
 
 @login_required(login_url='/Panacea/login')
@@ -533,7 +533,7 @@ def Vanpool_data(request):
         # Set chart title
         chart_title = form.MEASURE_CHOICES_DICT[chart_measure]
 
-        return render(request, 'pages/Vanpool_data.html', {'form': form,
+        return render(request, 'pages/vanpool/Vanpool_data.html', {'form': form,
                                                            'chart_title': chart_title,
                                                            'chart_measure': chart_measure,
                                                            'chart_label': x_axis_labels,
@@ -570,7 +570,7 @@ def vanpool_organization_summary(request, org_id=None):
             include_regions=None,
             include_agency_classifications=None)
 
-    return render(request, 'pages/vanpool_organization_summary.html', {'settings_form': settings_form,
+    return render(request, 'pages/vanpool/vanpool_organization_summary.html', {'settings_form': settings_form,
                                                                     'chart_label': x_axis_labels,
                                                                     'all_charts': all_charts,
                                                                     'summary_table_data': summary_table_data,
@@ -609,7 +609,7 @@ def vanpool_statewide_summary(request):
             include_regions=include_regions,
             include_agency_classifications=include_agency_classifications)
 
-    return render(request, 'pages/vanpool_statewide_summary.html', {'settings_form': settings_form,
+    return render(request, 'pages/vanpool/vanpool_statewide_summary.html', {'settings_form': settings_form,
                                                                     'chart_label': x_axis_labels,
                                                                     'all_charts': all_charts,
                                                                     'summary_table_data': summary_table_data,
@@ -621,7 +621,7 @@ def vanpool_statewide_summary(request):
 
 @login_required(login_url='/Panacea/login')
 def Vanpool_Growth(request):
-    return render(request, 'pages/VanpoolGrowth.html', {})
+    return render(request, 'pages/vanpool/VanpoolGrowth.html', {})
 
 @login_required(login_url='/Panacea/login')
 def Operation_Summary(request):
@@ -665,14 +665,14 @@ def Operation_Summary(request):
     average_riders = zip(avg_riders, empty_list)
     average_miles = zip(avg_miles, empty_list)
 
-    return render(request, 'pages/OperationSummary.html', {'vp_totals': vp_totals, 'vs_totals': vs_totals, 'starts':starts, 'folds': folds, 'starts_as_a_percent': starts_as_percent,
+    return render(request, 'pages/vanpool/OperationSummary.html', {'vp_totals': vp_totals, 'vs_totals': vs_totals, 'starts':starts, 'folds': folds, 'starts_as_a_percent': starts_as_percent,
                                                            'folds_as_percent': folds_as_percent, 'net_vans': net_vans, 'average_riders': average_riders, 'average_miles': average_miles, 'years':years})
 
 # endregion
 
-
-
-
+# region summary
+ #
+# endregion
 
 
 
