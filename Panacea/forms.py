@@ -12,6 +12,7 @@ from tempus_dominus.widgets import DatePicker
 from .widgets import FengyuanChenDatePickerInput
 
 
+# region shared
 class CustomUserCreationForm(forms.ModelForm):
     """
     A form that creates a user, with no privileges, from the given username and
@@ -163,6 +164,85 @@ class ReportSelection(forms.ModelForm):
         fields = ('reports_on', )
 
 
+class organization_profile(forms.ModelForm):
+    class Meta:
+        TRUE_FALSE_CHOICES = (
+            (False, 'No'),
+            (True, 'Yes')
+        )
+
+        model = organization
+        fields = ('name', 'address_line_1', 'address_line_2', 'city', 'state', 'zip_code', 'vanshare_program', 'in_puget_sound_area')
+        widgets = {
+            'name': forms.TextInput(
+                attrs={'class': 'form-control-plaintext', 'readonly': 'True', 'style': "width:350px"}),
+            'address_line_1': forms.TextInput(
+                attrs={'class': 'form-control-plaintext', 'readonly': 'True', 'style': "width:350px"}),
+            'address_line_2': forms.TextInput(
+                attrs={'class': 'form-control-plaintext', 'readonly': 'True', 'style': "width:350px"}),
+            'city': forms.TextInput(
+                attrs={'class': 'form-control-plaintext', 'readonly': 'True'}),
+            'state': forms.Select(attrs={'class': 'form-control form-control-plaintext', 'readonly': 'True', 'style': 'pointer-events: none'}),
+            'zip_code': forms.TextInput(
+                attrs={'class': 'form-control-plaintext', 'readonly': 'True'}),
+            'vanshare_program': forms.Select(choices=TRUE_FALSE_CHOICES,
+                                             attrs={'class': 'form-control form-control-plaintext', 'readonly': 'True',
+                                                    'style': 'pointer-events: none'}),
+            'in_puget_sound_area': forms.Select(choices=TRUE_FALSE_CHOICES,
+                                                attrs={'class': 'form-control-plaintext', 'readonly': 'True',
+                                                       'style': 'pointer-events: none'})
+        }
+
+
+class change_user_permissions_group(forms.ModelForm):
+    class Meta:
+        model = custom_user
+        fields = ['first_name', 'last_name', 'email', 'groups', ]
+        widgets = {
+            'groups': forms.CheckboxSelectMultiple(attrs={'class': 'form-check-inline no-bullet AJAX_instant_submit',
+                                                          'data-form-name': "Admin_assignPermissions_all"}),
+            'first_name': forms.TextInput(
+                attrs={'class': 'form-control-plaintext', 'readonly': 'True',
+                       'style': 'display: none; visibility: hidden'}),
+            'last_name': forms.TextInput(
+                attrs={'class': 'form-control-plaintext', 'readonly': 'True',
+                       'style': 'display: none; visibility: hidden'}),
+            'email': forms.TextInput(
+                attrs={'class': 'form-control-plaintext', 'readonly': 'True',
+                       'style': 'display: none; visibility: hidden'}),
+        }
+
+
+class request_user_permissions(forms.ModelForm):
+    class Meta:
+        model = custom_user
+        fields = ['groups', ]
+        widgets = {
+            'groups': forms.CheckboxSelectMultiple(attrs={'class': 'form-check'})
+        }
+
+
+class organisation_summary_settings(forms.Form):
+    INCLUDE_YEARS_CHOICES = (
+        (1, "One Year"),
+        (2, "Two Years"),
+        (3, "Three Years"),
+        (5, "Five Years"),
+        (10, "Ten Years"),
+        (99, "All")
+    )
+
+    include_years = forms.CharField(widget=forms.Select(choices=INCLUDE_YEARS_CHOICES,
+                                                        attrs={'class': 'form-control',
+                                                               'data-form-name': "chart_form"}))
+    summary_org = forms.ModelChoiceField(queryset=organization.objects.all(),
+                                         widget=forms.Select(choices=organization.objects.all(),
+                                                             attrs={'class': 'form-control',
+                                                                    'data-form-name': "chart_form"}))
+# endregion
+
+
+# region vanpool
 class VanpoolMonthlyReport(forms.ModelForm):
 
     def __init__(self, user_organization, record_id, report_month, report_year, *args, **kwargs):
@@ -310,64 +390,6 @@ class VanpoolMonthlyReport(forms.ModelForm):
         return instance
 
 
-class organization_profile(forms.ModelForm):
-    class Meta:
-        TRUE_FALSE_CHOICES = (
-            (False, 'No'),
-            (True, 'Yes')
-        )
-
-        model = organization
-        fields = ('name', 'address_line_1', 'address_line_2', 'city', 'state', 'zip_code', 'vanshare_program', 'in_puget_sound_area')
-        widgets = {
-            'name': forms.TextInput(
-                attrs={'class': 'form-control-plaintext', 'readonly': 'True', 'style': "width:350px"}),
-            'address_line_1': forms.TextInput(
-                attrs={'class': 'form-control-plaintext', 'readonly': 'True', 'style': "width:350px"}),
-            'address_line_2': forms.TextInput(
-                attrs={'class': 'form-control-plaintext', 'readonly': 'True', 'style': "width:350px"}),
-            'city': forms.TextInput(
-                attrs={'class': 'form-control-plaintext', 'readonly': 'True'}),
-            'state': forms.Select(attrs={'class': 'form-control form-control-plaintext', 'readonly': 'True', 'style': 'pointer-events: none'}),
-            'zip_code': forms.TextInput(
-                attrs={'class': 'form-control-plaintext', 'readonly': 'True'}),
-            'vanshare_program': forms.Select(choices=TRUE_FALSE_CHOICES,
-                                             attrs={'class': 'form-control form-control-plaintext', 'readonly': 'True',
-                                                    'style': 'pointer-events: none'}),
-            'in_puget_sound_area': forms.Select(choices=TRUE_FALSE_CHOICES,
-                                                attrs={'class': 'form-control-plaintext', 'readonly': 'True',
-                                                       'style': 'pointer-events: none'})
-        }
-
-
-class change_user_permissions_group(forms.ModelForm):
-    class Meta:
-        model = custom_user
-        fields = ['first_name', 'last_name', 'email', 'groups', ]
-        widgets = {
-            'groups': forms.CheckboxSelectMultiple(attrs={'class': 'form-check-inline no-bullet AJAX_instant_submit',
-                                                          'data-form-name': "Admin_assignPermissions_all"}),
-            'first_name': forms.TextInput(
-                attrs={'class': 'form-control-plaintext', 'readonly': 'True',
-                       'style': 'display: none; visibility: hidden'}),
-            'last_name': forms.TextInput(
-                attrs={'class': 'form-control-plaintext', 'readonly': 'True',
-                       'style': 'display: none; visibility: hidden'}),
-            'email': forms.TextInput(
-                attrs={'class': 'form-control-plaintext', 'readonly': 'True',
-                       'style': 'display: none; visibility: hidden'}),
-        }
-
-
-class request_user_permissions(forms.ModelForm):
-    class Meta:
-        model = custom_user
-        fields = ['groups', ]
-        widgets = {
-            'groups': forms.CheckboxSelectMultiple(attrs={'class': 'form-check'})
-        }
-
-
 # TODO rename this form to something less generic
 class chart_form(forms.Form):
     MEASURE_CHOICES_DICT = {
@@ -442,25 +464,6 @@ class statewide_summary_settings(forms.Form):
                                                                           'data-form-name': "chart_form"}))
 
 
-class organisation_summary_settings(forms.Form):
-    INCLUDE_YEARS_CHOICES = (
-        (1, "One Year"),
-        (2, "Two Years"),
-        (3, "Three Years"),
-        (5, "Five Years"),
-        (10, "Ten Years"),
-        (99, "All")
-    )
-
-    include_years = forms.CharField(widget=forms.Select(choices=INCLUDE_YEARS_CHOICES,
-                                                        attrs={'class': 'form-control',
-                                                               'data-form-name': "chart_form"}))
-    summary_org = forms.ModelChoiceField(queryset=organization.objects.all(),
-                                         widget=forms.Select(choices=organization.objects.all(),
-                                                             attrs={'class': 'form-control',
-                                                                    'data-form-name': "chart_form"}))
-
-
 class submit_a_new_vanpool_expansion(forms.ModelForm):
     CHOICES = (
         ('11-13', '11-13'),
@@ -514,7 +517,6 @@ class submit_a_new_vanpool_expansion(forms.ModelForm):
         }
 
 
-
 class Modify_A_Vanpool_Expansion(forms.ModelForm):
     class Meta:
         model = vanpool_expansion_analysis
@@ -537,5 +539,10 @@ class Modify_A_Vanpool_Expansion(forms.ModelForm):
         if commit:
             instance.save()
         return instance
+# endregion
 
 
+# region summary
+
+
+# endregion
