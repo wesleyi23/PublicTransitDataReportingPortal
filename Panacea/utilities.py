@@ -1,7 +1,8 @@
-from .models import organization, vanpool_expansion_analysis, vanpool_report, custom_user, profile
-from django.db.models import Max, Subquery, F, OuterRef, Case, CharField, Value, When
-from django.core.mail import send_mail
-from TransitData import settings
+import calendar
+import json
+from .models import organization, vanpool_expansion_analysis, vanpool_report
+from django.db.models import Max, Subquery, F, OuterRef, Case, CharField, Value, When, Sum, Count
+
 import datetime
 from dateutil.relativedelta import relativedelta
 #####
@@ -217,3 +218,114 @@ def green_house_gas_per_sov_mile():
 
     return co2_per_sov_mile_traveled
 
+
+def get_vanpool_summary_charts_and_table(include_years,
+                                         is_org_summary=True,
+                                         org_id=None,
+                                         include_regions=None,
+                                         include_agency_classifications=None):
+    """
+    This function is used to generate the summary charts and summary table for the vanpool state wide and organization
+    summary pages
+    :param include_years: int how many years to include in the charts and tables
+    :param is_org_summary: bool is it the organization summary or the statewide summary
+    :param org_id: int required if is_org_summary is true
+    :param include_regions: str required if is_org summary is false
+    :param include_agency_classifications:  str required if is_org summary is false
+    :return: x_axis_labels, all_charts, summary_table_data, summary_table_data_total
+    """
+
+    MEASURES = [
+        ("vanpool_miles_traveled", "vanshare_miles_traveled"),
+        ("vanpool_passenger_trips", "vanshare_passenger_trips"),
+        ("vanpool_groups_in_operation", "vanshare_groups_in_operation"),
+    ]
+
+    all_chart_data = [report for report in
+                      vanpool_report.objects.order_by('report_year', 'report_month').all() if
+                      report.report_year >= datetime.datetime.today().year - include_years]
+    x_axis_labels = [report.report_month for report in all_chart_data]
+    x_axis_labels = list(dict.fromkeys(x_axis_labels))
+    x_axis_labels = list(map(lambda x: calendar.month_name[x], x_axis_labels))
+
+    if not is_org_summary:
+        if include_regions != "Statewide":
+            if include_regions == "Puget Sound":
+                orgs_to_include = organization.objects.filter(classification__in=include_agency_classifications).filter(
+                    in_puget_sound_area=True).values_list('id')
+            else:
+                orgs_to_include = organization.objects.filter(classification__in=include_agency_classifications).filter(
+                    in_puget_sound_area=False).values_list('id')
+        else:
+            orgs_to_include = organization.objects.filter(classification__in=include_agency_classifications).values_list(
+                'id')
+    else:
+        orgs_to_include = [org_id]
+
+    years = range(datetime.datetime.today().year - include_years + 1, datetime.datetime.today().year + 1)
+
+    all_data = vanpool_report.objects.filter(report_year__gte=datetime.datetime.today().year - (include_years - 1),
+                                             report_year__lte=datetime.datetime.today().year,
+                                             organization_id__in=orgs_to_include).order_by('report_year',
+                                                                                           'report_month').all()
+
+    # TODO once the final data is in we need to confirm that the greenhouse gas calculations are correct
+    summary_table_data = vanpool_report.objects.filter(
+        report_year__gte=datetime.datetime.today().year - (include_years - 1),
+        report_year__lte=datetime.datetime.today().year,
+        organization_id__in=orgs_to_include,
+        report_date__isnull=False,
+        vanpool_passenger_trips__isnull=False).values('report_year').annotate(
+        table_total_miles_traveled=Sum(F(MEASURES[0][0]) + F(MEASURES[0][1])),
+        table_total_passenger_trips=Sum(F(MEASURES[1][0]) + F(MEASURES[2][1])),
+        table_total_groups_in_operation=Sum(F(MEASURES[2][0]) + F(MEASURES[2][1])) / Count('report_month',
+                                                                                           distinct=True),
+        green_house_gas_prevented=Sum((F(MEASURES[0][0]) + F(MEASURES[0][1])) * (
+                    F('average_riders_per_van') - 1)) * green_house_gas_per_sov_mile() - Sum(
+            F(MEASURES[0][0]) + F(MEASURES[0][1])) * green_house_gas_per_vanpool_mile()
+    )
+
+    # TODO once the final data is in we need to confirm that the greenhouse gas calculations are correct
+    summary_table_data_total = vanpool_report.objects.filter(
+        report_year__gte=datetime.datetime.today().year - (include_years - 1),
+        report_year__lte=datetime.datetime.today().year,
+        organization_id__in=orgs_to_include).aggregate(
+        table_total_miles_traveled=Sum(F(MEASURES[0][0]) + F(MEASURES[0][1])),
+        table_total_passenger_trips=Sum(F(MEASURES[1][0]) + F(MEASURES[2][1])),
+        green_house_gas_prevented=Sum((F(MEASURES[0][0]) + F(MEASURES[0][1])) * (
+                F('average_riders_per_van') - 1)) * green_house_gas_per_sov_mile() - Sum(
+            F(MEASURES[0][0]) + F(MEASURES[0][1])) * green_house_gas_per_vanpool_mile()
+    )
+
+    all_charts = list()
+    for i in range(len(MEASURES) + 1):
+        # to include green house gasses
+        if i == len(MEASURES):
+            all_chart_data = all_data.values('report_year', 'report_month').annotate(
+                result=Sum((F(MEASURES[0][0]) + F(MEASURES[0][1])) * (
+                            F('average_riders_per_van') - 1)) * green_house_gas_per_sov_mile() - Sum(
+                    F(MEASURES[0][0]) + F(MEASURES[0][1])) * green_house_gas_per_vanpool_mile()
+            )
+        else:
+            all_chart_data = all_data.values('report_year', 'report_month').annotate(
+                result=Sum(F(MEASURES[i][0]) + F(MEASURES[i][1]))
+            )
+
+        chart_datasets = {}
+        color_i = 0
+        for year in years:
+            if year == datetime.datetime.today().year:
+                current_year = True
+                line_color = get_wsdot_color(color_i, hex_or_rgb='rgb')
+            else:
+                current_year = False
+                line_color = get_wsdot_color(color_i, alpha=50, hex_or_rgb='rgb')
+            chart_dataset = all_chart_data.filter(report_year=year)
+            if chart_dataset.count() >= 1:
+                chart_dataset = [result["result"] for result in chart_dataset]
+                chart_datasets[year] = [json.dumps(list(chart_dataset)), line_color, current_year]
+                color_i = color_i + 1
+
+        all_charts.append(chart_datasets)
+
+    return x_axis_labels, all_charts, summary_table_data, summary_table_data_total
