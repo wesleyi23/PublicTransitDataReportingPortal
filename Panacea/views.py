@@ -33,7 +33,7 @@ from .forms import CustomUserCreationForm, \
     statewide_summary_settings, \
     Modify_A_Vanpool_Expansion, organisation_summary_settings
 
-from .models import profile, vanpool_report, custom_user,  vanpool_expansion_analysis, organization
+from .models import profile, vanpool_report, custom_user, vanpool_expansion_analysis, organization
 from django.contrib.auth.models import Group
 from .utilities import calculate_latest_vanpool, find_maximum_vanpool, calculate_remaining_months, calculate_if_goal_has_been_reached
 
