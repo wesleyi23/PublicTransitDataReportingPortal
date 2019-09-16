@@ -7,9 +7,9 @@ from Panacea.models import vanpool_report
 def yearchange(user_org_id, start_year, end_year, measure):
 
     start_vanpool_report_year = vanpool_report.objects. \
-        filter(organization_id=user_org_id, report_date__isnull=False, report_month=12, report_year=start_year)
+        filter(organization_id=user_org_id, report_date__isnull=False, report_month=12, report_year=start_year).first()
     end_vanpool_report_year = vanpool_report.objects. \
-        filter(organization_id=user_org_id, report_date__isnull=False, report_month=12, report_year=end_year)
+        filter(organization_id=user_org_id, report_date__isnull=False, report_month=12, report_year=end_year).first()
 
     def overall_change(measure):
         """Return a list where first item is the current months stat and the second item is the year over year grouwth"""
