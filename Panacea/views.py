@@ -1,36 +1,18 @@
-import calendar
-import decimal
 import json
-
-from django.contrib import messages
-from django.core.mail import send_mail
-from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
-from django.db.models import Min, Max, Value, Sum, Avg, Count
+from django.db.models import Min, Sum, Avg
 from django.forms import modelformset_factory
-from django.http import HttpResponse, JsonResponse
+from django.http import JsonResponse
 from django.shortcuts import render, redirect
-from django.db.models.functions import Concat
-from django.template import RequestContext
-from django.urls import reverse_lazy
 from django.db.models.functions import datetime
-from django.utils.decorators import method_decorator
-from django.views import generic
-from django.views.generic import TemplateView
-from django.forms.models import inlineformset_factory
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
-from django.http import HttpResponseRedirect
-from django.db.models import Max, Subquery, F, OuterRef
-from django.db.models.expressions import RawSQL
+from django.db.models import Max
 from dateutil.relativedelta import relativedelta
 import datetime
-
 from Panacea.decorators import group_required
-from django.core.exceptions import ValidationError
-from django.forms.widgets import CheckboxInput
-from .utilities import monthdelta, get_wsdot_color, green_house_gas_per_vanpool_mile, green_house_gas_per_sov_mile, \
-    get_vanpool_summary_charts_and_table
+from .utilities import monthdelta, get_wsdot_color, get_vanpool_summary_charts_and_table
 from django.http import Http404
 from .filters import VanpoolExpansionFilter
 from django.conf import settings
@@ -50,7 +32,7 @@ from .forms import CustomUserCreationForm, \
     request_user_permissions, \
     statewide_summary_settings, \
     Modify_A_Vanpool_Expansion, organisation_summary_settings
-from django.utils.translation import ugettext_lazy as _
+
 from .models import profile, vanpool_report, custom_user,  vanpool_expansion_analysis, organization
 from django.contrib.auth.models import Group
 from .utilities import calculate_latest_vanpool, find_maximum_vanpool, calculate_remaining_months, calculate_if_goal_has_been_reached
