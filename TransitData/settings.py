@@ -36,10 +36,12 @@ ALLOWED_HOSTS = []
 # pip install django-phonenumber-field
 # pip install phonenumbers
 # pip install django-localflavor
-# pip install celery 4.3.0
+# pip install celery
 # pip install django-widget-tweaks
-# pip install django-tempus-dominus
-
+#
+# pip install django-filter
+# pip install django-simple-history
+# pip install django-celery-beat
 # pip install eventlet
 
 
