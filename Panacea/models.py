@@ -472,6 +472,24 @@ class SummaryExpenses(models.Model):
 
 
 
-
-
+class cover_sheet(models.Model):
+    executive_officer_first_name = models.CharField(max_length=50, blank=True, null=True)
+    executive_officer_last_name = models.CharField(max_length=50, blank=True, null=True)
+    executive_officer_title = models.CharField(max_length=50, blank=True, null=True)
+    service_website_url = models.CharField(max_length=255, blank=True, null=True)
+    service_area_desc = models.CharField(max_length=500, blank=True, null=True)
+    congressional_districts = models.CharField(max_length=100, blank=True, null=True)
+    legislative_districts = models.CharField(max_length=100, blank=True, null=True)
+    type_of_government = models.CharField(max_length=100, blank=True, null=True)
+    governing_body = models.TextField(blank=True, null=True)
+    tax_authorized_desc = models.CharField(max_length=250, blank=True, null=True)
+    transit_development_plan_url = models.CharField(max_length=250, blank=True, null=True)
+    intermodal_connections = models.TextField(blank=True, null=True)
+    fares_desc = models.TextField(blank=True, null=True)
+    community_medicaid_service_and_eligibility = models.TextField(blank=True, null=True)
+    current_operations = models.TextField(blank=True, null=True)
+    community_medicaid_revenue_service_vehicles = models.TextField(blank=True, null=True)
+    community_medicaid_days_of_service = models.CharField(max_length=250, blank=True, null=True)
+    monorail_ownership = models.CharField(max_length=250, blank=True, null=True)
+    organization_logo = models.BinaryField(blank=True, null=True)
 
