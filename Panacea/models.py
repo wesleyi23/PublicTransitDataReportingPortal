@@ -326,7 +326,11 @@ class cover_sheet(models.Model):
     transit_development_plan_url = models.CharField(max_length=50, blank=True, null=True)
     intermodal_connections = models.CharField(max_length=50, blank=True, null=True)
     fares_desc = models.CharField(max_length=50, blank=True, null=True)
-    community_medicaid_ = models.CharField(max_length=50, blank=True, null=True)
+    community_medicaid_service_and_eligibility = models.CharField(max_length=50, blank=True, null=True)
+    current_operations = models.CharField(max_length=50, blank=True, null=True)
+    community_medicaid_revenue_service_vehicles = models.CharField(max_length=50, blank=True, null=True)
+    community_medicaid_days_of_service = models.CharField(max_length=50, blank=True, null=True)
+
 
 
 
