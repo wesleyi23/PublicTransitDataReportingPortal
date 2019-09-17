@@ -312,6 +312,22 @@ class vanpool_expansion_analysis(models.Model):
         return current_biennium
 
 
+class cover_sheet(models.Model):
+    executive_officer_first_name = models.CharField(max_length=50, blank=True, null=True)
+    executive_officer_last_name = models.CharField(max_length=50, blank=True, null=True)
+    executive_officer_title = models.CharField(max_length=50, blank=True, null=True)
+    service_website_url = models.CharField(max_length=50, blank=True, null=True)
+    service_area_desc = models.CharField(max_length=50, blank=True, null=True)
+    congressional_districts = models.CharField(max_length=50, blank=True, null=True)
+    legislative_districts = models.CharField(max_length=50, blank=True, null=True)
+    type_of_government = models.CharField(max_length=50, blank=True, null=True)
+    governing_body = models.CharField(max_length=50, blank=True, null=True)
+    tax_authorized_desc = models.CharField(max_length=50, blank=True, null=True)
+    transit_development_plan_url = models.CharField(max_length=50, blank=True, null=True)
+    intermodal_connections = models.CharField(max_length=50, blank=True, null=True)
+    fares_desc = models.CharField(max_length=50, blank=True, null=True)
+    community_medicaid_ = models.CharField(max_length=50, blank=True, null=True)
+
 
 
 
