@@ -232,12 +232,12 @@ class organisation_summary_settings(forms.Form):
         (99, "All")
     )
 
+
     include_years = forms.CharField(widget=forms.Select(choices=INCLUDE_YEARS_CHOICES,
                                                         attrs={'class': 'form-control',
                                                                'data-form-name': "chart_form"}))
     summary_org = forms.ModelChoiceField(queryset=organization.objects.all(),
-                                         widget=forms.Select(choices=organization.objects.all(),
-                                                             attrs={'class': 'form-control',
+                                         widget=forms.Select(attrs={'class': 'form-control',
                                                                     'data-form-name': "chart_form"}))
 # endregion
 

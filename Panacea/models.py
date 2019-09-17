@@ -117,14 +117,14 @@ class organization(models.Model):
     state = USStateField(blank=True)
     zip_code = USZipCodeField(blank=True)
     classification = models.CharField(max_length=50, choices=AGENCY_CLASSIFICATIONS, blank=True, null=True)
-    # vanpool_program = models.BooleanField(blank=True, null=True, default=True)
+    vanpool_program = models.BooleanField(blank=True, null=True, default=True)
     vanshare_program = models.BooleanField(blank=True, null=True)
     vanpool_expansion = models.BooleanField(blank=True, null=True)
     # this is kind of a hack and I hate it; on the other hand, it seems less complex than storing a list
     # TODO add to agency profile form
     in_jblm_area = models.BooleanField(blank=True, null=True)  # TODO confirm this is no longer needed
     in_puget_sound_area = models.BooleanField(blank=True, null=True)
-    # summary_organization_classifications = models.CharField(max_length=50, choices=SUMMARY_ORG_CLASSIFICATIONS, blank=True, null=True)
+    summary_organization_classifications = models.CharField(max_length=50, choices=SUMMARY_ORG_CLASSIFICATIONS, blank=True, null=True)
 
 
 class profile(models.Model):
