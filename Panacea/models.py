@@ -88,7 +88,17 @@ class organization(models.Model):
         ("Rural", "Rural"),
     )
 
-    CHOICES = (
+    SUMMARY_ORG_CLASSIFICATIONS = (
+        ("Community Provider", "Community Provider"),
+        ("Ferry", "Ferry"),
+        ("Intercity Bus", "Intercity Bus"),
+        ("Medicaid Broker", "Medicaid Broker"),
+        ("Monorail", "Monorail"),
+        ("Transit", "Transit"),
+        ("Tribe", "Tribe"),
+    )
+
+    BIENNIUM_CHOICES = (
         ('13-15', '13-15'),
         ('15-17', '15-17'),
         ('17-19', '17-19'),
@@ -99,7 +109,7 @@ class organization(models.Model):
     def __str__(self):
         return self.name
 
-    #biennia = models.CharField(max_length=50, choices=CHOICES, blank=True, null=True)
+    #biennia = models.CharField(max_length=50, choices=BIENNIUM_CHOICES, blank=True, null=True)
     name = models.CharField(max_length=80, blank=True)
     address_line_1 = models.CharField(max_length=50, blank=True)
     address_line_2 = models.CharField(max_length=50, blank=True, null=True)
@@ -107,13 +117,14 @@ class organization(models.Model):
     state = USStateField(blank=True)
     zip_code = USZipCodeField(blank=True)
     classification = models.CharField(max_length=50, choices=AGENCY_CLASSIFICATIONS, blank=True, null=True)
+    vanpool_program = models.BooleanField(blank=True, null=True, default=True)
     vanshare_program = models.BooleanField(blank=True, null=True)
     vanpool_expansion = models.BooleanField(blank=True, null=True)
     # this is kind of a hack and I hate it; on the other hand, it seems less complex than storing a list
     # TODO add to agency profile form
     in_jblm_area = models.BooleanField(blank=True, null=True)  # TODO confirm this is no longer needed
     in_puget_sound_area = models.BooleanField(blank=True, null=True)
-    test_django = models.BooleanField(blank=True, null=True)
+    summary_organization_classifications = models.CharField(max_length=50, choices=SUMMARY_ORG_CLASSIFICATIONS, blank=True, null=True)
 
 
 class profile(models.Model):
@@ -131,7 +142,6 @@ class profile(models.Model):
     reports_on = models.ManyToManyField(ReportType, blank=True)  # TODO rename this to
     requested_permissions = models.ManyToManyField(Group)
     active_permissions_request = models.BooleanField(blank=True, null=True)
-
 
 
 class vanpool_report(models.Model):
@@ -274,7 +284,6 @@ class vanpool_expansion_analysis(models.Model):
     months_remaining = models.CharField(blank = True, null = True, max_length=20)
     organization_name = models.CharField(blank = True, null = True, max_length=100)
     history = HistoricalRecords()
-
 
     @property
     def adjusted_service_goal(self):
