@@ -1,0 +1,177 @@
+{% extends 'index.html' %}
+{% load humanize %}
+{% load custom_tags %}
+{% load static %}
+
+{% block head_content %}
+    {#  <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.19/css/jquery.dataTables.css">#}
+    <link href="{% static 'vendor/datatables/dataTables.bootstrap4.css' %}" rel="stylesheet" type="text/css">
+{% endblock %}
+
+{% block content %}
+
+    <div class="card shadow mb-4 w-100">
+        <div class="card-header">
+            <ul class="nav nav-tabs card-header-tabs">
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'Vanpool_expansion_analysis' %}">Vanpool Expansion Analysis</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link active" href="{% url 'Vanpool_expansion_modify' %}">Modify a Vanpool</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'Vanpool_expansion_submission' %}">Submit a Vanpool</a>
+                </li>
+            </ul>
+        </div>
+
+        <div class="card-body">
+            <h6 class="font-weight-bold text-primary"> Select a Vanpool Expansion to Modify {{ org.name }}</h6>
+
+            <div class = "dataTable_wrapper">
+                <table id="select_vanpool_expansion" class = 'table tdt-bootstrap4 dataTable dataTable_wrapper'>
+                    <thead class="table-secondary" >
+                    <tr>
+                        <th align = 'center'>Agency Name</th>
+                        <th scope="col">Expansion Vans</th>
+                        <th scope="col">Latest Vehicle Acceptance Date</th>
+                        <th scope="col">Notes</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {%  for org, vea in zipped %}
+                        <tr class = "fieldWrapper clickable-row {% if vea.id == id %} table-active {% endif %}" data-href="{%  url 'Vanpool_expansion_modify' %}/{{vea.id}}">
+                            <td> {{ org.name}}</td>
+                            <td>{{ vea.expansion_vans_awarded}}</td>
+                            <td>{{ vea.latest_vehicle_acceptance|date:"Y-m-d"}}</td>
+                            <td>{{ vea.notes}}</td>
+                        </tr>
+                    {%  endfor %}
+                    </tbody>
+                </table>
+
+            </div>
+            <hr style="margin-top: 1rem; margin-bottom: 1rem">
+
+            <h6 class="font-weight-bold text-primary">Report Details {{ org.name }}</h6>
+            <div class="form-group">
+                <form action = "{% url 'Vanpool_expansion_modify' %}/{{id}}" method="post" id="post-form" style="opacity: 0" class="form-fade-out">
+                    {% csrf_token %}
+                    {{ form.non_field_errors }}
+                    {{ form.source.errors }}
+                    {{ form.source }}
+                    <table style="border-collapse: separate; border-spacing: .5rem">
+                        <tr class="fieldWrapper">
+                            <td>Expansion Vans Awarded</td>
+                            <td>{{ form.expansion_vans_awarded }}</td>
+                            <td>{{ form.expansion_vans_awarded.errors }}</td>
+                        </tr>
+                        <tr class="fieldWrapper">
+                            <td>Latest Vehicle Acceptance</td>
+                            <td>{{ form.latest_vehicle_acceptance }}</td>
+                            <td>{{ form.latest_vehicle_acceptance.errors }}</td>
+                        </tr>
+                        <tr class="fieldWrapper">
+                            <td>Grant Extension</td>
+                            <td>{{ form.extension_granted }}</td>
+                            <td>{{ form.extension_granted.errors }}</td>
+                        </tr>
+                        <tr class="fieldWrapper">
+                            <td>Extension Expired</td>
+                            <td>{{ form.expired }} <a href="#" class="edit_profile_field" data-field_name="{{ form.expired.name }}"> (Edit)</a></td>
+                            <td>{{ form.expired.errors }}</td>
+                        </tr>
+                    </table>
+                    <p style="margin-left: 0.5rem">
+                        Notes
+                        {{ form.notes }}
+                        {{ form.notes.errors }}
+                        <input type="submit" value="Modify Vanpool" form = "post-form" class="btn btn-primary float-left" style="position: absolute; bottom: 20px; right: 20px">
+                    </p>
+                </form>
+            </div>
+
+        </div>
+
+
+    </div>
+
+
+    {% if successful_submit %}
+        <!-- Modal -->
+        <div class="modal fade" id="success_modal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="exampleModalLabel">Success!</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        Your data has been submitted successfully.  You may review it and edit it at any time.
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <script src="{% static 'vendor/jquery/jquery.min.js'%}"></script>
+        <script type="text/javascript">
+            $(document).ready(function(){
+                $("#success_modal").modal();
+                $(".form-fade-out").fadeTo("fast", 1)
+            });
+        </script>
+
+    {% else %}
+        <script src="{% static 'vendor/jquery/jquery.min.js'%}"></script>
+        <script type="text/javascript">
+            $(document).ready(function() {
+                $(".form-fade-out").fadeTo("fast", 1)
+            });
+        </script>
+
+    {% endif %}
+
+{% endblock %}
+
+{% block page_scripts %}
+
+
+    <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.19/js/jquery.dataTables.js"></script>
+    <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.19/js/dataTables.bootstrap4.min.js "></script>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/datepicker/0.6.5/datepicker.min.css"/>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/datepicker/0.6.5/datepicker.min.js"></script>
+
+    <script>
+        $(function () {
+            $("#id_latest_vehicle_acceptance").datepicker({
+                format:'yyyy-mm-dd',
+            });
+        });
+    </script>
+    <script type="text/javascript">
+        $(document).ready(function() {
+            $("#id_latest_vehicle_acceptance").addClass('form-control')
+        });
+    </script>
+    {#    <script type="text/javascript">#}
+    {#        $(document).ready( function () {#}
+    {#            $('#select_vanpool_expansion').DataTable({#}
+    {#                "scrollX": true,#}
+    {#                "sScrollX": "100%",#}
+    {#                "sScrollXInner": "100%",#}
+    {#                "bLengthChange": false,#}
+    {#                "dom": '<"top"fl>rt<"bottom"ip><"clear">'#}
+    {#            });#}
+    {#            $('.dataTables_filter').addClass('form-inline');#}
+    {#            $('.dataTables_filter').css({"float":"left", "margin-bottom":"2px", "margin-left":"2px"})#}
+    {#        });#}
+    {##}
+    {##}
+    {##}
+    {#    </script>#}
+{% endblock %}

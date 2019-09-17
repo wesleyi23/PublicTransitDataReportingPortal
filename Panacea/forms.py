@@ -10,6 +10,7 @@ from django.core import serializers
 from dateutil.relativedelta import relativedelta
 from tempus_dominus.widgets import DatePicker
 from .widgets import FengyuanChenDatePickerInput
+from .utilities import pull_organization
 
 
 # region shared
@@ -125,6 +126,7 @@ class user_profile_custom_user(forms.ModelForm):
 
 class user_profile_profile(forms.ModelForm):
 
+
     class Meta:
         model = profile
         queryset = organization.objects.all()
@@ -138,8 +140,8 @@ class user_profile_profile(forms.ModelForm):
 
 
 class PhoneOrgSetup(forms.ModelForm):
-    queryset = organization.objects.all().order_by('name')
 
+    queryset = organization.objects.all().order_by('name')
     telephone_number = PhoneNumberField(widget=forms.TextInput(attrs={'class': 'form-control form-control-user'}),
                                         label=_("Phone number:"), required=True)
     job_title = forms.CharField(widget=forms.TextInput(attrs={'class': 'form-control form-control-user'}),
@@ -465,6 +467,7 @@ class statewide_summary_settings(forms.Form):
 
 
 class submit_a_new_vanpool_expansion(forms.ModelForm):
+
     CHOICES = (
         ('11-13', '11-13'),
         ('13-15', '13-15'),

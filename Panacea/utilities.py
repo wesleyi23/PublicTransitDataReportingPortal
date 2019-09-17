@@ -12,6 +12,10 @@ from dateutil.relativedelta import relativedelta
 #
 
 
+def pull_organization(self):
+    queryset = organization.objects.all()
+    return queryset
+
 
 def calculate_latest_vanpool():
     latestVanData = vanpool_expansion_analysis.objects.values('id', 'date_of_award', 'deadline', 'organization_id').order_by('organization_id')

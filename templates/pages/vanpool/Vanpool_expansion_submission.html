@@ -1,0 +1,94 @@
+{% extends 'index.html' %}
+{% load humanize %}
+{% load custom_tags %}
+{% load static %}
+
+
+{% block head_content %}
+
+{% endblock %}
+
+{% block content %}
+    <div class="card shadow mb-4 w-100">
+        <div class="card-header">
+            <ul class="nav nav-tabs card-header-tabs">
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'Vanpool_expansion_analysis' %}">Vanpool Expansion Analysis</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'Vanpool_expansion_modify' %}">Modify a Vanpool</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link active" href="{% url 'Vanpool_expansion_submission' %}">Submit a Vanpool</a>
+                </li>
+            </ul>
+        </div>
+        <div class="card-body" >
+            <div class="form-group">
+
+                <form action="{% url 'Vanpool_expansion_submission' %}" method="POST" class="post-form" name="ReportSelection" data-errField="reports_on" style="max-width: 600px">
+                    {%  csrf_token %}
+                    <table style="border-collapse: separate; border-spacing: 10px">
+                        <tbody>
+                        <tr class="fieldWrapper">
+                            <td class = "d-none d-md-table-cell">  Agency </td>
+                            <td class = "d-none d-md-table-cell" > {{ form.organization}}</td>
+                        </tr>
+                        <tr class="fieldWrapper">
+                            <td class = "d-none d-md-table-cell">  Date of Award </td>
+                            <td class = "d-none d-md-table-cell" > {{ form.date_of_award}}</td>
+                        </tr>
+                         <tr class="fieldWrapper">
+                            <td class = "d-none d-md-table-cell">  Expansion Vans Awarded </td>
+                            <td class = "d-none d-md-table-cell" > {{ form.expansion_vans_awarded}}</td>
+                        </tr>
+                        <tr class="fieldWrapper">
+                            <td class = "d-none d-md-table-cell">  Latest Vehicle Acceptance Date </td>
+                            <td class = "d-none d-md-table-cell" > {{ form.latest_vehicle_acceptance}}</td>
+                        </tr>
+
+                        <tr class="fieldWrapper">
+                            <td class = "d-none d-md-table-cell"> Starting Vanpools in Service </td>
+                            <td class = "d-none d-md-table-cell" > {{ form.vanpools_in_service_at_time_of_award}}</td>
+                        </tr>
+
+                        <tr class="fieldWrapper">
+                            <td class = "d-none d-md-table-cell">  Notes </td>
+                            <td class = "d-none d-md-table-cell" > {{ form.notes}}</td>
+                        </tr>
+                        <tr class="fieldWrapper">
+                            <td class = "d-none d-md-table-cell">  Awarded Biennium </td>
+                            <td class = "d-none d-md-table-cell" > {{ form.awarded_biennium}}</td>
+                        </tr>
+
+                        </tbody>
+                    </table>
+                    <div id="ReportSelection_err"></div>
+                    <input type="submit" value="Submit a New Expansion" class="btn btn-primary" style="bottom: 20px; right: 20px">
+                </form>
+
+            </div>
+        </div>
+    </div>
+
+{%  endblock %}
+
+{%  block page_scripts %}
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/datepicker/0.6.5/datepicker.min.css"/>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/datepicker/0.6.5/datepicker.min.js"></script>
+
+    <script>
+        $(function () {
+            $("#id_date_of_award").datepicker({
+                format:'yyyy-mm-dd',
+            });
+        });
+    </script>
+    <script>
+        $(function () {
+            $("#id_latest_vehicle_acceptance").datepicker({
+                format:'yyyy-mm-dd',
+            });
+        });
+    </script>
+{% endblock %}

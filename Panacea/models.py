@@ -113,6 +113,7 @@ class organization(models.Model):
     # TODO add to agency profile form
     in_jblm_area = models.BooleanField(blank=True, null=True)  # TODO confirm this is no longer needed
     in_puget_sound_area = models.BooleanField(blank=True, null=True)
+    test_django = models.BooleanField(blank=True, null=True)
 
 
 class profile(models.Model):
@@ -130,6 +131,7 @@ class profile(models.Model):
     reports_on = models.ManyToManyField(ReportType, blank=True)  # TODO rename this to
     requested_permissions = models.ManyToManyField(Group)
     active_permissions_request = models.BooleanField(blank=True, null=True)
+
 
 
 class vanpool_report(models.Model):
