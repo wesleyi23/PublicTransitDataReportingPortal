@@ -31,7 +31,7 @@ from .forms import CustomUserCreationForm, \
     Modify_A_Vanpool_Expansion, \
     request_user_permissions, \
     statewide_summary_settings, \
-    Modify_A_Vanpool_Expansion, organisation_summary_settings
+    Modify_A_Vanpool_Expansion, organisation_summary_settings, organization_information
 
 from .models import profile, vanpool_report, custom_user, vanpool_expansion_analysis, organization
 from django.contrib.auth.models import Group
@@ -670,8 +670,32 @@ def Operation_Summary(request):
 
 # endregion
 
+
 # region summary
- #
+def summary_instructions(request):
+    return render(request, 'pages/summary/summary_instructions.html', {})
+
+
+def organizational_information(request):
+    user_profile_data = profile.objects.get(custom_user=request.user.id)
+    org = user_profile_data.organization
+    org_name = org.name
+    form = organization_information(instance=org)
+    if request.POST:
+        if form.is_valid():
+            form.save()
+            return redirect('organizational_information')
+
+    return render(request, 'pages/summary/organizational_information.html', {'org_name': org_name, 'form': form})
+
+
+def ntd_upload(request):
+    return render(request, 'pages/summary/ntd_upload.html', {})
+
+
+def cover_sheet(request):
+    return render(request, 'pages/summary/cover_sheet.html', {})
+
 # endregion
 
 

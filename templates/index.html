@@ -53,14 +53,35 @@
             </a>
         </li>
 
-        <!-- Divider -->
-        <hr class="sidebar-divider">
+
 
         <!-- Heading -->
-        {% if request.user|has_group:"Vanpool reporter" or request.user|has_group:"WSDOT staff" %}
+        {% if request.user|has_group:"Summary reporter" or request.user|has_group:"Vanpool reporter" or request.user|has_group:"WSDOT staff" %}
             <div class="sidebar-heading">
                 Data Reporting
             </div>
+        {% endif %}
+        {% if request.user|has_group:"Summary reporter" or request.user|has_group:"WSDOT staff" %}
+            <!-- Nav Item - Asset Inventory Reports Menu -->
+
+            <li class="nav-item">
+                <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseSummaryReport" aria-expanded="true" aria-controls="collapseVanpoolReport">
+                    {#                    <i class="fas fa-fw fa-clipboard-check"></i>#}
+                    <span>Summary Reporting</span>
+                </a>
+                <div id="collapseSummaryReport" class="collapse" data-parent="#accordionSidebar">
+                    <div class="bg-white py-2 collapse-inner rounded">
+                        {% if request.user|has_group:"Summary reporter" %}
+                            <a class="collapse-item" href="{% url 'summary_instructions' %}">Start summary report</a>
+                        {% endif %}
+                        <a class="collapse-item" href="{% url 'Vanpool_data' %}">View summary data</a>
+
+                    </div>
+                </div>
+            </li>
+        {% endif %}
+
+        {% if request.user|has_group:"Vanpool reporter" or request.user|has_group:"WSDOT staff" %}
 
             <!-- Nav Item - Asset Inventory Reports Menu -->
 
@@ -81,6 +102,9 @@
                 </div>
             </li>
 
+        {% endif %}
+
+        {% if request.user|has_group:"Summary reporter" or request.user|has_group:"Vanpool reporter" or request.user|has_group:"WSDOT staff" %}
             <!-- Divider -->
             <hr class="sidebar-divider">
         {% endif %}

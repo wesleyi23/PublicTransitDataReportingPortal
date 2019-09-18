@@ -50,8 +50,11 @@ urlpatterns = [
     path('Panacea/', include('Panacea.urls')),
     path('Panacea/', include('django.contrib.auth.urls')),
     path('accessibility', views.accessibility, name='accessibility'),
-    path('PublicDisclosure/', views.public_disclosure, name="public_disclosure")
-
+    path('PublicDisclosure/', views.public_disclosure, name="public_disclosure"),
+    path('summary/instructions/', views.summary_instructions, name="summary_instructions"),
+    path('summary/organizational_information/', views.organizational_information, name="organizational_information"),
+    path('summary/ntd_upload/', views.ntd_upload, name="ntd_upload"),
+    path('summary/cover_sheets/', views.cover_sheet, name="cover_sheets"),
 ]
 
 handler404 = views.handler404

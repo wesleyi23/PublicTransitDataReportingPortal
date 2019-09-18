@@ -544,5 +544,15 @@ class Modify_A_Vanpool_Expansion(forms.ModelForm):
 
 # region summary
 
+class organization_information(forms.ModelForm):
+    class Meta:
+        model = organization
+        fields = ("summary_organization_classifications", )
+        widgets = {
+            'summary_organization_classifications': forms.Select(choices=organization.SUMMARY_ORG_CLASSIFICATIONS,
+                                                                 attrs={'class': 'form-control form-control-plaintext',
+                                                                        'readonly': 'True',
+                                                                        'style': 'pointer-events: none'}),
+        }
 
 # endregion
