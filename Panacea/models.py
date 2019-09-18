@@ -367,6 +367,7 @@ class SummaryTransitData(models.Model):
         ('Compressed Natural Gas', 'Compressed Natural Gas'),
         ('Propane', 'Propane'),
         ('Electricity', 'Electricity'),
+        ('Employees - FTEs', 'Employees - FTEs'),
         ('Farebox Revenues', 'Farebox Revenues')
     )
 
