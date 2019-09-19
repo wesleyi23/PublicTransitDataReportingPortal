@@ -37,8 +37,11 @@
                     </ul>
                 </div>
                 <div class="card-body" style="font-size: 0.8rem">
+                    <form action="/summary/cover_sheet/" method="post">
+                        {% csrf_token  %}
+                        {{ form.organization }}
 
-
+                    </form>
                 </div>
             </div>
         </div>

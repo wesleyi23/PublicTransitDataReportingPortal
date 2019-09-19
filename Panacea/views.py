@@ -31,9 +31,9 @@ from .forms import CustomUserCreationForm, \
     Modify_A_Vanpool_Expansion, \
     request_user_permissions, \
     statewide_summary_settings, \
-    Modify_A_Vanpool_Expansion, organisation_summary_settings, organization_information
+    Modify_A_Vanpool_Expansion, organisation_summary_settings, organization_information, cover_sheet_form
 
-from .models import profile, vanpool_report, custom_user, vanpool_expansion_analysis, organization
+from .models import profile, vanpool_report, custom_user, vanpool_expansion_analysis, organization, cover_sheet
 from django.contrib.auth.models import Group
 from .utilities import calculate_latest_vanpool, find_maximum_vanpool, calculate_remaining_months, calculate_if_goal_has_been_reached
 
@@ -693,8 +693,21 @@ def ntd_upload(request):
     return render(request, 'pages/summary/ntd_upload.html', {})
 
 
-def cover_sheet(request):
-    return render(request, 'pages/summary/cover_sheet.html', {})
+def cover_sheet_view(request):
+    user_profile_data = profile.objects.get(custom_user=request.user.id)
+    org = user_profile_data.organization
+    org_name = org.name
+
+    cover_sheet_instance, created = cover_sheet.objects.get_or_create(organization=org)
+
+    form = cover_sheet_form(instance=cover_sheet_instance)
+
+    if request.POST:
+        if form.is_valid():
+            form.save()
+            return redirect('cover_sheet')
+
+    return render(request, 'pages/summary/cover_sheet.html', {'org_name': org_name, 'form': form})
 
 # endregion
 

@@ -45,8 +45,8 @@ class CustomUserManager(BaseUserManager):
         return self._create_user(email, password, **extra_fields)
 
 
-# User authentication from tut located here:https://wsvincent.com/django-custom-user-model-tutorial/
 class custom_user(AbstractUser):
+    # User authentication from tut located here:https://wsvincent.com/django-custom-user-model-tutorial/
     username = None
     email = models.EmailField(_('email address'), unique=True)  # changes email to unique and blank to false
     random_field = models.CharField(max_length=80, blank=True)
@@ -87,7 +87,7 @@ class organization(models.Model):
         ("Small Urban", "Small Urban"),
         ("Rural", "Rural"),
     )
-
+    # TODO move to table
     SUMMARY_ORG_CLASSIFICATIONS = (
         ("Community Provider", "Community Provider"),
         ("Ferry", "Ferry"),
@@ -130,7 +130,7 @@ class profile(models.Model):
     city = models.CharField(max_length=50, blank=True)
     state = USStateField(blank=True)
     zip_code = USZipCodeField(blank=True)
-    reports_on = models.ManyToManyField(ReportType, blank=True)  # TODO rename this to
+    reports_on = models.ManyToManyField(ReportType, blank=True)  # TODO rename this to something else
     requested_permissions = models.ManyToManyField(Group)
     active_permissions_request = models.BooleanField(blank=True, null=True)
 
@@ -243,6 +243,7 @@ def save_user_profile(sender, instance, **kwargs):
 
 
 class vanpool_expansion_analysis(models.Model):
+    # TODO change to our biennium function
     CHOICES = (
         ('11-13', '11-13'),
         ('13-15', '13-15'),
@@ -282,7 +283,7 @@ class vanpool_expansion_analysis(models.Model):
 #TODO Change all the forms so we get good data, put various checks into the views page,
     @property
     # TODO should this be here or a function in utilities also we may want to rewrite this so it works no mater what date we put in
-    # TODO Generic function made - need to integrate it in back here
+    # TODO Generic function made - need to integrate it in
     def calculate_current_biennium(self):
         import datetime
         today = datetime.date.today()
@@ -296,13 +297,10 @@ class vanpool_expansion_analysis(models.Model):
         elif today >= datetime.date(2023, 6, 1) and today < datetime.date(2025, 6, 1):
             current_biennium = '21-25'
         return current_biennium
-# endregion
-
-
-
 
 
 class SummaryTransitData(models.Model):
+    # TODO move to table
     MODE_CHOICES = (
         ('Light Rail', 'Light Rail'),
         ('Streetcar', 'Streetcar'),
@@ -315,9 +313,8 @@ class SummaryTransitData(models.Model):
         ('Bus Rapid Transit', 'Bus Rapid Transit'),
         ('Commuter Rail', 'Commuter Rail'),
         ('Demand Response Taxi Services', 'Demand Response Taxi Services')
-
     )
-
+    # TODO move to table
     MODE_ROLLUPS = (
         ('Fixed Route', 'Fixed Route'),
         ('Route Deviated', 'Route Deviated'),
@@ -333,7 +330,7 @@ class SummaryTransitData(models.Model):
         ('Purchased', 'Purchased')
 
     )
-
+    # TODO move to table
     TRANSIT_METRICS = (
         ('Revenue Vehicle Hours', 'Revenue Vehicle Hours'),
         ('Total Vehicle Hours', 'Total Vehicle Hours'),
@@ -373,7 +370,7 @@ class SummaryRevenues(models.Model):
         ('Capital', 'Capital'),
         ('Operating', 'Operating')
     )
-
+    # TODO move to table
     REVENUE_SOURCE = (
         ('Sales Tax', 'Sales Tax'),
         ('Other Local Taxes', 'Other Local Taxes'),
@@ -420,9 +417,9 @@ class SummaryRevenues(models.Model):
     history = HistoricalRecords()
 
 
-
 class SummaryExpenses(models.Model):
 
+    # TODO move to table
     EXPENSES_DETAILED = (('Local Funds', 'Local Funds'),
     ('Other-Expenditures', 'Other-Expenditures'),
     ('Depreciation ', 'Depreciation '),
@@ -452,6 +449,7 @@ class SummaryExpenses(models.Model):
 class RevenueSource(models.Model):
     specific_revenue_source = models.CharField(max_length=120)
 
+
 class ExpensesSource(models.Model):
     specific_expense_source = models.CharField(max_length=100)
 
@@ -459,12 +457,14 @@ class ExpensesSource(models.Model):
 class TransitMetrics(models.Model):
     metric = models.CharField(max_length=120)
 
+
 class TransitMode(models.Model):
     mode = models.CharField(max_length=80)
     rollup_mode = models.CharField(max_length=80)
 
 
 class cover_sheet(models.Model):
+    organization = models.ForeignKey(organization, on_delete=models.PROTECT, blank=True, null=True)
     executive_officer_first_name = models.CharField(max_length=50, blank=True, null=True)
     executive_officer_last_name = models.CharField(max_length=50, blank=True, null=True)
     executive_officer_title = models.CharField(max_length=50, blank=True, null=True)

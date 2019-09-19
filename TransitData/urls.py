@@ -54,7 +54,7 @@ urlpatterns = [
     path('summary/instructions/', views.summary_instructions, name="summary_instructions"),
     path('summary/organizational_information/', views.organizational_information, name="organizational_information"),
     path('summary/ntd_upload/', views.ntd_upload, name="ntd_upload"),
-    path('summary/cover_sheets/', views.cover_sheet, name="cover_sheets"),
+    path('summary/cover_sheets/', views.cover_sheet_view, name="cover_sheets"),
 ]
 
 handler404 = views.handler404

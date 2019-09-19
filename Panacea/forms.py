@@ -2,7 +2,13 @@ from django import forms
 from django.contrib.auth import password_validation, login
 from django.contrib.auth.forms import UserChangeForm, AuthenticationForm
 import datetime
-from .models import custom_user, profile, organization, ReportType, vanpool_report, vanpool_expansion_analysis
+from .models import custom_user, \
+    profile, \
+    organization, \
+    ReportType, \
+    vanpool_report, \
+    vanpool_expansion_analysis, \
+    cover_sheet
 from django.utils.translation import gettext, gettext_lazy as _
 from phonenumber_field.formfields import PhoneNumberField
 from localflavor.us.forms import USStateSelect, USZipCodeField
@@ -554,5 +560,13 @@ class organization_information(forms.ModelForm):
                                                                         'readonly': 'True',
                                                                         'style': 'pointer-events: none'}),
         }
+
+class cover_sheet_form(forms.ModelForm):
+    class Meta:
+        model = cover_sheet
+        exclude = ['']
+
+
+
 
 # endregion
