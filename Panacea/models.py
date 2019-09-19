@@ -98,18 +98,10 @@ class organization(models.Model):
         ("Tribe", "Tribe"),
     )
 
-    # BIENNIUM_CHOICES = (
-    #     ('13-15', '13-15'),
-    #     ('15-17', '15-17'),
-    #     ('17-19', '17-19'),
-    #     ('19-21', '19-21'),
-    #     ('21-23', '21-23')
-    # )
-
     def __str__(self):
         return self.name
 
-    #biennia = models.CharField(max_length=50, choices=BIENNIUM_CHOICES, blank=True, null=True)
+
     name = models.CharField(max_length=80, blank=True)
     address_line_1 = models.CharField(max_length=50, blank=True)
     address_line_2 = models.CharField(max_length=50, blank=True, null=True)
@@ -120,7 +112,6 @@ class organization(models.Model):
     vanpool_program = models.BooleanField(blank=True, null=True, default=True)
     vanshare_program = models.BooleanField(blank=True, null=True)
     vanpool_expansion = models.BooleanField(blank=True, null=True)
-    # this is kind of a hack and I hate it; on the other hand, it seems less complex than storing a list
     # TODO add to agency profile form
     in_jblm_area = models.BooleanField(blank=True, null=True)  # TODO confirm this is no longer needed
     in_puget_sound_area = models.BooleanField(blank=True, null=True)
@@ -263,40 +254,35 @@ class vanpool_expansion_analysis(models.Model):
         ('25-27', '25-27')
     )
 
-
-    organization = models.ForeignKey(organization, on_delete=models.PROTECT, related_name = '+')
+    organization = models.ForeignKey(organization, on_delete=models.PROTECT, related_name='+')
     vanpools_in_service_at_time_of_award = models.IntegerField(blank=True, null=True)
-    date_of_award = models.DateField(blank = True, null = True)
-    expansion_vans_awarded = models.IntegerField(blank= True, null = True)
-    latest_vehicle_acceptance = models.DateField(blank =True, null=True)
-    extension_granted = models.BooleanField(blank = False, null = True)
-    vanpool_goal_met = models.BooleanField(blank=False, null = True)
-    expired = models.BooleanField(blank=False, null = True)
-    notes = models.TextField(blank = False, null = True)
+    date_of_award = models.DateField(blank=True, null=True)
+    expansion_vans_awarded = models.IntegerField(blank=True, null=True)
+    latest_vehicle_acceptance = models.DateField(blank=True, null=True)
+    extension_granted = models.BooleanField(blank=False, null=True)
+    vanpool_goal_met = models.BooleanField(blank=False, null=True)
+    expired = models.BooleanField(blank=False, null=True)
+    notes = models.TextField(blank=False, null=True)
     awarded_biennium = models.CharField(max_length=50, choices=CHOICES, blank=True, null=True)
-    expansion_goal = models.IntegerField(blank = True, null = True)
-    deadline = models.DateField(blank = True, null = True)
-    service_goal_met_date = models.DateField(blank = True, null=True)
-    max_vanpool_numbers = models.IntegerField(blank=True, null= True)
-    max_vanpool_date = models.DateField(blank = True, null=True)
-    latest_vanpool_number = models.IntegerField(blank = True, null=True)
+    expansion_goal = models.IntegerField(blank=True, null=True)
+    deadline = models.DateField(blank=True, null=True)
+    service_goal_met_date = models.DateField(blank=True, null=True)
+    max_vanpool_numbers = models.IntegerField(blank=True, null=True)
+    max_vanpool_date = models.DateField(blank=True, null=True)
+    latest_vanpool_number = models.IntegerField(blank=True, null=True)
     latest_report_date = models.DateField(blank=True, null=True)
-    months_remaining = models.CharField(blank = True, null = True, max_length=20)
-    organization_name = models.CharField(blank = True, null = True, max_length=100)
+    months_remaining = models.CharField(blank=True, null=True, max_length=20)
+    organization_name = models.CharField(blank=True, null=True, max_length=100)
     history = HistoricalRecords()
 
     @property
     def adjusted_service_goal(self):
         return int(self.vanpools_in_service_at_time_of_award + round(self.expansion_vans_awarded*.8, 0))
 
-
-
-
 #TODO Change all the forms so we get good data, put various checks into the views page,
-
-
     @property
     # TODO should this be here or a function in utilities also we may want to rewrite this so it works no mater what date we put in
+    # TODO Generic function made - need to integrate it in back here
     def calculate_current_biennium(self):
         import datetime
         today = datetime.date.today()

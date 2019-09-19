@@ -1,5 +1,7 @@
 import calendar
 import json
+from typing import Any, Union
+
 from .models import organization, vanpool_expansion_analysis, vanpool_report
 from django.db.models import Max, Subquery, F, OuterRef, Case, CharField, Value, When, Sum, Count
 

@@ -400,7 +400,7 @@ def Vanpool_report(request, year=None, month=None):
 
     # Respond to POST request
     if request.method == 'POST':
-        form = VanpoolMonthlyReport(user_organization = user_organization, data=request.POST, instance=form_data, record_id = form_data.id, report_month=month, report_year=year)
+        form = VanpoolMonthlyReport(user_organization=user_organization, data=request.POST, instance=form_data, record_id = form_data.id, report_month=month, report_year=year)
         if form.is_valid():
             form.save()
             successful_submit = True  # Triggers a modal that says the form was submitted
@@ -473,10 +473,10 @@ def Vanpool_expansion_analysis(request):
 def Vanpool_expansion_modify(request, id=None):
     if not id:
         id = 1
-    orgs = vanpool_expansion_analysis.objects.filter(expired = False).values('organization_id')
+    orgs = vanpool_expansion_analysis.objects.filter(expired=False).values('organization_id')
     organization_name = organization.objects.filter(id__in=orgs).values('name')
-    vea = vanpool_expansion_analysis.objects.all().filter(expired = False).order_by('organization_id')
-    form_data = vanpool_expansion_analysis.objects.get(id = id)
+    vea = vanpool_expansion_analysis.objects.all().filter(expired=False).order_by('organization_id')
+    form_data = vanpool_expansion_analysis.objects.get(id=id)
 
     if request.method == 'POST':
         form = Modify_A_Vanpool_Expansion(data=request.POST, instance=form_data)
