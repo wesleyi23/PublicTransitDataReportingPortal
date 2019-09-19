@@ -116,6 +116,7 @@ class organization(models.Model):
     in_jblm_area = models.BooleanField(blank=True, null=True)  # TODO confirm this is no longer needed
     in_puget_sound_area = models.BooleanField(blank=True, null=True)
     summary_organization_classifications = models.CharField(max_length=50, choices=SUMMARY_ORG_CLASSIFICATIONS, blank=True, null=True)
+    #fixed_route_expansion = models.BooleanField(blank=True, null=True)
 
 
 class profile(models.Model):
