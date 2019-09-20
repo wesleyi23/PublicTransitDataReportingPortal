@@ -500,7 +500,7 @@ class submit_a_new_vanpool_expansion(forms.ModelForm):
         model = vanpool_expansion_analysis
 
         fields = ['organization', 'date_of_award', 'expansion_vans_awarded', 'latest_vehicle_acceptance',
-                  'vanpools_in_service_at_time_of_award', 'notes', 'awarded_biennium', 'expansion_goal', 'deadline']
+                  'vanpools_in_service_at_time_of_award', 'notes', 'award_biennium', 'expansion_goal', 'deadline']
         required = ['organization', 'date_of_award', 'expansion_vans_awarded', 'latest_vehicle_acceptance',
                     'extension_granted', 'vanpools_in_service_at_time_of_award', 'expired', 'vanpool_goal_met']
 

@@ -101,7 +101,6 @@ class organization(models.Model):
     def __str__(self):
         return self.name
 
-
     name = models.CharField(max_length=80, blank=True)
     address_line_1 = models.CharField(max_length=50, blank=True)
     address_line_2 = models.CharField(max_length=50, blank=True, null=True)
@@ -131,7 +130,7 @@ class profile(models.Model):
     state = USStateField(blank=True)
     zip_code = USZipCodeField(blank=True)
     reports_on = models.ManyToManyField(ReportType, blank=True)  # TODO rename this to something else
-    requested_permissions = models.ManyToManyField(Group)
+    request_permissions = models.ManyToManyField(Group)
     active_permissions_request = models.BooleanField(blank=True, null=True)
 
 
@@ -158,7 +157,7 @@ class vanpool_report(models.Model):
     # report_due_date = models.DateField()
     #report_day = models.IntegerField(default = 1, null=True)
     report_date = models.DateTimeField(default=None, null=True)
-    updated_date = models.DateTimeField(auto_now=True, blank=True, null=True)
+    update_date = models.DateTimeField(auto_now=True, blank=True, null=True)
     report_by = models.ForeignKey(custom_user, on_delete=models.PROTECT, blank=True, null=True)
     organization = models.ForeignKey(organization, on_delete=models.PROTECT)
     vanshare_groups_in_operation = models.IntegerField(blank=True, null=True)
@@ -264,7 +263,7 @@ class vanpool_expansion_analysis(models.Model):
     vanpool_goal_met = models.BooleanField(blank=False, null=True)
     expired = models.BooleanField(blank=False, null=True)
     notes = models.TextField(blank=False, null=True)
-    awarded_biennium = models.CharField(max_length=50, choices=CHOICES, blank=True, null=True)
+    award_biennium = models.CharField(max_length=50, choices=CHOICES, blank=True, null=True)
     expansion_goal = models.IntegerField(blank=True, null=True)
     deadline = models.DateField(blank=True, null=True)
     service_goal_met_date = models.DateField(blank=True, null=True)
@@ -280,7 +279,7 @@ class vanpool_expansion_analysis(models.Model):
     def adjusted_service_goal(self):
         return int(self.vanpools_in_service_at_time_of_award + round(self.expansion_vans_awarded*.8, 0))
 
-#TODO Change all the forms so we get good data, put various checks into the views page,
+    #TODO Change all the forms so we get good data, put various checks into the views page,
     @property
     # TODO should this be here or a function in utilities also we may want to rewrite this so it works no mater what date we put in
     # TODO Generic function made - need to integrate it in
@@ -421,20 +420,20 @@ class SummaryExpenses(models.Model):
 
     # TODO move to table
     EXPENSES_DETAILED = (('Local Funds', 'Local Funds'),
-    ('Other-Expenditures', 'Other-Expenditures'),
-    ('Depreciation ', 'Depreciation '),
-    ('Interest', 'Interest'),
-    ('Principal', 'Principal'),
-    ('General Fund', 'General Fund'),
-    ('Unrestricted Cash and Investments', 'Unrestricted Cash and Investments'),
-    ('Operating Reserve', 'Operating Reserve'),
-    ('Working Capital', 'Working Capital'),
-    ('Capital Reserve Funds', 'Capital Reserve Funds'),
-    ('Contingency Reserve', 'Contingency Reserve'),
-    ('Debt Service Funds', 'Debt Service Funds'),
-    ('Insurance Funds', 'Insurance Funds'),
-    ('Other', 'Other')
-    )
+                         ('Other-Expenditures', 'Other-Expenditures'),
+                         ('Depreciation ', 'Depreciation '),
+                         ('Interest', 'Interest'),
+                         ('Principal', 'Principal'),
+                         ('General Fund', 'General Fund'),
+                         ('Unrestricted Cash and Investments', 'Unrestricted Cash and Investments'),
+                         ('Operating Reserve', 'Operating Reserve'),
+                         ('Working Capital', 'Working Capital'),
+                         ('Capital Reserve Funds', 'Capital Reserve Funds'),
+                         ('Contingency Reserve', 'Contingency Reserve'),
+                         ('Debt Service Funds', 'Debt Service Funds'),
+                         ('Insurance Funds', 'Insurance Funds'),
+                         ('Other', 'Other')
+                         )
 
     organization = models.ForeignKey(organization, on_delete=models.PROTECT, related_name='+')
     report_year = models.IntegerField()
@@ -446,19 +445,19 @@ class SummaryExpenses(models.Model):
     history = HistoricalRecords()
 
 
-class RevenueSource(models.Model):
+class revenue_source(models.Model):
     specific_revenue_source = models.CharField(max_length=120)
 
 
-class ExpensesSource(models.Model):
+class expenses_source(models.Model):
     specific_expense_source = models.CharField(max_length=100)
 
 
-class TransitMetrics(models.Model):
+class transit_metrics(models.Model):
     metric = models.CharField(max_length=120)
 
 
-class TransitMode(models.Model):
+class transit_mode(models.Model):
     mode = models.CharField(max_length=80)
     rollup_mode = models.CharField(max_length=80)
 
@@ -469,15 +468,15 @@ class cover_sheet(models.Model):
     executive_officer_last_name = models.CharField(max_length=50, blank=True, null=True)
     executive_officer_title = models.CharField(max_length=50, blank=True, null=True)
     service_website_url = models.CharField(max_length=255, blank=True, null=True)
-    service_area_desc = models.CharField(max_length=500, blank=True, null=True)
+    service_area_description = models.CharField(max_length=500, blank=True, null=True)
     congressional_districts = models.CharField(max_length=100, blank=True, null=True)
     legislative_districts = models.CharField(max_length=100, blank=True, null=True)
     type_of_government = models.CharField(max_length=100, blank=True, null=True)
     governing_body = models.TextField(blank=True, null=True)
-    tax_authorized_desc = models.CharField(max_length=250, blank=True, null=True)
+    tax_authorized_description = models.CharField(max_length=250, blank=True, null=True)
     transit_development_plan_url = models.CharField(max_length=250, blank=True, null=True)
     intermodal_connections = models.TextField(blank=True, null=True)
-    fares_desc = models.TextField(blank=True, null=True)
+    fares_description = models.TextField(blank=True, null=True)
     community_medicaid_service_and_eligibility = models.TextField(blank=True, null=True)
     current_operations = models.TextField(blank=True, null=True)
     community_medicaid_revenue_service_vehicles = models.TextField(blank=True, null=True)

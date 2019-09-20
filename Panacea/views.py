@@ -279,7 +279,7 @@ def Permissions(request):
                 html_message=msg_html,
             )
             current_user_profile = profile.objects.get(custom_user_id=request.user.id)
-            current_user_profile.requested_permissions.set(form.cleaned_data['groups'])
+            current_user_profile.request_permissions.set(form.cleaned_data['groups'])
             current_user_profile.active_permissions_request = True
             current_user_profile.save()
             submit_success = True
