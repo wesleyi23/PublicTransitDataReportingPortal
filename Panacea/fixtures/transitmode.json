@@ -1,0 +1,82 @@
+[
+  {
+    "id": 1,
+    "mode": "Fixed Route",
+    "rollup_mode": "Fixed Route"
+  },
+  {
+    "id": 2,
+    "mode": "Demand Response",
+    "rollup_mode": "Demand Response"
+  },
+  {
+    "id": 3,
+    "mode": "Vanpool",
+    "rollup_mode": "Vanpool"
+  },
+  {
+    "id": 4,
+    "mode": "Demand Response Taxi Services",
+    "rollup_mode": "Demand Response"
+  },
+  {
+    "id": 5,
+    "mode": "Commuter Bus",
+    "rollup_mode": "Fixed Route"
+  },
+  {
+    "id": 6,
+    "mode": "Route Deviated",
+    "rollup_mode": "Route Deviated"
+  },
+  {
+    "id": 7,
+    "mode": "Streetcar",
+    "rollup_mode": "Light Rail"
+  },
+  {
+    "id": 8,
+    "mode": "Trolley Bus",
+    "rollup_mode": "Fixed Route"
+  },
+  {
+    "id": 9,
+    "mode": "Light Rail",
+    "rollup_mode": "Light Rail"
+  },
+  {
+    "id": 10,
+    "mode": "Commuter Rail",
+    "rollup_mode": "Commuter Rail"
+  },
+  {
+    "id": 11,
+    "mode": "Bus Rapid Transit",
+    "rollup_mode": "Fixed Route"
+  },
+  {
+    "id": 12,
+    "mode": "Demand Response",
+    "rollup_mode": "Community Provider"
+  },
+  {
+    "id": 13,
+    "mode": "Commuter Bus",
+    "rollup_mode": "Community Provider"
+  },
+  {
+    "id": 14,
+    "mode": "Bus",
+    "rollup_mode": "Community Provider"
+  },
+  {
+    "id": 15,
+    "mode": "Intercity Bus",
+    "rollup_mode": "Intercity Bus"
+  },
+  {
+    "id": 16,
+    "mode": "Ferry",
+    "rollup_mode": "Ferry"
+  }
+]

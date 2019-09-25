@@ -1,0 +1,82 @@
+[
+  {
+    "id": 1,
+    "metric": "Revenue Vehicle Hours"
+  },
+  {
+    "id": 2,
+    "metric": "Total Vehicle Hours"
+  },
+  {
+    "id": 3,
+    "metric": "Revenue Vehicle Miles"
+  },
+  {
+    "id": 4,
+    "metric": "Total Vehicle Miles"
+  },
+  {
+    "id": 5,
+    "metric": "Passenger Trips"
+  },
+  {
+    "id": 6,
+    "metric": "Diesel Fuel Consumed (gallons)"
+  },
+  {
+    "id": 7,
+    "metric": "Gasoline Fuel Consumed (gallons)"
+  },
+  {
+    "id": 8,
+    "metric": "Employees - FTEs"
+  },
+  {
+    "id": 9,
+    "metric": "Operating Expenses"
+  },
+  {
+    "id": 10,
+    "metric": "Farebox Revenues"
+  },
+  {
+    "id": 11,
+    "metric": "Electricity Consumed (kWh)"
+  },
+  {
+    "id": 12,
+    "metric": "Propane Fuel Consumed (gallons)"
+  },
+  {
+    "id": 13,
+    "metric": "Farebox Auto and Driver Fare Revenues"
+  },
+  {
+    "id": 14,
+    "metric": "Sponsored Passenger Trips"
+  },
+  {
+    "id": 15,
+    "metric": "Revenue Vessel Hours"
+  },
+  {
+    "id": 16,
+    "metric": "Vehicle Trips"
+  },
+  {
+    "id": 17,
+    "metric": "Total Vessel Hours"
+  },
+  {
+    "id": 18,
+    "metric": "Revenue Vessel Miles"
+  },
+  {
+    "id": 19,
+    "metric": "BioDiesel Fuel Consumed (gallons)"
+  },
+  {
+    "id": 20,
+    "metric": "Total Vessel Miles"
+  }
+]
