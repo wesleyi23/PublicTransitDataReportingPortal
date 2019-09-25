@@ -1,0 +1,58 @@
+[
+  {
+    "id": 1,
+    "specific_expense_source": "Local Capital Funds"
+  },
+  {
+    "id": 2,
+    "specific_expense_source": "Other-Expenditures"
+  },
+  {
+    "id": 3,
+    "specific_expense_source": "Depreciation (Not included in Total Expenditures)"
+  },
+  {
+    "id": 4,
+    "specific_expense_source": "Interest"
+  },
+  {
+    "id": 5,
+    "specific_expense_source": "Principal"
+  },
+  {
+    "id": 6,
+    "specific_expense_source": "General Fund"
+  },
+  {
+    "id": 7,
+    "specific_expense_source": "Unrestricted Cash and Investments"
+  },
+  {
+    "id": 8,
+    "specific_expense_source": "Operating Reserve"
+  },
+  {
+    "id": 9,
+    "specific_expense_source": "Working Capital"
+  },
+  {
+    "id": 10,
+    "specific_expense_source": "Capital Reserve Funds"
+  },
+  {
+    "id": 11,
+    "specific_expense_source": "Contingency Reserve"
+  },
+  {
+    "id": 12,
+    "specific_expense_source": "Debt Service Funds"
+  },
+  {
+    "id": 13,
+    "specific_expense_source": "Insurance Funds"
+  },
+  {
+    "id": 14,
+    "specific_expense_source": "Other Balance"
+  }
+]

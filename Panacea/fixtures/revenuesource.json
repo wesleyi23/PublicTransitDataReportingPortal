@@ -1,0 +1,254 @@
+[
+  {
+    "id": 1,
+    "specific_revenue_source": "CM/AQ and Other Federal Grants"
+  },
+  {
+    "id": 2,
+    "specific_revenue_source": "Federal Section §5307 Capital Grants"
+  },
+  {
+    "id": 3,
+    "specific_revenue_source": "Federal Section §5307 Operating"
+  },
+  {
+    "id": 4,
+    "specific_revenue_source": "Federal Section §5307 Preventative"
+  },
+  {
+    "id": 5,
+    "specific_revenue_source": "Federal Section §5309 Capital Grants"
+  },
+  {
+    "id": 6,
+    "specific_revenue_source": "Federal Section §5310 Capital Grants"
+  },
+  {
+    "id": 7,
+    "specific_revenue_source": "Federal Section §5311 Capital Grants"
+  },
+  {
+    "id": 8,
+    "specific_revenue_source": "Federal Section §5311 Operating"
+  },
+  {
+    "id": 9,
+    "specific_revenue_source": "Federal STP Grants"
+  },
+  {
+    "id": 10,
+    "specific_revenue_source": "FTA JARC (§5316) Capital Program"
+  },
+  {
+    "id": 11,
+    "specific_revenue_source": "FTA JARC (§5316) Program"
+  },
+  {
+    "id": 12,
+    "specific_revenue_source": "MVET"
+  },
+  {
+    "id": 13,
+    "specific_revenue_source": "Other Federal Operating"
+  },
+  {
+    "id": 14,
+    "specific_revenue_source": "Other Local Taxes"
+  },
+  {
+    "id": 15,
+    "specific_revenue_source": "Other State Capital Funds"
+  },
+  {
+    "id": 16,
+    "specific_revenue_source": "Other State Operating Grants"
+  },
+  {
+    "id": 17,
+    "specific_revenue_source": "Other-Advertising"
+  },
+  {
+    "id": 18,
+    "specific_revenue_source": "Other-Gain (Loss) on Sale of Assets"
+  },
+  {
+    "id": 19,
+    "specific_revenue_source": "Other-Interest"
+  },
+  {
+    "id": 20,
+    "specific_revenue_source": "Other-MISC "
+  },
+  {
+    "id": 21,
+    "specific_revenue_source": "Sales Tax"
+  },
+  {
+    "id": 22,
+    "specific_revenue_source": "Sales Tax Equalization"
+  },
+  {
+    "id": 23,
+    "specific_revenue_source": "Sales Tax Equalization-Capital"
+  },
+  {
+    "id": 24,
+    "specific_revenue_source": "State Operating Distribution"
+  },
+  {
+    "id": 25,
+    "specific_revenue_source": "State Regional Mobility Grants"
+  },
+  {
+    "id": 26,
+    "specific_revenue_source": "State Regional Mobility Operating Grants"
+  },
+  {
+    "id": 27,
+    "specific_revenue_source": "State Rural Mobility Grants"
+  },
+  {
+    "id": 28,
+    "specific_revenue_source": "State Rural Mobility Operating Grants"
+  },
+  {
+    "id": 29,
+    "specific_revenue_source": "State Special Needs Grants"
+  },
+  {
+    "id": 30,
+    "specific_revenue_source": "State Special Needs Operating Grants"
+  },
+  {
+    "id": 31,
+    "specific_revenue_source": "State Vanpool Grants"
+  },
+  {
+    "id": 32,
+    "specific_revenue_source": "FTA §5311 Rural Area Formula Funds"
+  },
+  {
+    "id": 33,
+    "specific_revenue_source": "Farebox Revenues"
+  },
+  {
+    "id": 34,
+    "specific_revenue_source": "Donations\r\n"
+  },
+  {
+    "id": 35,
+    "specific_revenue_source": "State Funds"
+  },
+  {
+    "id": 36,
+    "specific_revenue_source": "FTA §5310 Special Needs of Elderly Individuals and Individuals with Disabilities Formula Program Funds"
+  },
+  {
+    "id": 37,
+    "specific_revenue_source": "ARRA §5311 Rural Area Formual Funds"
+  },
+  {
+    "id": 38,
+    "specific_revenue_source": "Contract Revenues"
+  },
+  {
+    "id": 39,
+    "specific_revenue_source": "Local Funds"
+  },
+  {
+    "id": 40,
+    "specific_revenue_source": "Other Directly Generated Funds"
+  },
+  {
+    "id": 41,
+    "specific_revenue_source": "Other Federal Funds"
+  },
+  {
+    "id": 42,
+    "specific_revenue_source": "Other FTA Funds"
+  },
+  {
+    "id": 43,
+    "specific_revenue_source": "Other Funds"
+  },
+  {
+    "id": 44,
+    "specific_revenue_source": "ARRA §5311 Tribal Transit Funds"
+  },
+  {
+    "id": 45,
+    "specific_revenue_source": "FTA §5310 Capital Assistance Spent on Operations"
+  },
+  {
+    "id": 46,
+    "specific_revenue_source": "FTA §5311 Capital Assistance Spent on Operations"
+  },
+  {
+    "id": 47,
+    "specific_revenue_source": "FTA §5311 Tribal Transit Funds"
+  },
+  {
+    "id": 48,
+    "specific_revenue_source": "FTA §5320 Transit in the Park Funds"
+  },
+  {
+    "id": 49,
+    "specific_revenue_source": "Directly Generated Funds - Property Taxes"
+  },
+  {
+    "id": 50,
+    "specific_revenue_source": "State Ferry Deficit Reimbursement Grant"
+  },
+  {
+    "id": 51,
+    "specific_revenue_source": "Other - Gasoline Taxes"
+  },
+  {
+    "id": 52,
+    "specific_revenue_source": "Other State - Ferry Sale"
+  },
+  {
+    "id": 53,
+    "specific_revenue_source": "Lease and Rental Agreements"
+  },
+  {
+    "id": 54,
+    "specific_revenue_source": "Other Reconciling Items"
+  },
+  {
+    "id": 55,
+    "specific_revenue_source": "Other State - Viaduct Mitigation"
+  },
+  {
+    "id": 56,
+    "specific_revenue_source": "FTA §5309 Capital Program Funds"
+  },
+  {
+    "id": 57,
+    "specific_revenue_source": "FTA §5317 New Freedom Program Funds"
+  },
+  {
+    "id": 58,
+    "specific_revenue_source": "Other State - Puget Sound Clean Air Grant"
+  },
+  {
+    "id": 59,
+    "specific_revenue_source": "Other - Other Revenues"
+  },
+  {
+    "id": 60,
+    "specific_revenue_source": "Other State - Gasoline Taxes"
+  },
+  {
+    "id": 61,
+    "specific_revenue_source": "Other State - Other Taxes"
+  },
+  {
+    "id": 62,
+    "specific_revenue_source": "Other Local Capital"
+  },
+  {
+    "id": 63,
+    "specific_revenue_source": "Federal Section §5337 Capital Grants"
+  }
+]

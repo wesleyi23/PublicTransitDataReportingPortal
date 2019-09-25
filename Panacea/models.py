@@ -10,7 +10,7 @@ from phonenumber_field.modelfields import PhoneNumberField
 import datetime
 from simple_history.models import HistoricalRecords
 
-
+# region shared
 class CustomUserManager(BaseUserManager):
     """Define a model manager for User model with no username field."""
 
@@ -81,6 +81,7 @@ class ReportType(models.Model):
     report_owner = models.ForeignKey(custom_user, on_delete=models.PROTECT, blank=True, null=True)
 
 
+
 class organization(models.Model):
     AGENCY_CLASSIFICATIONS = (
         ("Urban", "Urban"),
@@ -134,7 +135,23 @@ class profile(models.Model):
     request_permissions = models.ManyToManyField(Group)
     active_permissions_request = models.BooleanField(blank=True, null=True)
 
+@receiver(post_save, sender=custom_user)
+def create_user_profile(sender, instance, created, **kwargs):
+    if created:
+        profile.objects.create(custom_user=instance)
 
+
+@receiver(post_save, sender=custom_user)
+def save_user_profile(sender, instance, **kwargs):
+    instance.profile.save()
+
+
+
+
+# endregion
+
+
+# region Vanpool
 class vanpool_report(models.Model):
     REPORT_MONTH = (
         (1, 'January'),
@@ -231,16 +248,6 @@ class vanpool_report(models.Model):
         unique_together = ('organization', 'report_year', 'report_month',)
 
 
-@receiver(post_save, sender=custom_user)
-def create_user_profile(sender, instance, created, **kwargs):
-    if created:
-        profile.objects.create(custom_user=instance)
-
-
-@receiver(post_save, sender=custom_user)
-def save_user_profile(sender, instance, **kwargs):
-    instance.profile.save()
-
 
 class vanpool_expansion_analysis(models.Model):
     # TODO change to our biennium function
@@ -297,6 +304,86 @@ class vanpool_expansion_analysis(models.Model):
         elif today >= datetime.date(2023, 6, 1) and today < datetime.date(2025, 6, 1):
             current_biennium = '21-25'
         return current_biennium
+# endregion
+
+
+
+
+class TransitMode(models.Model):
+    mode = models.CharField(max_length=120)
+    rollup_mode = models.CharField(max_length=120)
+
+
+class TransitMetric(models.Model):
+    metric = models.CharField(max_length=120)
+
+
+class SummaryTransitData(models.Model):
+
+
+    DO_OR_PT = (
+        ('Direct Operated', 'Direct Operated'),
+        ('Purchased', 'Purchased')
+
+    )
+
+    organization = models.ForeignKey(organization, on_delete=models.PROTECT, related_name = '+')
+    report_year = models.IntegerField()
+    mode = models.ForeignKey(TransitMode, on_delete = models.PROTECT,  related_name = 'mode')
+    rollup_mode = models.ForeignKey(TransitMode, on_delete = models.PROTECT,  related_name = 'rollup_mode')
+    administration_of_mode = models.CharField(max_length= 80, choices=DO_OR_PT)
+    metric = models.ForeignKey(TransitMetric, on_delete=models.PROTECT, related_name='+')
+    metric_value = models.FloatField()
+    report_by = models.ForeignKey(custom_user, on_delete=models.PROTECT, blank=True, null=True)
+    comments = models.TextField(blank = False, null = True)
+    history = HistoricalRecords()
+
+
+class RevenueSource(models.Model):
+    specific_revenue_source = models.CharField(max_length = 200)
+
+class SummaryRevenues(models.Model):
+    LEVIATHANS = (
+        ('Federal', 'Federal'),
+        ('State', 'State'),
+        ('Local', 'Local')
+    )
+
+    FUNDING_KIND = (
+        ('Capital', 'Capital'),
+        ('Operating', 'Operating')
+    )
+
+
+    organization = models.ForeignKey(organization, on_delete=models.PROTECT, related_name='+')
+    report_year = models.IntegerField()
+    government_type = models.CharField(max_length= 100, choices = LEVIATHANS)
+    spending_type = models.CharField(max_length = 30, choices = FUNDING_KIND)
+    specific_revenue_source = models.ForeignKey(RevenueSource, on_delete=models.PROTECT, related_name='+')
+    specific_revenue_value = models.FloatField()
+    subfund = models.BooleanField(default=False)
+    subfund_specification = models.TextField(blank=False, null=True)
+    comments = models.TextField(blank=False, null=True)
+    history = HistoricalRecords()
+
+
+class ExpensesSource(models.Model):
+    specific_expense_source = models.CharField(max_length=80)
+
+
+class SummaryExpenses(models.Model):
+
+    organization = models.ForeignKey(organization, on_delete=models.PROTECT, related_name='+')
+    report_year = models.IntegerField()
+    specific_expense_source = models.ForeignKey(ExpensesSource, on_delete=models.PROTECT, related_name='+')
+    specific_expense_value = models.FloatField()
+    subfund = models.BooleanField(default=False)
+    subfund_specification = models.TextField(blank = False, null = True)
+    comments = models.TextField(blank=False, null=True)
+    history = HistoricalRecords()
+
+
+
 
 
 class SummaryTransitData(models.Model):
