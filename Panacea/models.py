@@ -307,232 +307,6 @@ class vanpool_expansion_analysis(models.Model):
 # endregion
 
 
-
-
-class TransitMode(models.Model):
-    mode = models.CharField(max_length=120)
-    rollup_mode = models.CharField(max_length=120)
-
-
-class TransitMetric(models.Model):
-    metric = models.CharField(max_length=120)
-
-
-class SummaryTransitData(models.Model):
-
-
-    DO_OR_PT = (
-        ('Direct Operated', 'Direct Operated'),
-        ('Purchased', 'Purchased')
-
-    )
-
-    organization = models.ForeignKey(organization, on_delete=models.PROTECT, related_name = '+')
-    report_year = models.IntegerField()
-    mode = models.ForeignKey(TransitMode, on_delete = models.PROTECT,  related_name = 'mode')
-    rollup_mode = models.ForeignKey(TransitMode, on_delete = models.PROTECT,  related_name = 'rollup_mode')
-    administration_of_mode = models.CharField(max_length= 80, choices=DO_OR_PT)
-    metric = models.ForeignKey(TransitMetric, on_delete=models.PROTECT, related_name='+')
-    metric_value = models.FloatField()
-    report_by = models.ForeignKey(custom_user, on_delete=models.PROTECT, blank=True, null=True)
-    comments = models.TextField(blank = False, null = True)
-    history = HistoricalRecords()
-
-
-class RevenueSource(models.Model):
-    specific_revenue_source = models.CharField(max_length = 200)
-
-class SummaryRevenues(models.Model):
-    LEVIATHANS = (
-        ('Federal', 'Federal'),
-        ('State', 'State'),
-        ('Local', 'Local')
-    )
-
-    FUNDING_KIND = (
-        ('Capital', 'Capital'),
-        ('Operating', 'Operating')
-    )
-
-
-    organization = models.ForeignKey(organization, on_delete=models.PROTECT, related_name='+')
-    report_year = models.IntegerField()
-    government_type = models.CharField(max_length= 100, choices = LEVIATHANS)
-    spending_type = models.CharField(max_length = 30, choices = FUNDING_KIND)
-    specific_revenue_source = models.ForeignKey(RevenueSource, on_delete=models.PROTECT, related_name='+')
-    specific_revenue_value = models.FloatField()
-    subfund = models.BooleanField(default=False)
-    subfund_specification = models.TextField(blank=False, null=True)
-    comments = models.TextField(blank=False, null=True)
-    history = HistoricalRecords()
-
-
-class ExpensesSource(models.Model):
-    specific_expense_source = models.CharField(max_length=80)
-
-
-class SummaryExpenses(models.Model):
-
-    organization = models.ForeignKey(organization, on_delete=models.PROTECT, related_name='+')
-    report_year = models.IntegerField()
-    specific_expense_source = models.ForeignKey(ExpensesSource, on_delete=models.PROTECT, related_name='+')
-    specific_expense_value = models.FloatField()
-    subfund = models.BooleanField(default=False)
-    subfund_specification = models.TextField(blank = False, null = True)
-    comments = models.TextField(blank=False, null=True)
-    history = HistoricalRecords()
-
-
-
-
-
-class SummaryTransitData(models.Model):
-    # TODO move to table
-    MODE_CHOICES = (
-        ('Light Rail', 'Light Rail'),
-        ('Streetcar', 'Streetcar'),
-        ('Demand Response', 'Demand Response'),
-        ('Fixed Route', 'Fixed Route'),
-        ('Commuter Bus', 'Commuter Bus'),
-        ('Route Deviated', 'Route Deviated'),
-        ('Vanpool', 'Vanpool'),
-        ('Trolley Bus', 'Trolley Bus'),
-        ('Bus Rapid Transit', 'Bus Rapid Transit'),
-        ('Commuter Rail', 'Commuter Rail'),
-        ('Demand Response Taxi Services', 'Demand Response Taxi Services')
-    )
-    # TODO move to table
-    MODE_ROLLUPS = (
-        ('Fixed Route', 'Fixed Route'),
-        ('Route Deviated', 'Route Deviated'),
-        ('Demand Response', 'Demand Response'),
-        ('Vanpool', 'Vanpool'),
-        ('Commuter Rail', 'Commuter Rail'),
-        ('Light Rail', 'Light Rail')
-
-    )
-
-    DO_OR_PT = (
-        ('Direct Operated', 'Direct Operated'),
-        ('Purchased', 'Purchased')
-
-    )
-    # TODO move to table
-    TRANSIT_METRICS = (
-        ('Revenue Vehicle Hours', 'Revenue Vehicle Hours'),
-        ('Total Vehicle Hours', 'Total Vehicle Hours'),
-        ('Revenue Vehicle Miles', 'Revenue Vehicle Miles'),
-        ('Total Vehicle Miles', 'Total Vehicle Miles'),
-        ('Passenger Trips', 'Passenger Trips'),
-        ('Operating Expenses', 'Operating Expenses'),
-        ('Diesel', 'Diesel'),
-        ('Gasoline', 'Gasoline'),
-        ('Compressed Natural Gas', 'Compressed Natural Gas'),
-        ('Propane', 'Propane'),
-        ('Electricity', 'Electricity'),
-        ('Employees - FTEs', 'Employees - FTEs'),
-        ('Farebox Revenues', 'Farebox Revenues')
-    )
-
-    organization = models.ForeignKey(organization, on_delete=models.PROTECT, related_name = '+')
-    report_year = models.IntegerField()
-    mode = models.CharField(max_length= 80, choices=MODE_CHOICES)
-    rollup_mode = models.CharField(max_length= 80, choices=MODE_ROLLUPS)
-    administration_of_mode = models.CharField(max_length= 80, choices=DO_OR_PT)
-    metric = models.CharField(max_length= 120, choices=TRANSIT_METRICS)
-    metric_value = models.IntegerField()
-    report_by = models.ForeignKey(custom_user, on_delete=models.PROTECT, blank=True, null=True)
-    comments = models.TextField(blank = False, null = True)
-    history = HistoricalRecords()
-
-
-class SummaryRevenues(models.Model):
-    LEVIATHANS = (
-        ('Federal', 'Federal'),
-        ('State', 'State'),
-        ('Local', 'Local')
-    )
-
-    FUNDING_KIND = (
-        ('Capital', 'Capital'),
-        ('Operating', 'Operating')
-    )
-    # TODO move to table
-    REVENUE_SOURCE = (
-        ('Sales Tax', 'Sales Tax'),
-        ('Other Local Taxes', 'Other Local Taxes'),
-        ('MVET', 'MVET'),
-        ('Federal Section §5307 Operating', 'Federal Section §5307 Operating'),
-        ('Federal Section §5307 Preventative', 'Federal Section §5307 Preventative'),
-        ('Federal Section §5311 Operating', 'Federal Section §5311 Operating'),
-        ('FTA JARC (§5316) Program', 'FTA JARC (§5316) Program'),
-        ('Other Federal Operating', 'Other Federal Operating'),
-        ('State Rural Mobility Operating Grants', 'State Rural Mobility Operating Grants'),
-        ('State Regional Mobility Operating Grants', 'State Regional Mobility Operating Grants'),
-        ('State Special Needs Operating Grants', 'State Special Needs Operating Grants'),
-        ('State Operating Distribution', 'State Operating Distribution'),
-        ('Sales Tax Equalization', 'Sales Tax Equalization'),
-        ('Other State Operating Grants', 'Other State Operating Grants'),
-        ('Other-Advertising', 'Other-Advertising'),
-        ('Other-Interest', 'Other-Interest'),
-        ('Other-Gain (Loss) on Sale of Assets', 'Other-Gain (Loss) on Sale of Assets'),
-        ('Other-MISC ', 'Other-MISC '),
-        ('Federal Section §5307 Capital Grants', 'Federal Section §5307 Capital Grants'),
-        ('Federal Section §5309 Capital Grants', 'Federal Section §5309 Capital Grants'),
-        ('Federal Section §5310 Capital Grants', 'Federal Section §5310 Capital Grants'),
-        ('Federal Section §5311 Capital Grants', 'Federal Section §5311 Capital Grants'),
-        ('FTA JARC (§5316) Program', 'FTA JARC (§5316) Program'),
-        ('Federal STP Grants', 'Federal STP Grants'),
-        ('CM/AQ and Other Federal Grants', 'CM/AQ and Other Federal Grants'),
-        ('State Rural Mobility Grants', 'State Rural Mobility Grants'),
-        ('State Regional Mobility Grants', 'State Regional Mobility Grants'),
-        ('State Special Needs Grants', 'State Special Needs Grants'),
-        ('Sales Tax Equalization-Capital', 'Sales Tax Equalization-Capital'),
-        ('State Vanpool Grants', 'State Vanpool Grants'),
-        ('Other State Capital Funds', 'Other State Capital Funds')
-    )
-
-    organization = models.ForeignKey(organization, on_delete=models.PROTECT, related_name='+')
-    report_year = models.IntegerField()
-    government_type = models.CharField(max_length= 100, choices = LEVIATHANS)
-    spending_type = models.CharField(max_length = 30, choices = FUNDING_KIND)
-    specific_revenue_source = models.CharField(max_length= 120, choices= REVENUE_SOURCE)
-    revenue_value = models.IntegerField()
-    subfund = models.BooleanField(default=False)
-    subfund_specification = models.TextField(blank=False, null=True)
-    comments = models.TextField(blank=False, null=True)
-    history = HistoricalRecords()
-
-
-class SummaryExpenses(models.Model):
-
-    # TODO move to table
-    EXPENSES_DETAILED = (('Local Funds', 'Local Funds'),
-                         ('Other-Expenditures', 'Other-Expenditures'),
-                         ('Depreciation ', 'Depreciation '),
-                         ('Interest', 'Interest'),
-                         ('Principal', 'Principal'),
-                         ('General Fund', 'General Fund'),
-                         ('Unrestricted Cash and Investments', 'Unrestricted Cash and Investments'),
-                         ('Operating Reserve', 'Operating Reserve'),
-                         ('Working Capital', 'Working Capital'),
-                         ('Capital Reserve Funds', 'Capital Reserve Funds'),
-                         ('Contingency Reserve', 'Contingency Reserve'),
-                         ('Debt Service Funds', 'Debt Service Funds'),
-                         ('Insurance Funds', 'Insurance Funds'),
-                         ('Other', 'Other')
-                         )
-
-    organization = models.ForeignKey(organization, on_delete=models.PROTECT, related_name='+')
-    report_year = models.IntegerField()
-    specific_expense_source = models.CharField(max_length=100, choices=EXPENSES_DETAILED)
-    specific_expense_value = models.IntegerField()
-    subfund = models.BooleanField(default=False)
-    subfund_specification = models.TextField(blank = False, null = True)
-    comments = models.TextField(blank=False, null=True)
-    history = HistoricalRecords()
-
-
 class revenue_source(models.Model):
     specific_revenue_source = models.CharField(max_length=120)
 
@@ -548,6 +322,63 @@ class transit_metrics(models.Model):
 class transit_mode(models.Model):
     mode = models.CharField(max_length=80)
     rollup_mode = models.CharField(max_length=80)
+
+class SummaryTransitData(models.Model):
+
+
+    DO_OR_PT = (
+        ('Direct Operated', 'Direct Operated'),
+        ('Purchased', 'Purchased')
+
+    )
+
+    organization = models.ForeignKey(organization, on_delete=models.PROTECT, related_name = '+')
+    year = models.IntegerField()
+    mode = models.ForeignKey(transit_mode, on_delete = models.PROTECT,  related_name = 'mode')
+    rollup_mode = models.ForeignKey(transit_mode, on_delete = models.PROTECT,  related_name = 'rollup_mode')
+    administration_of_mode = models.CharField(max_length= 80, choices=DO_OR_PT)
+    metric = models.ForeignKey(transit_metrics, on_delete=models.PROTECT, related_name='+')
+    metric_value = models.FloatField()
+    report_by = models.ForeignKey(custom_user, on_delete=models.PROTECT, blank=True, null=True)
+    comments = models.TextField(blank = False, null = True)
+    history = HistoricalRecords()
+
+class SummaryRevenues(models.Model):
+    LEVIATHANS = (
+        ('Federal', 'Federal'),
+        ('State', 'State'),
+        ('Local', 'Local'),
+        ('Other', 'Other')
+    )
+
+    FUNDING_KIND = (
+        ('Capital', 'Capital'),
+        ('Operating', 'Operating')
+    )
+
+
+    organization = models.ForeignKey(organization, on_delete=models.PROTECT, related_name='+')
+    year = models.IntegerField()
+    government_type = models.CharField(max_length= 100, choices = LEVIATHANS)
+    spending_type = models.CharField(max_length = 30, choices = FUNDING_KIND)
+    specific_revenue_source = models.ForeignKey(revenue_source, on_delete=models.PROTECT, related_name='+')
+    specific_revenue_value = models.FloatField()
+    subfund = models.BooleanField(default=False)
+    subfund_specification = models.TextField(blank=False, null=True)
+    comments = models.TextField(blank=False, null=True)
+    history = HistoricalRecords()
+
+
+class SummaryExpenses(models.Model):
+
+    organization = models.ForeignKey(organization, on_delete=models.PROTECT, related_name='+')
+    report_year = models.IntegerField()
+    specific_expense_source = models.ForeignKey(expenses_source, on_delete=models.PROTECT, related_name='+')
+    specific_expense_value = models.FloatField()
+    subfund = models.BooleanField(default=False)
+    subfund_specification = models.TextField(blank = False, null = True)
+    comments = models.TextField(blank=False, null=True)
+    history = HistoricalRecords()
 
 
 class cover_sheet(models.Model):
