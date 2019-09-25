@@ -26,10 +26,13 @@
                             <a class="nav-link" href="{% url 'summary_instructions' %}">Instructions</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link active" href="{% url 'organizational_information' %}">Confirm organizational information</a>
+                            <a class="nav-link active" href="{% url 'organizational_information' %}">Confirm basic information</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{% url 'cover_sheets' %}">Update cover sheet</a>
+                            <a class="nav-link" href="{% url 'cover_sheets_organization' %}">Update cover sheet - organization</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'cover_sheets_service' %}">Update cover sheet - service</a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" href="{% url 'ntd_upload' %}">NTD data upload</a>
@@ -41,11 +44,7 @@
                     <form action="/summary/organizational_information/" method="post">
                         {% csrf_token  %}
                         {{ form }}
-
                     </form>
-
-
-
                 </div>
             </div>
         </div>

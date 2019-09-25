@@ -562,9 +562,32 @@ class organization_information(forms.ModelForm):
         }
 
 class cover_sheet_form(forms.ModelForm):
+
+
     class Meta:
         model = cover_sheet
         exclude = ['']
+        widgets = {
+            'executive_officer_first_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'executive_officer_last_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'service_website_url': forms.URLInput(attrs={'class': 'form-control',
+                                                         'label': 'Service website URL'}),
+            'service_area_description': forms.TextInput(attrs={'class': 'form-control'}),
+            'congressional_districts': forms.TextInput(attrs={'class': 'form-control'}),
+            'legislative_districts': forms.TextInput(attrs={'class': 'form-control'}),
+            'type_of_government': forms.TextInput(attrs={'class': 'form-control'}),
+            'governing_body': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
+            'transit_development_plan_url': forms.URLInput(attrs={'class': 'form-control'}),
+            'intermodal_connections': forms.Textarea(attrs={'class': 'form-control'}),
+            'fares_description': forms.Textarea(attrs={'class': 'form-control'}),
+            'community_medicaid_service_and_eligibility': forms.Textarea(attrs={'class': 'form-control'}),
+            'community_medicaid_days_of_service': forms.TextInput(attrs={'class': 'form-control'}),
+            'current_operations': forms.Textarea(attrs={'class': 'form-control'}),
+            'community_medicaid_revenue_service_vehicles': forms.TextInput(attrs={'class': 'form-control'}),
+            'monorail_ownership': forms.TextInput(attrs={'class': 'form-control'}),
+            'tax_authorized_description': forms.TextInput(attrs={'class': 'form-control'}),
+            'organization_logo': forms.FileInput(attrs={'class': 'custom-file-input'})
+        }
 
 
 

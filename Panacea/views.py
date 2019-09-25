@@ -693,7 +693,7 @@ def ntd_upload(request):
     return render(request, 'pages/summary/ntd_upload.html', {})
 
 
-def cover_sheet_view(request):
+def cover_sheet_organization_view(request):
     user_profile_data = profile.objects.get(custom_user=request.user.id)
     org = user_profile_data.organization
     org_name = org.name
@@ -707,7 +707,24 @@ def cover_sheet_view(request):
             form.save()
             return redirect('cover_sheet')
 
-    return render(request, 'pages/summary/cover_sheet.html', {'org_name': org_name, 'form': form})
+    return render(request, 'pages/summary/cover_sheet_organization.html', {'org_name': org_name, 'form': form})
+
+
+def cover_sheet_service_view(request):
+    user_profile_data = profile.objects.get(custom_user=request.user.id)
+    org = user_profile_data.organization
+    org_name = org.name
+
+    cover_sheet_instance, created = cover_sheet.objects.get_or_create(organization=org)
+
+    form = cover_sheet_form(instance=cover_sheet_instance)
+
+    if request.POST:
+        if form.is_valid():
+            form.save()
+            return redirect('cover_sheet')
+
+    return render(request, 'pages/summary/cover_sheet_service.html', {'org_name': org_name, 'form': form})
 
 # endregion
 
