@@ -2,7 +2,13 @@ from django import forms
 from django.contrib.auth import password_validation, login
 from django.contrib.auth.forms import UserChangeForm, AuthenticationForm
 import datetime
-from .models import custom_user, profile, organization, ReportType, vanpool_report, vanpool_expansion_analysis
+from .models import custom_user, \
+    profile, \
+    organization, \
+    ReportType, \
+    vanpool_report, \
+    vanpool_expansion_analysis, \
+    cover_sheet
 from django.utils.translation import gettext, gettext_lazy as _
 from phonenumber_field.formfields import PhoneNumberField
 from localflavor.us.forms import USStateSelect, USZipCodeField
@@ -494,7 +500,7 @@ class submit_a_new_vanpool_expansion(forms.ModelForm):
         model = vanpool_expansion_analysis
 
         fields = ['organization', 'date_of_award', 'expansion_vans_awarded', 'latest_vehicle_acceptance',
-                  'vanpools_in_service_at_time_of_award', 'notes', 'awarded_biennium', 'expansion_goal', 'deadline']
+                  'vanpools_in_service_at_time_of_award', 'notes', 'award_biennium', 'expansion_goal', 'deadline']
         required = ['organization', 'date_of_award', 'expansion_vans_awarded', 'latest_vehicle_acceptance',
                     'extension_granted', 'vanpools_in_service_at_time_of_award', 'expired', 'vanpool_goal_met']
 
@@ -554,5 +560,36 @@ class organization_information(forms.ModelForm):
                                                                         'readonly': 'True',
                                                                         'style': 'pointer-events: none'}),
         }
+
+class cover_sheet_form(forms.ModelForm):
+
+
+    class Meta:
+        model = cover_sheet
+        exclude = ['']
+        widgets = {
+            'executive_officer_first_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'executive_officer_last_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'service_website_url': forms.URLInput(attrs={'class': 'form-control',
+                                                         'label': 'Service website URL'}),
+            'service_area_description': forms.TextInput(attrs={'class': 'form-control'}),
+            'congressional_districts': forms.TextInput(attrs={'class': 'form-control'}),
+            'legislative_districts': forms.TextInput(attrs={'class': 'form-control'}),
+            'type_of_government': forms.TextInput(attrs={'class': 'form-control'}),
+            'governing_body': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
+            'transit_development_plan_url': forms.URLInput(attrs={'class': 'form-control'}),
+            'intermodal_connections': forms.Textarea(attrs={'class': 'form-control'}),
+            'fares_description': forms.Textarea(attrs={'class': 'form-control'}),
+            'community_medicaid_service_and_eligibility': forms.Textarea(attrs={'class': 'form-control'}),
+            'community_medicaid_days_of_service': forms.TextInput(attrs={'class': 'form-control'}),
+            'current_operations': forms.Textarea(attrs={'class': 'form-control'}),
+            'community_medicaid_revenue_service_vehicles': forms.TextInput(attrs={'class': 'form-control'}),
+            'monorail_ownership': forms.TextInput(attrs={'class': 'form-control'}),
+            'tax_authorized_description': forms.TextInput(attrs={'class': 'form-control'}),
+            'organization_logo': forms.FileInput(attrs={'class': 'custom-file-input'})
+        }
+
+
+
 
 # endregion

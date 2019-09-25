@@ -175,3 +175,6 @@ CELERY_BEAT_SCHEDULE = {'send_emails_now': {'task': 'Panacea.tasks.send_emails_n
                                              'schedule': crontab(minute="*")}
 
 }
+
+MEDIA_ROOT = '/var/media/'
+MEDIA_URL = '/media/'

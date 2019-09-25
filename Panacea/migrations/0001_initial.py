@@ -116,7 +116,7 @@ class Migration(migrations.Migration):
                 ('custom_user', models.OneToOneField(on_delete=django.db.models.deletion.PROTECT, to=settings.AUTH_USER_MODEL)),
                 ('organization', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.PROTECT, to='Panacea.organization')),
                 ('reports_on', models.ManyToManyField(blank=True, to='Panacea.ReportType')),
-                ('requested_permissions', models.ManyToManyField(to='auth.Group')),
+                ('request_permissions', models.ManyToManyField(to='auth.Group')),
             ],
         ),
         migrations.CreateModel(
