@@ -321,7 +321,10 @@ class transit_metrics(models.Model):
 
 class transit_mode(models.Model):
     mode = models.CharField(max_length=80)
+
+class rollup_mode(models.Model):
     rollup_mode = models.CharField(max_length=80)
+
 
 class SummaryTransitData(models.Model):
 
@@ -333,9 +336,9 @@ class SummaryTransitData(models.Model):
     )
 
     organization = models.ForeignKey(organization, on_delete=models.PROTECT, related_name = '+')
-    year = models.IntegerField()
-    mode = models.ForeignKey(transit_mode, on_delete = models.PROTECT,  related_name = 'mode')
-    rollup_mode = models.ForeignKey(transit_mode, on_delete = models.PROTECT,  related_name = 'rollup_mode')
+    year = models.IntegerField(blank=True, null=True)
+    mode = models.ForeignKey(transit_mode, on_delete = models.PROTECT,  related_name = '+')
+    rollup_mode = models.ForeignKey(rollup_mode, on_delete = models.PROTECT,  related_name = '+')
     administration_of_mode = models.CharField(max_length= 80, choices=DO_OR_PT)
     metric = models.ForeignKey(transit_metrics, on_delete=models.PROTECT, related_name='+')
     metric_value = models.FloatField()
@@ -365,6 +368,7 @@ class SummaryRevenues(models.Model):
     specific_revenue_value = models.FloatField()
     subfund = models.BooleanField(default=False)
     subfund_specification = models.TextField(blank=False, null=True)
+    report_by = models.ForeignKey(custom_user, on_delete=models.PROTECT, blank=True, null=True)
     comments = models.TextField(blank=False, null=True)
     history = HistoricalRecords()
 
@@ -372,11 +376,12 @@ class SummaryRevenues(models.Model):
 class SummaryExpenses(models.Model):
 
     organization = models.ForeignKey(organization, on_delete=models.PROTECT, related_name='+')
-    report_year = models.IntegerField()
+    year = models.IntegerField()
     specific_expense_source = models.ForeignKey(expenses_source, on_delete=models.PROTECT, related_name='+')
     specific_expense_value = models.FloatField()
     subfund = models.BooleanField(default=False)
     subfund_specification = models.TextField(blank = False, null = True)
+    report_by = models.ForeignKey(custom_user, on_delete=models.PROTECT, blank=True, null=True)
     comments = models.TextField(blank=False, null=True)
     history = HistoricalRecords()
 
