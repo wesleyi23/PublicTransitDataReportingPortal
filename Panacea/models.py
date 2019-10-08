@@ -409,3 +409,15 @@ class cover_sheet(models.Model):
     community_planning_region  = models.CharField(max_length=50, blank = True, null=True)
     organization_logo = models.ImageField(upload_to='Organization_logo', blank=True, null=True)
 
+
+class ServiceOffered(models.Model):
+    DO_OR_PT = (
+        ('Direct Operated', 'Direct Operated'),
+        ('Purchased', 'Purchased')
+
+    )
+    mode = models.ForeignKey(transit_mode, on_delete = models.PROTECT,  related_name = '+')
+    administration_of_mode = models.CharField(max_length= 80, choices=DO_OR_PT)
+    organization = models.ForeignKey(organization, on_delete=models.PROTECT, blank=True, null=True)
+
+
