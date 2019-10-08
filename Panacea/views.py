@@ -730,7 +730,6 @@ def cover_sheet_service_view(request):
 def summary_report_data(request):
     return render(request, 'pages/summary/report_data.html')
 
-
 def summary_modes(request):
     return render(request, 'pages/summary/summary_modes.html')
 
