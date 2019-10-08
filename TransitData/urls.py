@@ -56,6 +56,13 @@ urlpatterns = [
     path('summary/ntd_upload/', views.ntd_upload, name="ntd_upload"),
     path('summary/cover_sheets/organization', views.cover_sheet_organization_view, name="cover_sheets_organization"),
     path('summary/cover_sheets/service', views.cover_sheet_service_view, name="cover_sheets_service"),
+    path('summary/report_data/', views.summary_report_data, name = 'summary_report_data'),
+    path('summary/report_data/confirm_mode', views.summary_modes, name = 'summary_modes'),
+    path('summary/report_data/report_transit_data', views.report_transit_data, name = 'report_transit_data'),
+    path('summary/report_data/report_revenue', views.report_revenues, name = 'report_revenues'),
+    path('summary/report_data/report_expenses', views.report_expenses, name = 'report_expenses'),
+    path('summary/report_data/review_data', views.review_data, name='review_data'),
+
 ]
 
 handler404 = views.handler404

@@ -73,6 +73,7 @@
                     <div class="bg-white py-2 collapse-inner rounded">
                         {% if request.user|has_group:"Summary reporter" %}
                             <a class="collapse-item" href="{% url 'summary_instructions' %}">Start summary report</a>
+                            <a class="collapse-item" href="{% url 'summary_report_data' %}">Report Summary Data</a>
                         {% endif %}
                         <a class="collapse-item" href="{% url 'Vanpool_data' %}">View summary data</a>
 

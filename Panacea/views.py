@@ -726,6 +726,26 @@ def cover_sheet_service_view(request):
 
     return render(request, 'pages/summary/cover_sheet_service.html', {'org_name': org_name, 'form': form})
 
+
+def summary_report_data(request):
+    return render(request, 'pages/summary/report_data.html')
+
+
+def summary_modes(request):
+    return render(request, 'pages/summary/summary_modes.html')
+
+def report_transit_data(request):
+    return render(request, 'pages/summary/report_transit_data.html')
+
+def report_revenues(request):
+    return render(request, 'pages/summary/report_revenues.html')
+
+def report_expenses(request):
+    return render(request, 'pages/summary/report_expenses.html')
+
+def review_data(request):
+    return render(request, 'pages/summary/review_data.html')
+
 # endregion
 
 
