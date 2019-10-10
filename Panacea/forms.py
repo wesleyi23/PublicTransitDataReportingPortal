@@ -1,4 +1,5 @@
 from django import forms
+from django.forms.formsets import BaseFormSet
 from django.contrib.auth import password_validation, login
 from django.contrib.auth.forms import UserChangeForm, AuthenticationForm
 import datetime
@@ -591,6 +592,11 @@ class cover_sheet_form(forms.ModelForm):
         }
 
 class revenue_data_form(forms.ModelForm):
+ #   def __init__(self, *args, report_by, organization, **kwargs):
+  #      self.report_by = report_by
+   #     self.organization = organization
+    #    super().__init__(*args, **kwargs)
+
     class Meta:
         model = SummaryRevenues
         exclude = ['']
@@ -608,6 +614,13 @@ class revenue_data_form(forms.ModelForm):
 
         }
 
-
+class BaseRevenueForm(BaseFormSet):
+    def clean(self):
+        """
+        Adds validation to check that no two links have the same anchor or URL
+        and that all links have both an anchor and URL.
+        """
+        if any(self.errors):
+            return
 
 # endregion

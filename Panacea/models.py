@@ -90,10 +90,10 @@ class organization(models.Model):
     )
     # TODO move to table
     SUMMARY_ORG_CLASSIFICATIONS = (
-        ("Community Provider", "Community Provider"),
+        ("Community provider", "Community provider"),
         ("Ferry", "Ferry"),
-        ("Intercity Bus", "Intercity Bus"),
-        ("Medicaid Broker", "Medicaid Broker"),
+        ("Intercity bus", "Intercity bus"),
+        ("Medicaid broker", "Medicaid broker"),
         ("Monorail", "Monorail"),
         ("Transit", "Transit"),
         ("Tribe", "Tribe"),

@@ -2,7 +2,7 @@ import json
 from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
 from django.db.models import Min, Sum, Avg
-from django.forms import modelformset_factory
+from django.forms import formset_factory
 from django.http import JsonResponse
 from django.shortcuts import render, redirect
 from django.db.models.functions import datetime
@@ -32,7 +32,7 @@ from .forms import CustomUserCreationForm, \
     request_user_permissions, \
     statewide_summary_settings, \
     Modify_A_Vanpool_Expansion, organisation_summary_settings, organization_information, cover_sheet_form, \
-    revenue_data_form
+    revenue_data_form, BaseRevenueForm
 
 from .models import profile, vanpool_report, custom_user, vanpool_expansion_analysis, organization, cover_sheet,\
     SummaryRevenues, SummaryTransitData, SummaryExpenses
@@ -742,14 +742,22 @@ def report_transit_data(request):
 def report_revenues(request):
     org = find_user_organization(request.user.id)
     report_years = generate_summary_report_years()
-    revenue_instance = SummaryRevenues.objects.filter(organization_id= org, year__in = report_years)
-    print(revenue_instance)
-    form = revenue_data_form(instance = revenue_instance)
-    if request.POST:
-        if form.is_valid():
-            form.save()
-            return redirect('report_expenses')
-    return render(request, 'pages/summary/report_revenues.html', {'form': form})
+    revenue_instance = SummaryRevenues.objects.filter(organization_id= org, year__in = report_years).values('year', 'government_type', 'spending_type', 'specific_revenue_value', 'subfund', 'subfund_specification', 'comments', 'specific_revenue_source__specific_revenue_source', 'organization', 'report_by')
+    RevenueFormSet = formset_factory(revenue_data_form, formset = BaseRevenueForm)
+    print(RevenueFormSet)
+    if request.method == 'GET':
+        formset = RevenueFormSet(initial=revenue_instance)
+        print(formset)
+    if request.method == 'POST':
+        formset = RevenueFormSet(request.POST, initial=revenue_instance)
+        print(formset)
+        if formset.is_valid():
+            formset.cleaned_data['report_by'] = request.user.id
+            formset.save()
+            #return redirect('report_expenses')
+    else:
+        formset = RevenueFormSet(initial=revenue_instance)
+    return render(request, 'pages/summary/report_revenues.html', {'formset': formset, 'report_years':report_years})
 
 def report_expenses(request):
     return render(request, 'pages/summary/report_expenses.html')

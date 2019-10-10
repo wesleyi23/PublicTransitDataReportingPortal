@@ -5,6 +5,11 @@ from Panacea.models import organization
 register = template.Library()
 
 
+@register.filter
+def in_category(things, category):
+    things = [i for i in things if i.year == category]
+    return things
+
 @register.simple_tag(name = 'get_org_name')
 def print_org_name(organization_id):
     name = organization.objects.get(id = organization_id).name

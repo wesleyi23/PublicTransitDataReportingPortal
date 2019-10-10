@@ -14,7 +14,7 @@ from dateutil.relativedelta import relativedelta
 
 def generate_summary_report_years():
     currentYear = datetime.date.today().year
-    reportYears = [currentYear-1, currentYear-2, currentYear-3]
+    reportYears = [currentYear-3, currentYear-2, currentYear-1]
     return reportYears
 
 def find_user_organization(id):
