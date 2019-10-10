@@ -8,7 +8,8 @@ from .models import custom_user, \
     ReportType, \
     vanpool_report, \
     vanpool_expansion_analysis, \
-    cover_sheet
+    cover_sheet, \
+    SummaryRevenues, SummaryExpenses, SummaryTransitData, revenue_source
 from django.utils.translation import gettext, gettext_lazy as _
 from phonenumber_field.formfields import PhoneNumberField
 from localflavor.us.forms import USStateSelect, USZipCodeField
@@ -589,6 +590,23 @@ class cover_sheet_form(forms.ModelForm):
             'organization_logo': forms.FileInput(attrs={'class': 'custom-file-input'})
         }
 
+class revenue_data_form(forms.ModelForm):
+    class Meta:
+        model = SummaryRevenues
+        exclude = ['']
+        queryset = revenue_source.objects.all()
+        widgets = {
+            'government_type': forms.Select(choices=SummaryRevenues.LEVIATHANS,
+            attrs={'class': 'form-control form-control-plaintext','readonly': 'True', 'style': 'pointer-events: none'}),
+            'spending_type': forms.Select(choices=SummaryRevenues.FUNDING_KIND,
+            attrs={'class': 'form-control form-control-plaintext', 'readonly': 'True', 'style': 'pointer-events: none'}),
+            'specific_revenue_source': forms.Select(choices = queryset, attrs={'class': 'form-control form-control-plaintext', 'readonly': 'True', 'style': 'pointer-events: none'}),
+            'specific_revenue_value': forms.NumberInput(attrs={'class': 'form-control'}),
+            'subfund': forms.CheckboxInput(attrs={'class': 'form-control', 'style': 'width:auto;zoom:200%'}),
+            'subfund_specification': forms.TextInput(attrs={'class': 'form-control'}),
+            'comments': forms.TextInput(attrs={'class': 'form-control'})
+
+        }
 
 
 

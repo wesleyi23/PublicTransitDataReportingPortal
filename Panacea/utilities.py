@@ -1,6 +1,6 @@
 import calendar
 import json
-from .models import organization, vanpool_expansion_analysis, vanpool_report
+from .models import organization, vanpool_expansion_analysis, vanpool_report, profile
 from django.db.models import Max, Subquery, F, OuterRef, Case, CharField, Value, When, Sum, Count
 
 import datetime
@@ -11,6 +11,16 @@ from dateutil.relativedelta import relativedelta
 
 #
 
+
+def generate_summary_report_years():
+    currentYear = datetime.date.today().year
+    reportYears = [currentYear-1, currentYear-2, currentYear-3]
+    return reportYears
+
+def find_user_organization(id):
+    user_profile_data = profile.objects.get(custom_user=id)
+    org = user_profile_data.organization
+    return org
 
 def pull_organization(self):
     queryset = organization.objects.all()

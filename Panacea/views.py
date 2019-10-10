@@ -31,11 +31,14 @@ from .forms import CustomUserCreationForm, \
     Modify_A_Vanpool_Expansion, \
     request_user_permissions, \
     statewide_summary_settings, \
-    Modify_A_Vanpool_Expansion, organisation_summary_settings, organization_information, cover_sheet_form
+    Modify_A_Vanpool_Expansion, organisation_summary_settings, organization_information, cover_sheet_form, \
+    revenue_data_form
 
-from .models import profile, vanpool_report, custom_user, vanpool_expansion_analysis, organization, cover_sheet
+from .models import profile, vanpool_report, custom_user, vanpool_expansion_analysis, organization, cover_sheet,\
+    SummaryRevenues, SummaryTransitData, SummaryExpenses
 from django.contrib.auth.models import Group
-from .utilities import calculate_latest_vanpool, find_maximum_vanpool, calculate_remaining_months, calculate_if_goal_has_been_reached
+from .utilities import calculate_latest_vanpool, find_maximum_vanpool, calculate_remaining_months, calculate_if_goal_has_been_reached,\
+    generate_summary_report_years, find_user_organization
 
 
 # region shared_views
@@ -737,7 +740,16 @@ def report_transit_data(request):
     return render(request, 'pages/summary/report_transit_data.html')
 
 def report_revenues(request):
-    return render(request, 'pages/summary/report_revenues.html')
+    org = find_user_organization(request.user.id)
+    report_years = generate_summary_report_years()
+    revenue_instance = SummaryRevenues.objects.filter(organization_id= org, year__in = report_years)
+    print(revenue_instance)
+    form = revenue_data_form(instance = revenue_instance)
+    if request.POST:
+        if form.is_valid():
+            form.save()
+            return redirect('report_expenses')
+    return render(request, 'pages/summary/report_revenues.html', {'form': form})
 
 def report_expenses(request):
     return render(request, 'pages/summary/report_expenses.html')
