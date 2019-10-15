@@ -22,7 +22,7 @@
                 <div class="card-header">
                     <ul class="nav nav-tabs card-header-tabs">
                         <li class="nav-item">
-                            <a class="nav-link active" href="{% url 'summary_report_data' %}">Instructions</a>
+                            <a class="nav-link" href="{% url 'summary_report_data' %}">Instructions</a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" href="{% url 'summary_modes' %}">Confirm and update agency's transit modes</a>
@@ -31,7 +31,7 @@
                             <a class="nav-link" href="{% url 'report_transit_data' %}">Report transit data</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{% url 'report_revenues' %}">Report revenues</a>
+                            <a class="nav-link active" href="{% url 'report_revenues' %}">Report revenues</a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" href="{% url 'report_expenses' %}">Report expenses</a>
@@ -48,17 +48,55 @@
     </div>
 
 
+
 <form method="post">
+<table>
+<th> Revenue Types</th>
+<tr><td>Operating Related Revenues</td></tr>
+{%  for label in labels %}
+
+    {%  if label.government_type == 'Local' and label.spending_type == 'Operating' %}
+    <tr><td>{{ label.specific_revenue_source__specific_revenue_source}}</td></tr>
+    {%  endif %}
+    {%  if label.government_type == 'Federal' and label.spending_type == 'Operating' %}
+    <tr><td>{{ label.specific_revenue_source__specific_revenue_source}}</td></tr>
+    {%  endif %}
+    {%  if label.government_type == 'State' and label.spending_type == 'Operating' %}
+    <tr><td>{{ label.specific_revenue_source__specific_revenue_source}}</td></tr>
+    {%  endif %}
+    {%  if label.government_type == 'Other' and label.spending_type == 'Operating' %}
+    <tr><td>{{ label.specific_revenue_source__specific_revenue_source}}</td></tr>
+    {%  endif %}
+    {%  if label.government_type == 'Federal' and label.spending_type == 'Capital' %}
+        <tr><td>Federal Capital Grant Revenues</td></tr>
+    <tr><td>{{ label.specific_revenue_source__specific_revenue_source}}</td></tr>
+    {%  endif %}
+    {%  if label.government_type == 'State' and label.spending_type == 'Capital' %}
+        <tr><td>State Capital Grant Revenues</td></tr>
+    <tr><td>{{ label.specific_revenue_source__specific_revenue_source}}</td></tr>
+    {%  endif %}
+    {%  if label.government_type == 'Local' and label.spending_type == 'Capital' %}
+        <tr><td>Local Capital Expenditures</td></tr>
+    <tr><td>{{ label.specific_revenue_source__specific_revenue_source}}</td></tr>
+    {%  endif %}
+
+{% endfor %}
+</table>
     {{ formset.management_form }}
-    <table>
-        {%  for year in report_years %}
-                <th>{{ year }}</th>
-            {%  for form in formset %}
-                <td>{{ form.specifc_revenue_source }}</td>
-                <td>{{ form.specifc_revenue_value }}</td>
+            {% for form, report_year in zipped %}
+                <div class="col-md-6">
+                {{ report_year.year }}
+                {%  for yearform in form %}
+
+                    <td>  {{ yearform.specific_revenue_source}}</td>
+                    <td>{{ yearform.specific_revenue_value }} </td>
+
+
             {% endfor %}
-        {% endfor %}
-    </table>
+                </div>
+    {%  endfor %}
+
+
 </form>
 
 {% endblock %}

@@ -742,22 +742,32 @@ def report_transit_data(request):
 def report_revenues(request):
     org = find_user_organization(request.user.id)
     report_years = generate_summary_report_years()
-    revenue_instance = SummaryRevenues.objects.filter(organization_id= org, year__in = report_years).values('year', 'government_type', 'spending_type', 'specific_revenue_value', 'subfund', 'subfund_specification', 'comments', 'specific_revenue_source__specific_revenue_source', 'organization', 'report_by')
+    summaryrevenues = SummaryRevenues.objects.filter(organization_id=org, year__in=report_years).values('specific_revenue_source__specific_revenue_source', 'government_type', 'spending_type').distinct()
+    print(summaryrevenues)
+    revenue_years = []
+    for year in report_years:
+        revenue_instance = SummaryRevenues.objects.filter(organization_id= org, year = year).values('year', 'government_type', 'spending_type', 'specific_revenue_value', 'subfund', 'subfund_specification', 'comments', 'specific_revenue_source', 'organization', 'report_by')
+        revenue_years.append(revenue_instance)
     RevenueFormSet = formset_factory(revenue_data_form, formset = BaseRevenueForm)
-    print(RevenueFormSet)
     if request.method == 'GET':
-        formset = RevenueFormSet(initial=revenue_instance)
-        print(formset)
+        form_list = []
+        for year in revenue_years:
+            formset = RevenueFormSet(initial=year)
+            form_list.append(formset)
+        zipped = zip(form_list, revenue_years)
     if request.method == 'POST':
-        formset = RevenueFormSet(request.POST, initial=revenue_instance)
-        print(formset)
+        form_list = []
+        for year in revenue_years:
+            formset = RevenueFormSet(initial=year)
+            form_list.append(formset)
+        zipped = zip(form_list, revenue_years)
         if formset.is_valid():
             formset.cleaned_data['report_by'] = request.user.id
             formset.save()
             #return redirect('report_expenses')
     else:
         formset = RevenueFormSet(initial=revenue_instance)
-    return render(request, 'pages/summary/report_revenues.html', {'formset': formset, 'report_years':report_years})
+    return render(request, 'pages/summary/report_revenues.html', {'zipped': zipped, 'report_years':report_years, 'labels': summaryrevenues})
 
 def report_expenses(request):
     return render(request, 'pages/summary/report_expenses.html')

@@ -606,7 +606,7 @@ class revenue_data_form(forms.ModelForm):
             attrs={'class': 'form-control form-control-plaintext','readonly': 'True', 'style': 'pointer-events: none'}),
             'spending_type': forms.Select(choices=SummaryRevenues.FUNDING_KIND,
             attrs={'class': 'form-control form-control-plaintext', 'readonly': 'True', 'style': 'pointer-events: none'}),
-            'specific_revenue_source': forms.Select(choices = queryset, attrs={'class': 'form-control form-control-plaintext', 'readonly': 'True', 'style': 'pointer-events: none'}),
+         #   'specific_revenue_source': forms.Select(choices = queryset, attrs={'class': 'form-control form-control-plaintext', 'readonly': 'True', 'style': 'pointer-events: none'}),
             'specific_revenue_value': forms.NumberInput(attrs={'class': 'form-control'}),
             'subfund': forms.CheckboxInput(attrs={'class': 'form-control', 'style': 'width:auto;zoom:200%'}),
             'subfund_specification': forms.TextInput(attrs={'class': 'form-control'}),

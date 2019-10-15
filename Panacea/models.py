@@ -309,21 +309,36 @@ class vanpool_expansion_analysis(models.Model):
 
 class revenue_source(models.Model):
     specific_revenue_source = models.CharField(max_length=120)
+    order_in_summary = models.IntegerField(null=True, blank=True)
+    def __str__(self):
+        return self.specific_revenue_source
 
 
 class expenses_source(models.Model):
     specific_expense_source = models.CharField(max_length=100)
 
+    def __str__(self):
+        return self.specific_expense_source
+
 
 class transit_metrics(models.Model):
     metric = models.CharField(max_length=120)
+
+    def __str__(self):
+        return self.metric
 
 
 class transit_mode(models.Model):
     mode = models.CharField(max_length=80)
 
+    def __str__(self):
+        return self.mode
+
 class rollup_mode(models.Model):
     rollup_mode = models.CharField(max_length=80)
+
+    def __str__(self):
+        return self.rollup_mode
 
 
 class SummaryTransitData(models.Model):
