@@ -169,6 +169,19 @@ div.dataTables_info {
 .help-popover{
   cursor: pointer;
 }
+
+.my-custom-file-input{
+  width: 0.1px;
+  height: 0.1px;
+  opacity: 0;
+  overflow: hidden;
+  position: absolute;
+  z-index: -1;
+}
+
+.table-breath td{
+  padding-right: 2rem !important;
+}
 /*! END ADDITIONS
  */
 

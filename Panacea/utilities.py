@@ -360,3 +360,25 @@ def percent_change_calculation(totals, label):
             except ZeroDivisionError:
                 percent_change.append('N/A')
     return percent_change
+
+def yearchange(user_org_id, start_year, end_year, measure):
+
+    start_vanpool_report_year = vanpool_report.objects. \
+        filter(organization_id=user_org_id, report_date__isnull=False, report_month=12, report_year=start_year).first()
+    end_vanpool_report_year = vanpool_report.objects. \
+        filter(organization_id=user_org_id, report_date__isnull=False, report_month=12, report_year=end_year).first()
+
+    def overall_change(measure):
+        """Return a list where first item is the current months stat and the second item is the year over year grouwth"""
+        start_measure_value = getattr(start_vanpool_report_year, measure)
+        end_measure_value = getattr(end_vanpool_report_year, measure)
+        if start_measure_value is None:
+            overall_growth = "NA"
+        else:
+            overall_growth = (end_measure_value/start_measure_value) - 1
+            overall_growth = round(overall_growth*100, 0)
+
+        return [end_measure_value, overall_growth]
+
+    return [measure, overall_change(measure)]
+

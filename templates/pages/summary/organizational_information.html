@@ -26,13 +26,13 @@
                             <a class="nav-link" href="{% url 'summary_instructions' %}">Instructions</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link active" href="{% url 'organizational_information' %}">Confirm basic information</a>
+                            <a class="nav-link active" href="{% url 'organizational_information' %}">Address & organization type</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{% url 'cover_sheets_organization' %}">Update cover sheet - organization</a>
+                            <a class="nav-link" href="{% url 'cover_sheets_organization' %}">Your organization</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{% url 'cover_sheets_service' %}">Update cover sheet - service</a>
+                            <a class="nav-link" href="{% url 'cover_sheets_service' %}">Your service</a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" href="{% url 'ntd_upload' %}">NTD data upload</a>
@@ -41,9 +41,63 @@
                 </div>
                 <div class="card-body" style="">
                     <h4>Please confirm the following details about your organization:</h4>
-                    <form action="/summary/organizational_information/" method="post">
+                    <form action=" {% url 'OrganizationProfile' redirect_to='organizational_information' %}" method="post">
                         {% csrf_token  %}
-                        {{ form }}
+                        {#                        {{ form }}#}
+                        <div class="table-responsive" style="padding-top: 1.5rem">
+                            <table class="table float-left table-borderless table-breath">
+                                <tbody>
+                                <tr class="fieldWrapper">
+                                    <td>{{ form.name.label_tag }}</td>
+                                    <td style="white-space: nowrap; width: 1%">{{ form.name }}</td>
+                                    <td><a href="#" class="edit_profile_field" data-field_name="{{ form.name.name }}">(Edit)</a></td>
+                                    <td>{{ form.name.errors }}</td>
+                                </tr>
+                                <tr class="fieldWrapper">
+                                    <td style="white-space: nowrap; width: 1%">{{ form.address_line_1.label_tag }}</td>
+                                    <td style="white-space: nowrap; width: 1%">{{ form.address_line_1 }}</td>
+                                    <td><a href="#" class="edit_profile_field" data-field_name="{{ form.address_line_1.name }}">(Edit)</a></td>
+                                    <td>{{ form.last_name.errors }}</td>
+                                </tr>
+                                <tr class="fieldWrapper">
+                                    <td>{{ form.address_line_2.label_tag }}</td>
+                                    <td style="white-space: nowrap; width: 1%">{{ form.address_line_2 }}</td>
+                                    <td><a href="#" class="edit_profile_field" data-field_name="{{ form.address_line_2.name }}">(Edit)</a></td>
+                                    <td>{{ form.address_line_2.errors }}</td>
+                                </tr>
+                                <tr class="fieldWrapper">
+                                    <td>{{ form.city.label_tag }}</td>
+                                    <td style="white-space: nowrap; width: 1%">{{ form.city }}</td>
+                                    <td><a href="#" class="edit_profile_field" data-field_name="{{ form.city.name }}">(Edit)</a></td>
+                                    <td>{{ form.city.errors }}</td>
+                                </tr>
+                                <tr class="fieldWrapper">
+                                    <td>{{ form.state.label_tag }}</td>
+                                    <td style="white-space: nowrap; width: 1%">{{ form.state }}</td>
+                                    <td><a href="#" class="edit_profile_field" data-field_name="{{ form.state.name }}">(Edit)</a></td>
+                                    <td>{{ form.state.errors }}</td>
+                                </tr>
+                                <tr class="fieldWrapper">
+                                    <td>{{ form.zip_code.label_tag }}</td>
+                                    <td style="white-space: nowrap; width: 1%">{{ form.zip_code }}</td>
+                                    <td><a href="#" class="edit_profile_field" data-field_name="{{ form.zip_code.name }}">(Edit)</a></td>
+                                    <td>{{ form.zip_code.errors }}</td>
+                                </tr>
+
+                                <tr class="fieldWrapper">
+                                    <td>{{ form.summary_organization_classifications.label_tag }}</td>
+                                    <td style="white-space: nowrap; width: 1%">{{ form.summary_organization_classifications }}</td>
+                                    <td><a href="#" class="edit_profile_field" data-field_name="{{ form.summary_organization_classifications.name }}">(Edit)</a></td>
+                                    <td>{{ form.summary_organization_classifications.errors }}</td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        {{ form.non_field_errors }}
+                        {{ form.source.errors }}
+                        {{ form.source }}
+                        <input type="submit" value="Confirm"  class="btn btn-primary float-right mt-3">
+                        <a href="."  class="btn btn-secondary float-right mr-2 mt-3" >Cancel</a>
                     </form>
                 </div>
             </div>

@@ -5,7 +5,7 @@
 {% load widget_tweaks %}
 
 {% block head_content %}
-
+    <link href="{% static 'css/slidder.css'%}" rel="stylesheet">
 
 {% endblock %}
 
@@ -26,26 +26,76 @@
                             <a class="nav-link" href="{% url 'summary_instructions' %}">Instructions</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{% url 'organizational_information' %}">Confirm basic information</a>
+                            <a class="nav-link" href="{% url 'organizational_information' %}">Address & organization type</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{% url 'cover_sheets_organization' %}">Update cover sheet - organization</a>
+                            <a class="nav-link" href="{% url 'cover_sheets_organization' %}">Your organization</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{% url 'cover_sheets_service' %}">Update cover sheet - service</a>
+                            <a class="nav-link" href="{% url 'cover_sheets_service' %}">Your service</a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link active" href="{% url 'ntd_upload' %}">NTD data upload</a>
                         </li>
                     </ul>
                 </div>
-                <div class="card-body" style="font-size: 0.8rem">
+                <div class="card-body" style="min-height: 25rem">
+                    <div class="container-fluid w-100 h-100">
+                        <div class="row w-100 h-100" >
+                            <div class="col col-5 border-right text-center">
+                                <h3 style="padding-top: 7rem; padding-bottom: 3rem">Upload NTD File</h3>
+                                <label class="btn btn-primary" style="" for=""><i class="fas fa-upload"></i>  Choose a file</label>
+                            </div>
+                            <div class="col col-2">
+                                <div >
+                                    <ul class="c text-center">
+                                        <li></li>
+                                        <li></li>
+                                        <li></li>
+                                        <li></li>
+                                        <li></li>
+                                    </ul>
+                                </div>
 
+                            </div>
+                            <div class="col col-5 h-100">
+                                <div class="row ml-1" style="height: 33%">
+                                    <span class="my-auto ">Validating NTD file</span>
+                                    <div class="progress" style="height: 20px; width: 100%">
+                                        <div class="progress-bar" role="progressbar"  style="width: 100%; background-color: #99CABF;" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"></div>
+                                    </div>
+                                </div>
+                                <div class="row ml-1" style="height: 33%">
+                                    <span class="my-auto">Importing data</span>
+                                    <div class="progress" style="height: 20px; width: 100%">
+                                        <div class="progress-bar" role="progressbar" style="width: 100%; background-color: #66B09F;" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"></div>
+                                    </div>
+                                </div>
+                                <div class="row ml-1" style="height: 33%">
+                                    <span class="my-auto">Validating data</span>
+                                    <div class="progress" style="height: 20px; width: 100%">
+                                        <div class="progress-bar" role="progressbar" style="width: 33%; background-color: #33957F;" aria-valuenow="33" aria-valuemin="0" aria-valuemax="100"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
 
 
 
                 </div>
             </div>
+        </div>
+        <div class="row">
+            <div class="card shadow mb-4 w-100">
+                <div class="card-header">
+                    NTD data upload results
+                </div>
+                <div class="card-body">
+
+                </div>
+            </div>
+
         </div>
     </div>
 

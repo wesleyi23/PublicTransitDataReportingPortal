@@ -412,17 +412,17 @@ class cover_sheet(models.Model):
     legislative_districts = models.CharField(max_length=100, blank=True, null=True)
     type_of_government = models.CharField(max_length=100, blank=True, null=True)
     governing_body = models.TextField(blank=True, null=True)
-    tax_authorized_description = models.CharField(max_length=250, blank=True, null=True)
+    tax_rate_description = models.CharField(max_length=250, blank=True, null=True)
     transit_development_plan_url = models.CharField(verbose_name="Transit development plan URL", max_length=250, blank=True, null=True)
     intermodal_connections = models.TextField(blank=True, null=True)
     fares_description = models.TextField(blank=True, null=True)
-    community_medicaid_service_and_eligibility = models.TextField(verbose_name="Service and eligibility description", blank=True, null=True)
+    service_and_eligibility = models.TextField(verbose_name="Service and eligibility description", blank=True, null=True)
     current_operations = models.TextField(blank=True, null=True)
-    community_medicaid_revenue_service_vehicles = models.TextField(verbose_name="Revenue service vehicles", blank=True, null=True)
-    community_medicaid_days_of_service = models.CharField(verbose_name="Days of service", max_length=250, blank=True, null=True)
+    revenue_service_vehicles = models.TextField(verbose_name="Revenue service vehicles", blank=True, null=True)
+    days_of_service = models.CharField(verbose_name="Days of service", max_length=250, blank=True, null=True)
     monorail_ownership = models.CharField(max_length=250, blank=True, null=True)
-    community_planning_region  = models.CharField(max_length=50, blank = True, null=True)
-    organization_logo = models.ImageField(upload_to='Organization_logo', blank=True, null=True)
+    community_planning_region = models.CharField(max_length=50, blank = True, null=True)
+    organization_logo = models.BinaryField(editable=True, blank=True, null=True)
 
 
 class ServiceOffered(models.Model):

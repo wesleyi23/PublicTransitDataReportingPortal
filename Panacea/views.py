@@ -16,6 +16,7 @@ from .utilities import monthdelta, get_wsdot_color, get_vanpool_summary_charts_a
 from django.http import Http404
 from .filters import VanpoolExpansionFilter
 from django.conf import settings
+import base64
 
 from .forms import CustomUserCreationForm, \
     custom_user_ChangeForm, \
@@ -31,7 +32,7 @@ from .forms import CustomUserCreationForm, \
     Modify_A_Vanpool_Expansion, \
     request_user_permissions, \
     statewide_summary_settings, \
-    Modify_A_Vanpool_Expansion, organisation_summary_settings, organization_information, cover_sheet_form, \
+    Modify_A_Vanpool_Expansion, organisation_summary_settings, organization_information, cover_sheet_service, cover_sheet_organization, \
     revenue_data_form, BaseRevenueForm
 
 from .models import profile, vanpool_report, custom_user, vanpool_expansion_analysis, organization, cover_sheet,\
@@ -227,7 +228,7 @@ def OrganizationProfileUsers(request):
 
 @login_required(login_url='/Panacea/login')
 @group_required('Vanpool reporter', 'WSDOT staff', 'Summary reporter')
-def OrganizationProfile(request):
+def OrganizationProfile(request, redirect_to=None):
     user_profile_data = profile.objects.get(custom_user=request.user.id)
     org = user_profile_data.organization
     org_name = org.name
@@ -239,7 +240,11 @@ def OrganizationProfile(request):
             if not 'state' in form.data:
                 form.data['state'] = user_profile_data.organization.state
             form.save()
-            return redirect('OrganizationProfile')
+            if redirect_to:
+                print(redirect_to)
+                return redirect(redirect_to)
+            else:
+                return redirect('OrganizationProfile')
         else:
             form.data['name'] = org.name
             form.data['address_line_1'] = org.address_line_1
@@ -683,7 +688,7 @@ def organizational_information(request):
     user_profile_data = profile.objects.get(custom_user=request.user.id)
     org = user_profile_data.organization
     org_name = org.name
-    form = organization_information(instance=org)
+    form = organization_profile(instance=org)
     if request.POST:
         if form.is_valid():
             form.save()
@@ -700,35 +705,58 @@ def cover_sheet_organization_view(request):
     user_profile_data = profile.objects.get(custom_user=request.user.id)
     org = user_profile_data.organization
     org_name = org.name
+    cover_sheet_instance, created = cover_sheet.objects.get_or_create(organization_id=org.id)
+    form = cover_sheet_organization(instance=cover_sheet_instance)
 
-    cover_sheet_instance, created = cover_sheet.objects.get_or_create(organization=org)
-
-    form = cover_sheet_form(instance=cover_sheet_instance)
+    try:
+        base64_logo = base64.encodebytes(cover_sheet_instance.organization_logo).decode("utf-8")
+    except:
+        base64_logo = ""
 
     if request.POST:
-        if form.is_valid():
-            form.save()
-            return redirect('cover_sheet')
+        form = cover_sheet_organization(data=request.POST, files=request.FILES)
 
-    return render(request, 'pages/summary/cover_sheet_organization.html', {'org_name': org_name, 'form': form})
+        if form.is_valid():
+            instance = form.save(commit=False)
+            instance.organization = org
+            instance.id = cover_sheet_instance.id
+            filepath = request.FILES.get('organization_logo_input', False)
+
+            if filepath:
+                instance.organization_logo = filepath.read()
+                base64_logo = base64.encodebytes(instance.organization_logo).decode("utf-8")
+            else:
+                instance.organization_logo = cover_sheet_instance.organization_logo
+
+            instance.save()
+
+    return render(request, 'pages/summary/cover_sheet_organization.html', {'form': form,
+                                                                           'org_name': org_name,
+                                                                           'base64_logo': base64_logo})
 
 
 def cover_sheet_service_view(request):
+
     user_profile_data = profile.objects.get(custom_user=request.user.id)
     org = user_profile_data.organization
-    org_name = org.name
+    service_type = org.summary_organization_classifications
 
     cover_sheet_instance, created = cover_sheet.objects.get_or_create(organization=org)
 
-    form = cover_sheet_form(instance=cover_sheet_instance)
+    form = cover_sheet_service(instance=cover_sheet_instance)
 
     if request.POST:
+        form = cover_sheet_service(data=request.POST, instance=cover_sheet_instance)
+
         if form.is_valid():
+            print("valid")
             form.save()
-            return redirect('cover_sheet')
+        else:
+            print("Error")
+            for error in form.errors:
+                print(error)
 
-    return render(request, 'pages/summary/cover_sheet_service.html', {'org_name': org_name, 'form': form})
-
+    return render(request, 'pages/summary/cover_sheet_service.html', {'service_type': service_type, 'form': form})
 
 def summary_report_data(request):
     return render(request, 'pages/summary/report_data.html')

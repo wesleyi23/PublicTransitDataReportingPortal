@@ -26,13 +26,13 @@
                             <a class="nav-link" href="{% url 'summary_instructions' %}">Instructions</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{% url 'organizational_information' %}">Confirm basic information</a>
+                            <a class="nav-link" href="{% url 'organizational_information' %}">Address & organization type</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{% url 'cover_sheets_organization' %}">Update cover sheet - organization</a>
+                            <a class="nav-link" href="{% url 'cover_sheets_organization' %}">Your organization</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link active" href="{% url 'cover_sheets_service' %}">Update cover sheet - service</a>
+                            <a class="nav-link active" href="{% url 'cover_sheets_service' %}">Your service</a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" href="{% url 'ntd_upload' %}">NTD data upload</a>
@@ -40,58 +40,76 @@
                     </ul>
                 </div>
                 <div class="card-body" style="">
-                    <form action="/summary/cover_sheet/" method="post">
+                    <form action="{% url 'cover_sheets_service' %}" method="post">
                         {% csrf_token  %}
-                        <h3>{{ form.instance.organization }}</h3>
+                        <h3>Please update any information that has changed:</h3>
                         <div class="container-fluid w-100">
                             <div class="row w-100">
-                                <div class="col">
-                                    <div>
-                                        <table class="w-100">
-                                            <tr>
-                                                <td>{{ form.executive_officer_first_name.label_tag}}</td>
-                                                <td>{{ form.executive_officer_last_name.label_tag}}</td>
-                                            </tr>
-                                            <tr>
-                                                <td>{{ form.executive_officer_first_name }} </td>
-                                                <td>{{ form.executive_officer_last_name }}</td>
-                                            </tr>
-                                        </table>
-                                        {{ form.service_website_url.label_tag }}
-                                        <p>{{ form.service_website_url }}</p>
-                                        {{ form.service_area_description.label_tag }}
-                                        <p>{{ form.service_area_description}}</p>
-                                        {{ form.congressional_districts.label_tag }}
-                                        <p>{{ form.congressional_districts}}</p>
-                                        {{ form.legislative_districts.label_tag }}
-                                        <p>{{ form.legislative_districts}}</p>
-                                        {{ form.type_of_government.label_tag }}
-                                        <p>{{ form.type_of_government}}</p>
-                                        {{ form.governing_body.label_tag }}
-                                        <p>{{ form.governing_body}}</p>
-                                        {{ form.transit_development_plan_url.label_tag }}
-                                        <p>{{ form.transit_development_plan_url}}</p>
-                                    </div>
-                                </div>
-                                <div class="col">
+                                <div class="col" style="padding-right: 1.5rem">
                                     {{ form.intermodal_connections.label_tag }}
+                                    <sup>
+                                        <i class="fas fa-question-circle help-popover"
+                                           data-toggle="popover" title="Intermodal connections:"
+                                           data-content="Provide a list of the transportation systems (public and private) that your system connects to. You may also include the locations where you make these connections."></i>
+                                    </sup>
                                     <p>{{ form.intermodal_connections}}</p>
+
                                     {{ form.fares_description.label_tag }}
+                                    <sup>
+                                        <i class="fas fa-question-circle help-popover"
+                                           data-toggle="popover" title="Fares Description:"
+                                           data-content="Provide a basic list of your fares (e.g., adult, youth, senior, paratransit, monthly pass) and the website URL for more detailed fare information. If you do not collect fares, write “Fare-free.”"></i>
+                                    </sup>
                                     <p>{{ form.fares_description}}</p>
-                                    {{ form.community_medicaid_service_and_eligibility.label_tag }}
-                                    <p>{{ form.community_medicaid_service_and_eligibility}}</p>
-                                    {{ form.current_operations.label_tag }}
-                                    <p>{{ form.current_operations}}</p>
-                                    {{ form.community_medicaid_revenue_service_vehicles.label_tag }}
-                                    <p>{{ form.community_medicaid_revenue_service_vehicles}}</p>
-                                    {{ form.community_medicaid_days_of_service.label_tag }}
-                                    <p>{{ form.intermodal_connections}}</p>
-                                    {{ form.monorail_ownership.label_tag }}
-                                    <p>{{ form.monorail_ownership}}</p>
-                                    {{ form.organization_logo.label_tag }}
-                                    <p>{{ form.organization_logo}}</p>
-                                    {{ form.tax_authorized_description.label_tag }}
-                                    <p>{{ form.tax_authorized_description}}</p>
+
+                                </div>
+                                <div class="col" style="padding-right: 1.5rem">
+                                    {% if service_type == "Medicaid broker" or service_type == "Community provider" %}
+                                        {{ form.service_and_eligibility.label_tag }}
+                                        <sup>
+                                            <i class="fas fa-question-circle help-popover"
+                                               data-toggle="popover" title="Service and eligibility:"
+                                               data-content="Provide a basic list of your public transportation services (e.g., demand response, paratransit, veteran transportation). For each service you provide, list the groups eligible for that service (e.g., individuals with special needs, seniors, people with disabilities, general public). "></i>
+                                        </sup>
+                                        <p>{{ form.service_and_eligibility }}</p>
+                                    {% endif %}
+
+                                    {% if service_type == "Community provider"  %}
+                                        {{ form.revenue_service_vehicles.label_tag }}
+                                        <sup>
+                                            <i class="fas fa-question-circle help-popover"
+                                               data-toggle="popover" title="Revenue service vehicles:"
+                                               data-content="Provide a list of your revenue service vehicles, their seating capacity and ADA-accessibility  (e.g., Four, 16-passenger ADA-accessible cutaways; four, 6-passenger minivans (three are ADAaccessible); and two, 4-passenger ADA-accessible specialty vehicles)."></i>
+                                        </sup>
+                                        <p>{{ form.revenue_service_vehicles }}</p>
+                                    {% endif %}
+
+                                    {% if service_type == "Medicaid broker" or service_type == "Community provider" %}
+                                        {{ form.days_of_service.label_tag }}
+                                        <sup>
+                                            <i class="fas fa-question-circle help-popover"
+                                               data-toggle="popover" title="Days of service:"
+                                               data-content="Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur."></i>
+                                        </sup>
+                                        <p>{{ form.days_of_service }}</p>
+                                    {% endif %}
+
+                                    {% if service_type == "Transit" or service_type == "Tribe" %}
+                                        {{ form.tax_rate_description.label_tag }}
+                                        <sup>
+                                            <i class="fas fa-question-circle help-popover"
+                                               data-toggle="popover" title="Tax rate description:"
+                                               data-content="For transit agencies, provide the type and total tax rate for transit services approved by voters in your service area (e.g., 0.6 percent total sales and use tax). Additionally, include a brief history of tax rate increases for transit services approved by voters in your service area (e.g., 0.3 approved in 1981, and an additional 0.3 percent approved in 2002)."></i>
+                                        </sup>
+                                        <p>{{ form.tax_rate_description}}</p>
+                                    {% endif %}
+
+                                    {% for error in form.non_field_errors %}
+                                        <div class="alert alert-danger">
+                                            <strong>{{ error|escape }}</strong>
+                                        </div>
+                                    {% endfor %}
+                                    <input id="update_coversheet_service" type="submit" value="Update Report" class="btn btn-primary float-left" style="position: absolute; bottom: 1rem; right: 1.25rem">
                                 </div>
                             </div>
                         </div>
@@ -109,5 +127,16 @@
 
 {% block page_scripts %}
 
+    <script>
+        $(function () {
+            $('.help-popover').popover({
+                container: 'body',
+                animation: false,
+                trigger: 'hover',
+                html:true
+            })
+        })
+
+    </script>
 
 {% endblock %}

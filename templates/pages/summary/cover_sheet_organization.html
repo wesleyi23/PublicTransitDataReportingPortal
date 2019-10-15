@@ -26,13 +26,13 @@
                             <a class="nav-link" href="{% url 'summary_instructions' %}">Instructions</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{% url 'organizational_information' %}">Confirm basic information</a>
+                            <a class="nav-link" href="{% url 'organizational_information' %}">Address & organization type</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link active" href="{% url 'cover_sheets_organization' %}">Update cover sheet - organization</a>
+                            <a class="nav-link active" href="{% url 'cover_sheets_organization' %}">Your organization</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{% url 'cover_sheets_service' %}">Update cover sheet - service</a>
+                            <a class="nav-link" href="{% url 'cover_sheets_service' %}">Your service</a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" href="{% url 'ntd_upload' %}">NTD data upload</a>
@@ -40,14 +40,14 @@
                     </ul>
                 </div>
                 <div class="card-body" style="">
-                    <form action="/summary/cover_sheet/" method="post">
+                    <form action={% url 'cover_sheets_organization' %} method="post" enctype="multipart/form-data">
                         {% csrf_token  %}
-                        <h3>{{ form.instance.organization }}</h3>
+                        <h3>Please update any information that has changed:</h3>
                         <div class="container-fluid w-100">
                             <div class="row w-100">
-                                <div class="col">
+                                <div class="col" style="padding-right: 1.5rem">
                                     <div>
-                                        <table class="w-100">
+                                        <table class="w-100" style="margin-bottom: 1rem">
                                             <tr>
                                                 <td>{{ form.executive_officer_first_name.label_tag}}</td>
                                                 <td>{{ form.executive_officer_last_name.label_tag}}</td>
@@ -61,38 +61,38 @@
                                                 <td>{{ form.executive_officer_last_name.errors }}</td>
                                             </tr>
                                         </table>
+
                                         {{ form.service_website_url.label_tag }}
-                                        <sup>
-                                            <i class="fas fa-question-circle help-popover"
-                                               data-toggle="popover" title="Service website URL:"
-                                               data-content="Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur."></i>
-                                        </sup>
                                         <p>{{ form.service_website_url }}</p>
                                         {{ form.service_website_url.errors }}
+
                                         {{ form.congressional_districts.label_tag }}
                                         <sup>
                                             <i class="fas fa-question-circle help-popover"
                                                data-toggle="popover" title="Congressional districts: "
-                                               data-content="Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur."></i>
+                                               data-content="The United States congressional districts within your service area."></i>
                                         </sup>
                                         <p>{{ form.congressional_districts}}</p>
                                         {{ form.congressional_districts.errors}}
+
                                         {{ form.legislative_districts.label_tag }}
                                         <sup>
                                             <i class="fas fa-question-circle help-popover"
                                                data-toggle="popover" title="Legislative districts:"
-                                               data-content="Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur."></i>
+                                               data-content="The Washington state legislative districts within your service area."></i>
                                         </sup>
                                         <p>{{ form.legislative_districts}}</p>
                                         {{ form.legislative_districts.errors}}
+
                                         {{ form.type_of_government.label_tag }}
                                         <sup>
                                             <i class="fas fa-question-circle help-popover"
                                                data-toggle="popover" title="Type of government:"
-                                               data-content="Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur."></i>
+                                               data-content="<b>For transit agencies:</b> Public Transportation Benefit Area, City Transit System, County Public Transportation Authority or Regional Transit Authority. <br><b>For other providers:</b> If you are a public agency, the description that most closely matches your governance structure (e.g., Tribal council, General purpose government). If you are a nonprofit organization, write “Nonprofit organization.” If you are a for-profit, private organization, write “For-profit organization.”"></i>
                                         </sup>
                                         <p>{{ form.type_of_government}}</p>
                                         {{ form.type_of_government.errors}}
+
                                         {{ form.governing_body.label_tag }}
                                         <sup>
                                             <i class="fas fa-question-circle help-popover"
@@ -101,28 +101,34 @@
                                         </sup>
                                         <p>{{ form.governing_body}}</p>
                                         {{ form.governing_body.errors}}
-                                        {{ form.transit_development_plan_url.label_tag }}
-                                        <sup>
-                                            <i class="fas fa-question-circle help-popover"
-                                               data-toggle="popover" title="Transit development plan URL:"
-                                               data-content="Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur."></i>
-                                        </sup>
-                                        <p>{{ form.transit_development_plan_url}}</p>
-                                        {{ form.transit_development_plan_url.errors}}
                                     </div>
                                 </div>
-                                <div class="col">
-                                    Organization logo:
-                                    <div class="custom-file">
-                                        {{ form.organization_logo }}
-                                        <label class="custom-file-label" for="id_{{ form.organization_logo.name }}">Choose a file</label>
+                                <div class="col" style="padding-left:1.5rem">
+                                    <div style="padding-bottom: 0.5rem">Organization logo:
+                                        <sup>
+                                            <i class="fas fa-question-circle help-popover"
+                                               data-toggle="popover" title="Governing body:"
+                                               data-content="Upload an image file (e.g., jpg, png, tif) of your agency’s logo. While it is not a requirement, WSDOT prefers logos without slogans or catchphrases."></i>
+                                        </sup>
                                     </div>
-                                    <div>
-                                        <img src="{{ form.organization_logo.url }}" id="preview" class="img-thumbnail">
+                                    <div class="text-center" >
+                                        {{ form.organization_logo_input }}
+                                        <label class="btn btn-primary" style="" for="id_{{ form.organization_logo_input.name }}"><i class="fas fa-upload"></i>  Choose a file</label>
                                     </div>
+                                    <div class="text-center" style="padding-top:0.5rem">
+                                        <img src="data:image/png;base64, {{ base64_logo }}" id="preview" class="img-fluid img-thumbnail" style="width:66%">
+                                    </div>
+                                    {{ form.organization_logo_input.errors }}
+                                    {% for error in form.non_field_errors %}
+                                        <div class="alert alert-danger">
+                                            <strong>{{ error|escape }}</strong>
+                                        </div>
+                                    {% endfor %}
+
                                 </div>
                             </div>
                         </div>
+                        <input id="update_coversheet_organization" type="submit" value="Update Report" class="btn btn-secondary float-left" style="position: absolute; bottom: 1rem; right: 1.25rem">
                     </form>
                 </div>
             </div>
@@ -156,12 +162,13 @@
         });
     </script>
 
-        <script>
+    <script>
         $(function () {
             $('.help-popover').popover({
                 container: 'body',
                 animation: false,
-                trigger: 'hover'
+                trigger: 'hover',
+                html:true
             })
         })
 

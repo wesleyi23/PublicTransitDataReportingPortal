@@ -180,7 +180,8 @@ class organization_profile(forms.ModelForm):
         )
 
         model = organization
-        fields = ('name', 'address_line_1', 'address_line_2', 'city', 'state', 'zip_code', 'vanshare_program', 'in_puget_sound_area')
+        fields = ('name', 'address_line_1', 'address_line_2', 'city', 'state', 'zip_code', 'vanshare_program',
+                  'in_puget_sound_area', 'summary_organization_classifications')
         widgets = {
             'name': forms.TextInput(
                 attrs={'class': 'form-control-plaintext', 'readonly': 'True', 'style': "width:350px"}),
@@ -190,7 +191,9 @@ class organization_profile(forms.ModelForm):
                 attrs={'class': 'form-control-plaintext', 'readonly': 'True', 'style': "width:350px"}),
             'city': forms.TextInput(
                 attrs={'class': 'form-control-plaintext', 'readonly': 'True'}),
-            'state': forms.Select(attrs={'class': 'form-control form-control-plaintext', 'readonly': 'True', 'style': 'pointer-events: none'}),
+            'state': forms.Select(
+                attrs={'class': 'form-control form-control-plaintext', 'readonly': 'True',
+                       'style': 'pointer-events: none'}),
             'zip_code': forms.TextInput(
                 attrs={'class': 'form-control-plaintext', 'readonly': 'True'}),
             'vanshare_program': forms.Select(choices=TRUE_FALSE_CHOICES,
@@ -198,7 +201,12 @@ class organization_profile(forms.ModelForm):
                                                     'style': 'pointer-events: none'}),
             'in_puget_sound_area': forms.Select(choices=TRUE_FALSE_CHOICES,
                                                 attrs={'class': 'form-control-plaintext', 'readonly': 'True',
-                                                       'style': 'pointer-events: none'})
+                                                       'style': 'pointer-events: none'}),
+            'summary_organization_classifications': forms.Select(choices=organization.SUMMARY_ORG_CLASSIFICATIONS,
+                                                                 attrs={'class': 'form-control-plaintext',
+                                                                        'readonly': 'True',
+                                                                        'style': 'pointer-events: none'}),
+
         }
 
 
@@ -563,12 +571,16 @@ class organization_information(forms.ModelForm):
                                                                         'style': 'pointer-events: none'}),
         }
 
-class cover_sheet_form(forms.ModelForm):
-
+class cover_sheet_organization(forms.ModelForm):
+    organization_logo_input = forms.FileField(required=False,
+                                              widget=forms.FileInput(attrs={'class': 'my-custom-file-input',
+                                                                            'accept': '.jpg, .jpeg, .png, .tif'}))
 
     class Meta:
         model = cover_sheet
-        exclude = ['']
+        fields = ['executive_officer_first_name', 'executive_officer_last_name', 'service_website_url',
+                  'service_area_description', 'congressional_districts', 'legislative_districts', 'type_of_government',
+                  'governing_body']
         widgets = {
             'executive_officer_first_name': forms.TextInput(attrs={'class': 'form-control'}),
             'executive_officer_last_name': forms.TextInput(attrs={'class': 'form-control'}),
@@ -579,16 +591,33 @@ class cover_sheet_form(forms.ModelForm):
             'legislative_districts': forms.TextInput(attrs={'class': 'form-control'}),
             'type_of_government': forms.TextInput(attrs={'class': 'form-control'}),
             'governing_body': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
-            'transit_development_plan_url': forms.URLInput(attrs={'class': 'form-control'}),
+        }
+
+    def clean_organization_logo_input(self):
+        from Panacea.validators import validate_image_file
+        image = self.cleaned_data.get('organization_logo_input')
+        # import pdb; pdb.set_trace()
+
+        print(image)
+        if image is not None:
+            print("validator")
+            validate_image_file(image)
+
+
+class cover_sheet_service(forms.ModelForm):
+    class Meta:
+        model = cover_sheet
+        fields = ['intermodal_connections', 'fares_description', 'service_and_eligibility',
+                  'days_of_service', 'current_operations', 'revenue_service_vehicles',
+                  'tax_rate_description']
+        widgets = {
             'intermodal_connections': forms.Textarea(attrs={'class': 'form-control'}),
             'fares_description': forms.Textarea(attrs={'class': 'form-control'}),
-            'community_medicaid_service_and_eligibility': forms.Textarea(attrs={'class': 'form-control'}),
-            'community_medicaid_days_of_service': forms.TextInput(attrs={'class': 'form-control'}),
+            'service_and_eligibility': forms.Textarea(attrs={'class': 'form-control'}),
+            'days_of_service': forms.TextInput(attrs={'class': 'form-control'}),
             'current_operations': forms.Textarea(attrs={'class': 'form-control'}),
-            'community_medicaid_revenue_service_vehicles': forms.TextInput(attrs={'class': 'form-control'}),
-            'monorail_ownership': forms.TextInput(attrs={'class': 'form-control'}),
-            'tax_authorized_description': forms.TextInput(attrs={'class': 'form-control'}),
-            'organization_logo': forms.FileInput(attrs={'class': 'custom-file-input'})
+            'revenue_service_vehicles': forms.TextInput(attrs={'class': 'form-control'}),
+            'tax_rate_description': forms.Textarea(attrs={'class': 'form-control'}),
         }
 
 class revenue_data_form(forms.ModelForm):

@@ -35,6 +35,7 @@ urlpatterns = [
     path('vanpool/organization_summary/<int:org_id>/', views.vanpool_organization_summary, name="vanpool_organization_summary"),
     path('UserProfile/', views.UserProfile, name="UserProfile"),
     path('OrganizationProfile/', views.OrganizationProfile, name="OrganizationProfile"),
+    path('OrganizationProfile/<redirect_to>/', views.OrganizationProfile, name="OrganizationProfile"),
     path('OrganizationProfile/Users', views.OrganizationProfileUsers, name="OrganizationProfileUsers"),
     path('Permissions/', views.Permissions, name="Permissions"),
     path('Admin/Expansion/', views.Vanpool_expansion_analysis, name="Vanpool_expansion_analysis"),
