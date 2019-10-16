@@ -12,7 +12,7 @@ from django.db.models import Max
 from dateutil.relativedelta import relativedelta
 import datetime
 from Panacea.decorators import group_required
-from .utilities import monthdelta, get_wsdot_color, get_vanpool_summary_charts_and_table, percent_change_calculation
+from .utilities import monthdelta, get_wsdot_color, get_vanpool_summary_charts_and_table, percent_change_calculation, find_vanpool_organizations
 from django.http import Http404
 from .filters import VanpoolExpansionFilter
 from django.conf import settings
@@ -629,7 +629,16 @@ def vanpool_statewide_summary(request):
 
 @login_required(login_url='/Panacea/login')
 def Vanpool_Growth(request):
+    listOfAgencies = find_vanpool_organizations()
+    for i in listOfAgencies:
+        organizationId = i.id
+        start_vanpool_report_year = vanpool_report.objects.filter(organization_id=organizationId, report_date__isnull=False, report_month=12,).first()
+        end_vanpool_report_year = vanpool_report.objects.filter(organization_id=organizationId, report_date__isnull=False, report_month=12,).last()
+        print(start_vanpool_report_year)
+        print(end_vanpool_report_year)
     return render(request, 'pages/vanpool/VanpoolGrowth.html', {})
+
+
 
 @login_required(login_url='/Panacea/login')
 def Operation_Summary(request):

@@ -11,6 +11,9 @@ from dateutil.relativedelta import relativedelta
 
 #
 
+def find_vanpool_organizations():
+    return organization.objects.all().filter(vanpool_program=True)
+
 
 def generate_summary_report_years():
     currentYear = datetime.date.today().year

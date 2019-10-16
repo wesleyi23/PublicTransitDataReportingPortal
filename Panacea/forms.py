@@ -621,10 +621,9 @@ class cover_sheet_service(forms.ModelForm):
         }
 
 class revenue_data_form(forms.ModelForm):
- #   def __init__(self, *args, report_by, organization, **kwargs):
-  #      self.report_by = report_by
-   #     self.organization = organization
-    #    super().__init__(*args, **kwargs)
+
+
+
 
     class Meta:
         model = SummaryRevenues
