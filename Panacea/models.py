@@ -308,8 +308,22 @@ class vanpool_expansion_analysis(models.Model):
 
 
 class revenue_source(models.Model):
+    LEVIATHANS = (
+        ('Federal', 'Federal'),
+        ('State', 'State'),
+        ('Local', 'Local'),
+        ('Other', 'Other')
+    )
+
+    FUNDING_KIND = (
+        ('Capital', 'Capital'),
+        ('Operating', 'Operating')
+    )
+
     specific_revenue_source = models.CharField(max_length=120)
     order_in_summary = models.IntegerField(null=True, blank=True)
+    government_type = models.CharField(max_length=100, choices=LEVIATHANS, null=True, blank=True)
+    funding_type = models.CharField(max_length=30, choices=FUNDING_KIND, null=True, blank=True)
     def __str__(self):
         return self.specific_revenue_source
 
@@ -334,12 +348,12 @@ class transit_mode(models.Model):
     def __str__(self):
         return self.mode
 
+
 class rollup_mode(models.Model):
     rollup_mode = models.CharField(max_length=80)
 
     def __str__(self):
         return self.rollup_mode
-
 
 class SummaryTransitData(models.Model):
 
@@ -361,32 +375,20 @@ class SummaryTransitData(models.Model):
     comments = models.TextField(blank = False, null = True)
     history = HistoricalRecords()
 
+
 class SummaryRevenues(models.Model):
-    LEVIATHANS = (
-        ('Federal', 'Federal'),
-        ('State', 'State'),
-        ('Local', 'Local'),
-        ('Other', 'Other')
-    )
-
-    FUNDING_KIND = (
-        ('Capital', 'Capital'),
-        ('Operating', 'Operating')
-    )
-
-
     organization = models.ForeignKey(organization, on_delete=models.PROTECT, related_name='+')
     year = models.IntegerField()
-    government_type = models.CharField(max_length= 100, choices = LEVIATHANS)
-    spending_type = models.CharField(max_length = 30, choices = FUNDING_KIND)
     specific_revenue_source = models.ForeignKey(revenue_source, on_delete=models.PROTECT, related_name='+')
     specific_revenue_value = models.FloatField()
-    subfund = models.BooleanField(default=False)
-    subfund_specification = models.TextField(blank=False, null=True)
     report_by = models.ForeignKey(custom_user, on_delete=models.PROTECT, blank=True, null=True)
     comments = models.TextField(blank=False, null=True)
     history = HistoricalRecords()
 
+
+class subfundRevenues(models.Model):
+    specific_revenue_value = models.ForeignKey(SummaryRevenues, on_delete=models.PROTECT, related_name= '+')
+    subfund_specification = models.TextField(blank=False, null=True)
 
 class SummaryExpenses(models.Model):
 
@@ -394,11 +396,13 @@ class SummaryExpenses(models.Model):
     year = models.IntegerField()
     specific_expense_source = models.ForeignKey(expenses_source, on_delete=models.PROTECT, related_name='+')
     specific_expense_value = models.FloatField()
-    subfund = models.BooleanField(default=False)
-    subfund_specification = models.TextField(blank = False, null = True)
     report_by = models.ForeignKey(custom_user, on_delete=models.PROTECT, blank=True, null=True)
     comments = models.TextField(blank=False, null=True)
     history = HistoricalRecords()
+
+class subfundExpenses(models.Model):
+    specific_expense_value = models.ForeignKey(SummaryExpenses, on_delete=models.PROTECT, related_name='+')
+    subfund_specification = models.TextField(blank=False, null=True)
 
 
 class cover_sheet(models.Model):

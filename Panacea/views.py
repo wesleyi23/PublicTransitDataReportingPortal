@@ -629,13 +629,28 @@ def vanpool_statewide_summary(request):
 
 @login_required(login_url='/Panacea/login')
 def Vanpool_Growth(request):
+
+    # class growth_report_table():
+    #
+    #     def __init__(self, start_vanpool_report_year, end_vanpool_report_year):
+    #         self.start_year= start_vanpool_report_year.report_year
+    #         self.end_year = end_vanpool_report_year.report_year
+    #         self.start_year_vans = start_vanpool_report_year.report_year
+    #         self.most_recent_year_vans = end_vanpool_report_year.vanpool_groups_in_operation + end_vanpool_report_year.vanshare_groups_in_operation
+    #         self.percent_growth =
+    #         self.absolute_van_growth
+    #         self.most_recent_year_folds
+    #         self.most_recent_year_start
+
+
+
     listOfAgencies = find_vanpool_organizations()
     for i in listOfAgencies:
         organizationId = i.id
         start_vanpool_report_year = vanpool_report.objects.filter(organization_id=organizationId, report_date__isnull=False, report_month=12,).first()
         end_vanpool_report_year = vanpool_report.objects.filter(organization_id=organizationId, report_date__isnull=False, report_month=12,).last()
-        print(start_vanpool_report_year)
-        print(end_vanpool_report_year)
+        print(start_vanpool_report_year.report_year)
+        print(end_vanpool_report_year.report_year)
     return render(request, 'pages/vanpool/VanpoolGrowth.html', {})
 
 
