@@ -386,7 +386,7 @@ class SummaryRevenues(models.Model):
     history = HistoricalRecords()
 
 
-class subfundExpenses(models.Model):
+class subfundRevenues(models.Model):
     specific_revenue_value = models.ForeignKey(SummaryRevenues, on_delete=models.PROTECT, related_name='+')
     subfund_specification = models.TextField(blank=False, null=True)
 
