@@ -2,7 +2,7 @@ import json
 from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
 from django.db.models import Min, Sum, Avg
-from django.forms import formset_factory
+from django.forms import formset_factory, modelformset_factory
 from django.http import JsonResponse
 from django.shortcuts import render, redirect
 from django.db.models.functions import datetime
@@ -33,10 +33,10 @@ from .forms import CustomUserCreationForm, \
     request_user_permissions, \
     statewide_summary_settings, \
     Modify_A_Vanpool_Expansion, organisation_summary_settings, organization_information, cover_sheet_service, cover_sheet_organization, \
-    revenue_data_form, BaseRevenueForm
+    revenue_data_form, test_field, base_test_field
 
 from .models import profile, vanpool_report, custom_user, vanpool_expansion_analysis, organization, cover_sheet,\
-    SummaryRevenues, SummaryTransitData, SummaryExpenses
+    SummaryRevenues, SummaryTransitData, SummaryExpenses, test_model
 from django.contrib.auth.models import Group
 from .utilities import calculate_latest_vanpool, find_maximum_vanpool, calculate_remaining_months, calculate_if_goal_has_been_reached,\
     generate_summary_report_years, find_user_organization
@@ -794,38 +794,33 @@ def report_transit_data(request):
 def report_revenues(request):
     org = find_user_organization(request.user.id)
     report_years = generate_summary_report_years()
-    summaryrevenues = SummaryRevenues.objects.filter(organization_id=org, year__in=report_years).values('specific_revenue_source__specific_revenue_source', 'government_type', 'spending_type').distinct()
-    print(summaryrevenues)
-    revenue_years = []
-    for year in report_years:
-        revenue_instance = SummaryRevenues.objects.filter(organization_id= org, year = year).values('year', 'government_type', 'spending_type', 'specific_revenue_value', 'subfund', 'subfund_specification', 'comments', 'specific_revenue_source', 'organization', 'report_by')
-        revenue_years.append(revenue_instance)
-    RevenueFormSet = formset_factory(revenue_data_form, formset = BaseRevenueForm)
-    if request.method == 'GET':
-        form_list = []
-        for year in revenue_years:
-            formset = RevenueFormSet(initial=year)
-            form_list.append(formset)
-        zipped = zip(form_list, revenue_years)
-    if request.method == 'POST':
-        form_list = []
-        for year in revenue_years:
-            formset = RevenueFormSet(initial=year)
-            form_list.append(formset)
-        zipped = zip(form_list, revenue_years)
-        if formset.is_valid():
-            formset.cleaned_data['report_by'] = request.user.id
-            formset.save()
-            #return redirect('report_expenses')
-    else:
-        formset = RevenueFormSet(initial=revenue_instance)
-    return render(request, 'pages/summary/report_revenues.html', {'zipped': zipped, 'report_years':report_years, 'labels': summaryrevenues})
+    return render(request, 'pages/summary/report_revenues.html', {'report_years':report_years})
 
 def report_expenses(request):
     return render(request, 'pages/summary/report_expenses.html')
 
 def review_data(request):
     return render(request, 'pages/summary/review_data.html')
+
+def test(request):
+    org = find_user_organization(request.user.id)
+    report_years = generate_summary_report_years()
+    firstreport = SummaryRevenues.objects.filter(year = 2016, organization_id=org)
+    formlist = []
+    for i in firstreport:
+        print(i.specific_revenue_source)
+        print(i.specific_revenue_value)
+
+
+    form = test_field(label_suffix = 'something', revenue_source_id="test value")
+    if request.method == 'POST':
+        form = test_field(data=request.POST, revenue_source_id=form.revenue_source_id)
+        print("post")
+        if form.is_valid():
+            print("form valid")
+            form.save()
+
+    return render(request, 'pages/Blank.html', {'form': form})
 
 # endregion
 

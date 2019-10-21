@@ -10,7 +10,7 @@ from .models import custom_user, \
     vanpool_report, \
     vanpool_expansion_analysis, \
     cover_sheet, \
-    SummaryRevenues, SummaryExpenses, SummaryTransitData, revenue_source
+    SummaryRevenues, SummaryExpenses, SummaryTransitData, revenue_source, test_model
 from django.utils.translation import gettext, gettext_lazy as _
 from phonenumber_field.formfields import PhoneNumberField
 from localflavor.us.forms import USStateSelect, USZipCodeField
@@ -636,13 +636,26 @@ class revenue_data_form(forms.Form):
 
         }
 
-class BaseRevenueForm(BaseFormSet):
-    def clean(self):
-        """
-        Adds validation to check that no two links have the same anchor or URL
-        and that all links have both an anchor and URL.
-        """
-        if any(self.errors):
-            return
+
+
+class base_test_field(forms.ModelForm):
+
+    class Meta:
+        model = test_model
+        exclude = ['test_target']
+
+
+
+class test_field(base_test_field):
+
+    def __init__(self, revenue_source_id=None, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.revenue_source_id = revenue_source_id
+
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+        instance.test_target = self.revenue_source_id
+        instance.save()
+
 
 # endregion

@@ -440,4 +440,8 @@ class ServiceOffered(models.Model):
     administration_of_mode = models.CharField(max_length= 80, choices=DO_OR_PT)
     organization = models.ForeignKey(organization, on_delete=models.PROTECT, blank=True, null=True)
 
+class test_model(models.Model):
+
+    test_field = models.CharField(max_length=80, blank=True, null=True)
+    test_target = models.CharField(max_length=80, blank=True, null=True)
 

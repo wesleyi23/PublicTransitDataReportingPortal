@@ -53,48 +53,7 @@
 <table>
 <th> Revenue Types</th>
 <tr><td>Operating Related Revenues</td></tr>
-{%  for label in labels %}
-
-    {%  if label.government_type == 'Local' and label.spending_type == 'Operating' %}
-    <tr><td>{{ label.specific_revenue_source__specific_revenue_source}}</td></tr>
-    {%  endif %}
-    {%  if label.government_type == 'Federal' and label.spending_type == 'Operating' %}
-    <tr><td>{{ label.specific_revenue_source__specific_revenue_source}}</td></tr>
-    {%  endif %}
-    {%  if label.government_type == 'State' and label.spending_type == 'Operating' %}
-    <tr><td>{{ label.specific_revenue_source__specific_revenue_source}}</td></tr>
-    {%  endif %}
-    {%  if label.government_type == 'Other' and label.spending_type == 'Operating' %}
-    <tr><td>{{ label.specific_revenue_source__specific_revenue_source}}</td></tr>
-    {%  endif %}
-    {%  if label.government_type == 'Federal' and label.spending_type == 'Capital' %}
-        <tr><td>Federal Capital Grant Revenues</td></tr>
-    <tr><td>{{ label.specific_revenue_source__specific_revenue_source}}</td></tr>
-    {%  endif %}
-    {%  if label.government_type == 'State' and label.spending_type == 'Capital' %}
-        <tr><td>State Capital Grant Revenues</td></tr>
-    <tr><td>{{ label.specific_revenue_source__specific_revenue_source}}</td></tr>
-    {%  endif %}
-    {%  if label.government_type == 'Local' and label.spending_type == 'Capital' %}
-        <tr><td>Local Capital Expenditures</td></tr>
-    <tr><td>{{ label.specific_revenue_source__specific_revenue_source}}</td></tr>
-    {%  endif %}
-
-{% endfor %}
 </table>
-    {{ formset.management_form }}
-            {% for form, report_year in zipped %}
-                <div class="col-md-6">
-                {{ report_year.year }}
-                {%  for yearform in form %}
-
-                    <td>  {{ yearform.specific_revenue_source}}</td>
-                    <td>{{ yearform.specific_revenue_value }} </td>
-
-
-            {% endfor %}
-                </div>
-    {%  endfor %}
 
 
 </form>
