@@ -6,5 +6,65 @@
 
 {% block head_content %}
 
+{%  endblock %}
+        <!-- Page Heading -->
+{% block content %}
+
+  <div class="container-fluid">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="card shadow mb-4 w-100">
+                <div class="card-header">
+                    <ul class="nav nav-tabs card-header-tabs">
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'summary_report_data' %}">Instructions</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link active" href="{% url 'summary_modes' %}">Confirm and update agency's transit modes</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'report_transit_data' %}">Report transit data</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'report_revenues' %}">Report revenues</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link " href="{% url 'report_expenses' %}">Report expenses</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'review_data' %}">Review submitted data</a>
+                        </li>
+
+                    </ul>
+                </div>
+                <div class="card-body" style="">
+                <p> Welcome to the Summary of Public Transportation data reporting section. Please confirm that these are the modes that your transit operates and
+                add or delete any relevant modes.</p>
+                    <form method="POST" class="post-form">{% csrf_token %}
+                        <table>
+                            <thead><th>Nature of Service</th>
+                                    <th>Mode</th></thead>
+                        {%  for f in form %}
+                        <tr><td>
+                            {{ f.administration_of_mode}}</td>
+                        <td>
+                             {{ f.mode }}</td>
+                        <td>{{ f.errors }}</td>
+                        </tr>
+                            {%  endfor %}
+                        <input type="submit" value="Submit"  class="btn btn-primary float-right mt-3">
+
+                    </form>
+                    </table>
+
+                </div>
+            </div>
+        </div>
+        </div>
+  </div>
+{%  endblock %}
+{% block page_scripts %}
+
 
 {% endblock %}
+

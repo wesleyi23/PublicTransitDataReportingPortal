@@ -6,5 +6,65 @@
 
 {% block head_content %}
 
+{% endblock %}
+
+
+{% block content %}
+
+    <div class="container-fluid">
+
+        <!-- Page Heading -->
+
+    </div>
+
+    <div class="container-fluid">
+        <div class="row">
+            <div class="card shadow mb-4 w-100">
+                <div class="card-header">
+                    <ul class="nav nav-tabs card-header-tabs">
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'summary_report_data' %}">Instructions</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'summary_modes' %}">Confirm and update agency's transit modes</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'report_transit_data' %}">Report transit data</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'report_revenues' %}">Report revenues</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link active" href="{% url 'report_expenses' %}">Report expenses</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'review_data' %}">Review submitted data</a>
+                        </li>
+
+                    </ul>
+                </div>
+                <div class="card-body" style="">
+                    <form method="POST" class="post-form">{% csrf_token %}
+
+                        {% csrf_token  %}
+                        {% for form in formset %}
+                            {{ form.as_p }}
+                            {{ form.errors }}
+                            {{ form.non_field_errors }}
+                        {% endfor %}
+                        {{ formset.management_form }}
+                        <input type="submit" value="Submit"  class="btn btn-primary float-right mt-3">
+
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+{%  endblock %}
+
+{% block page_scripts %}
+
 
 {% endblock %}

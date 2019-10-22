@@ -38,7 +38,7 @@ ALLOWED_HOSTS = []
 # pip install django-localflavor
 # pip install celery
 # pip install django-widget-tweaks
-#
+# pip install django-tempus-dominus
 # pip install django-filter
 # pip install django-simple-history
 # pip install django-celery-beat

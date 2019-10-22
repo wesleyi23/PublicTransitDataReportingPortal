@@ -10,7 +10,7 @@ from .models import custom_user, \
     vanpool_report, \
     vanpool_expansion_analysis, \
     cover_sheet, \
-    SummaryRevenues, SummaryExpenses, SummaryTransitData, revenue_source, test_model
+    SummaryRevenues, SummaryExpenses, SummaryTransitData, revenue_source, test_model, ServiceOffered, transit_mode
 from django.utils.translation import gettext, gettext_lazy as _
 from phonenumber_field.formfields import PhoneNumberField
 from localflavor.us.forms import USStateSelect, USZipCodeField
@@ -620,8 +620,19 @@ class cover_sheet_service(forms.ModelForm):
             'tax_rate_description': forms.Textarea(attrs={'class': 'form-control'}),
         }
 
-class revenue_data_form(forms.Form):
+class service_offered(forms.ModelForm):
+    DO_OR_PT = (
+                   ('Direct Operated', 'Direct Operated'),
+                   ('Purchased', 'Purchased')
+    )
+    mode = forms.ModelChoiceField(queryset=transit_mode.objects.all(), label='Service Mode', widget=forms.Select(attrs={'class': 'form-control form-control-plaintext', 'style': 'pointer-events: none'})),
+    administration_of_mode = forms.CharField(label = 'Nature of the Service', widget=forms.Select(choices=ServiceOffered.DO_OR_PT, attrs={'class': 'form-control'}))
+    class Meta:
+        model = ServiceOffered
+        fields = ['administration_of_mode', 'mode']
 
+
+class revenue_data_form(forms.Form):
 
 
 
@@ -636,6 +647,14 @@ class revenue_data_form(forms.Form):
 
         }
 
+class BaseRevenueForm(BaseFormSet):
+    def clean(self):
+        """
+        Adds validation to check that no two links have the same anchor or URL
+        and that all links have both an anchor and URL.
+        """
+        if any(self.errors):
+            return
 
 
 class base_test_field(forms.ModelForm):
@@ -644,6 +663,17 @@ class base_test_field(forms.ModelForm):
         model = test_model
         exclude = ['test_target']
 
+
+class test_formset(BaseFormSet):
+    def __init__(self, revenue_source_ids, *args, **kwargs):
+        super(test_formset, self).__init__(*args, **kwargs)
+        self.revenue_source_ids = revenue_source_ids
+
+    def get_form_kwargs(self, form_index):
+        form_kwargs = super(test_formset, self).get_form_kwargs(form_index)
+        if form_index < len(self.revenue_source_ids):
+            form_kwargs = {'revenue_source_id': self.revenue_source_ids[form_index]}
+        return form_kwargs
 
 
 class test_field(base_test_field):

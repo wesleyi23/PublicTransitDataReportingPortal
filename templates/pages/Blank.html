@@ -8,10 +8,14 @@
 
         <form method="POST" class="post-form">{% csrf_token %}
 
-                   {{ form.as_p }}
-            <input type="submit" value="Submit"  class="btn btn-primary float-right mt-3">
+    {%  for form in form_list %}
+        {{ form.as_p }}
+
             {{ form.errors }}
             {{ form.non_field_errors }}
+            {% endfor %}
+<input type="submit" value="Submit"  class="btn btn-primary float-right mt-3">
+
         </form>
     </div>
 {%  endblock %}
