@@ -38,33 +38,40 @@
                     </ul>
                 </div>
                 <div class="card-body" style="">
-                <p> Welcome to the Summary of Public Transportation data reporting section. Please confirm that these are the modes that your transit operates and
-                add or delete any relevant modes.</p>
-                    <form method="POST" class="post-form">{% csrf_token %}
-                        <table>
+                <p> Welcome to the Summary of Public Transportation data reporting section. Please confirm that these are the modes that your transit operates, add any modes in the next column, and
+                review the relevant modes. If you would like to delete a mode, please report all zeros in the next section. If you would like to combine or change a mode that you believe was previously reported erroneously, please be in touch with the Summary site administrators</p>
+                <div class = 'table-responsive'></div>
+                        <table class = "table table-bordered">
                             <thead><th>Nature of Service</th>
                                     <th>Mode</th></thead>
-                        {%  for f in form %}
-                        <tr><td>
-                            {{ f.administration_of_mode}}</td>
+                        {%  for mode in modes %}
+                        <tr class="fieldWrapper"><td>
+                            {{ mode.administration_of_mode}}</td>
                         <td>
-                             {{ f.mode }}</td>
-                        <td>{{ f.errors }}</td>
+                             {{ mode.mode}}</td>
                         </tr>
                             {%  endfor %}
-                        <input type="submit" value="Submit"  class="btn btn-primary float-right mt-3">
+                      </table>
 
-                    </form>
-                    </table>
 
+
+                <p> Please add any new modes that you are operating here</p>
+                        <table>
+                            <form method="POST" class="post-form">{% csrf_token %}
+
+                                {{ formset.as_p }}
+                                {{ formset.management_form }}
+                                <input type="submit" value="Confirm Current and Added Modes" class="btn btn-primary float-right mt-3" onclick="report_transit_data">
+                            </form>
+                        </table>
+                </div>
                 </div>
             </div>
         </div>
         </div>
   </div>
 {%  endblock %}
-{% block page_scripts %}
 
 
-{% endblock %}
+
 

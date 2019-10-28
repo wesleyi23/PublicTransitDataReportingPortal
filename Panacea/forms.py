@@ -626,7 +626,7 @@ class service_offered(forms.ModelForm):
                    ('Purchased', 'Purchased')
     )
     mode = forms.ModelChoiceField(queryset=transit_mode.objects.all(), label='Service Mode', widget=forms.Select(attrs={'class': 'form-control form-control-plaintext', 'style': 'pointer-events: none'})),
-    administration_of_mode = forms.CharField(label = 'Nature of the Service', widget=forms.Select(choices=ServiceOffered.DO_OR_PT, attrs={'class': 'form-control'}))
+    administration_of_mode = forms.CharField(required= False, label = 'Nature of Service', widget=forms.Select(choices=ServiceOffered.DO_OR_PT, attrs={'class': 'form-control'}))
     class Meta:
         model = ServiceOffered
         fields = ['administration_of_mode', 'mode']

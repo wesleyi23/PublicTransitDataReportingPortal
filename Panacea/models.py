@@ -436,8 +436,8 @@ class ServiceOffered(models.Model):
         ('Purchased', 'Purchased')
 
     )
-    mode = models.ForeignKey(transit_mode, on_delete = models.PROTECT,  related_name = '+')
-    administration_of_mode = models.CharField(max_length= 80, choices=DO_OR_PT)
+    mode = models.ForeignKey(transit_mode, on_delete = models.PROTECT,  related_name = '+', blank=True, null = True)
+    administration_of_mode = models.CharField(max_length= 80, choices=DO_OR_PT, null=True, blank = True)
     organization = models.ForeignKey(organization, on_delete=models.PROTECT, blank=True, null=True)
 
 class test_model(models.Model):

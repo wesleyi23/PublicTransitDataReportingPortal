@@ -791,17 +791,24 @@ def summary_modes(request):
         ('Purchased', 'Purchased')
     )
     org = find_user_organization(request.user.id)
-    modes = ServiceOffered.objects.filter(organization_id = org).values('administration_of_mode', 'mode')
-    print(modes)
-    mode_formset = formset_factory(service_offered, min_num=len(modes), extra=2)
-    formset = mode_formset(initial=[{'administration_of_mode': x['administration_of_mode'], 'mode': x['mode']} for x in modes])
+    modes = ServiceOffered.objects.filter(organization_id = org)
+    mode_formset = formset_factory(service_offered, min_num=2)
+    formset = mode_formset()
+    # TODO add in date time of changes and user id to this dataset date time as native, foreign key for user 
     if request.method == 'POST':
-        form = service_offered(data=request.POST)
-        print(form.cleaned_data)
-        if form.is_valid():
-            form.save()
-
-    return render(request, 'pages/summary/summary_modes.html', {'form': formset})
+        formset = mode_formset(data=request.POST)
+        print(formset.errors)
+        print(formset.is_valid())
+        for form in formset:
+            if 'mode' in form.changed_data:
+                if form.is_valid():
+                    instance = form.save(commit=False)
+                    instance.organization = org
+                    form.save()
+                    return redirect('report_transit_data')
+            else:
+                return redirect('report_transit_data')
+    return render(request, 'pages/summary/summary_modes.html', {'formset': formset, 'modes': modes, 'org': org})
 
 def report_transit_data(request):
     return render(request, 'pages/summary/report_transit_data.html')
