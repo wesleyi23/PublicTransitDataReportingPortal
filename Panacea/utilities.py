@@ -385,3 +385,12 @@ def yearchange(user_org_id, start_year, end_year, measure):
 
     return [measure, overall_change(measure)]
 
+
+# TODO make this real
+def get_current_summary_report_year():
+    return 2018
+
+
+
+
+

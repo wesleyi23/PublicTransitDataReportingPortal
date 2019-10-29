@@ -13,7 +13,10 @@ https://docs.djangoproject.com/en/2.1/ref/settings/
 import os
 from celery.schedules import crontab
 
-os.environ.setdefault('FORKED_BY_MULTIPROCESSING', '1')
+dev_mode = True
+
+if not dev_mode:
+    os.environ.setdefault('FORKED_BY_MULTIPROCESSING', '1')
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -22,28 +25,22 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # See https://docs.djangoproject.com/en/2.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'x%b_yxu0_1k3i9t$e&yr0h)edaj0u07hp+dg(&yy^m28x2zkmo'
+if dev_mode:
+    SECRET_KEY = 'x%b_yxu0_1k3i9t$e&yr0h)edaj0u07hp+dg(&yy^m28x2zkmo'
+else:
+    SECRET_KEY = os.environ.get("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+
+if dev_mode:
+    DEBUG = True
+else:
+    DEBUG = int(os.environ.get("DEBUG", default=0))
+
 
 ALLOWED_HOSTS = []
 
 # Application definition
-
-# Install instructions:
-# pip install bootstrap4
-# pip install django-phonenumber-field
-# pip install phonenumbers
-# pip install django-localflavor
-# pip install celery
-# pip install django-widget-tweaks
-# pip install django-tempus-dominus
-# pip install django-filter
-# pip install django-simple-history
-# pip install django-celery-beat
-# pip install eventlet
-
 
 INSTALLED_APPS = [
     'bootstrap4',
@@ -79,10 +76,15 @@ MIDDLEWARE = [
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_HOST_USER = 'ptddatateam@gmail.com'
-EMAIL_HOST_PASSWORD = 'flyyzcoccfrxyaap'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 DEFAULT_FROM_EMAIL = 'ptddatateam@gmail.com'
+
+if dev_mode:
+    EMAIL_HOST_PASSWORD = 'flyyzcoccfrxyaap'
+else:
+    EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD")
+
 
 ROOT_URLCONF = 'TransitData.urls'
 
@@ -155,7 +157,12 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.1/howto/static-files/
 
-STATIC_URL = '/static/'
+if dev_mode:
+    STATIC_URL = '/static/'
+else:
+    STATIC_URL = "/staticfiles/"
+    STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
+
 
 # User authentication from tut located here:https://wsvincent.com/django-custom-user-model-tutorial/
 
@@ -172,7 +179,7 @@ CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TASK_SERIALIZER = 'json'
 
 CELERY_BEAT_SCHEDULE = {'send_emails_now': {'task': 'Panacea.tasks.send_emails_now',
-                                             'schedule': crontab(minute="*")}
+                                            'schedule': crontab(minute="*")}
 
 }
 

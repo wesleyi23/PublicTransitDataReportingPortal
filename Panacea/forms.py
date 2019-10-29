@@ -1,8 +1,11 @@
 from django import forms
+from django.forms import BaseModelFormSet
 from django.forms.formsets import BaseFormSet
 from django.contrib.auth import password_validation, login
 from django.contrib.auth.forms import UserChangeForm, AuthenticationForm
 import datetime
+
+from Panacea.utilities import find_user_organization
 from .models import custom_user, \
     profile, \
     organization, \
@@ -10,7 +13,7 @@ from .models import custom_user, \
     vanpool_report, \
     vanpool_expansion_analysis, \
     cover_sheet, \
-    SummaryRevenues, SummaryExpenses, SummaryTransitData, revenue_source, test_model, ServiceOffered, transit_mode
+    SummaryRevenues, SummaryExpenses, SummaryTransitData, revenue_source, test_model, transit_mode, ServiceOffered
 from django.utils.translation import gettext, gettext_lazy as _
 from phonenumber_field.formfields import PhoneNumberField
 from localflavor.us.forms import USStateSelect, USZipCodeField
@@ -398,7 +401,6 @@ class VanpoolMonthlyReport(forms.ModelForm):
 
         }
 
-    # TODO test how easily the fields can be extracted
     def save(self, commit=True):
         instance = super(VanpoolMonthlyReport, self).save(commit=False)
         if commit:
@@ -603,6 +605,14 @@ class cover_sheet_organization(forms.ModelForm):
             print("validator")
             validate_image_file(image)
 
+class service_offered(forms.ModelForm):
+
+    mode = forms.ModelChoiceField(required=False, queryset=transit_mode.objects.all(), label='Service Mode', widget=forms.Select(attrs={'class': 'form-control form-control-plaintext', 'style': 'pointer-events: none'})),
+    administration_of_mode = forms.CharField(required= False, label = 'Nature of Service', widget=forms.Select(choices=ServiceOffered.DO_OR_PT, attrs={'class': 'form-control'}))
+    class Meta:
+        model = ServiceOffered
+        fields = ['administration_of_mode', 'mode']
+
 
 class cover_sheet_service(forms.ModelForm):
     class Meta:
@@ -620,21 +630,7 @@ class cover_sheet_service(forms.ModelForm):
             'tax_rate_description': forms.Textarea(attrs={'class': 'form-control'}),
         }
 
-class service_offered(forms.ModelForm):
-    DO_OR_PT = (
-                   ('Direct Operated', 'Direct Operated'),
-                   ('Purchased', 'Purchased')
-    )
-    mode = forms.ModelChoiceField(queryset=transit_mode.objects.all(), label='Service Mode', widget=forms.Select(attrs={'class': 'form-control form-control-plaintext', 'style': 'pointer-events: none'})),
-    administration_of_mode = forms.CharField(required= False, label = 'Nature of Service', widget=forms.Select(choices=ServiceOffered.DO_OR_PT, attrs={'class': 'form-control'}))
-    class Meta:
-        model = ServiceOffered
-        fields = ['administration_of_mode', 'mode']
-
-
 class revenue_data_form(forms.Form):
-
-
 
     class Meta:
         model = SummaryRevenues
@@ -657,35 +653,58 @@ class BaseRevenueForm(BaseFormSet):
             return
 
 
-class base_test_field(forms.ModelForm):
+class summary_expense_form(forms.ModelForm):
 
     class Meta:
-        model = test_model
-        exclude = ['test_target']
+        model = SummaryExpenses
+        exclude = ["organization", "report_by"]
+        widgets = {
+            'specific_expense_value': forms.NumberInput(attrs={'class': 'form-control'}),
+            'comments': forms.Textarea(attrs={'class': 'form-control', "rows": 3}),
+            'year': forms.NumberInput(attrs={'disabled': True}),
+            'specific_expense_source': forms.TextInput(attrs={'disabled': True}),
+            'id': forms.TextInput(attrs={'disabled': True})
+        }
 
 
-class test_formset(BaseFormSet):
-    def __init__(self, revenue_source_ids, *args, **kwargs):
-        super(test_formset, self).__init__(*args, **kwargs)
-        self.revenue_source_ids = revenue_source_ids
 
-    def get_form_kwargs(self, form_index):
-        form_kwargs = super(test_formset, self).get_form_kwargs(form_index)
-        if form_index < len(self.revenue_source_ids):
-            form_kwargs = {'revenue_source_id': self.revenue_source_ids[form_index]}
-        return form_kwargs
+# class source_id_formset(BaseModelFormSet):
+#     def __init__(self, source_ids, year, my_user, *args, **kwargs):
+#         super(source_id_formset, self).__init__(*args, **kwargs)
+#         self.source_ids = source_ids
+#         self.year = year
+#         self.my_user = my_user
+#
+#     def get_form_kwargs(self, form_index):
+#         form_kwargs = super(source_id_formset, self).get_form_kwargs(form_index)
+#         if form_index < len(self.source_ids):
+#             form_kwargs = {'source_id': self.source_ids[form_index],
+#                            'year': self.year,
+#                            'my_user': self.my_user}
+#         else:
+#             form_kwargs = {'source_id': None,
+#                            'year': self.year,
+#                            'my_user': self.my_user}
+#
+#         print(form_kwargs)
+#         return form_kwargs
 
 
-class test_field(base_test_field):
-
-    def __init__(self, revenue_source_id=None, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.revenue_source_id = revenue_source_id
-
-    def save(self, commit=True):
-        instance = super().save(commit=False)
-        instance.test_target = self.revenue_source_id
-        instance.save()
+# class summary_expense_form(base_summary_expense_form):
+#
+#     def __init__(self, year, my_user, source_id, *args, **kwargs):
+#         super().__init__(*args, **kwargs)
+#         self.source_id = source_id
+#         self.year = year
+#         self.my_user = my_user
+#
+#     def save(self, commit=True):
+#         instance = super().save(commit=False)
+#         instance.specific_expense_source_id = self.source_id
+#         instance.organization = find_user_organization(self.my_user.id)
+#         instance.year = self.year
+#         instance.report_by = self.my_user
+#         instance.save()
 
 
 # endregion

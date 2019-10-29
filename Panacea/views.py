@@ -1,6 +1,7 @@
 import json
 from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
+from django.db import transaction
 from django.db.models import Min, Sum, Avg
 from django.forms import formset_factory, modelformset_factory
 from django.http import JsonResponse
@@ -12,7 +13,8 @@ from django.db.models import Max
 from dateutil.relativedelta import relativedelta
 import datetime
 from Panacea.decorators import group_required
-from .utilities import monthdelta, get_wsdot_color, get_vanpool_summary_charts_and_table, percent_change_calculation, find_vanpool_organizations
+from .utilities import monthdelta, get_wsdot_color, get_vanpool_summary_charts_and_table, percent_change_calculation, \
+    find_vanpool_organizations, get_current_summary_report_year
 from django.http import Http404
 from .filters import VanpoolExpansionFilter
 from django.conf import settings
@@ -32,13 +34,14 @@ from .forms import CustomUserCreationForm, \
     Modify_A_Vanpool_Expansion, \
     request_user_permissions, \
     statewide_summary_settings, \
-    Modify_A_Vanpool_Expansion, organisation_summary_settings, organization_information, cover_sheet_service, cover_sheet_organization, \
-    revenue_data_form, test_field, base_test_field, test_formset, service_offered
+    Modify_A_Vanpool_Expansion, organisation_summary_settings, organization_information, cover_sheet_service, \
+    cover_sheet_organization, \
+    revenue_data_form, BaseRevenueForm, summary_expense_form, service_offered
 
-from .models import profile, vanpool_report, custom_user, vanpool_expansion_analysis, organization, cover_sheet,\
-    SummaryRevenues, SummaryTransitData, SummaryExpenses, test_model, ServiceOffered
+from .models import profile, vanpool_report, custom_user, vanpool_expansion_analysis, organization, cover_sheet, \
+    SummaryRevenues, SummaryTransitData, SummaryExpenses, expenses_source, ServiceOffered
 from django.contrib.auth.models import Group
-from .utilities import calculate_latest_vanpool, find_maximum_vanpool, calculate_remaining_months, calculate_if_goal_has_been_reached,\
+from .utilities import calculate_latest_vanpool, find_maximum_vanpool, calculate_remaining_months, calculate_if_goal_has_been_reached, \
     generate_summary_report_years, find_user_organization
 
 
@@ -431,14 +434,14 @@ def Vanpool_report(request, year=None, month=None):
         form.fields['changeReason'].required = False
 
     return render(request, 'pages/vanpool/Vanpool_report.html', {'form': form,
-                                                         'past_report_data': past_report_data,
-                                                         'year': year,
-                                                         'month': month,
-                                                         'organization': user_organization,
-                                                         'successful_submit': successful_submit,
-                                                         'min_year': min_year,
-                                                         'max_year': max_year,
-                                                         'new_report': new_report}
+                                                                 'past_report_data': past_report_data,
+                                                                 'year': year,
+                                                                 'month': month,
+                                                                 'organization': user_organization,
+                                                                 'successful_submit': successful_submit,
+                                                                 'min_year': min_year,
+                                                                 'max_year': max_year,
+                                                                 'new_report': new_report}
                   )
 
 
@@ -451,7 +454,7 @@ def Vanpool_expansion_submission(request):
             instance = form.save(commit = False)
             instance.deadline = instance.latest_vehicle_acceptance + relativedelta(months=+18)
             instance.expansion_goal = int(round(instance.expansion_vans_awarded * .8, 0) + \
-                                                      instance.vanpools_in_service_at_time_of_award)
+                                          instance.vanpools_in_service_at_time_of_award)
             instance.expired = False
             instance.vanpool_goal_met = False
             instance.extension_granted = False
@@ -542,12 +545,12 @@ def Vanpool_data(request):
         chart_title = form.MEASURE_CHOICES_DICT[chart_measure]
 
         return render(request, 'pages/vanpool/Vanpool_data.html', {'form': form,
-                                                           'chart_title': chart_title,
-                                                           'chart_measure': chart_measure,
-                                                           'chart_label': x_axis_labels,
-                                                           'chart_datasets_filtered': chart_datasets,
-                                                           'org_list': org_list
-                                                           })
+                                                                   'chart_title': chart_title,
+                                                                   'chart_measure': chart_measure,
+                                                                   'chart_label': x_axis_labels,
+                                                                   'chart_datasets_filtered': chart_datasets,
+                                                                   'org_list': org_list
+                                                                   })
     else:
         raise Http404
 
@@ -579,12 +582,12 @@ def vanpool_organization_summary(request, org_id=None):
             include_agency_classifications=None)
 
     return render(request, 'pages/vanpool/vanpool_organization_summary.html', {'settings_form': settings_form,
-                                                                    'chart_label': x_axis_labels,
-                                                                    'all_charts': all_charts,
-                                                                    'summary_table_data': summary_table_data,
-                                                                    'summary_table_data_total': summary_table_data_total,
-                                                                    'organization_name': org_name
-                                                                    }
+                                                                               'chart_label': x_axis_labels,
+                                                                               'all_charts': all_charts,
+                                                                               'summary_table_data': summary_table_data,
+                                                                               'summary_table_data_total': summary_table_data_total,
+                                                                               'organization_name': org_name
+                                                                               }
                   )
 
 
@@ -618,13 +621,13 @@ def vanpool_statewide_summary(request):
             include_agency_classifications=include_agency_classifications)
 
     return render(request, 'pages/vanpool/vanpool_statewide_summary.html', {'settings_form': settings_form,
-                                                                    'chart_label': x_axis_labels,
-                                                                    'all_charts': all_charts,
-                                                                    'summary_table_data': summary_table_data,
-                                                                    'summary_table_data_total': summary_table_data_total,
-                                                                    'include_regions': include_regions,
-                                                                    'include_agency_classifications': include_agency_classifications
-                                                                    }
+                                                                            'chart_label': x_axis_labels,
+                                                                            'all_charts': all_charts,
+                                                                            'summary_table_data': summary_table_data,
+                                                                            'summary_table_data_total': summary_table_data_total,
+                                                                            'include_regions': include_regions,
+                                                                            'include_agency_classifications': include_agency_classifications
+                                                                            }
                   )
 
 @login_required(login_url='/Panacea/login')
@@ -698,7 +701,7 @@ def Operation_Summary(request):
     average_miles = zip(avg_miles, empty_list)
 
     return render(request, 'pages/vanpool/OperationSummary.html', {'vp_totals': vp_totals, 'vs_totals': vs_totals, 'starts':starts, 'folds': folds, 'starts_as_a_percent': starts_as_percent,
-                                                           'folds_as_percent': folds_as_percent, 'net_vans': net_vans, 'average_riders': average_riders, 'average_miles': average_miles, 'years':years})
+                                                                   'folds_as_percent': folds_as_percent, 'net_vans': net_vans, 'average_riders': average_riders, 'average_miles': average_miles, 'years':years})
 
 # endregion
 
@@ -782,19 +785,21 @@ def cover_sheet_service_view(request):
 
     return render(request, 'pages/summary/cover_sheet_service.html', {'service_type': service_type, 'form': form})
 
+
 def summary_report_data(request):
     return render(request, 'pages/summary/report_data.html')
 
+
 def summary_modes(request):
-    DO_OR_PT = (
-        ('Direct Operated', 'Direct Operated'),
-        ('Purchased', 'Purchased')
-    )
     org = find_user_organization(request.user.id)
+    modes = ServiceOffered.objects.filter(organization_id = org).values('administration_of_mode', 'mode')
+    print(modes)
+    mode_formset = formset_factory(service_offered, min_num=len(modes), extra=2)
+    formset = mode_formset(initial=[{'administration_of_mode': x['administration_of_mode'], 'mode': x['mode']} for x in modes])
     modes = ServiceOffered.objects.filter(organization_id = org)
     mode_formset = formset_factory(service_offered, min_num=2)
     formset = mode_formset()
-    # TODO add in date time of changes and user id to this dataset date time as native, foreign key for user 
+    # TODO add in date time of changes and user id to this dataset date time as native, foreign key for user
     if request.method == 'POST':
         formset = mode_formset(data=request.POST)
         print(formset.errors)
@@ -805,77 +810,121 @@ def summary_modes(request):
                     instance = form.save(commit=False)
                     instance.organization = org
                     form.save()
-                    return redirect('report_transit_data')
-            else:
-                return redirect('report_transit_data')
+                    print('here')
+        print('here')
+        return redirect('report_transit_data.html')
     return render(request, 'pages/summary/summary_modes.html', {'formset': formset, 'modes': modes, 'org': org})
 
 def report_transit_data(request):
     return render(request, 'pages/summary/report_transit_data.html')
 
+
 def report_revenues(request):
     org = find_user_organization(request.user.id)
     report_years = generate_summary_report_years()
-    revenuelist = SummaryRevenues.objects.filter(organization_id=org, year__in=report_years).values('specific_revenue_source__specific_revenue_source').distinct()
-    revenuedata = SummaryRevenues.objects.filter(organization_id=org, year__in= report_years).values('specific_revenue_source__specific_revenue_source', 'specific_revenue_value')
-    revenuelist = [i['specific_revenue_source__specific_revenue_source'] for i in revenuelist]
-    revenuedata = list(revenuedata)
-    print(revenuedata)
-    my_formset_factory = formset_factory(form=test_field, formset=test_formset, min_num=len(revenuedata))
-    formset = my_formset_factory(revenue_source_ids = [{'specific_revenue_source__specific_revenue_source': x['specific_revenue_source__specific_revenue_source']} for x in revenuedata], initial = [{'specific_revenue_value': x['specific_revenue_value']} for x in revenuedata])
-    print(revenuedata)
+    summaryrevenues = SummaryRevenues.objects.filter(organization_id=org, year__in=report_years).values('specific_revenue_source__specific_revenue_source', 'government_type', 'spending_type').distinct()
+    print(summaryrevenues)
+    revenue_years = []
+    for year in report_years:
+        revenue_instance = SummaryRevenues.objects.filter(organization_id= org, year = year).values('year', 'government_type', 'spending_type', 'specific_revenue_value', 'subfund', 'subfund_specification', 'comments', 'specific_revenue_source', 'organization', 'report_by')
+        revenue_years.append(revenue_instance)
+    RevenueFormSet = formset_factory(revenue_data_form, formset = BaseRevenueForm)
+    if request.method == 'GET':
+        form_list = []
+        for year in revenue_years:
+            formset = RevenueFormSet(initial=year)
+            form_list.append(formset)
+        zipped = zip(form_list, revenue_years)
     if request.method == 'POST':
-        print("post")
-        formset = my_formset_factory(data=request.POST, revenue_source_ids=[x['specific_revenue_source__specific_revenue_source'] for x in revenuedata], initial = [{'specific_revenue_value': x['specific_revenue_value']} for x in revenuedata])
-        for form in formset:
-            form.save()
-    return render(request, 'pages/summary/report_revenues.html', {'formset': formset, 'report_years':report_years})
+        form_list = []
+        for year in revenue_years:
+            formset = RevenueFormSet(initial=year)
+            form_list.append(formset)
+        zipped = zip(form_list, revenue_years)
+        if formset.is_valid():
+            formset.cleaned_data['report_by'] = request.user.id
+            formset.save()
+            #return redirect('report_expenses')
+    else:
+        formset = RevenueFormSet(initial=revenue_instance)
+    return render(request, 'pages/summary/report_revenues.html', {'zipped': zipped, 'report_years':report_years, 'labels': summaryrevenues})
 
-def report_expenses(request):
 
-
+def report_expenses(request, year=None):
     user_org = find_user_organization(request.user.id)
-    previous_two_years = generate_summary_report_years()
 
-    past_expenses = SummaryExpenses.objects.filter(organization_id=user_org.id, year__in=previous_two_years).all()
+    if year is None:
+        year = get_current_summary_report_year()
+    previous_year = year - 1
+    two_years_ago = year - 2
 
-    my_formset_factory = formset_factory(form=test_field, formset=test_formset, min_num=2)
-    formset = my_formset_factory(revenue_source_ids=["test1", "test2", "test 3"])
+    my_formset_factory = modelformset_factory(model=SummaryExpenses,
+                                              form=summary_expense_form,
+                                              extra=0)
 
-    print(formset.total_form_count())
+    #Function start TODO move this
+    def get_or_create_summary_expenses_queryset(year, organization, user):
+        source_ids = list(SummaryExpenses.objects.filter(organization_id=user_org.id, year=year).values_list(
+            'specific_expense_source_id', flat=True))
+        all_expense_sources = list(expenses_source.objects.values_list("id", flat=True))
+
+        if len(source_ids) != len(all_expense_sources):
+            missing_ids = list(set(all_expense_sources) - set(source_ids))
+            print(missing_ids)
+
+            with transaction.atomic():
+                for my_id in missing_ids:
+                    SummaryExpenses.objects.create(year=year,
+                                                   specific_expense_source_id=my_id,
+                                                   organization=organization,
+                                                   specific_expense_source=None,
+                                                   report_by=user
+                                                   )
+        return SummaryExpenses.objects.filter(organization_id=user_org.id,
+                                              year=year).order_by('specific_expense_source').all()
+    #Function end
+
+    query_sets = {'this_year': get_or_create_summary_expenses_queryset(year, user_org, request.user),
+                  'previous_year': get_or_create_summary_expenses_queryset(previous_year, user_org, request.user),
+                  'two_years_ago': get_or_create_summary_expenses_queryset(two_years_ago, user_org, request.user)}
+
+    formsets = {}
+    for key, value in query_sets.items():
+        formsets[key] = my_formset_factory(queryset=value, prefix=key)
+
+    # print(formset.total_form_count())
 
     if request.method == 'POST':
         print("post")
-        formset = my_formset_factory(data=request.POST, revenue_source_ids=["test1", "test2", "test 3"])
-        for form in formset:
-            form.save()
+        for key, value in formsets.items():
+            formsets[key] = my_formset_factory(request.POST, queryset=query_sets[key], prefix=key)
+            if formsets[key].is_valid():
+                for form in formsets[key]:
+                    form.save()
+            else:
+                print(formsets[key].errors)
 
+    return render(request, 'pages/summary/report_expenses.html', {'formsets': formsets,
+                                                                  'form_range': range(len(formsets['this_year']))})
 
-    return render(request, 'pages/summary/report_expenses.html', {'formset': formset})
 
 def review_data(request):
     return render(request, 'pages/summary/review_data.html')
 
 
-def test(request):
-    org = find_user_organization(request.user.id)
-    report_years = generate_summary_report_years()
-    firstreport = SummaryRevenues.objects.filter(year = 2016, organization_id=org)
-    form_list = []
-    for i in firstreport:
-        form = test_field(label_suffix = i.specific_revenue_source, revenue_source_id = i.specific_revenue_value, instance=i)
-        form_list.append(form)
-    if request.method == 'POST':
-        for form in form_list:
-            form = test_field(data=request.POST, revenue_source_id=form.revenue_source_id)
-            print(form.instance)
-            print(form.data)
-            print("post")
-            if form.is_valid():
-                print("form valid")
-                form.save()
-
-    return render(request, 'pages/Blank.html', {'form_list': form_list})
+#def test(request):
+    #
+    #     form = test_field(custom_field_name="test value")
+    #     # import pdb
+    #     # pdb.set_trace()
+    #     if request.method == 'POST':
+    #         form = test_field(data=request.POST, custom_field_name=form.custom_field_name)
+    #         print("post")
+    #         if form.is_valid():
+    #             print("form valid")
+    #             form.save()
+    #
+  #  return render(request, 'pages/Blank.html', {'form': form})
 
 # endregion
 

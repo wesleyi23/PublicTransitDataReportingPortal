@@ -3,7 +3,7 @@
 {% load custom_tags %}
 {% load static %}
 {% load widget_tweaks %}
-
+{% load multifor %}
 {% block head_content %}
 
 {% endblock %}
@@ -45,14 +45,58 @@
                 </div>
                 <div class="card-body" style="">
                     <form method="POST" class="post-form">{% csrf_token %}
-
                         {% csrf_token  %}
-                        {% for form in formset %}
-                            {{ form.as_p }}
-                            {{ form.errors }}
-                            {{ form.non_field_errors }}
-                        {% endfor %}
-                        {{ formset.management_form }}
+
+                        <table class="table table-responsive">
+                            <thead>
+                            <tr style="min-height: 3.5rem">
+                                <th width="10%" style="min-width: 125px">Expense source</th>
+                                <th class="two-years-ago" width="10%" style="min-width: 125px">{{ formsets.two_years_ago.1.year.value }} <a class="edit-column" href="#">(edit)</a></th>
+                                <th class="two-years-ago comments" width="25%" style="min-width: 125px">{{ formsets.two_years_ago.1.year.value }} comments</th>
+                                <th class="previous-year" width="10%" style="min-width: 125px">{{ formsets.previous_year.1.year.value }} <a class="edit-column" href="#">(edit)</a></th>
+                                <th class="previous-year comments" width="25%" style="min-width: 125px">{{ formsets.previous_year.1.year.value }} comments</th>
+                                <th class="this-year" width="10%" style="min-width: 125px">{{ formsets.this_year.1.year.value }} <a class="edit-column" href="#">(edit)</a></th>
+                                <th class="this-year comments" width="25%" style="min-width: 125px">{{ formsets.this_year.1.year.value }} comments</th>
+                                <th>Validation errors</th>
+                                <th style="display: none">Hidden</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+
+                            {% for form_x in formsets.this_year; form_y in formsets.previous_year; form_z in formsets.two_years_ago %}
+                                <tr>
+                                    <td class="align-top" style="max-width: 5rem">{% if form_x.instance.specific_expense_source %}
+                                        {{ form_x.instance.specific_expense_source }}
+                                    {% else %}
+                                        {{ form_x.data.specific_expense_source }}
+                                    {% endif %}</td>
+                                    <td class="two-years-ago summary-input align-top" >{{ form_z.specific_expense_value }}</td>
+                                    <td class="two-years-ago comments align-top" >{{ form_z.comments }}</td>
+                                    <td class="previous-year summary-input align-top" >{{ form_y.specific_expense_value }}</td>
+                                    <td class="previous-year comments align-top" >{{ form_y.comments }}</td>
+                                    <td class="this-year summary-input align-top" >{{ form_x.specific_expense_value }}</td>
+                                    <td class="this-year comments align-top" >{{ form_x.comments }}</td>
+                                    <td>Errors</td>
+                                    <td style="display: none">{{ form_x.specific_expense_source}}
+                                        {{ form_y.specific_expense_source }}
+                                        {{ form_z.specific_expense_source }}
+                                        {{ form_x.id}}
+                                        {{ form_y.id }}
+                                        {{ form_z.id }}
+                                        {{ form_x.year}}
+                                        {{ form_y.year }}
+                                        {{ form_z.year }}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                            <tr>
+
+                            </tbody>
+                        </table>
+
+                        {{ formsets.this_year.management_form }}
+                        {{ formsets.previous_year.management_form }}
+                        {{ formsets.two_years_ago.management_form }}
                         <input type="submit" value="Submit"  class="btn btn-primary float-right mt-3">
 
                     </form>
@@ -65,6 +109,69 @@
 {%  endblock %}
 
 {% block page_scripts %}
+    <script>
+        $(document).ready(function() {
+            $('.this-year').children("input").attr("disabled", false);
+            $('.two-years-ago').children("input").attr("disabled", true);
+            $('.previous-year').children("input").attr("disabled", true);
 
+            $('.this-year').css("display", "")
+            $('.two-years-ago.comments').css("display", "none");
+            $('.previous-year.comments').css("display", "none");
+
+            $('.this-year').children(".edit-column").css("display", "none");
+        });
+
+        $('.post-form').submit(function(){
+            $(".post-form :disabled").removeAttr('disabled');
+        });
+
+        $('.edit-column').click(function(){
+            console.log('click');
+
+            switch($(this).parent().prop("class")){
+                case 'this-year':
+                    $('.this-year').children("input").attr("disabled", false);
+                    $('.two-years-ago').children("input").attr("disabled", true);
+                    $('.previous-year').children("input").attr("disabled", true);
+
+                    $('.this-year.comments').show(25);
+                    $('.two-years-ago.comments').hide(25);
+                    $('.previous-year.comments').hide(25);
+
+                    $('.this-year').children(".edit-column").css("display", "none");
+                    $('.two-years-ago').children(".edit-column").css("display", "");
+                    $('.previous-year').children(".edit-column").css("display", "");
+                    break;
+                case 'previous-year':
+                    $('.this-year').children("input").attr("disabled", true);
+                    $('.two-years-ago').children("input").attr("disabled", true);
+                    $('.previous-year').children("input").attr("disabled", false);
+
+                    $('.previous-year.comments').show(25);
+                    $('.this-year.comments').hide(25);
+                    $('.two-years-ago.comments').hide(25);
+
+                    $('.this-year').children(".edit-column").css("display", "");
+                    $('.two-years-ago').children(".edit-column").css("display", "");
+                    $('.previous-year').children(".edit-column").css("display", "none");
+                    break;
+                case 'two-years-ago':
+                    $('.this-year').children("input").attr("disabled", true);
+                    $('.two-years-ago').children("input").attr("disabled", false);
+                    $('.previous-year').children("input").attr("disabled", true);
+
+                    $('.two-years-ago.comments').show(25);
+                    $('.this-year.comments').hide(25);
+                    $('.previous-year.comments').hide(25);
+
+                    $('.this-year').children(".edit-column").css("display", "");
+                    $('.two-years-ago').children(".edit-column").css("display", "none");
+                    $('.previous-year').children(".edit-column").css("display", "");
+                    break;
+            }
+        })
+
+    </script>
 
 {% endblock %}

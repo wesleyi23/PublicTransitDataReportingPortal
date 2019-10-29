@@ -1,6 +1,7 @@
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AbstractUser, BaseUserManager, Group  ## A new class is imported. ##
 from django.db import models
+from django.db.models import UniqueConstraint
 from django.db.models.functions import datetime
 from django.utils.translation import ugettext_lazy as _
 from django.db.models.signals import post_save
@@ -132,7 +133,7 @@ class profile(models.Model):
     state = USStateField(blank=True)
     zip_code = USZipCodeField(blank=True)
     reports_on = models.ManyToManyField(ReportType, blank=True)  # TODO rename this to something else
-    request_permissions = models.ManyToManyField(Group)
+    requested_permissions = models.ManyToManyField(Group)
     active_permissions_request = models.BooleanField(blank=True, null=True)
 
 @receiver(post_save, sender=custom_user)
@@ -289,21 +290,11 @@ class vanpool_expansion_analysis(models.Model):
 
     #TODO Change all the forms so we get good data, put various checks into the views page,
     @property
-    # TODO should this be here or a function in utilities also we may want to rewrite this so it works no mater what date we put in
-    # TODO Generic function made - need to integrate it in
     def calculate_current_biennium(self):
         import datetime
-        today = datetime.date.today()
-        if today < datetime.date(2019, 6, 1):
-            current_biennium = '17-19'
-        # TODO you may want to simplify these as suggested by PyCharm
-        elif today >= datetime.date(2019, 6, 1) and today < datetime.date(2021, 6, 1):
-            current_biennium = '19-21'
-        elif today >= datetime.date(2021, 6, 1) and today < datetime.date(2023, 6, 1):
-            current_biennium = '21-23'
-        elif today >= datetime.date(2023, 6, 1) and today < datetime.date(2025, 6, 1):
-            current_biennium = '21-25'
-        return current_biennium
+        from Panacea.utilities import calculate_biennium
+        return calculate_biennium(datetime.date.today())
+
 # endregion
 
 
@@ -355,13 +346,14 @@ class rollup_mode(models.Model):
     def __str__(self):
         return self.rollup_mode
 
+
+# TODO Take out of camel case so the database table names are clean
 class SummaryTransitData(models.Model):
 
 
     DO_OR_PT = (
         ('Direct Operated', 'Direct Operated'),
         ('Purchased', 'Purchased')
-
     )
 
     organization = models.ForeignKey(organization, on_delete=models.PROTECT, related_name = '+')
@@ -394,12 +386,17 @@ class subfundRevenues(models.Model):
 class SummaryExpenses(models.Model):
 
     organization = models.ForeignKey(organization, on_delete=models.PROTECT, related_name='+')
-    year = models.IntegerField()
+    year = models.IntegerField(blank=True, null=True)
     specific_expense_source = models.ForeignKey(expenses_source, on_delete=models.PROTECT, related_name='+')
-    specific_expense_value = models.FloatField()
+    specific_expense_value = models.IntegerField(blank=True, null=True)
     report_by = models.ForeignKey(custom_user, on_delete=models.PROTECT, blank=True, null=True)
-    comments = models.TextField(blank=False, null=True)
+    comments = models.TextField(blank=True, null=True)
     history = HistoricalRecords()
+
+    class Meta:
+        constraints = [
+            UniqueConstraint(fields=['organization', 'year', 'specific_expense_source'], name='unique_source_report'),
+        ]
 
 class subfundExpenses(models.Model):
     specific_expense_value = models.ForeignKey(SummaryExpenses, on_delete=models.PROTECT, related_name='+')
@@ -426,19 +423,20 @@ class cover_sheet(models.Model):
     revenue_service_vehicles = models.TextField(verbose_name="Revenue service vehicles", blank=True, null=True)
     days_of_service = models.CharField(verbose_name="Days of service", max_length=250, blank=True, null=True)
     monorail_ownership = models.CharField(max_length=250, blank=True, null=True)
-    community_planning_region = models.CharField(max_length=50, blank = True, null=True)
+    community_planning_region = models.CharField(max_length=50, blank=True, null=True)
     organization_logo = models.BinaryField(editable=True, blank=True, null=True)
 
 
+# TODO Take out of camel case so the database table names are clean
 class ServiceOffered(models.Model):
     DO_OR_PT = (
         ('Direct Operated', 'Direct Operated'),
         ('Purchased', 'Purchased')
-
     )
-    mode = models.ForeignKey(transit_mode, on_delete = models.PROTECT,  related_name = '+', blank=True, null = True)
-    administration_of_mode = models.CharField(max_length= 80, choices=DO_OR_PT, null=True, blank = True)
+    mode = models.ForeignKey(transit_mode, on_delete = models.PROTECT,  related_name = '+')
+    administration_of_mode = models.CharField(max_length= 80, choices=DO_OR_PT)
     organization = models.ForeignKey(organization, on_delete=models.PROTECT, blank=True, null=True)
+
 
 class test_model(models.Model):
 
