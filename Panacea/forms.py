@@ -656,7 +656,7 @@ class summary_expense_form(forms.ModelForm):
         }
 
 
-class summary_revenue_form(forms.Form):
+class summary_revenue_form(forms.ModelForm):
 
     class Meta:
         model = SummaryRevenues

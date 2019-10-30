@@ -855,6 +855,8 @@ def report_revenues(request, year = None):
                   'previous_year': get_or_create_summary_revenue_queryset(previous_year, user_org, request.user),
                   'two_years_ago': get_or_create_summary_revenue_queryset(two_years_ago, user_org, request.user)}
 
+    print(query_sets)
+
     formsets = {}
     for key, value in query_sets.items():
         formsets[key] = my_formset_factory(queryset=value, prefix=key)
@@ -864,6 +866,7 @@ def report_revenues(request, year = None):
     if request.method == 'POST':
         print("post")
         for key, value in formsets.items():
+            print(key)
             formsets[key] = my_formset_factory(request.POST, queryset=query_sets[key], prefix=key)
             if formsets[key].is_valid():
                 for form in formsets[key]:
