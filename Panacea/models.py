@@ -315,6 +315,7 @@ class revenue_source(models.Model):
     order_in_summary = models.IntegerField(null=True, blank=True)
     government_type = models.CharField(max_length=100, choices=LEVIATHANS, null=True, blank=True)
     funding_type = models.CharField(max_length=30, choices=FUNDING_KIND, null=True, blank=True)
+    agency_funding_type  =  models.CharField(max_length= 30, null=True, blank=True)
     def __str__(self):
         return self.specific_revenue_source
 
@@ -372,7 +373,7 @@ class SummaryRevenues(models.Model):
     organization = models.ForeignKey(organization, on_delete=models.PROTECT, related_name='+')
     year = models.IntegerField()
     specific_revenue_source = models.ForeignKey(revenue_source, on_delete=models.PROTECT, related_name='+')
-    specific_revenue_value = models.FloatField(null=True)
+    specific_revenue_value = models.FloatField(null=True, blank=True)
     report_by = models.ForeignKey(custom_user, on_delete=models.PROTECT, blank=True, null=True)
     comments = models.TextField(blank=False, null=True)
     history = HistoricalRecords()

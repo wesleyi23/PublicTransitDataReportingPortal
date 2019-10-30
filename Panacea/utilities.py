@@ -11,6 +11,9 @@ from dateutil.relativedelta import relativedelta
 
 #
 
+def filter_revenue_sheet_by_mode():
+    return 'mode'
+
 def find_vanpool_organizations():
     return organization.objects.all().filter(vanpool_program=True)
 
