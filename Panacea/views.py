@@ -36,10 +36,10 @@ from .forms import CustomUserCreationForm, \
     statewide_summary_settings, \
     Modify_A_Vanpool_Expansion, organisation_summary_settings, organization_information, cover_sheet_service, \
     cover_sheet_organization, \
-    revenue_data_form, BaseRevenueForm, summary_expense_form, service_offered
+    summary_revenue_form, BaseRevenueForm, summary_expense_form, service_offered
 
 from .models import profile, vanpool_report, custom_user, vanpool_expansion_analysis, organization, cover_sheet, \
-    SummaryRevenues, SummaryTransitData, SummaryExpenses, expenses_source, ServiceOffered
+    SummaryRevenues, SummaryTransitData, SummaryExpenses, expenses_source, ServiceOffered, revenue_source
 from django.contrib.auth.models import Group
 from .utilities import calculate_latest_vanpool, find_maximum_vanpool, calculate_remaining_months, calculate_if_goal_has_been_reached, \
     generate_summary_report_years, find_user_organization
@@ -793,7 +793,6 @@ def summary_report_data(request):
 def summary_modes(request):
     org = find_user_organization(request.user.id)
     modes = ServiceOffered.objects.filter(organization_id = org).values('administration_of_mode', 'mode')
-    print(modes)
     mode_formset = formset_factory(service_offered, min_num=len(modes), extra=2)
     formset = mode_formset(initial=[{'administration_of_mode': x['administration_of_mode'], 'mode': x['mode']} for x in modes])
     modes = ServiceOffered.objects.filter(organization_id = org)
@@ -807,47 +806,73 @@ def summary_modes(request):
         for form in formset:
             if 'mode' in form.changed_data:
                 if form.is_valid():
+                    print(form.is_valid())
                     instance = form.save(commit=False)
                     instance.organization = org
                     form.save()
-                    print('here')
-        print('here')
-        return redirect('report_transit_data.html')
+        return redirect('report_transit_data')
     return render(request, 'pages/summary/summary_modes.html', {'formset': formset, 'modes': modes, 'org': org})
 
 def report_transit_data(request):
     return render(request, 'pages/summary/report_transit_data.html')
 
 
-def report_revenues(request):
-    org = find_user_organization(request.user.id)
-    report_years = generate_summary_report_years()
-    summaryrevenues = SummaryRevenues.objects.filter(organization_id=org, year__in=report_years).values('specific_revenue_source__specific_revenue_source', 'government_type', 'spending_type').distinct()
-    print(summaryrevenues)
-    revenue_years = []
-    for year in report_years:
-        revenue_instance = SummaryRevenues.objects.filter(organization_id= org, year = year).values('year', 'government_type', 'spending_type', 'specific_revenue_value', 'subfund', 'subfund_specification', 'comments', 'specific_revenue_source', 'organization', 'report_by')
-        revenue_years.append(revenue_instance)
-    RevenueFormSet = formset_factory(revenue_data_form, formset = BaseRevenueForm)
-    if request.method == 'GET':
-        form_list = []
-        for year in revenue_years:
-            formset = RevenueFormSet(initial=year)
-            form_list.append(formset)
-        zipped = zip(form_list, revenue_years)
+def report_revenues(request, year = None):
+    user_org = find_user_organization(request.user.id)
+
+    if year is None:
+        year = get_current_summary_report_year()
+    previous_year = year - 1
+    two_years_ago = year - 2
+
+    my_formset_factory = modelformset_factory(model=SummaryRevenues,
+                                              form=summary_revenue_form,
+                                              extra=0)
+
+    # Function start TODO move this
+    def get_or_create_summary_revenue_queryset(year, organization, user):
+        source_ids = list(SummaryRevenues.objects.filter(organization_id=user_org.id, year=year).values_list(
+            'specific_revenue_source_id', flat=True))
+        all_revenue_sources = list(revenue_source.objects.values_list("id", flat=True))
+
+        if len(source_ids) != len(all_revenue_sources):
+            missing_ids = list(set(all_revenue_sources) - set(source_ids))
+            print(missing_ids)
+
+            with transaction.atomic():
+                for my_id in missing_ids:
+                   SummaryRevenues.objects.create(year=year,
+                                                   specific_revenue_source_id=my_id,
+                                                   organization=organization,
+                                                   specific_revenue_source=None,
+                                                   report_by=user)
+        return SummaryRevenues.objects.filter(organization_id=user_org.id,
+                                              year=year).order_by('specific_revenue_source').all()
+
+    # Function end
+
+    query_sets = {'this_year': get_or_create_summary_revenue_queryset(year, user_org, request.user),
+                  'previous_year': get_or_create_summary_revenue_queryset(previous_year, user_org, request.user),
+                  'two_years_ago': get_or_create_summary_revenue_queryset(two_years_ago, user_org, request.user)}
+
+    formsets = {}
+    for key, value in query_sets.items():
+        formsets[key] = my_formset_factory(queryset=value, prefix=key)
+
+    # print(formset.total_form_count())
+
     if request.method == 'POST':
-        form_list = []
-        for year in revenue_years:
-            formset = RevenueFormSet(initial=year)
-            form_list.append(formset)
-        zipped = zip(form_list, revenue_years)
-        if formset.is_valid():
-            formset.cleaned_data['report_by'] = request.user.id
-            formset.save()
-            #return redirect('report_expenses')
-    else:
-        formset = RevenueFormSet(initial=revenue_instance)
-    return render(request, 'pages/summary/report_revenues.html', {'zipped': zipped, 'report_years':report_years, 'labels': summaryrevenues})
+        print("post")
+        for key, value in formsets.items():
+            formsets[key] = my_formset_factory(request.POST, queryset=query_sets[key], prefix=key)
+            if formsets[key].is_valid():
+                for form in formsets[key]:
+                    form.save()
+            else:
+                print(formsets[key].errors)
+
+    return render(request, 'pages/summary/report_revenues.html', {'formsets': formsets,
+                                                                  'form_range': range(len(formsets['this_year']))})
 
 
 def report_expenses(request, year=None):

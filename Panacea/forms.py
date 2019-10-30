@@ -13,7 +13,7 @@ from .models import custom_user, \
     vanpool_report, \
     vanpool_expansion_analysis, \
     cover_sheet, \
-    SummaryRevenues, SummaryExpenses, SummaryTransitData, revenue_source, test_model, transit_mode, ServiceOffered
+    SummaryRevenues, SummaryExpenses, SummaryTransitData, revenue_source, transit_mode, ServiceOffered
 from django.utils.translation import gettext, gettext_lazy as _
 from phonenumber_field.formfields import PhoneNumberField
 from localflavor.us.forms import USStateSelect, USZipCodeField
@@ -630,18 +630,7 @@ class cover_sheet_service(forms.ModelForm):
             'tax_rate_description': forms.Textarea(attrs={'class': 'form-control'}),
         }
 
-class revenue_data_form(forms.Form):
 
-    class Meta:
-        model = SummaryRevenues
-        exclude = ['']
-        queryset = revenue_source.objects.all()
-        widgets = {
-
-            'specific_revenue_value': forms.NumberInput(attrs={'class': 'form-control'}),
-            'comments': forms.TextInput(attrs={'class': 'form-control'})
-
-        }
 
 class BaseRevenueForm(BaseFormSet):
     def clean(self):
@@ -667,6 +656,19 @@ class summary_expense_form(forms.ModelForm):
         }
 
 
+class summary_revenue_form(forms.Form):
+
+    class Meta:
+        model = SummaryRevenues
+        exclude = ['organization', 'report_by']
+        queryset = revenue_source.objects.all()
+        widgets = {
+            'specific_revenue_value': forms.NumberInput(attrs={'class': 'form-control'}),
+            'comments': forms.Textarea(attrs={'class': 'form-control', "rows": 3}),
+            'year': forms.NumberInput(attrs={'disabled': True}),
+            'specific_revenue_source': forms.TextInput(attrs={'disabled': True}),
+            'id': forms.TextInput(attrs={'disabled': True})
+        }
 
 # class source_id_formset(BaseModelFormSet):
 #     def __init__(self, source_ids, year, my_user, *args, **kwargs):

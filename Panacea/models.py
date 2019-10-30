@@ -133,7 +133,7 @@ class profile(models.Model):
     state = USStateField(blank=True)
     zip_code = USZipCodeField(blank=True)
     reports_on = models.ManyToManyField(ReportType, blank=True)  # TODO rename this to something else
-    requested_permissions = models.ManyToManyField(Group)
+   # requested_permissions = models.ManyToManyField(Group, blank=True)
     active_permissions_request = models.BooleanField(blank=True, null=True)
 
 @receiver(post_save, sender=custom_user)
@@ -311,7 +311,7 @@ class revenue_source(models.Model):
         ('Operating', 'Operating')
     )
 
-    specific_revenue_source = models.CharField(max_length=120)
+    specific_revenue_source = models.CharField(max_length=120, null=True, blank=True)
     order_in_summary = models.IntegerField(null=True, blank=True)
     government_type = models.CharField(max_length=100, choices=LEVIATHANS, null=True, blank=True)
     funding_type = models.CharField(max_length=30, choices=FUNDING_KIND, null=True, blank=True)
@@ -334,7 +334,7 @@ class transit_metrics(models.Model):
 
 
 class transit_mode(models.Model):
-    mode = models.CharField(max_length=80)
+    mode = models.CharField(max_length=80, blank=True)
 
     def __str__(self):
         return self.mode
@@ -372,7 +372,7 @@ class SummaryRevenues(models.Model):
     organization = models.ForeignKey(organization, on_delete=models.PROTECT, related_name='+')
     year = models.IntegerField()
     specific_revenue_source = models.ForeignKey(revenue_source, on_delete=models.PROTECT, related_name='+')
-    specific_revenue_value = models.FloatField()
+    specific_revenue_value = models.FloatField(null=True)
     report_by = models.ForeignKey(custom_user, on_delete=models.PROTECT, blank=True, null=True)
     comments = models.TextField(blank=False, null=True)
     history = HistoricalRecords()
@@ -433,13 +433,34 @@ class ServiceOffered(models.Model):
         ('Direct Operated', 'Direct Operated'),
         ('Purchased', 'Purchased')
     )
-    mode = models.ForeignKey(transit_mode, on_delete = models.PROTECT,  related_name = '+')
-    administration_of_mode = models.CharField(max_length= 80, choices=DO_OR_PT)
+    mode = models.ForeignKey(transit_mode, on_delete = models.PROTECT,  related_name = '+', blank=True)
+    administration_of_mode = models.CharField(max_length= 80, choices=DO_OR_PT, blank=True)
     organization = models.ForeignKey(organization, on_delete=models.PROTECT, blank=True, null=True)
 
 
-class test_model(models.Model):
+class depreciation(models.Model):
+    depreciation = models.IntegerField(blank =False, null=True)
+    year = models.IntegerField(blank=True, null=True)
+    organization = models.ForeignKey(organization, on_delete=models.PROTECT, blank=True, null=True)
+    report_by = models.ForeignKey(custom_user, on_delete=models.PROTECT, blank=True, null=True)
+    comments = models.TextField(blank=True, null=True)
+    history = HistoricalRecords()
 
-    test_field = models.CharField(max_length=80, blank=True, null=True)
-    test_target = models.CharField(max_length=80, blank=True, null=True)
+
+class ending_balance_categories(models.Model):
+    ending_balance_category = models.CharField(max_length=100, blank=False, null = False)
+    def __str__(self):
+        return self.ending_balance_category
+
+
+class ending_balances(models.Model):
+    ending_balance_category = models.ForeignKey(ending_balance_categories, on_delete=models.PROTECT ,related_name = '+')
+    ending_balance_value = models.FloatField()
+    year = models.IntegerField(blank=True, null=True)
+    organization = models.ForeignKey(organization, on_delete=models.PROTECT, blank=True, null=True)
+    report_by = models.ForeignKey(custom_user, on_delete=models.PROTECT, blank=True, null=True)
+    comments = models.TextField(blank=True, null=True)
+    history = HistoricalRecords()
+
+
 
