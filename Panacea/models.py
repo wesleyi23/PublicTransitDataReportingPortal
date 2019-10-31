@@ -133,7 +133,7 @@ class profile(models.Model):
     state = USStateField(blank=True)
     zip_code = USZipCodeField(blank=True)
     reports_on = models.ManyToManyField(ReportType, blank=True)  # TODO rename this to something else
-   # requested_permissions = models.ManyToManyField(Group, blank=True)
+    requested_permissions = models.ManyToManyField(Group, blank=True, null=True)
     active_permissions_request = models.BooleanField(blank=True, null=True)
 
 @receiver(post_save, sender=custom_user)

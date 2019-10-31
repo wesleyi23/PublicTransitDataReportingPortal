@@ -64,7 +64,7 @@ urlpatterns = [
     path('summary/report_data/report_expenses/', views.report_expenses, name='report_expenses'),
     path('summary/report_data/report_expenses/<int:year>', views.report_expenses, name='report_expenses'),
     path('summary/report_data/review_data', views.review_data, name='review_data'),
-    path('summary/test', views.test, name='test'),
+   # path('summary/test', views.test, name='test'),
 
 ]
 
