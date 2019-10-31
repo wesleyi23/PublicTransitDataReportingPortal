@@ -14,7 +14,7 @@ from dateutil.relativedelta import relativedelta
 import datetime
 from Panacea.decorators import group_required
 from .utilities import monthdelta, get_wsdot_color, get_vanpool_summary_charts_and_table, percent_change_calculation, \
-    find_vanpool_organizations, get_current_summary_report_year
+    find_vanpool_organizations, get_current_summary_report_year, filter_revenue_sheet_by_classification
 from django.http import Http404
 from .filters import VanpoolExpansionFilter
 from django.conf import settings
@@ -831,9 +831,14 @@ def report_revenues(request, year = None):
 
     # Function start TODO move this
     def get_or_create_summary_revenue_queryset(year, organization, user):
+        classification = organization.summary_organization_classifications
+        classification = filter_revenue_sheet_by_classification(classification)
+        print(classification)
         source_ids = list(SummaryRevenues.objects.filter(organization_id=user_org.id, year=year).values_list(
             'specific_revenue_source_id', flat=True))
-        all_revenue_sources = list(revenue_source.objects.values_list("id", flat=True))
+        all_revenue_sources = list(revenue_source.objects.filter(agency_funding_classification=classification).values_list("id", flat=True))
+        print(all_revenue_sources)
+        print(source_ids)
 
         if len(source_ids) != len(all_revenue_sources):
             missing_ids = list(set(all_revenue_sources) - set(source_ids))
@@ -855,7 +860,6 @@ def report_revenues(request, year = None):
                   'previous_year': get_or_create_summary_revenue_queryset(previous_year, user_org, request.user),
                   'two_years_ago': get_or_create_summary_revenue_queryset(two_years_ago, user_org, request.user)}
 
-    print(query_sets)
 
     formsets = {}
     for key, value in query_sets.items():

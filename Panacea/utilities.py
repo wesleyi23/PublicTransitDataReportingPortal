@@ -11,8 +11,15 @@ from dateutil.relativedelta import relativedelta
 
 #
 
-def filter_revenue_sheet_by_mode():
-    return 'mode'
+def filter_revenue_sheet_by_classification(classification):
+    if classification == 'Transit':
+        return 'Transit'
+    elif classification == 'Tribe':
+        return 'Transit'
+    elif classification == 'Community Provider':
+        return 'Community Provider'
+    elif classification == 'Ferry':
+        return 'Ferry'
 
 def find_vanpool_organizations():
     return organization.objects.all().filter(vanpool_program=True)
