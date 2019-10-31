@@ -61,8 +61,10 @@ urlpatterns = [
     path('summary/report_data/confirm_mode', views.summary_modes, name = 'summary_modes'),
     path('summary/report_data/report_transit_data', views.report_transit_data, name = 'report_transit_data'),
     path('summary/report_data/report_revenue', views.report_revenues, name = 'report_revenues'),
-    path('summary/report_data/report_expenses', views.report_expenses, name = 'report_expenses'),
+    path('summary/report_data/report_expenses/', views.report_expenses, name='report_expenses'),
+    path('summary/report_data/report_expenses/<int:year>', views.report_expenses, name='report_expenses'),
     path('summary/report_data/review_data', views.review_data, name='review_data'),
+    path('summary/test', views.test, name='test'),
 
 ]
 
