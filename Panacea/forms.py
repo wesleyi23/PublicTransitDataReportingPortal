@@ -13,7 +13,7 @@ from .models import custom_user, \
     vanpool_report, \
     vanpool_expansion_analysis, \
     cover_sheet, \
-    SummaryRevenues, SummaryExpenses, SummaryTransitData, revenue_source, transit_mode, ServiceOffered
+    SummaryRevenues, SummaryExpenses, SummaryTransitData, revenue_source, transit_mode, ServiceOffered, transit_metrics
 from django.utils.translation import gettext, gettext_lazy as _
 from phonenumber_field.formfields import PhoneNumberField
 from localflavor.us.forms import USStateSelect, USZipCodeField
@@ -669,6 +669,23 @@ class summary_revenue_form(forms.ModelForm):
             'specific_revenue_source': forms.TextInput(attrs={'disabled': True}),
             'id': forms.TextInput(attrs={'disabled': True})
         }
+
+
+class transit_data_form(forms.ModelForm):
+
+    class Meta:
+        model = SummaryTransitData
+        exclude = ['organization', 'report_by', 'rollup_mode', 'mode', 'administration_of_mode']
+        queryset = transit_metrics.objects.all()
+        widgets = {
+            'metric_value': forms.NumberInput(attrs={'class': 'form-control'}),
+            'comments': forms.Textarea(attrs={'class': 'form-control', "rows": 3}),
+            'year': forms.NumberInput(attrs={'disabled': True}),
+            'metric': forms.TextInput(attrs={'disabled': True}),
+            'id': forms.TextInput(attrs={'disabled': True})
+        }
+
+
 
 # class source_id_formset(BaseModelFormSet):
 #     def __init__(self, source_ids, year, my_user, *args, **kwargs):

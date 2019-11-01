@@ -329,6 +329,8 @@ class expenses_source(models.Model):
 
 class transit_metrics(models.Model):
     metric = models.CharField(max_length=120)
+    agency_classification = models.CharField(max_length=80, null=True, blank=True)
+    order_in_summary = models.IntegerField(null=True, blank=True)
 
     def __str__(self):
         return self.metric
@@ -363,7 +365,7 @@ class SummaryTransitData(models.Model):
     rollup_mode = models.ForeignKey(rollup_mode, on_delete = models.PROTECT,  related_name = '+')
     administration_of_mode = models.CharField(max_length= 80, choices=DO_OR_PT)
     metric = models.ForeignKey(transit_metrics, on_delete=models.PROTECT, related_name='+')
-    metric_value = models.FloatField()
+    metric_value = models.FloatField(null=True)
     report_by = models.ForeignKey(custom_user, on_delete=models.PROTECT, blank=True, null=True)
     comments = models.TextField(blank = False, null = True)
     history = HistoricalRecords()
