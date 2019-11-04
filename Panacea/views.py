@@ -377,6 +377,7 @@ def Vanpool_report(request, year=None, month=None):
     user_organization_id = profile.objects.get(custom_user_id=request.user.id).organization_id
     user_organization = organization.objects.get(id=user_organization_id)
     organization_data = vanpool_report.objects.filter(organization_id=user_organization_id)
+    print(year)
 
     # logic to select the most recent form or the form requested through the URL
     if not year:
@@ -861,10 +862,10 @@ def report_transit_data(request, year = None):
             if count == 0:
                 count +=1
                 qs = SummaryTransitData.objects.filter(organization_id=user_org.id, administration_of_mode=mode['administration_of_mode'], mode_id = mode['mode'],
-                                year=year).order_by('metric__order_in_summary')
+                                year=year)
             else:
                 qs2 =SummaryTransitData.objects.filter(organization_id=user_org.id, administration_of_mode=mode['administration_of_mode'], mode_id = mode['mode'],
-                                              year=year).order_by('metric__order_in_summary')
+                                              year=year)
                 print(qs2.values_list())
                 qs = qs.union(qs2)
         return qs.order_by('mode_id', 'administration_of_mode')
@@ -896,7 +897,7 @@ def report_transit_data(request, year = None):
                                                                   'form_range': range(len(formsets['this_year'])), 'modes': modes})
 
 
-def report_revenues(request, year = None):
+def report_revenues(request, funding_type=None, year = None):
     user_org = find_user_organization(request.user.id)
 
     if year is None:
@@ -904,12 +905,22 @@ def report_revenues(request, year = None):
     previous_year = year - 1
     two_years_ago = year - 2
 
+    if funding_type is None:
+        funding_type = 'Operating'
+    else:
+        print(request.GET.dict())
+        print(request.GET)
+
+
+
+
     my_formset_factory = modelformset_factory(model=SummaryRevenues,
                                               form=summary_revenue_form,
                                               extra=0)
 
     # Function start TODO move this
-    def get_or_create_summary_revenue_queryset(year, organization, user):
+
+    def get_or_create_summary_revenue_queryset(year, organization, user, funding_type):
         classification = organization.summary_organization_classifications
         classification = filter_revenue_sheet_by_classification(classification)
         source_ids = list(SummaryRevenues.objects.filter(organization_id=user_org.id, year=year).values_list(
@@ -928,13 +939,13 @@ def report_revenues(request, year = None):
                                                    specific_revenue_source=None,
                                                    report_by=user)
         return SummaryRevenues.objects.filter(organization_id=user_org.id,
-                                              year=year, specific_revenue_source__agency_funding_classification=classification).order_by('specific_revenue_source__order_in_summary')
+                                              year=year, specific_revenue_source__agency_funding_classification=classification, specific_revenue_source__funding_type=funding_type).order_by('specific_revenue_source__order_in_summary')
 
     # Function end
 
-    query_sets = {'this_year': get_or_create_summary_revenue_queryset(year, user_org, request.user),
-                  'previous_year': get_or_create_summary_revenue_queryset(previous_year, user_org, request.user),
-                  'two_years_ago': get_or_create_summary_revenue_queryset(two_years_ago, user_org, request.user)}
+    query_sets = {'this_year': get_or_create_summary_revenue_queryset(year, user_org, request.user, funding_type),
+                  'previous_year': get_or_create_summary_revenue_queryset(previous_year, user_org, request.user, funding_type),
+                  'two_years_ago': get_or_create_summary_revenue_queryset(two_years_ago, user_org, request.user, funding_type)}
 
 
     formsets = {}
@@ -951,9 +962,10 @@ def report_revenues(request, year = None):
                     form.save()
             else:
                 print(formsets[key].errors)
-
+    print(funding_type)
     return render(request, 'pages/summary/report_revenues.html', {'formsets': formsets,
-                                                                  'form_range': range(len(formsets['this_year']))})
+                                                                  'form_range': range(len(formsets['this_year'])),
+                                                                  'funding_type': funding_type})
 
 
 def report_expenses(request, year=None):

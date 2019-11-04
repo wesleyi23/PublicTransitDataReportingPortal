@@ -43,7 +43,24 @@
 
                     </ul>
                 </div>
+
+                <div class="card-header">
+                      <ul class="nav nav-tabs card-header-tabs">
+                        <li class="nav-item">
+                         <a class="nav-link" href="{% url 'report_revenues' %}/{{ funding_type }}">Operating</a>
+                        </li>
+                          <li class="nav-item">
+                         <a class="nav-link" href="{% url 'report_revenues' %}/{{ funding_type }}">Capital</a>
+                        </li>
+
+
+                      </ul>
+                </div>
+
+
+
                 <div class="card-body" style="">
+
                     <form method="POST" class="post-form">{% csrf_token %}
                         {% csrf_token  %}
 
@@ -70,7 +87,7 @@
                                     {% else %}
                                         {{ form_x.data.specific_revenue_source }}
                                     {% endif %}</td>
-                                    <td class="two-years-ago summary-input align-top" >{{ form_z.specific_revenue_value }}</td>
+                                    <td class="two-years-ago summary-input align-top" >{{ form_z.specific_revenue_value}}</td>
                                     <td class="two-years-ago comments align-top" >{{ form_z.comments }}</td>
                                     <td class="previous-year summary-input align-top" >{{ form_y.specific_revenue_value }}</td>
                                     <td class="previous-year comments align-top" >{{ form_y.comments }}</td>
