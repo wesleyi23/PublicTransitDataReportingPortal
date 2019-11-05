@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     'bootstrap4',
     'phonenumber_field',
     'localflavor',
+    'mailer',
     'widget_tweaks',
     'django.contrib.humanize',
     'django.contrib.admin',
@@ -75,7 +76,9 @@ MIDDLEWARE = [
     'simple_history.middleware.HistoryRequestMiddleware',
 ]
 
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+
+EMAIL_BACKEND = "mailer.backend.DbBackend"
+MAILER_EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_HOST_USER = 'ptddatateam@gmail.com'
 EMAIL_PORT = 587

@@ -18,7 +18,7 @@ from .utilities import monthdelta, get_wsdot_color, get_vanpool_summary_charts_a
 from django.http import Http404
 from .filters import VanpoolExpansionFilter
 from django.conf import settings
-from .emails import send_user_registration_email, alert_about_active_permissions_request
+from .emails import send_user_registration_email, notify_user_that_permissions_have_been_requested, active_permissions_request_notification
 import base64
 
 from .forms import CustomUserCreationForm, \
@@ -264,10 +264,10 @@ def Permissions(request):
         if form.is_valid():
 
             groups = ' & '.join(str(s[1]) for s in form.cleaned_data['groups'].values_list())
-            print('it')
-            alert_about_active_permissions_request(request.user.get_full_name(), groups)
+            notify_user_that_permissions_have_been_requested(request.user.get_full_name(), groups, request.user.email)
+            active_permissions_request_notification()
             current_user_profile = profile.objects.get(custom_user_id=request.user.id)
-            current_user_profile.request_permissions.set(form.cleaned_data['groups'])
+            current_user_profile.requested_permissions.set(form.cleaned_data['groups'])
             current_user_profile.active_permissions_request = True
             current_user_profile.save()
             submit_success = True

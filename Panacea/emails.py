@@ -14,7 +14,24 @@ def send_user_registration_email(user_id):
     send_mail('Welcome to WSDOT\'s Public Transit Data Reporting Portal', msg_plain, settings.EMAIL_HOST_USER, [emailAddress[0]], html_message=msg_html,)
 
 
-def alert_about_active_permissions_request(full_name, groups):
+
+def active_permissions_request_notification():
+    if settings.dev_mode == True:
+        recipient_list = [settings.EMAIL_HOST_USER, ]
+    else:
+        recipient_list = ['wesleyi@wsdot.wa.gov', 'schumen@wsdot.wa.gov', ]
+
+    msg_html = "There is an active permissions request in the Public Transportation Reporting Portal"  # TODO add link
+    msg_plain = "There is an active permissions request in the Public Transportation Reporting Portal"  # TODO add link
+    send_mail(
+        subject='Active Permissions Request - Public Transportation Reporting Portal',
+        message=msg_plain,
+        from_email=settings.EMAIL_HOST_USER,
+        recipient_list= recipient_list,
+        html_message= msg_html,)
+
+
+def notify_user_that_permissions_have_been_requested(full_name, groups, email):
     if settings.dev_mode == True:
         recipient_list = [settings.EMAIL_HOST_USER, ]
     else:
@@ -28,6 +45,6 @@ def alert_about_active_permissions_request(full_name, groups):
         subject='Active Permissions Request - Public Transportation Reporting Portal',
         message=msg_plain,
         from_email= settings.EMAIL_HOST_USER,
-        recipient_list = recipient_list,
+        recipient_list = [email,],
         html_message=msg_html,
     )
