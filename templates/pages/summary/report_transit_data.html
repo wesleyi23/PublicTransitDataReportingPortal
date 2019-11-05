@@ -9,18 +9,10 @@
 {% block head_content %}
 
 
-
-
 {% endblock %}
 
 
 {% block content %}
-
-    <div class="container-fluid">
-
-        <!-- Page Heading -->
-
-    </div>
 
     <div class="container-fluid">
         <div class="row">
@@ -31,29 +23,45 @@
                             <a class="nav-link" href="{% url 'summary_report_data' %}">Instructions</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{% url 'summary_modes' %}">Confirm and update agency's transit modes</a>
+                            <a class="nav-link" href="{% url 'summary_modes' %}">Confirm services</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link active" href="{% url 'report_transit_data' %}">Report transit data</a>
+                            <a class="nav-link active" href="{% url 'report_transit_data' %}">Transit data</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{% url 'report_revenues' %}">Report revenues</a>
+                            <a class="nav-link" href="{% url 'report_revenues' %}">Revenues</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{% url 'report_expenses' %}">Report expenses</a>
+                            <a class="nav-link" href="{% url 'report_expenses' %}">Expenses</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{% url 'review_data' %}">Review submitted data</a>
+                            <a class="nav-link" href="{% url 'review_data' %}">Review</a>
                         </li>
 
                     </ul>
                 </div>
+
+                <ul class="nav justify-content-center pt-4" style="font-size: 1.25rem">
+                    {% for service in services %}
+                    <li class="nav-item pl-2 pr-2">
+                        {% if service.id == active_service.id %}
+                            <a class="nav-link disabled" href="#">{{ service.mode }}</a>
+                        {% else %}
+                            <a class="nav-link" href="{% url 'report_transit_data_year_mode' year service.id %}">{{ service.mode }}</a>
+                        {% endif %}
+                    </li>
+                    {% endfor %}
+                </ul>
+
+
                 <div class="card-body" style="">
-                    <form method="POST" class="post-form">{% csrf_token %}
+
+                    <form method="POST" class="disabled-form">
                         {% csrf_token  %}
 
-                        <table class="table table-responsive">
+                        <table class="table table-striped table-responsive">
                             <thead>
+                            <h3>{{ active_service.mode }} - {{ active_service.administration_of_mode }}</h3>
                             <tr style="min-height: 3.5rem">
                                 <th width="10%" style="min-width: 125px">Revenue source</th>
                                 <th class="two-years-ago" width="10%" style="min-width: 125px">{{ formsets.two_years_ago.1.year.value }} <a class="edit-column" href="#">(edit)</a></th>
@@ -128,8 +136,8 @@
             $('.this-year').children(".edit-column").css("display", "none");
         });
 
-        $('.post-form').submit(function(){
-            $(".post-form :disabled").removeAttr('disabled');
+        $('.disabled-form').submit(function(){
+            $(".disabled-form :disabled").removeAttr('disabled');
         });
 
         $('.edit-column').click(function(){

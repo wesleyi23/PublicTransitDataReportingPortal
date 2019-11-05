@@ -26,25 +26,24 @@
                             <a class="nav-link" href="{% url 'summary_report_data' %}">Instructions</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{% url 'summary_modes' %}">Confirm and update agency's transit modes</a>
+                            <a class="nav-link" href="{% url 'summary_modes' %}">Confirm services</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{% url 'report_transit_data' %}">Report transit data</a>
+                            <a class="nav-link" href="{% url 'report_transit_data' %}">Transit data</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{% url 'report_revenues' %}">Report revenues</a>
+                            <a class="nav-link" href="{% url 'report_revenues' %}">Revenues</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link active" href="{% url 'report_expenses' %}">Report expenses</a>
+                            <a class="nav-link active" href="{% url 'report_expenses' %}">Expenses</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{% url 'review_data' %}">Review submitted data</a>
+                            <a class="nav-link" href="{% url 'review_data' %}">Review</a>
                         </li>
-
                     </ul>
                 </div>
                 <div class="card-body" style="">
-                    <form method="POST" class="post-form">{% csrf_token %}
+                    <form method="post" class="disabled-form">
                         {% csrf_token  %}
 
                         <table class="table table-responsive">
@@ -122,8 +121,8 @@
             $('.this-year').children(".edit-column").css("display", "none");
         });
 
-        $('.post-form').submit(function(){
-            $(".post-form :disabled").removeAttr('disabled');
+        $('.disabled-form').submit(function(){
+            $(".disabled-form :disabled").removeAttr('disabled');
         });
 
         $('.edit-column').click(function(){

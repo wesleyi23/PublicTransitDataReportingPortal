@@ -13,7 +13,8 @@ from .models import custom_user, \
     vanpool_report, \
     vanpool_expansion_analysis, \
     cover_sheet, \
-    SummaryRevenues, SummaryExpenses, SummaryTransitData, revenue_source, transit_mode, ServiceOffered, transit_metrics
+    SummaryRevenues, SummaryExpenses, SummaryTransitData, revenue_source, transit_mode, ServiceOffered, transit_metrics, \
+    expenses_source
 from django.utils.translation import gettext, gettext_lazy as _
 from phonenumber_field.formfields import PhoneNumberField
 from localflavor.us.forms import USStateSelect, USZipCodeField
@@ -607,11 +608,13 @@ class cover_sheet_organization(forms.ModelForm):
 
 class service_offered(forms.ModelForm):
 
-    mode = forms.ModelChoiceField(required=False, queryset=transit_mode.objects.all(), label='Service Mode', widget=forms.Select(attrs={'class': 'form-control form-control-plaintext', 'style': 'pointer-events: none'})),
-    administration_of_mode = forms.CharField(required= False, label = 'Nature of Service', widget=forms.Select(choices=ServiceOffered.DO_OR_PT, attrs={'class': 'form-control'}))
     class Meta:
         model = ServiceOffered
         fields = ['administration_of_mode', 'mode']
+        widgets = {
+            'mode': forms.Select( choices=transit_mode.objects.all(), attrs={'class': 'form-control'}),
+            'administration_of_mode': forms.Select(choices=ServiceOffered.DO_OR_PT, attrs={'class': 'form-control'})
+        }
 
 
 class cover_sheet_service(forms.ModelForm):
@@ -644,45 +647,47 @@ class BaseRevenueForm(BaseFormSet):
 
 class summary_expense_form(forms.ModelForm):
 
+    id = forms.IntegerField(disabled=True)
+    specific_expense_source = forms.ModelChoiceField(disabled=True, queryset=expenses_source.objects.all())
+    year = forms.IntegerField(disabled=True)
+
     class Meta:
         model = SummaryExpenses
-        exclude = ["organization", "report_by"]
+        fields = ["id", "specific_expense_source", "year", "specific_expense_value", "comments"]
         widgets = {
             'specific_expense_value': forms.NumberInput(attrs={'class': 'form-control'}),
             'comments': forms.Textarea(attrs={'class': 'form-control', "rows": 3}),
-            'year': forms.NumberInput(attrs={'disabled': True}),
-            'specific_expense_source': forms.TextInput(attrs={'disabled': True}),
-            'id': forms.TextInput(attrs={'disabled': True})
         }
 
 
 class summary_revenue_form(forms.ModelForm):
 
+    id = forms.IntegerField(disabled=True)
+    specific_revenue_source = forms.ModelChoiceField(disabled=True, queryset=revenue_source.objects.all())
+    year = forms.IntegerField(disabled=True)
+
     class Meta:
         model = SummaryRevenues
-        exclude = ['organization', 'report_by']
+        fields = ["id", "specific_revenue_source", "year", "specific_revenue_value", "comments"]
         queryset = revenue_source.objects.all()
         widgets = {
             'specific_revenue_value': forms.NumberInput(attrs={'class': 'form-control'}),
             'comments': forms.Textarea(attrs={'class': 'form-control', "rows": 3}),
-            'year': forms.NumberInput(attrs={'disabled': True}),
-            'specific_revenue_source': forms.TextInput(attrs={'disabled': True}),
-            'id': forms.TextInput(attrs={'disabled': True})
         }
 
 
 class transit_data_form(forms.ModelForm):
 
+    id = forms.IntegerField(disabled=True)
+    metric = forms.ModelChoiceField(disabled=True, queryset=transit_metrics.objects.all())
+    year = forms.IntegerField(disabled=True)
+
     class Meta:
         model = SummaryTransitData
-        exclude = ['organization', 'report_by', 'rollup_mode', 'mode', 'administration_of_mode']
-        queryset = transit_metrics.objects.all()
+        fields = ['id', 'metric', 'year', 'metric_value', 'comments']
         widgets = {
             'metric_value': forms.NumberInput(attrs={'class': 'form-control'}),
             'comments': forms.Textarea(attrs={'class': 'form-control', "rows": 3}),
-            'year': forms.NumberInput(attrs={'disabled': True}),
-            'metric': forms.TextInput(attrs={'disabled': True}),
-            'id': forms.TextInput(attrs={'disabled': True})
         }
 
 
