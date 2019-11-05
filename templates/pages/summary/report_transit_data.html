@@ -43,13 +43,13 @@
 
                 <ul class="nav justify-content-center pt-4" style="font-size: 1.25rem">
                     {% for service in services %}
-                    <li class="nav-item pl-2 pr-2">
-                        {% if service.id == active_service.id %}
-                            <a class="nav-link disabled" href="#">{{ service.mode }}</a>
-                        {% else %}
-                            <a class="nav-link" href="{% url 'report_transit_data_year_mode' year service.id %}">{{ service.mode }}</a>
-                        {% endif %}
-                    </li>
+                        <li class="nav-item pl-2 pr-2">
+                            {% if service.id == active_service.id %}
+                                <a class="nav-link disabled" href="#">{{ service.mode }}</a>
+                            {% else %}
+                                <a class="nav-link" href="{% url 'report_transit_data_year_mode' year service.id %}">{{ service.mode }}</a>
+                            {% endif %}
+                        </li>
                     {% endfor %}
                 </ul>
 
@@ -77,21 +77,23 @@
                             <tbody>
 
                             {% for form_x in formsets.this_year; form_y in formsets.previous_year; form_z in formsets.two_years_ago %}
+                                {% if form_x.instance.metric %}
+                                    {% define form_x.instance.metric as metric %}
+                                {% else %}
+                                    {% define form_x.data.metric as metric %}
+                                {% endif %}
                                 <tr>
-                                    <td class="align-top" style="max-width: 5rem">{% if form_x.instance.metric %}
-                                        {{ form_x.instance.metric }}
-                                    {% else %}
-                                        {{ form_x.data.metric }}
-                                    {% endif %}</td>
+                                    <td class="align-top" style="max-width: 5rem">{{ metric }}</td>
 
-                                    <td class="two-years-ago summary-input align-top" >{{ form_z.metric_value }}</td>
+                                    <td class="two-years-ago summary-input align-top AutoNumeric-{{ metric.form_masking_class }}" >{{ form_z.metric_value }}</td>
                                     <td class="two-years-ago comments align-top" >{{ form_z.comments }}</td>
-                                    <td class="previous-year summary-input align-top" >{{ form_y.metric_value }}</td>
+                                    <td class="previous-year summary-input align-top AutoNumeric-{{ metric.form_masking_class }}" >{{ form_y.metric_value }}</td>
                                     <td class="previous-year comments align-top" >{{ form_y.comments }}</td>
-                                    <td class="this-year summary-input align-top" >{{ form_x.metric_value }}</td>
+                                    <td class="this-year summary-input align-top AutoNumeric-{{ metric.form_masking_class }}" >{{ form_x.metric_value }}</td>
                                     <td class="this-year comments align-top" >{{ form_x.comments }}</td>
                                     <td>Errors</td>
-                                    <td style="display: none">{{ form_x.specific_revenue_source}}
+                                    <td style="display: none">
+                                        {{ form_x.metric}}
                                         {{ form_y.metric }}
                                         {{ form_z.metric }}
                                         {{ form_x.id}}
@@ -123,69 +125,8 @@
 {%  endblock %}
 
 {% block page_scripts %}
-    <script>
-        $(document).ready(function() {
-            $('.this-year').children("input").attr("disabled", false);
-            $('.two-years-ago').children("input").attr("disabled", true);
-            $('.previous-year').children("input").attr("disabled", true);
-
-            $('.this-year').css("display", "")
-            $('.two-years-ago.comments').css("display", "none");
-            $('.previous-year.comments').css("display", "none");
-
-            $('.this-year').children(".edit-column").css("display", "none");
-        });
-
-        $('.disabled-form').submit(function(){
-            $(".disabled-form :disabled").removeAttr('disabled');
-        });
-
-        $('.edit-column').click(function(){
-            console.log('click');
-
-            switch($(this).parent().prop("class")){
-                case 'this-year':
-                    $('.this-year').children("input").attr("disabled", false);
-                    $('.two-years-ago').children("input").attr("disabled", true);
-                    $('.previous-year').children("input").attr("disabled", true);
-
-                    $('.this-year.comments').show(25);
-                    $('.two-years-ago.comments').hide(25);
-                    $('.previous-year.comments').hide(25);
-
-                    $('.this-year').children(".edit-column").css("display", "none");
-                    $('.two-years-ago').children(".edit-column").css("display", "");
-                    $('.previous-year').children(".edit-column").css("display", "");
-                    break;
-                case 'previous-year':
-                    $('.this-year').children("input").attr("disabled", true);
-                    $('.two-years-ago').children("input").attr("disabled", true);
-                    $('.previous-year').children("input").attr("disabled", false);
-
-                    $('.previous-year.comments').show(25);
-                    $('.this-year.comments').hide(25);
-                    $('.two-years-ago.comments').hide(25);
-
-                    $('.this-year').children(".edit-column").css("display", "");
-                    $('.two-years-ago').children(".edit-column").css("display", "");
-                    $('.previous-year').children(".edit-column").css("display", "none");
-                    break;
-                case 'two-years-ago':
-                    $('.this-year').children("input").attr("disabled", true);
-                    $('.two-years-ago').children("input").attr("disabled", false);
-                    $('.previous-year').children("input").attr("disabled", true);
-
-                    $('.two-years-ago.comments').show(25);
-                    $('.this-year.comments').hide(25);
-                    $('.previous-year.comments').hide(25);
-
-                    $('.this-year').children(".edit-column").css("display", "");
-                    $('.two-years-ago').children(".edit-column").css("display", "none");
-                    $('.previous-year').children(".edit-column").css("display", "");
-                    break;
-            }
-        })
-
-    </script>
+    <script src="https://cdn.jsdelivr.net/npm/autonumeric@4.5.4"></script>
+    <script src="{% static 'js/AutoNumeric_Settings.js' %}"></script>
+    <script src="{% static 'js/Summary_Data_Entry_Tables.js' %}"></script>
 
 {% endblock %}

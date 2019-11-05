@@ -45,14 +45,14 @@
                 </div>
 
                 <div class="card-header">
-                      <ul class="nav nav-tabs card-header-tabs">
+                    <ul class="nav nav-tabs card-header-tabs">
                         <li class="nav-item">
-                         <a class="nav-link" href="{% url 'report_revenues' %}/{{ year }}/{{ funding_type }}">Operating</a>
+                            <a class="nav-link" href="{% url 'report_revenues' %}/{{ year }}/{{ funding_type }}">Operating</a>
                         </li>
-                          <li class="nav-item">
-                         <a class="nav-link" href="{% url 'report_revenues' %}/{{ year }}/{{ funding_type }}">Capital</a>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'report_revenues' %}/{{ year }}/{{ funding_type }}">Capital</a>
                         </li>
-                      </ul>
+                    </ul>
                 </div>
 
                 <div class="card-body" style="">
@@ -83,11 +83,11 @@
                                     {% else %}
                                         {{ form_x.data.specific_revenue_source }}
                                     {% endif %}</td>
-                                    <td class="two-years-ago summary-input align-top" >{{ form_z.specific_revenue_value}}</td>
+                                    <td class="two-years-ago summary-input align-top AutoNumeric-Money" >{{ form_z.specific_revenue_value}}</td>
                                     <td class="two-years-ago comments align-top" >{{ form_z.comments }}</td>
-                                    <td class="previous-year summary-input align-top" >{{ form_y.specific_revenue_value }}</td>
+                                    <td class="previous-year summary-input align-top AutoNumeric-Money" >{{ form_y.specific_revenue_value }}</td>
                                     <td class="previous-year comments align-top" >{{ form_y.comments }}</td>
-                                    <td class="this-year summary-input align-top" >{{ form_x.specific_revenue_value }}</td>
+                                    <td class="this-year summary-input align-top AutoNumeric-Money" >{{ form_x.specific_revenue_value }}</td>
                                     <td class="this-year comments align-top" >{{ form_x.comments }}</td>
                                     <td>Errors</td>
                                     <td style="display: none">{{ form_x.specific_revenue_source}}
@@ -122,69 +122,7 @@
 {%  endblock %}
 
 {% block page_scripts %}
-    <script>
-        $(document).ready(function() {
-            $('.this-year').children("input").attr("disabled", false);
-            $('.two-years-ago').children("input").attr("disabled", true);
-            $('.previous-year').children("input").attr("disabled", true);
-
-            $('.this-year').css("display", "")
-            $('.two-years-ago.comments').css("display", "none");
-            $('.previous-year.comments').css("display", "none");
-
-            $('.this-year').children(".edit-column").css("display", "none");
-        });
-
-        $('.disabled-form').submit(function(){
-            $(".disabled-form :disabled").removeAttr('disabled');
-        });
-
-        $('.edit-column').click(function(){
-            console.log('click');
-
-            switch($(this).parent().prop("class")){
-                case 'this-year':
-                    $('.this-year').children("input").attr("disabled", false);
-                    $('.two-years-ago').children("input").attr("disabled", true);
-                    $('.previous-year').children("input").attr("disabled", true);
-
-                    $('.this-year.comments').show(25);
-                    $('.two-years-ago.comments').hide(25);
-                    $('.previous-year.comments').hide(25);
-
-                    $('.this-year').children(".edit-column").css("display", "none");
-                    $('.two-years-ago').children(".edit-column").css("display", "");
-                    $('.previous-year').children(".edit-column").css("display", "");
-                    break;
-                case 'previous-year':
-                    $('.this-year').children("input").attr("disabled", true);
-                    $('.two-years-ago').children("input").attr("disabled", true);
-                    $('.previous-year').children("input").attr("disabled", false);
-
-                    $('.previous-year.comments').show(25);
-                    $('.this-year.comments').hide(25);
-                    $('.two-years-ago.comments').hide(25);
-
-                    $('.this-year').children(".edit-column").css("display", "");
-                    $('.two-years-ago').children(".edit-column").css("display", "");
-                    $('.previous-year').children(".edit-column").css("display", "none");
-                    break;
-                case 'two-years-ago':
-                    $('.this-year').children("input").attr("disabled", true);
-                    $('.two-years-ago').children("input").attr("disabled", false);
-                    $('.previous-year').children("input").attr("disabled", true);
-
-                    $('.two-years-ago.comments').show(25);
-                    $('.this-year.comments').hide(25);
-                    $('.previous-year.comments').hide(25);
-
-                    $('.this-year').children(".edit-column").css("display", "");
-                    $('.two-years-ago').children(".edit-column").css("display", "none");
-                    $('.previous-year').children(".edit-column").css("display", "");
-                    break;
-            }
-        })
-
-    </script>
-
+    <script src="https://cdn.jsdelivr.net/npm/autonumeric@4.5.4"></script>
+    <script src="{% static 'js/AutoNumeric_Settings.js' %}"></script>
+    <script src="{% static 'js/Summary_Data_Entry_Tables.js' %}"></script>
 {% endblock %}

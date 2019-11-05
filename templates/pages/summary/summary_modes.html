@@ -35,40 +35,126 @@
                     </ul>
                 </div>
                 <div class="card-body" style="">
-                <p> Welcome to the Summary of Public Transportation data reporting section. Please confirm that these are the modes that your transit operates, add any modes in the next column, and
-                review the relevant modes. If you would like to delete a mode, please report all zeros in the next section. If you would like to combine or change a mode that you believe was previously reported erroneously, please be in touch with the Summary site administrators</p>
-                <div class = 'table-responsive'></div>
-                        <table class = "table table-bordered">
-                            <thead><th>Nature of Service</th>
-                                    <th>Mode</th></thead>
-                        {%  for mode in modes %}
-                        <tr class="fieldWrapper"><td>
-                            {{ mode.administration_of_mode}}</td>
-                        <td>
-                             {{ mode.mode}}</td>
-                        </tr>
-                            {%  endfor %}
-                      </table>
+                    <h3>Confirm current services</h3>
+                    <div style="padding-left: 1rem">
+                        <p> Please confirm that these are the modes that your transit operates.  If you have add any new service or a modes is missing please add it below.
+                            To remove a mode press the delete button.
+                        </p>
+                        <div class = 'table-responsive'>
+                            <table class = "table table-bordered table-hover">
+                                <thead>
+                                <tr>
+                                    <th style="width:25%">Mode</th>
+                                    <th>Administration of mode</th>
+                                    <th style="width:10%; text-align: center">Delete</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                {%  for mode in modes %}
+                                    <tr class="fieldWrapper">
+                                        <td>{{ mode.mode}}</td>
+                                        <td>{{ mode.administration_of_mode}}</td>
+                                        <td style="text-align: center;">
+                                            <a href="#" class="delete-mode" data-mode="{{ mode.mode }}" data-admin-mode="{{ mode.administration_of_mode }}">
+                                                <i class="fa fa-times-circle text-danger"> </i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                {%  endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <h3>Add new service</h3>
+                    <div style="padding-left: 1rem">
+                        <p> Please add any new modes that you are operating here</p>
+                        {% if messages %}
+                            {% for message in messages %}
+                                <h4 class="{{ message.tags }}">{{ message }}</h4>
+                            {% endfor %}
+                        {% endif %}
 
+                        <form method="POST" class="">
+                            {% csrf_token %}
+                            <div class = 'table-responsive'>
+                                <table class = "table table-bordered table-hover">
+                                    <thead>
+                                    <tr>
+                                        <th style="width:25%">Mode</th>
+                                        <th>Administration of mode</th>
+                                        <th style="width:10%; text-align: center">Add</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
 
+                                        <tr class="fieldWrapper">
+                                            <td>{{ form.mode}}</td>
+                                            <td>{{ form.administration_of_mode}}</td>
+                                            <td style="text-align: center"><input type="submit" value="Add mode" class="btn btn-sm btn-primary"></td>
+                                        </tr>
 
-                <p> Please add any new modes that you are operating here</p>
-                        <table>
-                            <form method="POST" class="post-form">{% csrf_token %}
+                                    </tbody>
+                                </table>
 
-                                {{ formset.as_p }}
-                                {{ formset.management_form }}
-                                <input type="submit" value="Confirm Current and Added Modes" class="btn btn-primary float-right mt-3" onclick="report_transit_data">
-                            </form>
-                        </table>
-                </div>
+                        </form>
+                    </div>
                 </div>
             </div>
         </div>
+    </div>
+
+
+    <div class="modal fade" id="deleteModal" tabindex="-1" role="dialog" aria-labelledby="deleteModal" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="deleteModal">Are you sure you wish to delete this mode?</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class = 'table-responsive'>
+                        <table class = "table table-bordered">
+                            <thead>
+                            <tr>
+                                <th>Mode</th>
+                                <th>Administration of mode</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr>
+                                <td><span id="delete-mode-detail"></span></td>
+                                <td><span id="delete-admin-mode-detail"></span></td>
+                            </tr>
+                            </tbody>
+
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                    <a id="final-delete" type="button" class="btn btn-danger" style="color: white">Delete mode</a>
+                </div>
+            </div>
         </div>
-  </div>
+    </div>
+
 {%  endblock %}
 
 
+{% block page_scripts %}
+    <script>
+        $( ".delete-mode" ).click(function(e) {
+            e.preventDefault();
+            $("#delete-mode-detail").text($(this).attr('data-mode'));
+            $("#delete-admin-mode-detail").text($(this).attr('data-admin-mode'));
+            $('#final-delete').attr('href', "{% url 'delete_summary_mode_root' %}" + $(this).attr('data-mode') + "/" + $(this).attr('data-admin-mode'));
+            $('#deleteModal').modal('show')
+        });
+
+    </script>
+
+{% endblock %}
 
 

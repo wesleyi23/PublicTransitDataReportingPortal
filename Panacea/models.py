@@ -328,9 +328,16 @@ class expenses_source(models.Model):
 
 
 class transit_metrics(models.Model):
+    FORM_MASKING_CLASSES = (
+        ("Int", "Int"),
+        ("Float", "Float"),
+        ("Money", "Money"),
+    )
+
     metric = models.CharField(max_length=120)
     agency_classification = models.CharField(max_length=80, null=True, blank=True)
     order_in_summary = models.IntegerField(null=True, blank=True)
+    form_masking_class = models.CharField(max_length=25, choices=FORM_MASKING_CLASSES, null=True, blank=True)
 
     def __str__(self):
         return self.metric

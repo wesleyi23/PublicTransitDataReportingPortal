@@ -142,3 +142,12 @@ def transit_mode_from_id(mode_id):
     mode_name = transit_mode.objects.get(id=mode_id).mode
     return mode_name
 
+
+@register.simple_tag
+def define(val=None):
+  return val
+
+@register.filter
+def get_AutoNumeric_mask_type(metric):
+    print(metric)
+    return "Int"
