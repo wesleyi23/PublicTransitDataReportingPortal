@@ -324,10 +324,37 @@ class VanpoolMonthlyReport(forms.ModelForm):
                                                          report_year=report_year,
                                                          report_month=report_month).values(category)
                 old_data = old_data[0][category]
+                print(old_data)
 
                 # Should not happen but in case there is old data that is missing a value (came up during testing)
                 if old_data is None:
                     continue
+                if category == 'vanpool_groups_in_operation':
+                    old_van_number = vanpool_report.objects.filter(
+                        organization_id=self.user_organization,
+                        report_year=report_year,
+                        report_month=report_month).values('vanpool_groups_in_operation', 'vanpool_group_starts',
+                                                          'vanpool_group_folds')
+                    old_van_number = old_van_number[0]
+                    if new_data != (
+                            old_van_number['vanpool_groups_in_operation'] + old_van_number['vanpool_group_starts'] -
+                            old_van_number['vanpool_group_folds']):
+                        old_total = old_van_number['vanpool_groups_in_operation'] + old_van_number['vanpool_group_starts'] -old_van_number['vanpool_group_folds']
+                        error_list.append(
+                            'The Vanpool Groups in Operation are not equal to the projected number of vanpool groups in operation of {}, based on the {} folds and {} starts recorded last month.'.format(old_total,old_van_number['vanpool_group_starts'], old_van_number['vanpool_group_folds']))
+
+                if category == 'vanshare_groups_in_operation':
+                    old_van_number = vanpool_report.objects.filter(
+                        organization_id=self.user_organization,
+                        report_year=report_year,
+                        report_month=report_month).values('vanshare_groups_in_operation', 'vanshare_group_starts',
+                                                          'vanshare_group_folds')
+                    old_van_number = old_van_number[0]
+                    if new_data != (
+                            old_van_number['vanshare_groups_in_operation'] + old_van_number['vanshare_group_starts'] -old_van_number['vanshare_group_folds']):
+                        old_total = old_van_number['vanshare_groups_in_operation'] + old_van_number['vanshare_group_starts'] -old_van_number['vanshare_group_folds']
+                        error_list.append(
+                            'The Vanshare Groups in Operation are not equal to the projected number of vanshare groups in operation of {}, based on the {} folds and {} starts recorded last month.'.format(old_total, old_van_number['vanshare_group_folds'],old_van_number['vanshare_group_starts'] ))
 
                 if new_data >= old_data * 1.2:
                     category = category.replace('_', ' ')
@@ -338,17 +365,6 @@ class VanpoolMonthlyReport(forms.ModelForm):
                     category = category.replace('_', ' ')
                     category = category.title()
                     error_list.append('{} have decreased more than 20%. Please confirm this number'.format(category))
-
-                if category == 'vanpool_groups_in_operation':
-                    old_van_number = vanpool_report.objects.filter(
-                        organization_id=self.user_organization,
-                        report_year=report_year,
-                        report_month=report_month).values('vanpool_groups_in_operation', 'vanpool_group_starts', 'vanpool_group_folds')
-                    old_van_number = old_van_number[0]
-
-                    if new_data != (old_van_number['vanpool_groups_in_operation'] + old_van_number['vanpool_group_starts'] - old_van_number['vanpool_group_folds']):
-                        error_list.append('The Vanpool Groups in Operation do not reflect the folds and started recorded last month')
-
             return error_list
 
     def clean(self):
@@ -430,7 +446,7 @@ class chart_form(forms.Form):
         ("loaner_spare_vans_in_fleet", "Loaner Spare Vans in Fleet")
     )
 
-    ORGANIZATION_CHOICES = organization.objects.all().values('name')
+    ORGANIZATION_CHOICES = organization.objects.filter(vanpool_program=True).values('name')
     TIMEFRAME_CHOICES = (
         (3, "Three Months"),
         (6, "Six Months"),
@@ -444,7 +460,7 @@ class chart_form(forms.Form):
     chart_measure = forms.CharField(widget=forms.Select(choices=MEASURE_CHOICES,
                                                         attrs={'class': 'form-control my_chart_control',
                                                                'data-form-name': "chart_form"}))
-    chart_organizations = forms.ModelChoiceField(queryset=organization.objects.all().order_by('name'), empty_label=None,
+    chart_organizations = forms.ModelChoiceField(queryset=organization.objects.filter(vanpool_program=True).order_by('name'), empty_label=None,
                                                  widget=forms.CheckboxSelectMultiple(
                                                      attrs={'class': 'form-check checkbox-grid',
                                                             'data-form-name': "chart_form"}))

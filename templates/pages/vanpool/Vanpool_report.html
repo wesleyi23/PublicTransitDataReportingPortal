@@ -84,7 +84,7 @@
 
                             {%  if form.non_field_errors %}
                                 {%  if  'You must fill out the data for the previous month first. Please refer to the previous reporting month' in form.non_field_errors %}
-                                    <p>Please revise the previous data</p>
+                                    <p>You are trying to fill out data for a month while the previous month(s) remain blank. Please fill out the previous month(s) first</p>
                                 {% else %}
                                     <b>Validation Issues:</b>
                                     <ul>{% for error in form.non_field_errors %}

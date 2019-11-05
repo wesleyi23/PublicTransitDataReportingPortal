@@ -972,7 +972,7 @@ def report_expenses(request, year=None):
                     SummaryExpenses.objects.create(year=year,
                                                    specific_expense_source_id=my_id,
                                                    organization=organization,
-                                                   specific_expense_source=None,
+                                                   specific_expense_value=None,
                                                    report_by=user
                                                    )
         return SummaryExpenses.objects.filter(organization_id=user_org.id,
