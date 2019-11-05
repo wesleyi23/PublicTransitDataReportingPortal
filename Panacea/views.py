@@ -18,6 +18,7 @@ from .utilities import monthdelta, get_wsdot_color, get_vanpool_summary_charts_a
 from django.http import Http404
 from .filters import VanpoolExpansionFilter
 from django.conf import settings
+from .emails import send_user_registration_email, alert_about_active_permissions_request
 import base64
 
 from .forms import CustomUserCreationForm, \
@@ -174,12 +175,7 @@ def ProfileSetup_ReportSelection(request):
                 form.save()
                 current_user_instance.profile_submitted = True
                 current_user_instance.save()
-                emailRecipient = custom_user.objects.filter(id = request.user.id).values('first_name','last_name')
-                name = emailRecipient.values_list('first_name', flat=True)
-                emailAddress = custom_user.objects.filter(id = request.user.id).values_list('email', flat = True)
-                msg_plain = render_to_string('emails/registration_email.txt', {'firstname':name[0]})
-                msg_html = render_to_string('emails/registration_email.html', {'firstname': name[0]})
-                send_mail('Welcome to WSDOT\'s Public Transit Data Reporting Portal', msg_plain, settings.EMAIL_HOST_USER, [emailAddress[0]], html_message=msg_html,)
+                send_user_registration_email(request.user.id)
                 return JsonResponse({'redirect': '../dashboard'})
             else:
                 return JsonResponse({'error': form.errors})
@@ -268,27 +264,8 @@ def Permissions(request):
         if form.is_valid():
 
             groups = ' & '.join(str(s[1]) for s in form.cleaned_data['groups'].values_list())
-
-            msg_html = render_to_string('emails/request_permissions_email.html',
-                                        {'user_name': request.user.get_full_name(), 'groups': groups})
-            msg_plain = render_to_string('emails/request_permissions_email.txt',
-                                         {'user_name': request.user.get_full_name(), 'groups': groups})
-            send_mail(
-                subject='Permissions Request - Public Transportation Reporting Portal',
-                message=msg_plain,
-                from_email='some@sender.com',  # TODO change this to the correct email address
-                recipient_list=['wesleyi@wsdot.wa.gov', ],  # TODO change this to the correct email address
-                html_message=msg_html,
-            )
-            msg_html = "There is an active permissions request in the Public Transportation Reporting Portal"  # TODO add link
-            msg_plain = "There is an active permissions request in the Public Transportation Reporting Portal"  # TODO add link
-            send_mail(
-                subject='Active Permissions Request - Public Transportation Reporting Portal',
-                message=msg_plain,
-                from_email='some@sender.com',  # TODO change this to the correct email address
-                recipient_list=['wesleyi@wsdot.wa.gov', ],  # TODO change this to the correct email address
-                html_message=msg_html,
-            )
+            print('it')
+            alert_about_active_permissions_request(request.user.get_full_name(), groups)
             current_user_profile = profile.objects.get(custom_user_id=request.user.id)
             current_user_profile.request_permissions.set(form.cleaned_data['groups'])
             current_user_profile.active_permissions_request = True

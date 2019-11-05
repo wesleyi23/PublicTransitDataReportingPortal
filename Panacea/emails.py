@@ -1,0 +1,33 @@
+from .models import custom_user
+from django.core.mail import send_mail
+from TransitData import settings
+from django.template.loader import render_to_string
+
+
+
+def send_user_registration_email(user_id):
+    emailRecipient = custom_user.objects.filter(id = user_id).values('first_name','last_name')
+    name = emailRecipient.values_list('first_name', flat=True)
+    emailAddress = custom_user.objects.filter(id = user_id).values_list('email', flat = True)
+    msg_plain = render_to_string('emails/registration_email.txt', {'firstname':name[0]})
+    msg_html = render_to_string('emails/registration_email.html', {'firstname': name[0]})
+    send_mail('Welcome to WSDOT\'s Public Transit Data Reporting Portal', msg_plain, settings.EMAIL_HOST_USER, [emailAddress[0]], html_message=msg_html,)
+
+
+def alert_about_active_permissions_request(full_name, groups):
+    if settings.dev_mode == True:
+        recipient_list = [settings.EMAIL_HOST_USER, ]
+    else:
+        recipient_list = ['wesleyi@wsdot.wa.gov', 'schumen@wsdot.wa.gov', ]
+
+    msg_html = render_to_string('emails/request_permissions_email.html',
+                                {'user_name': full_name, 'groups': groups})
+    msg_plain = render_to_string('emails/request_permissions_email.txt',
+                                 {'user_name': full_name, 'groups': groups})
+    send_mail(
+        subject='Active Permissions Request - Public Transportation Reporting Portal',
+        message=msg_plain,
+        from_email= settings.EMAIL_HOST_USER,
+        recipient_list = recipient_list,
+        html_message=msg_html,
+    )
