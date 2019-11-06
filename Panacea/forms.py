@@ -5,7 +5,7 @@ from django.contrib.auth import password_validation, login
 from django.contrib.auth.forms import UserChangeForm, AuthenticationForm
 import datetime
 
-from Panacea.utilities import find_user_organization
+from Panacea.utilities import find_user_organization, find_vanpool_organizations
 from .models import custom_user, \
     profile, \
     organization, \
@@ -13,7 +13,8 @@ from .models import custom_user, \
     vanpool_report, \
     vanpool_expansion_analysis, \
     cover_sheet, \
-    SummaryRevenues, SummaryExpenses, SummaryTransitData, revenue_source, transit_mode, ServiceOffered, transit_metrics
+    SummaryRevenues, SummaryExpenses, SummaryTransitData, revenue_source, transit_mode, ServiceOffered, transit_metrics, \
+    expenses_source
 from django.utils.translation import gettext, gettext_lazy as _
 from phonenumber_field.formfields import PhoneNumberField
 from localflavor.us.forms import USStateSelect, USZipCodeField
@@ -254,10 +255,10 @@ class organisation_summary_settings(forms.Form):
 
     include_years = forms.CharField(widget=forms.Select(choices=INCLUDE_YEARS_CHOICES,
                                                         attrs={'class': 'form-control',
-                                                               'data-form-name': "chart_form"}))
+                                                               'data-form-name': "vanpool_metric_chart_form"}))
     summary_org = forms.ModelChoiceField(queryset=organization.objects.all(),
                                          widget=forms.Select(attrs={'class': 'form-control',
-                                                                    'data-form-name': "chart_form"}))
+                                                                    'data-form-name': "vanpool_metric_chart_form"}))
 # endregion
 
 
@@ -337,11 +338,11 @@ class VanpoolMonthlyReport(forms.ModelForm):
                                                           'vanpool_group_folds')
                     old_van_number = old_van_number[0]
                     if new_data != (
-                            old_van_number['vanpool_groups_in_operation'] + old_van_number['vanpool_group_starts'] -
-                            old_van_number['vanpool_group_folds']):
-                        old_total = old_van_number['vanpool_groups_in_operation'] + old_van_number['vanpool_group_starts'] -old_van_number['vanpool_group_folds']
+                            int(old_van_number['vanpool_groups_in_operation']) + int(old_van_number['vanpool_group_starts']) -
+                            int(old_van_number['vanpool_group_folds'])):
+                        old_total = int(old_van_number['vanpool_groups_in_operation']) + int(old_van_number['vanpool_group_starts']) -int(old_van_number['vanpool_group_folds'])
                         error_list.append(
-                            'The Vanpool Groups in Operation are not equal to the projected number of vanpool groups in operation of {}, based on the {} folds and {} starts recorded last month.'.format(old_total,old_van_number['vanpool_group_starts'], old_van_number['vanpool_group_folds']))
+                            'The Vanpool Groups in Operation are not equal to the projected number of vanpool groups in operation of {}, based on the {} fold(s) and {} start(s) recorded last month.'.format(old_total,old_van_number['vanpool_group_starts'], old_van_number['vanpool_group_folds']))
 
                 if category == 'vanshare_groups_in_operation':
                     old_van_number = vanpool_report.objects.filter(
@@ -351,10 +352,10 @@ class VanpoolMonthlyReport(forms.ModelForm):
                                                           'vanshare_group_folds')
                     old_van_number = old_van_number[0]
                     if new_data != (
-                            old_van_number['vanshare_groups_in_operation'] + old_van_number['vanshare_group_starts'] -old_van_number['vanshare_group_folds']):
-                        old_total = old_van_number['vanshare_groups_in_operation'] + old_van_number['vanshare_group_starts'] -old_van_number['vanshare_group_folds']
+                            int(old_van_number['vanshare_groups_in_operation']) + int(old_van_number['vanshare_group_starts']) -int(old_van_number['vanshare_group_folds'])):
+                        old_total = int(old_van_number['vanshare_groups_in_operation']) + int(old_van_number['vanshare_group_starts']) -int(old_van_number['vanshare_group_folds'])
                         error_list.append(
-                            'The Vanshare Groups in Operation are not equal to the projected number of vanshare groups in operation of {}, based on the {} folds and {} starts recorded last month.'.format(old_total, old_van_number['vanshare_group_folds'],old_van_number['vanshare_group_starts'] ))
+                            'The Vanshare Groups in Operation are not equal to the projected number of vanshare groups in operation of {}, based on the {} fold(s) and {} start(s) recorded last month.'.format(old_total, old_van_number['vanshare_group_folds'],old_van_number['vanshare_group_starts'] ))
 
                 if new_data >= old_data * 1.2:
                     category = category.replace('_', ' ')
@@ -365,6 +366,17 @@ class VanpoolMonthlyReport(forms.ModelForm):
                     category = category.replace('_', ' ')
                     category = category.title()
                     error_list.append('{} have decreased more than 20%. Please confirm this number'.format(category))
+
+                if category == 'vanpool_groups_in_operation':
+                    old_van_number = vanpool_report.objects.filter(
+                        organization_id=self.user_organization,
+                        report_year=report_year,
+                        report_month=report_month).values('vanpool_groups_in_operation', 'vanpool_group_starts', 'vanpool_group_folds')
+                    old_van_number = old_van_number[0]
+
+                    if new_data != (old_van_number['vanpool_groups_in_operation'] + old_van_number['vanpool_group_starts'] - old_van_number['vanpool_group_folds']):
+                        error_list.append('The Vanpool Groups in Operation do not reflect the folds and started recorded last month')
+
             return error_list
 
     def clean(self):
@@ -386,33 +398,33 @@ class VanpoolMonthlyReport(forms.ModelForm):
         exclude = ('report_date', 'report_year', 'report_month', 'report_by', 'organization', 'report_type',
                    'report_due_date')
         widgets = {
-            'vanshare_groups_in_operation': forms.NumberInput(
+            'vanshare_groups_in_operation': forms.TextInput(
                 attrs={'required': True, 'class': 'form-control input-sm'}),
-            'vanshare_group_starts': forms.NumberInput(
+            'vanshare_group_starts': forms.TextInput(
                 attrs={'required': True, 'class': 'form-control input-sm'}),
-            'vanshare_group_folds': forms.NumberInput(
+            'vanshare_group_folds': forms.TextInput(
                 attrs={'required': True, 'class': 'form-control input-sm'}),
-            'vanshare_passenger_trips': forms.NumberInput(
+            'vanshare_passenger_trips': forms.TextInput(
                 attrs={'required': True, 'class': 'form-control input-sm'}),
-            'vanshare_miles_traveled': forms.NumberInput(
+            'vanshare_miles_traveled': forms.TextInput(
                 attrs={'required': True, 'class': 'form-control input-sm'}),
-            'vanpool_groups_in_operation': forms.NumberInput(
+            'vanpool_groups_in_operation': forms.TextInput(
                 attrs={'required': True, 'class': 'form-control input-sm'}),
-            'vanpool_group_starts': forms.NumberInput(
+            'vanpool_group_starts': forms.TextInput(
                 attrs={'required': True, 'class': 'form-control input-sm'}),
-            'vanpool_group_folds': forms.NumberInput(
+            'vanpool_group_folds': forms.TextInput(
                 attrs={'required': True, 'class': 'form-control input-sm'}),
-            'vans_available': forms.NumberInput(
+            'vans_available': forms.TextInput(
                 attrs={'required': True, 'class': 'form-control input-sm'}),
-            'loaner_spare_vans_in_fleet': forms.NumberInput(
+            'loaner_spare_vans_in_fleet': forms.TextInput(
                 attrs={'required': True, 'class': 'form-control input-sm'}),
-            'vanpool_passenger_trips': forms.NumberInput(
+            'vanpool_passenger_trips': forms.TextInput(
                 attrs={'required': True, 'class': 'form-control input-sm'}),
-            'vanpool_miles_traveled': forms.NumberInput(
+            'vanpool_miles_traveled': forms.TextInput(
                 attrs={'required': True, 'class': 'form-control input-sm'}),
-            'average_riders_per_van': forms.NumberInput(
+            'average_riders_per_van': forms.TextInput(
                 attrs={'required': True, 'class': 'form-control input-sm'}),
-            'average_round_trip_miles': forms.NumberInput(
+            'average_round_trip_miles': forms.TextInput(
                 attrs={'required': True, 'class': 'form-control input-sm'}),
 
         }
@@ -425,7 +437,7 @@ class VanpoolMonthlyReport(forms.ModelForm):
 
 
 # TODO rename this form to something less generic
-class chart_form(forms.Form):
+class vanpool_metric_chart_form(forms.Form):
     MEASURE_CHOICES_DICT = {
         "total_miles_traveled": "Total Miles Traveled",
         "total_passenger_trips": "Total Passenger Trips",
@@ -446,7 +458,7 @@ class chart_form(forms.Form):
         ("loaner_spare_vans_in_fleet", "Loaner Spare Vans in Fleet")
     )
 
-    ORGANIZATION_CHOICES = organization.objects.filter(vanpool_program=True).values('name')
+    ORGANIZATION_CHOICES = organization.objects.all().values('name')
     TIMEFRAME_CHOICES = (
         (3, "Three Months"),
         (6, "Six Months"),
@@ -459,14 +471,14 @@ class chart_form(forms.Form):
 
     chart_measure = forms.CharField(widget=forms.Select(choices=MEASURE_CHOICES,
                                                         attrs={'class': 'form-control my_chart_control',
-                                                               'data-form-name': "chart_form"}))
-    chart_organizations = forms.ModelChoiceField(queryset=organization.objects.filter(vanpool_program=True).order_by('name'), empty_label=None,
+                                                               'data-form-name': "vanpool_metric_chart_form"}))
+    chart_organizations = forms.ModelChoiceField(queryset=find_vanpool_organizations().order_by('name'), empty_label=None,
                                                  widget=forms.CheckboxSelectMultiple(
                                                      attrs={'class': 'form-check checkbox-grid',
-                                                            'data-form-name': "chart_form"}))
+                                                            'data-form-name': "vanpool_metric_chart_form"}))
     chart_time_frame = forms.CharField(widget=forms.Select(choices=TIMEFRAME_CHOICES,
                                                            attrs={'class': 'form-control my_chart_control',
-                                                                  'data-form-name': "chart_form"}))
+                                                                  'data-form-name': "vanpool_metric_chart_form"}))
 
 
 class statewide_summary_settings(forms.Form):
@@ -487,15 +499,15 @@ class statewide_summary_settings(forms.Form):
 
     include_years = forms.CharField(widget=forms.Select(choices=INCLUDE_YEARS_CHOICES,
                                                         attrs={'class': 'form-control',
-                                                               'data-form-name': "chart_form"}))
+                                                               'data-form-name': "vanpool_metric_chart_form"}))
 
     include_regions = forms.CharField(widget=forms.Select(choices=INCLUDE_REGION_CHOICES,
                                                           attrs={'class': 'form-control ',
-                                                                 'data-form-name': "chart_form"}))
+                                                                 'data-form-name': "vanpool_metric_chart_form"}))
     include_agency_classifications = forms.MultipleChoiceField(choices=organization.AGENCY_CLASSIFICATIONS,
                                                                widget=forms.CheckboxSelectMultiple(
                                                                    attrs={'class': 'form-check',
-                                                                          'data-form-name': "chart_form"}))
+                                                                          'data-form-name': "vanpool_metric_chart_form"}))
 
 
 class submit_a_new_vanpool_expansion(forms.ModelForm):
@@ -623,11 +635,13 @@ class cover_sheet_organization(forms.ModelForm):
 
 class service_offered(forms.ModelForm):
 
-    mode = forms.ModelChoiceField(required=False, queryset=transit_mode.objects.all(), label='Service Mode', widget=forms.Select(attrs={'class': 'form-control form-control-plaintext', 'style': 'pointer-events: none'})),
-    administration_of_mode = forms.CharField(required= False, label = 'Nature of Service', widget=forms.Select(choices=ServiceOffered.DO_OR_PT, attrs={'class': 'form-control'}))
     class Meta:
         model = ServiceOffered
         fields = ['administration_of_mode', 'mode']
+        widgets = {
+            'mode': forms.Select( choices=transit_mode.objects.all(), attrs={'class': 'form-control'}),
+            'administration_of_mode': forms.Select(choices=ServiceOffered.DO_OR_PT, attrs={'class': 'form-control'})
+        }
 
 
 class cover_sheet_service(forms.ModelForm):
@@ -660,45 +674,47 @@ class BaseRevenueForm(BaseFormSet):
 
 class summary_expense_form(forms.ModelForm):
 
+    id = forms.IntegerField(disabled=True)
+    specific_expense_source = forms.ModelChoiceField(disabled=True, queryset=expenses_source.objects.all())
+    year = forms.IntegerField(disabled=True)
+
     class Meta:
         model = SummaryExpenses
-        exclude = ["organization", "report_by"]
+        fields = ["id", "specific_expense_source", "year", "specific_expense_value", "comments"]
         widgets = {
-            'specific_expense_value': forms.NumberInput(attrs={'class': 'form-control'}),
+            'specific_expense_value': forms.TextInput(attrs={'class': 'form-control'}),
             'comments': forms.Textarea(attrs={'class': 'form-control', "rows": 3}),
-            'year': forms.NumberInput(attrs={'disabled': True}),
-            'specific_expense_source': forms.TextInput(attrs={'disabled': True}),
-            'id': forms.TextInput(attrs={'disabled': True})
         }
 
 
 class summary_revenue_form(forms.ModelForm):
 
+    id = forms.IntegerField(disabled=True)
+    specific_revenue_source = forms.ModelChoiceField(disabled=True, queryset=revenue_source.objects.all())
+    year = forms.IntegerField(disabled=True)
+
     class Meta:
         model = SummaryRevenues
-        exclude = ['organization', 'report_by']
+        fields = ["id", "specific_revenue_source", "year", "specific_revenue_value", "comments"]
         queryset = revenue_source.objects.all()
         widgets = {
-            'specific_revenue_value': forms.NumberInput(attrs={'class': 'form-control'}),
+            'specific_revenue_value': forms.TextInput(attrs={'class': 'form-control'}),
             'comments': forms.Textarea(attrs={'class': 'form-control', "rows": 3}),
-            'year': forms.NumberInput(attrs={'disabled': True}),
-            'specific_revenue_source': forms.TextInput(attrs={'disabled': True}),
-            'id': forms.TextInput(attrs={'disabled': True})
         }
 
 
 class transit_data_form(forms.ModelForm):
 
+    id = forms.IntegerField(disabled=True)
+    metric = forms.ModelChoiceField(disabled=True, queryset=transit_metrics.objects.all())
+    year = forms.IntegerField(disabled=True)
+
     class Meta:
         model = SummaryTransitData
-        exclude = ['organization', 'report_by', 'rollup_mode', 'mode', 'administration_of_mode']
-        queryset = transit_metrics.objects.all()
+        fields = ['id', 'metric', 'year', 'metric_value', 'comments']
         widgets = {
-            'metric_value': forms.NumberInput(attrs={'class': 'form-control'}),
+            'metric_value': forms.TextInput(attrs={'class': 'form-control'}),
             'comments': forms.Textarea(attrs={'class': 'form-control', "rows": 3}),
-            'year': forms.NumberInput(attrs={'disabled': True}),
-            'metric': forms.TextInput(attrs={'disabled': True}),
-            'id': forms.TextInput(attrs={'disabled': True})
         }
 
 

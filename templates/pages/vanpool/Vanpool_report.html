@@ -112,7 +112,7 @@
                                                data-content="Number of active groups in operation at the end of the reporting month."></i>
                                         </sup>
                                     </td>
-                                    <td>{{ form.vanpool_groups_in_operation }}</td>
+                                    <td class="AutoNumeric-Int">{{ form.vanpool_groups_in_operation }}</td>
                                 </tr>
                                 <tr class="fieldWrapper">
                                     <td>{{ form.vanpool_group_starts.errors }}</td>
@@ -123,7 +123,7 @@
                                                data-content="Number of groups that started during the reporting month."></i>
                                         </sup>
                                     </td>
-                                    <td>{{ form.vanpool_group_starts }} </td>
+                                    <td class="AutoNumeric-Int">{{ form.vanpool_group_starts }} </td>
                                 </tr>
                                 <tr class="fieldWrapper">
                                     <td>{{ form.vanpool_group_folds.errors }}</td>
@@ -134,7 +134,7 @@
                                                data-content="Number of groups that folded during the reporting month."></i>
                                         </sup>
                                     </td>
-                                    <td>{{ form.vanpool_group_folds }}</td>
+                                    <td class="AutoNumeric-Int">{{ form.vanpool_group_folds }}</td>
                                 </tr>
                                 <tr class="fieldWrapper">
                                     <td>{{ form.vanpool_miles_traveled.errors }}</td>
@@ -145,7 +145,7 @@
                                                data-content="Revenue miles traveled by operating groups (this figure is the total number of miles traveled minus shared use, shuttle, maintenance, familiarization, other [e.g. miles to pick up/drop off vans, shop miles], bonus, and personal use miles)."></i>
                                         </sup>
                                     </td>
-                                    <td>{{ form.vanpool_miles_traveled }}</td>
+                                    <td class="AutoNumeric-Int">{{ form.vanpool_miles_traveled }}</td>
                                 </tr>
                                 <tr class="fieldWrapper">
                                     <td>{{ form.vanpool_passenger_trips.errors }}</td>
@@ -156,7 +156,7 @@
                                                data-content="Revenue-based (number of groups in operation times average number of riders per van [including driver] of operating groups times average number of operating days times 2 [trips per day])."></i>
                                         </sup>
                                     </td>
-                                    <td>{{ form.vanpool_passenger_trips }}</td>
+                                    <td class="AutoNumeric-Int">{{ form.vanpool_passenger_trips }}</td>
                                 </tr>
                                 {% if organization.vanshare_program %}
                                     <tr>
@@ -165,57 +165,57 @@
                                     <tr class="fieldWrapper">
                                         <td>{{ form.vanshare_groups_in_operation.errors }}</td>
                                         <td>{{ form.vanshare_groups_in_operation.label_tag }}
-                                        <sup>
-                                            <i class="fas fa-question-circle help-popover"
-                                               data-toggle="popover" title="Vanshare groups in operation:"
-                                               data-content="Number of active vanshare groups in operation at the end of the reporting month."></i>
-                                        </sup>
-                                    </td>
-                                        <td>{{ form.vanshare_groups_in_operation }}</td>
+                                            <sup>
+                                                <i class="fas fa-question-circle help-popover"
+                                                   data-toggle="popover" title="Vanshare groups in operation:"
+                                                   data-content="Number of active vanshare groups in operation at the end of the reporting month."></i>
+                                            </sup>
+                                        </td>
+                                        <td class="AutoNumeric-Int">{{ form.vanshare_groups_in_operation }}</td>
                                     </tr>
                                     <tr class="fieldWrapper">
                                         <td>{{ form.vanshare_group_starts.errors }}</td>
                                         <td>{{ form.vanshare_group_starts.label_tag }}
-                                        <sup>
-                                            <i class="fas fa-question-circle help-popover"
-                                               data-toggle="popover" title="Vanshare groups in operation:"
-                                               data-content="Number of vanshare groups that started during the reporting month."></i>
-                                        </sup>
-                                    </td>
-                                        <td>{{ form.vanshare_group_starts }}</td>
+                                            <sup>
+                                                <i class="fas fa-question-circle help-popover"
+                                                   data-toggle="popover" title="Vanshare groups in operation:"
+                                                   data-content="Number of vanshare groups that started during the reporting month."></i>
+                                            </sup>
+                                        </td>
+                                        <td class="AutoNumeric-Int">{{ form.vanshare_group_starts }}</td>
                                     </tr>
                                     <tr class="fieldWrapper">
                                         <td>{{ form.vanshare_group_folds.errors }}</td>
                                         <td>{{ form.vanshare_group_folds.label_tag }}
-                                        <sup>
-                                            <i class="fas fa-question-circle help-popover"
-                                               data-toggle="popover" title="Vanshare group folds:"
-                                               data-content="Number of vanshare groups that folded during the reporting month."></i>
-                                        </sup>
-                                    </td>
-                                        <td>{{ form.vanshare_group_folds }}</td>
+                                            <sup>
+                                                <i class="fas fa-question-circle help-popover"
+                                                   data-toggle="popover" title="Vanshare group folds:"
+                                                   data-content="Number of vanshare groups that folded during the reporting month."></i>
+                                            </sup>
+                                        </td>
+                                        <td class="AutoNumeric-Int">{{ form.vanshare_group_folds }}</td>
                                     </tr>
                                     <tr class="fieldWrapper">
                                         <td>{{ form.vanshare_miles_traveled.errors }}</td>
                                         <td>{{ form.vanshare_miles_traveled.label_tag }}
-                                        <sup>
-                                            <i class="fas fa-question-circle help-popover"
-                                               data-toggle="popover" title="Vanshare miles traveled:"
-                                               data-content="Revenue miles traveled by operating groups (this figure is the total number of miles traveled minus shared use, shuttle, maintenance, familiarization, other [e.g. miles to pick up/drop off vans, shop miles], bonus, and personal use miles)."></i>
-                                        </sup>
-                                    </td>
-                                        <td>{{ form.vanshare_miles_traveled }}</td>
+                                            <sup>
+                                                <i class="fas fa-question-circle help-popover"
+                                                   data-toggle="popover" title="Vanshare miles traveled:"
+                                                   data-content="Revenue miles traveled by operating groups (this figure is the total number of miles traveled minus shared use, shuttle, maintenance, familiarization, other [e.g. miles to pick up/drop off vans, shop miles], bonus, and personal use miles)."></i>
+                                            </sup>
+                                        </td>
+                                        <td class="AutoNumeric-Int">{{ form.vanshare_miles_traveled }}</td>
                                     </tr>
                                     <tr class="fieldWrapper">
                                         <td>{{ form.vanshare_passenger_trips.errors }}</td>
                                         <td>{{ form.vanshare_passenger_trips.label_tag }}
-                                        <sup>
-                                            <i class="fas fa-question-circle help-popover"
-                                               data-toggle="popover" title="Vanshare passenger trips:"
-                                               data-content="Revenue-based (number of groups in operation times average number of riders per van [including driver] of operating groups times average number of operating days times 2 [trips per day])."></i>
-                                        </sup>
-                                    </td>
-                                        <td>{{ form.vanshare_passenger_trips }}</td>
+                                            <sup>
+                                                <i class="fas fa-question-circle help-popover"
+                                                   data-toggle="popover" title="Vanshare passenger trips:"
+                                                   data-content="Revenue-based (number of groups in operation times average number of riders per van [including driver] of operating groups times average number of operating days times 2 [trips per day])."></i>
+                                            </sup>
+                                        </td>
+                                        <td class="AutoNumeric-Int">{{ form.vanshare_passenger_trips }}</td>
                                     </tr>
                                     <tr>
                                         <td colspan="3"><b>Program Wide Information</b></td>
@@ -230,7 +230,7 @@
                                                data-content="Average number of riders (including driver) of active operating groups."></i>
                                         </sup>
                                     </td>
-                                    <td>{{ form.average_riders_per_van }}</td>
+                                    <td class="AutoNumeric-Int">{{ form.average_riders_per_van }}</td>
                                 </tr>
                                 <tr class="fieldWrapper">
                                     <td>{{ form.average_round_trip_miles.errors }}</td>
@@ -241,7 +241,7 @@
                                                data-content="Average round trip mileage figure of all operating groups."></i>
                                         </sup>
                                     </td>
-                                    <td>{{ form.average_round_trip_miles }}</td>
+                                    <td class="AutoNumeric-Int">{{ form.average_round_trip_miles }}</td>
                                 </tr>
                             </table>
                             {% if new_report %}
@@ -303,6 +303,8 @@
 {% endblock %}
 
 {% block page_scripts %}
+    <script src="https://cdn.jsdelivr.net/npm/autonumeric@4.5.4"></script>
+    <script src="{% static 'js/AutoNumeric_Settings.js' %}"></script>
     <script>
         $(function () {
             $('.help-popover').popover({

@@ -108,28 +108,28 @@
         {% if request.user|has_group:"Summary reporter" or request.user|has_group:"Vanpool reporter" or request.user|has_group:"WSDOT staff" %}
             <!-- Divider -->
             <hr class="sidebar-divider">
-        {% endif %}
-        <!-- Heading -->
-        <div class="sidebar-heading">
-            Settings
-        </div>
 
-        <!-- Nav Item - Settings Collapse Menu -->
-        <li class="nav-item">
-            <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseSettings" aria-expanded="true" aria-controls="collapseSettings">
-                {#                <i class="fas fa-fw fa-user"></i>#}
-                <span>Settings</span>
-            </a>
-            <div id="collapseSettings" class="collapse" data-parent="#accordionSidebar">
-                <div class="bg-white py-2 collapse-inner rounded">
-                    <a class="collapse-item" href="{% url 'UserProfile' %}">User Profile</a>
-                    {% if request.user|has_group:"Vanpool reporter" or request.user|has_group:"WSDOT staff" or request.user|has_group:"Summary reporter"%}
-                        <a class="collapse-item" href="{% url 'OrganizationProfile' %}">Organization Profile</a>
-                    {% endif %}
-                </div>
+            <!-- Heading -->
+            <div class="sidebar-heading">
+                Settings
             </div>
-        </li>
 
+            <!-- Nav Item - Settings Collapse Menu -->
+            <li class="nav-item">
+                <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseSettings" aria-expanded="true" aria-controls="collapseSettings">
+                    {#                <i class="fas fa-fw fa-user"></i>#}
+                    <span>Settings</span>
+                </a>
+                <div id="collapseSettings" class="collapse" data-parent="#accordionSidebar">
+                    <div class="bg-white py-2 collapse-inner rounded">
+                        <a class="collapse-item" href="{% url 'UserProfile' %}">User Profile</a>
+                        {% if request.user|has_group:"Vanpool reporter" or request.user|has_group:"WSDOT staff" or request.user|has_group:"Summary reporter"%}
+                            <a class="collapse-item" href="{% url 'OrganizationProfile' %}">Organization Profile</a>
+                        {% endif %}
+                    </div>
+                </div>
+            </li>
+        {% endif %}
         <!-- Divider -->
         <hr class="sidebar-divider">
         <!-- Heading -->

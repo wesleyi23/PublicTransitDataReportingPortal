@@ -1,6 +1,6 @@
 from django import template
 from django.conf import settings
-from Panacea.models import organization
+from Panacea.models import organization, transit_mode
 
 register = template.Library()
 
@@ -135,3 +135,19 @@ def has_group(user, group_name):
 @register.filter
 def index(sequence, position):
     return sequence[position]
+
+
+@register.filter
+def transit_mode_from_id(mode_id):
+    mode_name = transit_mode.objects.get(id=mode_id).mode
+    return mode_name
+
+
+@register.simple_tag
+def define(val=None):
+  return val
+
+@register.filter
+def get_AutoNumeric_mask_type(metric):
+    print(metric)
+    return "Int"

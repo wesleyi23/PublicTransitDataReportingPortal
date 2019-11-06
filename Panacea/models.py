@@ -328,9 +328,16 @@ class expenses_source(models.Model):
 
 
 class transit_metrics(models.Model):
+    FORM_MASKING_CLASSES = (
+        ("Int", "Int"),
+        ("Float", "Float"),
+        ("Money", "Money"),
+    )
+
     metric = models.CharField(max_length=120)
     agency_classification = models.CharField(max_length=80, null=True, blank=True)
     order_in_summary = models.IntegerField(null=True, blank=True)
+    form_masking_class = models.CharField(max_length=25, choices=FORM_MASKING_CLASSES, null=True, blank=True)
 
     def __str__(self):
         return self.metric
@@ -359,15 +366,15 @@ class SummaryTransitData(models.Model):
         ('Purchased', 'Purchased')
     )
 
-    organization = models.ForeignKey(organization, on_delete=models.PROTECT, related_name = '+')
-    year = models.IntegerField(blank=True, null=True)
-    mode = models.ForeignKey(transit_mode, on_delete = models.PROTECT,  related_name = '+')
-    rollup_mode = models.ForeignKey(rollup_mode, on_delete = models.PROTECT,  related_name = '+')
-    administration_of_mode = models.CharField(max_length= 80, choices=DO_OR_PT)
+    organization = models.ForeignKey(organization, on_delete=models.PROTECT, related_name='+')
+    year = models.IntegerField()
+    mode = models.ForeignKey(transit_mode, on_delete=models.PROTECT,  related_name='+')
+    rollup_mode = models.ForeignKey(rollup_mode, on_delete=models.PROTECT,  related_name='+')
+    administration_of_mode = models.CharField(max_length=80, choices=DO_OR_PT)
     metric = models.ForeignKey(transit_metrics, on_delete=models.PROTECT, related_name='+')
-    metric_value = models.FloatField(null=True)
+    metric_value = models.FloatField(blank=True, null=True)
     report_by = models.ForeignKey(custom_user, on_delete=models.PROTECT, blank=True, null=True)
-    comments = models.TextField(blank = False, null = True)
+    comments = models.TextField(blank=True, null=True)
     history = HistoricalRecords()
 
 
@@ -377,7 +384,7 @@ class SummaryRevenues(models.Model):
     specific_revenue_source = models.ForeignKey(revenue_source, on_delete=models.PROTECT, related_name='+')
     specific_revenue_value = models.FloatField(null=True, blank=True)
     report_by = models.ForeignKey(custom_user, on_delete=models.PROTECT, blank=True, null=True)
-    comments = models.TextField(blank=False, null=True)
+    comments = models.TextField(blank=True, null=True)
     history = HistoricalRecords()
 
 
@@ -389,7 +396,7 @@ class subfundRevenues(models.Model):
 class SummaryExpenses(models.Model):
 
     organization = models.ForeignKey(organization, on_delete=models.PROTECT, related_name='+')
-    year = models.IntegerField(blank=True, null=True)
+    year = models.IntegerField(blank = True)
     specific_expense_source = models.ForeignKey(expenses_source, on_delete=models.PROTECT, related_name='+')
     specific_expense_value = models.IntegerField(blank=True, null=True)
     report_by = models.ForeignKey(custom_user, on_delete=models.PROTECT, blank=True, null=True)
@@ -400,6 +407,7 @@ class SummaryExpenses(models.Model):
         constraints = [
             UniqueConstraint(fields=['organization', 'year', 'specific_expense_source'], name='unique_source_report'),
         ]
+
 
 class subfundExpenses(models.Model):
     specific_expense_value = models.ForeignKey(SummaryExpenses, on_delete=models.PROTECT, related_name='+')
@@ -436,9 +444,12 @@ class ServiceOffered(models.Model):
         ('Direct Operated', 'Direct Operated'),
         ('Purchased', 'Purchased')
     )
-    mode = models.ForeignKey(transit_mode, on_delete = models.PROTECT,  related_name = '+', blank=True)
-    administration_of_mode = models.CharField(max_length= 80, choices=DO_OR_PT, blank=True)
-    organization = models.ForeignKey(organization, on_delete=models.PROTECT, blank=True, null=True)
+    mode = models.ForeignKey(transit_mode, on_delete=models.PROTECT,  related_name = '+', blank=True)
+    administration_of_mode = models.CharField(max_length= 80, choices=DO_OR_PT, blank=False)
+    organization = models.ForeignKey(organization, on_delete=models.PROTECT, blank=True, null=False)
+
+    def mode_name(self):
+        return self.mode.mode
 
 
 class depreciation(models.Model):
