@@ -32,7 +32,7 @@ from .forms import CustomUserCreationForm, \
     user_profile_profile, \
     organization_profile, \
     change_user_permissions_group, \
-    chart_form, \
+    vanpool_metric_chart_form, \
     submit_a_new_vanpool_expansion, \
     Modify_A_Vanpool_Expansion, \
     request_user_permissions, \
@@ -177,6 +177,7 @@ def ProfileSetup_ReportSelection(request):
                 # form.user = request.user
                 form.save()
                 current_user_instance.profile_submitted = True
+                current_user_instance.active_permissions_request = True
                 current_user_instance.save()
                 send_user_registration_email(request.user.id)
                 return JsonResponse({'redirect': '../dashboard'})
@@ -283,6 +284,8 @@ def Permissions(request):
                                                       'user_name': request.user.get_full_name(),
                                                       'form': form,
                                                       'submit_success': submit_success})
+
+
 @login_required(login_url='/Panacea/login')
 # @group_required('WSDOT staff')
 def Admin_assignPermissions(request, active=None):
@@ -489,7 +492,7 @@ def Vanpool_data(request):
 
     # If it is a request for a chart
     if request.POST:
-        form = chart_form(data=request.POST)
+        form = vanpool_metric_chart_form(data=request.POST)
         org_list = request.POST.getlist("chart_organizations")
         chart_time_frame = monthdelta(datetime.datetime.now().date(), form.data['chart_time_frame'])
         chart_measure = form.data['chart_measure']
@@ -500,7 +503,7 @@ def Vanpool_data(request):
         chart_time_frame = monthdelta(datetime.datetime.now().date(), default_time_frame)
         org_list = [profile.objects.get(custom_user_id=request.user.id).organization_id]
         chart_measure = 'total_miles_traveled'
-        form = chart_form(initial={'chart_organizations': org_list[0],
+        form = vanpool_metric_chart_form(initial={'chart_organizations': org_list[0],
                                    'chart_measure': chart_measure,
                                    'chart_time_frame': default_time_frame})
 
@@ -610,7 +613,9 @@ def vanpool_statewide_summary(request):
                                                                             }
                   )
 
+
 @login_required(login_url='/Panacea/login')
+@group_required('WSDOT staff')
 def Vanpool_Growth(request):
 
     # class growth_report_table():
@@ -639,6 +644,7 @@ def Vanpool_Growth(request):
 
 
 @login_required(login_url='/Panacea/login')
+@group_required('WSDOT staff')
 def Operation_Summary(request):
     total_vp = vanpool_report.objects.values('report_year').annotate(Sum('vanpool_groups_in_operation')).filter(report_month=12, vanpool_groups_in_operation__isnull=False)
     years = [i['report_year'] for i in total_vp]
@@ -687,10 +693,14 @@ def Operation_Summary(request):
 
 
 # region summary
+@login_required(login_url='/Panacea/login')
+@group_required('Summary reporter', 'WSDOT staff')
 def summary_instructions(request):
     return render(request, 'pages/summary/summary_instructions.html', {})
 
 
+@login_required(login_url='/Panacea/login')
+@group_required('Summary reporter', 'WSDOT staff')
 def organizational_information(request):
     user_profile_data = profile.objects.get(custom_user=request.user.id)
     org = user_profile_data.organization
@@ -704,10 +714,14 @@ def organizational_information(request):
     return render(request, 'pages/summary/organizational_information.html', {'org_name': org_name, 'form': form})
 
 
+@login_required(login_url='/Panacea/login')
+@group_required('Summary reporter', 'WSDOT staff')
 def ntd_upload(request):
     return render(request, 'pages/summary/ntd_upload.html', {})
 
 
+@login_required(login_url='/Panacea/login')
+@group_required('Summary reporter', 'WSDOT staff')
 def cover_sheet_organization_view(request):
     user_profile_data = profile.objects.get(custom_user=request.user.id)
     org = user_profile_data.organization
@@ -742,6 +756,8 @@ def cover_sheet_organization_view(request):
                                                                            'base64_logo': base64_logo})
 
 
+@login_required(login_url='/Panacea/login')
+@group_required('Summary reporter', 'WSDOT staff')
 def cover_sheet_service_view(request):
 
     user_profile_data = profile.objects.get(custom_user=request.user.id)
@@ -766,10 +782,14 @@ def cover_sheet_service_view(request):
     return render(request, 'pages/summary/cover_sheet_service.html', {'service_type': service_type, 'form': form})
 
 
+@login_required(login_url='/Panacea/login')
+@group_required('Summary reporter', 'WSDOT staff')
 def summary_report_data(request):
     return render(request, 'pages/summary/report_data.html')
 
 
+@login_required(login_url='/Panacea/login')
+@group_required('Summary reporter', 'WSDOT staff')
 def summary_modes(request):
     org = find_user_organization(request.user.id)
     # modes = ServiceOffered.objects.filter(organization_id=org).values('administration_of_mode', 'mode')
@@ -796,6 +816,8 @@ def summary_modes(request):
     return render(request, 'pages/summary/summary_modes.html', {'form': form, 'modes': modes, 'org': org})
 
 
+@login_required(login_url='/Panacea/login')
+@group_required('Summary reporter', 'WSDOT staff')
 def delete_summary_mode(request, mode, admin_of_mode):
     if transit_mode.objects.filter(mode=mode).count() < 1:
 
@@ -813,6 +835,8 @@ def delete_summary_mode(request, mode, admin_of_mode):
         return redirect('summary_modes')
 
 
+@login_required(login_url='/Panacea/login')
+@group_required('Summary reporter', 'WSDOT staff')
 def report_transit_data(request, year=None, service=None):
 
     # TODO move to table
@@ -904,6 +928,8 @@ def report_transit_data(request, year=None, service=None):
                                                                       'year': year})
 
 
+@login_required(login_url='/Panacea/login')
+@group_required('Summary reporter', 'WSDOT staff')
 def report_revenues(request, year=None, funding_type=None):
     user_org = find_user_organization(request.user.id)
 
@@ -978,6 +1004,8 @@ def report_revenues(request, year=None, funding_type=None):
                                                                   'year': year})
 
 
+@login_required(login_url='/Panacea/login')
+@group_required('Summary reporter', 'WSDOT staff')
 def report_expenses(request, year=None):
     user_org = find_user_organization(request.user.id)
 
@@ -1038,6 +1066,8 @@ def report_expenses(request, year=None):
                                                                   'form_range': range(len(formsets['this_year']))})
 
 
+@login_required(login_url='/Panacea/login')
+@group_required('Summary reporter', 'WSDOT staff')
 def review_data(request):
     return render(request, 'pages/summary/review_data.html')
 

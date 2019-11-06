@@ -5,7 +5,7 @@ from django.contrib.auth import password_validation, login
 from django.contrib.auth.forms import UserChangeForm, AuthenticationForm
 import datetime
 
-from Panacea.utilities import find_user_organization
+from Panacea.utilities import find_user_organization, find_vanpool_organizations
 from .models import custom_user, \
     profile, \
     organization, \
@@ -255,10 +255,10 @@ class organisation_summary_settings(forms.Form):
 
     include_years = forms.CharField(widget=forms.Select(choices=INCLUDE_YEARS_CHOICES,
                                                         attrs={'class': 'form-control',
-                                                               'data-form-name': "chart_form"}))
+                                                               'data-form-name': "vanpool_metric_chart_form"}))
     summary_org = forms.ModelChoiceField(queryset=organization.objects.all(),
                                          widget=forms.Select(attrs={'class': 'form-control',
-                                                                    'data-form-name': "chart_form"}))
+                                                                    'data-form-name': "vanpool_metric_chart_form"}))
 # endregion
 
 
@@ -410,7 +410,7 @@ class VanpoolMonthlyReport(forms.ModelForm):
 
 
 # TODO rename this form to something less generic
-class chart_form(forms.Form):
+class vanpool_metric_chart_form(forms.Form):
     MEASURE_CHOICES_DICT = {
         "total_miles_traveled": "Total Miles Traveled",
         "total_passenger_trips": "Total Passenger Trips",
@@ -444,14 +444,14 @@ class chart_form(forms.Form):
 
     chart_measure = forms.CharField(widget=forms.Select(choices=MEASURE_CHOICES,
                                                         attrs={'class': 'form-control my_chart_control',
-                                                               'data-form-name': "chart_form"}))
-    chart_organizations = forms.ModelChoiceField(queryset=organization.objects.all().order_by('name'), empty_label=None,
+                                                               'data-form-name': "vanpool_metric_chart_form"}))
+    chart_organizations = forms.ModelChoiceField(queryset=find_vanpool_organizations().order_by('name'), empty_label=None,
                                                  widget=forms.CheckboxSelectMultiple(
                                                      attrs={'class': 'form-check checkbox-grid',
-                                                            'data-form-name': "chart_form"}))
+                                                            'data-form-name': "vanpool_metric_chart_form"}))
     chart_time_frame = forms.CharField(widget=forms.Select(choices=TIMEFRAME_CHOICES,
                                                            attrs={'class': 'form-control my_chart_control',
-                                                                  'data-form-name': "chart_form"}))
+                                                                  'data-form-name': "vanpool_metric_chart_form"}))
 
 
 class statewide_summary_settings(forms.Form):
@@ -472,15 +472,15 @@ class statewide_summary_settings(forms.Form):
 
     include_years = forms.CharField(widget=forms.Select(choices=INCLUDE_YEARS_CHOICES,
                                                         attrs={'class': 'form-control',
-                                                               'data-form-name': "chart_form"}))
+                                                               'data-form-name': "vanpool_metric_chart_form"}))
 
     include_regions = forms.CharField(widget=forms.Select(choices=INCLUDE_REGION_CHOICES,
                                                           attrs={'class': 'form-control ',
-                                                                 'data-form-name': "chart_form"}))
+                                                                 'data-form-name': "vanpool_metric_chart_form"}))
     include_agency_classifications = forms.MultipleChoiceField(choices=organization.AGENCY_CLASSIFICATIONS,
                                                                widget=forms.CheckboxSelectMultiple(
                                                                    attrs={'class': 'form-check',
-                                                                          'data-form-name': "chart_form"}))
+                                                                          'data-form-name': "vanpool_metric_chart_form"}))
 
 
 class submit_a_new_vanpool_expansion(forms.ModelForm):
