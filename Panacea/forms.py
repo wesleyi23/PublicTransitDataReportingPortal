@@ -372,33 +372,33 @@ class VanpoolMonthlyReport(forms.ModelForm):
                    'report_due_date')
         widgets = {
             'vanshare_groups_in_operation': forms.TextInput(
-                attrs={'required': True, 'class': 'form-control input-sm AutoNumeric-On'}),
+                attrs={'required': True, 'class': 'form-control input-sm'}),
             'vanshare_group_starts': forms.TextInput(
-                attrs={'required': True, 'class': 'form-control input-sm AutoNumeric-On'}),
+                attrs={'required': True, 'class': 'form-control input-sm'}),
             'vanshare_group_folds': forms.TextInput(
-                attrs={'required': True, 'class': 'form-control input-sm AutoNumeric-On'}),
+                attrs={'required': True, 'class': 'form-control input-sm'}),
             'vanshare_passenger_trips': forms.TextInput(
-                attrs={'required': True, 'class': 'form-control input-sm AutoNumeric-On'}),
+                attrs={'required': True, 'class': 'form-control input-sm'}),
             'vanshare_miles_traveled': forms.TextInput(
-                attrs={'required': True, 'class': 'form-control input-sm AutoNumeric-On'}),
+                attrs={'required': True, 'class': 'form-control input-sm'}),
             'vanpool_groups_in_operation': forms.TextInput(
-                attrs={'required': True, 'class': 'form-control input-sm AutoNumeric-On'}),
+                attrs={'required': True, 'class': 'form-control input-sm'}),
             'vanpool_group_starts': forms.TextInput(
-                attrs={'required': True, 'class': 'form-control input-sm AutoNumeric-On'}),
+                attrs={'required': True, 'class': 'form-control input-sm'}),
             'vanpool_group_folds': forms.TextInput(
-                attrs={'required': True, 'class': 'form-control input-sm AutoNumeric-On'}),
+                attrs={'required': True, 'class': 'form-control input-sm'}),
             'vans_available': forms.TextInput(
-                attrs={'required': True, 'class': 'form-control input-sm AutoNumeric-On'}),
+                attrs={'required': True, 'class': 'form-control input-sm'}),
             'loaner_spare_vans_in_fleet': forms.TextInput(
-                attrs={'required': True, 'class': 'form-control input-sm AutoNumeric-On'}),
+                attrs={'required': True, 'class': 'form-control input-sm'}),
             'vanpool_passenger_trips': forms.TextInput(
-                attrs={'required': True, 'class': 'form-control input-sm AutoNumeric-On'}),
+                attrs={'required': True, 'class': 'form-control input-sm'}),
             'vanpool_miles_traveled': forms.TextInput(
-                attrs={'required': True, 'class': 'form-control input-sm AutoNumeric-On'}),
+                attrs={'required': True, 'class': 'form-control input-sm'}),
             'average_riders_per_van': forms.TextInput(
-                attrs={'required': True, 'class': 'form-control input-sm AutoNumeric-On'}),
+                attrs={'required': True, 'class': 'form-control input-sm'}),
             'average_round_trip_miles': forms.TextInput(
-                attrs={'required': True, 'class': 'form-control input-sm AutoNumeric-On'}),
+                attrs={'required': True, 'class': 'form-control input-sm'}),
 
         }
 
@@ -655,7 +655,7 @@ class summary_expense_form(forms.ModelForm):
         model = SummaryExpenses
         fields = ["id", "specific_expense_source", "year", "specific_expense_value", "comments"]
         widgets = {
-            'specific_expense_value': forms.TextInput(attrs={'class': 'form-control AutoNumeric-On'}),
+            'specific_expense_value': forms.TextInput(attrs={'class': 'form-control'}),
             'comments': forms.Textarea(attrs={'class': 'form-control', "rows": 3}),
         }
 
@@ -671,7 +671,7 @@ class summary_revenue_form(forms.ModelForm):
         fields = ["id", "specific_revenue_source", "year", "specific_revenue_value", "comments"]
         queryset = revenue_source.objects.all()
         widgets = {
-            'specific_revenue_value': forms.TextInput(attrs={'class': 'form-control AutoNumeric-On'}),
+            'specific_revenue_value': forms.TextInput(attrs={'class': 'form-control'}),
             'comments': forms.Textarea(attrs={'class': 'form-control', "rows": 3}),
         }
 
@@ -686,7 +686,7 @@ class transit_data_form(forms.ModelForm):
         model = SummaryTransitData
         fields = ['id', 'metric', 'year', 'metric_value', 'comments']
         widgets = {
-            'metric_value': forms.TextInput(attrs={'class': 'form-control AutoNumeric-On'}),
+            'metric_value': forms.TextInput(attrs={'class': 'form-control'}),
             'comments': forms.Textarea(attrs={'class': 'form-control', "rows": 3}),
         }
 
