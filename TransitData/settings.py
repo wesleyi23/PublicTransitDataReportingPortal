@@ -13,7 +13,7 @@ https://docs.djangoproject.com/en/2.1/ref/settings/
 import os
 from celery.schedules import crontab
 
-dev_mode = True
+dev_mode = False
 
 if not dev_mode:
     os.environ.setdefault('FORKED_BY_MULTIPROCESSING', '1')
