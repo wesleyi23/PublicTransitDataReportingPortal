@@ -671,7 +671,7 @@ class summary_revenue_form(forms.ModelForm):
         fields = ["id", "specific_revenue_source", "year", "specific_revenue_value", "comments"]
         queryset = revenue_source.objects.all()
         widgets = {
-            'specific_revenue_value': forms.TextInput(attrs={'class': 'form-control'}),
+            'specific_revenue_value': forms.TextInput(attrs={'class': 'form-control grand-total-sum', 'onblur': 'findTotal()'}),
             'comments': forms.Textarea(attrs={'class': 'form-control', "rows": 3}),
         }
 

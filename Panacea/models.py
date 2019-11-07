@@ -409,6 +409,29 @@ class SummaryExpenses(models.Model):
         ]
 
 
+class fund_balance_type(models.Model):
+    specific_fund_balance_type = models.CharField(max_length=100)
+
+    def __str__(self):
+        return self.specific_expense_source
+
+
+class summary_fund_balance(models.Model):
+
+    organization = models.ForeignKey(organization, on_delete=models.PROTECT, related_name='+')
+    year = models.IntegerField()
+    specific_fund_balance_type = models.ForeignKey(fund_balance_type, on_delete=models.PROTECT, related_name='+')
+    specific_fund_balance_value = models.IntegerField(blank=True, null=True)
+    report_by = models.ForeignKey(custom_user, on_delete=models.PROTECT, blank=True, null=True)
+    comments = models.TextField(blank=True, null=True)
+    history = HistoricalRecords()
+
+    class Meta:
+        constraints = [
+            UniqueConstraint(fields=['organization', 'year', 'specific_fund_balance_type'], name='unique_end_balance'),
+        ]
+
+
 class subfundExpenses(models.Model):
     specific_expense_value = models.ForeignKey(SummaryExpenses, on_delete=models.PROTECT, related_name='+')
     subfund_specification = models.TextField(blank=False, null=True)
@@ -461,20 +484,20 @@ class depreciation(models.Model):
     history = HistoricalRecords()
 
 
-class ending_balance_categories(models.Model):
-    ending_balance_category = models.CharField(max_length=100, blank=False, null = False)
-    def __str__(self):
-        return self.ending_balance_category
-
-
-class ending_balances(models.Model):
-    ending_balance_category = models.ForeignKey(ending_balance_categories, on_delete=models.PROTECT ,related_name = '+')
-    ending_balance_value = models.FloatField()
-    year = models.IntegerField(blank=True, null=True)
-    organization = models.ForeignKey(organization, on_delete=models.PROTECT, blank=True, null=True)
-    report_by = models.ForeignKey(custom_user, on_delete=models.PROTECT, blank=True, null=True)
-    comments = models.TextField(blank=True, null=True)
-    history = HistoricalRecords()
+# class ending_balance_categories(models.Model):
+#     ending_balance_category = models.CharField(max_length=100, blank=False, null = False)
+#     def __str__(self):
+#         return self.ending_balance_category
+#
+#
+# class ending_balances(models.Model):
+#     ending_balance_category = models.ForeignKey(ending_balance_categories, on_delete=models.PROTECT ,related_name = '+')
+#     ending_balance_value = models.FloatField()
+#     year = models.IntegerField(blank=True, null=True)
+#     organization = models.ForeignKey(organization, on_delete=models.PROTECT, blank=True, null=True)
+#     report_by = models.ForeignKey(custom_user, on_delete=models.PROTECT, blank=True, null=True)
+#     comments = models.TextField(blank=True, null=True)
+#     history = HistoricalRecords()
 
 
 
