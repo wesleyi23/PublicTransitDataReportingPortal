@@ -1938,7 +1938,7 @@
 
     // IE10 10 FIX: Please, don't ask, the element isn't
     // considered in DOM in some circumstances...
-    // This isn't reproducible in IE10 compatibility mode of IE11
+    // This isn't reproducible in IE10 compatibility name of IE11
     try {
       if (isIE(10)) {
         rect = element.getBoundingClientRect();
@@ -2106,7 +2106,7 @@
    * @param {HTMLElement} reference
    * @param {number} padding
    * @param {HTMLElement} boundariesElement - Element used to define the boundaries
-   * @param {Boolean} fixedPosition - Is in fixed position mode
+   * @param {Boolean} fixedPosition - Is in fixed position name
    * @returns {Object} Coordinates of the boundaries
    */
   function getBoundaries(popper, reference, padding, boundariesElement) {
@@ -2237,7 +2237,7 @@
    * @param {Object} state
    * @param {Element} popper - the popper element
    * @param {Element} reference - the reference element (the popper will be relative to this)
-   * @param {Element} fixedPosition - is in fixed position mode
+   * @param {Element} fixedPosition - is in fixed position name
    * @returns {Object} An object containing the offsets which will be applied to the popper
    */
   function getReferenceOffsets(state, popper, reference) {
@@ -3871,7 +3871,7 @@
     placement: 'bottom',
 
     /**
-     * Set this to true if you want popper to position it self in 'fixed' mode
+     * Set this to true if you want popper to position it self in 'fixed' name
      * @prop {Boolean} positionFixed=false
      */
     positionFixed: false,

@@ -43,8 +43,8 @@ from .forms import CustomUserCreationForm, \
     fund_balance_form
 
 from .models import profile, vanpool_report, custom_user, vanpool_expansion_analysis, organization, cover_sheet, \
-    SummaryRevenues, SummaryTransitData, SummaryExpenses, expenses_source, ServiceOffered, revenue_source, \
-    transit_metrics, transit_mode, summary_fund_balance, fund_balance_type
+    revenue, transit_data, expense, expense_source, service_offered, revenue_source, \
+    transit_metrics, transit_mode, fund_balance, fund_balance_type
 from django.contrib.auth.models import Group
 from .utilities import calculate_latest_vanpool, find_maximum_vanpool, calculate_remaining_months, calculate_if_goal_has_been_reached, \
     generate_summary_report_years, find_user_organization
@@ -793,9 +793,9 @@ def summary_report_data(request):
 @group_required('Summary reporter', 'WSDOT staff')
 def summary_modes(request):
     org = find_user_organization(request.user.id)
-    # modes = ServiceOffered.objects.filter(organization_id=org).values('administration_of_mode', 'mode')
+    # modes = service_offered.objects.filter(organization_id=org).values('administration_of_mode', 'name')
     # mode_formset = formset_factory(service_offered, min_num=len(modes), extra=2)
-    # formset = mode_formset(initial=[{'administration_of_mode': x['administration_of_mode'], 'mode': x['mode']} for x in modes])
+    # formset = mode_formset(initial=[{'administration_of_mode': x['administration_of_mode'], 'name': x['name']} for x in modes])
 
     # mode_formset = formset_factory(service_offered, min_num=2)
     form = service_offered()
@@ -805,15 +805,15 @@ def summary_modes(request):
         form = service_offered(data=request.POST)
         if form.is_valid():
             print(form.is_valid())
-            instance, created = ServiceOffered.objects.get_or_create(organization_id=org.id,
-                                                                     mode=form.cleaned_data["mode"],
-                                                                     administration_of_mode=form.cleaned_data["administration_of_mode"])
+            instance, created = service_offered.objects.get_or_create(organization_id=org.id,
+                                                                      mode=form.cleaned_data["name"],
+                                                                      administration_of_mode=form.cleaned_data["administration_of_mode"])
             if not created:
                 print("not created")
-                messages.error(request, "This mode has already been added")
+                messages.error(request, "This name has already been added")
 
 
-    modes = ServiceOffered.objects.filter(organization_id=org).all()
+    modes = service_offered.objects.filter(organization_id=org).all()
     return render(request, 'pages/summary/summary_modes.html', {'form': form, 'modes': modes, 'org': org})
 
 
@@ -822,16 +822,16 @@ def summary_modes(request):
 def delete_summary_mode(request, mode, admin_of_mode):
     if transit_mode.objects.filter(mode=mode).count() < 1:
 
-        raise ValueError("invalid mode")
-    elif admin_of_mode in SummaryTransitData.DO_OR_PT:
-        raise ValueError("invalid mode administration")
+        raise ValueError("invalid name")
+    elif admin_of_mode in transit_data.DO_OR_PT:
+        raise ValueError("invalid name administration")
     else:
         user_id = request.user.id
-        mode_id = transit_mode.objects.get(mode=mode).id
+        transit_mode_id = transit_mode.objects.get(name=mode).id
         user_org_id = profile.objects.get(custom_user_id=user_id).organization_id
-        service_to_delete = ServiceOffered.objects.get(organization_id=user_org_id,
-                                                       administration_of_mode=admin_of_mode,
-                                                       mode_id=mode_id)
+        service_to_delete = service_offered.objects.get(organization_id=user_org_id,
+                                                        administration_of_mode=admin_of_mode,
+                                                        transit_mode_id=transit_mode_id)
         service_to_delete.delete()
         return redirect('summary_modes')
 
@@ -843,13 +843,13 @@ def report_transit_data(request, year=None, service=None):
     # TODO move to table
     def crosswalk_modes_to_rollup_modes(mode):
         mode_rollup_mode_dic = {1:1, 6:6, 8:1, 11:1, 5:1, 2:2, 4:2, 7:3, 9:3, 16:4, 3:8, 10:7}
-        print(mode_rollup_mode_dic[mode.mode_id])
-        return mode_rollup_mode_dic[mode.mode_id]
+        print(mode_rollup_mode_dic[mode.transit_mode_id])
+        return mode_rollup_mode_dic[mode.transit_mode_id]
 
     # Function start TODO move this
     def find_service(user_org):
-        ServiceOffered.objects.filter(organization_id=user_org)
-        return ServiceOffered.objects.filter(organization_id=user_org)
+        service_offered.objects.filter(organization_id=user_org)
+        return service_offered.objects.filter(organization_id=user_org)
 
     def get_or_create_summary_transit_queryset(my_year, my_organization, user, my_active_service):
         classification = my_organization.summary_organization_classifications
@@ -857,10 +857,10 @@ def report_transit_data(request, year=None, service=None):
         count = 0
 
         rollup_mode = crosswalk_modes_to_rollup_modes(my_active_service)
-        source_ids = list(SummaryTransitData.objects.filter(organization_id=user_org.id,
-                                                            year=my_year,
-                                                            administration_of_mode=my_active_service.administration_of_mode,
-                                                            mode=my_active_service.mode).values_list('metric_id', flat=True))
+        source_ids = list(transit_data.objects.filter(organization_id=user_org.id,
+                                                      year=my_year,
+                                                      administration_of_mode=my_active_service.administration_of_mode,
+                                                      transit_mode=my_active_service.transit_mode).values_list('transit_metric_id', flat=True))
 
         all_transit_metrics = list(transit_metrics.objects.filter(agency_classification=classification).values_list("id", flat=True))
 
@@ -869,20 +869,20 @@ def report_transit_data(request, year=None, service=None):
             missing_ids = list(set(all_transit_metrics) - set(source_ids))
             with transaction.atomic():
                 for my_id in missing_ids:
-                    SummaryTransitData.objects.create(year=my_year,
-                                                      administration_of_mode=my_active_service.administration_of_mode,
-                                                      mode_id=my_active_service.mode_id,
-                                                      metric_id=my_id,
-                                                      rollup_mode_id=rollup_mode,
-                                                      organization=my_organization,
-                                                      reported_value=None,
-                                                      report_by=user)
+                    transit_data.objects.create(year=my_year,
+                                                administration_of_mode=my_active_service.administration_of_mode,
+                                                transit_mode_id=my_active_service.transit_mode_id,
+                                                transit_metric_id=my_id,
+                                                rollup_mode_id=rollup_mode,
+                                                organization=my_organization,
+                                                reported_value=None,
+                                                report_by=user)
 
-        qs = SummaryTransitData.objects.filter(organization_id=user_org.id,
-                                               administration_of_mode=my_active_service.administration_of_mode,
-                                               mode_id=my_active_service.mode_id,
-                                               year=my_year)
-        return qs.order_by('mode_id', 'administration_of_mode')
+        qs = transit_data.objects.filter(organization_id=user_org.id,
+                                         administration_of_mode=my_active_service.administration_of_mode,
+                                         transit_mode_id=my_active_service.transit_mode_id,
+                                         year=my_year)
+        return qs.order_by('transit_mode_id', 'administration_of_mode')
 
     # Function end
 
@@ -892,12 +892,12 @@ def report_transit_data(request, year=None, service=None):
         year = get_current_summary_report_year()
     previous_year = year - 1
     two_years_ago = year - 2
-    my_formset_factory = modelformset_factory(model=SummaryTransitData,
+    my_formset_factory = modelformset_factory(model=transit_data,
                                               form=transit_data_form,
                                               extra=0)
     services = find_service(user_org)
     if service:
-        active_service = ServiceOffered.objects.get(id=service)
+        active_service = service_offered.objects.get(id=service)
     else:
         active_service = services[0]
 
@@ -931,7 +931,7 @@ def report_transit_data(request, year=None, service=None):
 
 @login_required(login_url='/Panacea/login')
 @group_required('Summary reporter', 'WSDOT staff')
-def report_revenues(request, year=None, funding_type=None, government_type=None):
+def report_revenue(request, year=None, funding_type=None, government_type=None):
     user_org = find_user_organization(request.user.id)
 
     if year is None:
@@ -944,7 +944,7 @@ def report_revenues(request, year=None, funding_type=None, government_type=None)
     if government_type is None:
         government_type = 'Local'
 
-    my_formset_factory = modelformset_factory(model=SummaryRevenues,
+    my_formset_factory = modelformset_factory(model=revenue,
                                               form=summary_revenue_form,
                                               extra=0)
 
@@ -953,8 +953,8 @@ def report_revenues(request, year=None, funding_type=None, government_type=None)
     classification = filter_revenue_sheet_by_classification(classification)
 
     def get_or_create_summary_revenue_queryset(my_year, my_organization, user, my_classification, my_funding_type, my_government_type):
-        source_ids = list(SummaryRevenues.objects.filter(organization_id=user_org.id,
-                                                         year=my_year).values_list('specific_revenue_source_id', flat=True))
+        source_ids = list(revenue.objects.filter(organization_id=user_org.id,
+                                                 year=my_year).values_list('revenue_source_id', flat=True))
         all_revenue_sources = list(revenue_source.objects.filter(agency_classification=my_classification).values_list("id", flat=True))
         source_ids = [idx for idx in source_ids if idx in all_revenue_sources]
 
@@ -963,16 +963,16 @@ def report_revenues(request, year=None, funding_type=None, government_type=None)
 
             with transaction.atomic():
                 for my_id in missing_ids:
-                    SummaryRevenues.objects.create(year=my_year,
-                                                   specific_revenue_source_id=my_id,
-                                                   organization=my_organization,
-                                                   reported_value=None,
-                                                   report_by=user)
-        return SummaryRevenues.objects.filter(organization_id=user_org.id,
-                                              year=my_year,
-                                              specific_revenue_source__agency_classification=my_classification,
-                                              specific_revenue_source__government_type=my_government_type,
-                                              specific_revenue_source__funding_type=my_funding_type).order_by('specific_revenue_source__order_in_summary')
+                    revenue.objects.create(year=my_year,
+                                           revenue_source_id=my_id,
+                                           organization=my_organization,
+                                           reported_value=None,
+                                           report_by=user)
+        return revenue.objects.filter(organization_id=user_org.id,
+                                      year=my_year,
+                                      revenue_source__agency_classification=my_classification,
+                                      revenue_source__government_type=my_government_type,
+                                      revenue_source__funding_type=my_funding_type).order_by('revenue_source__order_in_summary')
 
     # Function end
 
@@ -995,10 +995,10 @@ def report_revenues(request, year=None, funding_type=None, government_type=None)
 
         return output
 
-    excluded_fields_and_values_dict = {'specific_revenue_source__government_type': government_type,
-                                       'specific_revenue_source__funding_type': funding_type}
+    excluded_fields_and_values_dict = {'revenue_source__government_type': government_type,
+                                       'revenue_source__funding_type': funding_type}
 
-    other_revenue = get_grand_total_not_including_current_form(SummaryRevenues, 'reported_value', excluded_fields_and_values_dict)
+    other_revenue = get_grand_total_not_including_current_form(revenue, 'reported_value', excluded_fields_and_values_dict)
 
     formsets = {}
     if request.method == 'POST':
@@ -1013,7 +1013,7 @@ def report_revenues(request, year=None, funding_type=None, government_type=None)
         for key, value in query_sets.items():
             formsets[key] = my_formset_factory(queryset=value, prefix=key)
 
-    return render(request, 'pages/summary/report_revenues.html', {'formsets': formsets,
+    return render(request, 'pages/summary/report_revenue.html', {'formsets': formsets,
                                                                   'form_range': range(len(formsets['this_year'])),
                                                                   'all_funding_types': all_funding_types,
                                                                   'funding_type': funding_type,
@@ -1032,16 +1032,16 @@ def report_expenses(request, year=None):
     previous_year = year - 1
     two_years_ago = year - 2
 
-    my_formset_factory = modelformset_factory(model=SummaryExpenses,
+    my_formset_factory = modelformset_factory(model=expense,
                                               form=summary_expense_form,
                                               extra=0)
 
     #Function start TODO move this
     def get_or_create_summary_expenses_queryset(target_year, user_organization, user):
-        source_ids = list(SummaryExpenses.objects.filter(organization_id=user_org.id,
-                                                         year=target_year).values_list('specific_expense_source_id', flat=True))
+        source_ids = list(expense.objects.filter(organization_id=user_org.id,
+                                                 year=target_year).values_list('expense_source_id', flat=True))
 
-        all_expense_sources = list(expenses_source.objects.values_list("id", flat=True))
+        all_expense_sources = list(expense_source.objects.values_list("id", flat=True))
 
         if len(source_ids) != len(all_expense_sources):
             missing_ids = list(set(all_expense_sources) - set(source_ids))
@@ -1049,14 +1049,14 @@ def report_expenses(request, year=None):
 
             with transaction.atomic():
                 for my_id in missing_ids:
-                    SummaryExpenses.objects.create(year=target_year,
-                                                   specific_expense_source_id=my_id,
-                                                   organization=user_organization,
-                                                   reported_value=None,
-                                                   report_by=user
-                                                   )
-        return SummaryExpenses.objects.filter(organization_id=user_org.id,
-                                              year=target_year).order_by('specific_expense_source').all()
+                    expense.objects.create(year=target_year,
+                                           expense_source_id=my_id,
+                                           organization=user_organization,
+                                           reported_value=None,
+                                           report_by=user
+                                           )
+        return expense.objects.filter(organization_id=user_org.id,
+                                      year=target_year).order_by('expense_source').all()
     #Function end
 
     query_sets = {'this_year': get_or_create_summary_expenses_queryset(year, user_org, request.user),
@@ -1093,14 +1093,14 @@ def ending_balances(request, year=None):
     previous_year = year - 1
     two_years_ago = year - 2
 
-    my_formset_factory = modelformset_factory(model=summary_fund_balance,
+    my_formset_factory = modelformset_factory(model=fund_balance,
                                               form=fund_balance_form,
                                               extra=0)
 
     #Function start TODO move this and turn into generic function
     def get_or_create_fund_balance_queryset(target_year, user_organization, user):
-        source_ids = list(summary_fund_balance.objects.filter(organization_id=user_org.id,
-                                                              year=target_year).values_list('specific_fund_balance_type_id', flat=True))
+        source_ids = list(fund_balance.objects.filter(organization_id=user_org.id,
+                                                      year=target_year).values_list('fund_balance_type_id', flat=True))
 
         all_fund_balance_types = list(fund_balance_type.objects.values_list("id", flat=True))
 
@@ -1110,14 +1110,14 @@ def ending_balances(request, year=None):
 
             with transaction.atomic():
                 for my_id in missing_ids:
-                    summary_fund_balance.objects.create(year=target_year,
-                                                        specific_fund_balance_type_id=my_id,
-                                                        organization=user_organization,
-                                                        reported_value=None,
-                                                        report_by=user
-                                                        )
-        return summary_fund_balance.objects.filter(organization_id=user_org.id,
-                                                   year=target_year).order_by('specific_fund_balance_type').all()
+                    fund_balance.objects.create(year=target_year,
+                                                fund_balance_type_id=my_id,
+                                                organization=user_organization,
+                                                reported_value=None,
+                                                report_by=user
+                                                )
+        return fund_balance.objects.filter(organization_id=user_org.id,
+                                           year=target_year).order_by('fund_balance_type').all()
     #Function end
 
     query_sets = {'this_year': get_or_create_fund_balance_queryset(year, user_org, request.user),
@@ -1177,13 +1177,13 @@ class DataEntryType:
 
     def get_model(self):
         if self.type == "revenue":
-            return SummaryRevenues
+            return revenue
         elif self.type == "transit_data":
-            return SummaryTransitData
-        elif self.type == "expenses":
-            return SummaryExpenses
+            return transit_data
+        elif self.type == "expense":
+            return expense
         elif self.type == "ending_balances":
-            return summary_fund_balance
+            return fund_balance
         else:
             raise Http404("Report type does not exist.")
 
@@ -1192,20 +1192,20 @@ class DataEntryType:
             return revenue_source
         elif self.type == "transit_data":
             return transit_metrics,
-        elif self.type == "expenses":
-            return expenses_source
+        elif self.type == "expense":
+            return expense_source
         elif self.type == "ending_balances":
             return fund_balance_type
         else:
             raise Http404("Report type does not exist.")
 
-    def get_metric_id_field_name(self):
+    def get_transit_metric_id_field_name(self):
         if self.type == "revenue":
-            return 'specific_revenue_source_id'
+            return 'revenue_source_id'
         elif self.type == "transit_data":
             return transit_metrics,
-        elif self.type == "expenses":
-            return expenses_source
+        elif self.type == "expense":
+            return expense_source
         elif self.type == "ending_balances":
             return fund_balance_type
         else:
@@ -1213,16 +1213,16 @@ class DataEntryType:
 
     def confirm_form_complete(self, target_organization, year):
         metric_model = self.get_metric_model()
-        field_id = self.get_metric_id_field_name()
-        current_metric_ids = list(metric_model.objects.filter(organization=target_organization,
+        field_id = self.get_transit_metric_id_field_name()
+        current_transit_metric_ids = list(metric_model.objects.filter(organization=target_organization,
                                                               year=year).values_list(field_id, flat=True))
 
         if self.type in ["revenue", "tranist_data"]:
-            all_metric_ids = list(revenue_source.objects.filter(agency_classification=target_organization.summary_organization_classifications).values_list("id", flat=True))
+            all_transit_metric_ids = list(revenue_source.objects.filter(agency_classification=target_organization.summary_organization_classifications).values_list("id", flat=True))
 
 
 #
-# all_revenue_sources = list(revenue_source.objects.filter(agency_classification=my_classification).values_list("id", flat=True))
+# all_revenue_sources = list(name.objects.filter(agency_classification=my_classification).values_list("id", flat=True))
 # source_ids = [idx for idx in source_ids if idx in all_revenue_sources]
 #
 # if len(source_ids) != len(all_revenue_sources):
@@ -1230,8 +1230,8 @@ class DataEntryType:
 #
 #     with transaction.atomic():
 #         for my_id in missing_ids:
-#             SummaryRevenues.objects.create(year=my_year,
-#                                            specific_revenue_source_id=my_id,
+#             revenue.objects.create(year=my_year,
+#                                            revenue_source_id=my_id,
 #                                            organization=my_organization,
 #                                            reported_value=None,
 #                                            report_by=user)
@@ -1250,7 +1250,7 @@ def summary_reporting(request, report_type=None, year=None, filter_type_1=None, 
     two_years_ago = year - 2
 
     if report_type is None or report_type == "revenue":
-        target_model = SummaryRevenues
+        target_model = revenue
         target_form = summary_revenue_form
 
         if filter_type_1 is None:
@@ -1262,7 +1262,7 @@ def summary_reporting(request, report_type=None, year=None, filter_type_1=None, 
 
     elif report_type == "transit_data":
         pass
-    elif report_type == "expenses":
+    elif report_type == "expense":
         pass
     elif report_type == "ending_balances":
         pass
@@ -1277,8 +1277,8 @@ def summary_reporting(request, report_type=None, year=None, filter_type_1=None, 
 
 
     def get_or_create_summary_revenue_queryset(my_year, my_organization, user, my_classification, my_filter_type_1, my_filter_type_2):
-        source_ids = list(SummaryRevenues.objects.filter(organization_id=user_org.id,
-                                                         year=my_year).values_list('specific_revenue_source_id', flat=True))
+        source_ids = list(revenue.objects.filter(organization_id=user_org.id,
+                                                 year=my_year).values_list('revenue_source_id', flat=True))
         all_revenue_sources = list(revenue_source.objects.filter(agency_classification=my_classification).values_list("id", flat=True))
         source_ids = [idx for idx in source_ids if idx in all_revenue_sources]
 
@@ -1287,16 +1287,16 @@ def summary_reporting(request, report_type=None, year=None, filter_type_1=None, 
 
             with transaction.atomic():
                 for my_id in missing_ids:
-                    SummaryRevenues.objects.create(year=my_year,
-                                                   specific_revenue_source_id=my_id,
-                                                   organization=my_organization,
-                                                   reported_value=None,
-                                                   report_by=user)
-        return SummaryRevenues.objects.filter(organization_id=user_org.id,
-                                              year=my_year,
-                                              specific_revenue_source__agency_classification=my_classification,
-                                              specific_revenue_source__government_type=my_filter_type_2,
-                                              specific_revenue_source__funding_type=my_filter_type_1).order_by('specific_revenue_source__order_in_summary')
+                    revenue.objects.create(year=my_year,
+                                           revenue_source_id=my_id,
+                                           organization=my_organization,
+                                           reported_value=None,
+                                           report_by=user)
+        return revenue.objects.filter(organization_id=user_org.id,
+                                      year=my_year,
+                                      revenue_source__agency_classification=my_classification,
+                                      revenue_source__government_type=my_filter_type_2,
+                                      revenue_source__funding_type=my_filter_type_1).order_by('revenue_source__order_in_summary')
 
     # Function end
 
@@ -1319,8 +1319,8 @@ def summary_reporting(request, report_type=None, year=None, filter_type_1=None, 
 
         return output
 
-    excluded_fields_and_values_dict = {'specific_revenue_source__government_type': filter_type_2,
-                                       'specific_revenue_source__funding_type': filter_type_1}
+    excluded_fields_and_values_dict = {'revenue_source__government_type': filter_type_2,
+                                       'revenue_source__funding_type': filter_type_1}
 
     other_revenue = get_grand_total_not_including_current_form(target_model, 'reported_value', excluded_fields_and_values_dict)
 
@@ -1337,7 +1337,7 @@ def summary_reporting(request, report_type=None, year=None, filter_type_1=None, 
         for key, value in query_sets.items():
             formsets[key] = my_formset_factory(queryset=value, prefix=key)
 
-    return render(request, 'pages/summary/report_revenues.html', {'formsets': formsets,
+    return render(request, 'pages/summary/report_revenue.html', {'formsets': formsets,
                                                                   'form_range': range(len(formsets['this_year'])),
                                                                   'all_funding_types': all_filter_types,
                                                                   'funding_type': filter_type_1,

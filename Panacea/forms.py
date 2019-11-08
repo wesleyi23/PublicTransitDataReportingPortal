@@ -13,8 +13,8 @@ from .models import custom_user, \
     vanpool_report, \
     vanpool_expansion_analysis, \
     cover_sheet, \
-    SummaryRevenues, SummaryExpenses, SummaryTransitData, revenue_source, transit_mode, ServiceOffered, transit_metrics, \
-    expenses_source, summary_fund_balance, fund_balance_type
+    revenue, expense, transit_data, revenue_source, transit_mode, service_offered, transit_metrics, \
+    expense_source, fund_balance, fund_balance_type
 from django.utils.translation import gettext, gettext_lazy as _
 from phonenumber_field.formfields import PhoneNumberField
 from localflavor.us.forms import USStateSelect, USZipCodeField
@@ -609,11 +609,11 @@ class cover_sheet_organization(forms.ModelForm):
 class service_offered(forms.ModelForm):
 
     class Meta:
-        model = ServiceOffered
-        fields = ['administration_of_mode', 'mode']
+        model = service_offered
+        fields = ['administration_of_mode', 'transit_mode']
         widgets = {
-            'mode': forms.Select( choices=transit_mode.objects.all(), attrs={'class': 'form-control'}),
-            'administration_of_mode': forms.Select(choices=ServiceOffered.DO_OR_PT, attrs={'class': 'form-control'})
+            'transit_mode': forms.Select(choices=transit_mode.objects.all(), attrs={'class': 'form-control'}),
+            'administration_of_mode': forms.Select(choices=service_offered.DO_OR_PT, attrs={'class': 'form-control'})
         }
 
 
@@ -648,12 +648,12 @@ class BaseRevenueForm(BaseFormSet):
 class summary_expense_form(forms.ModelForm):
 
     id = forms.IntegerField(disabled=True)
-    specific_expense_source = forms.ModelChoiceField(disabled=True, queryset=expenses_source.objects.all())
+    expense_source = forms.ModelChoiceField(disabled=True, queryset=expense_source.objects.all())
     year = forms.IntegerField(disabled=True)
 
     class Meta:
-        model = SummaryExpenses
-        fields = ["id", "specific_expense_source", "year", "reported_value", "comments"]
+        model = expense
+        fields = ["id", "expense_source", "year", "reported_value", "comments"]
         widgets = {
             'reported_value': forms.TextInput(attrs={'class': 'form-control'}),
             'comments': forms.Textarea(attrs={'class': 'form-control', "rows": 3}),
@@ -663,12 +663,12 @@ class summary_expense_form(forms.ModelForm):
 class fund_balance_form(forms.ModelForm):
 
     id = forms.IntegerField(disabled=True)
-    specific_fund_balance_type = forms.ModelChoiceField(disabled=True, queryset=fund_balance_type.objects.all())
+    fund_balance_type = forms.ModelChoiceField(disabled=True, queryset=fund_balance_type.objects.all())
     year = forms.IntegerField(disabled=True)
 
     class Meta:
-        model = summary_fund_balance
-        fields = ["id", "specific_fund_balance_type", "year", "reported_value", "comments"]
+        model = fund_balance
+        fields = ["id", "fund_balance_type", "year", "reported_value", "comments"]
         widgets = {
             'reported_value': forms.TextInput(attrs={'class': 'form-control'}),
             'comments': forms.Textarea(attrs={'class': 'form-control', "rows": 3}),
@@ -678,12 +678,12 @@ class fund_balance_form(forms.ModelForm):
 class summary_revenue_form(forms.ModelForm):
 
     id = forms.IntegerField(disabled=True)
-    specific_revenue_source = forms.ModelChoiceField(disabled=True, queryset=revenue_source.objects.all())
+    revenue_source = forms.ModelChoiceField(disabled=True, queryset=revenue_source.objects.all())
     year = forms.IntegerField(disabled=True)
 
     class Meta:
-        model = SummaryRevenues
-        fields = ["id", "specific_revenue_source", "year", "reported_value", "comments"]
+        model = revenue
+        fields = ["id", "revenue_source", "year", "reported_value", "comments"]
         queryset = revenue_source.objects.all()
         widgets = {
             'reported_value': forms.TextInput(attrs={'class': 'form-control grand-total-sum', 'onblur': 'findTotal_wrapper()'}),
@@ -698,8 +698,8 @@ class transit_data_form(forms.ModelForm):
     year = forms.IntegerField(disabled=True)
 
     class Meta:
-        model = SummaryTransitData
-        fields = ['id', 'metric', 'year', 'reported_value', 'comments']
+        model = transit_data
+        fields = ['id', 'transit_metric', 'year', 'reported_value', 'comments']
         widgets = {
             'reported_value': forms.TextInput(attrs={'class': 'form-control'}),
             'comments': forms.Textarea(attrs={'class': 'form-control', "rows": 3}),
@@ -739,7 +739,7 @@ class transit_data_form(forms.ModelForm):
 #
 #     def save(self, commit=True):
 #         instance = super().save(commit=False)
-#         instance.specific_expense_source_id = self.source_id
+#         instance.expense_source_id = self.source_id
 #         instance.organization = find_user_organization(self.my_user.id)
 #         instance.year = self.year
 #         instance.report_by = self.my_user

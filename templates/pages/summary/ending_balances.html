@@ -32,7 +32,7 @@
                             <a class="nav-link" href="{% url 'report_transit_data' %}">Transit data</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{% url 'report_revenues' %}">Revenues</a>
+                            <a class="nav-link" href="{% url 'report_revenue' %}">revenue</a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" href="{% url 'report_expenses' %}">Expenses</a>
@@ -67,10 +67,10 @@
 
                             {% for form_x in formsets.this_year; form_y in formsets.previous_year; form_z in formsets.two_years_ago %}
                                 <tr>
-                                    <td class="align-top" style="max-width: 5rem">{% if form_x.instance.specific_fund_balance_type %}
-                                        {{ form_x.instance.specific_fund_balance_type }}
+                                    <td class="align-top" style="max-width: 5rem">{% if form_x.instance.fund_balance_type %}
+                                        {{ form_x.instance.fund_balance_type }}
                                     {% else %}
-                                        {{ form_x.data.specific_fund_balance_type }}
+                                        {{ form_x.data.fund_balance_type }}
                                     {% endif %}</td>
                                     <td class="two-years-ago summary-input align-top AutoNumeric-Money" >{{ form_z.reported_value }}</td>
                                     <td class="two-years-ago comments align-top" >{{ form_z.comments }}</td>
@@ -79,9 +79,9 @@
                                     <td class="this-year summary-input align-top AutoNumeric-Money" >{{ form_x.reported_value }}</td>
                                     <td class="this-year comments align-top" >{{ form_x.comments }}</td>
                                     <td>Errors</td>
-                                    <td style="display: none">{{ form_x.specific_fund_balance_type}}
-                                        {{ form_y.specific_fund_balance_type }}
-                                        {{ form_z.specific_fund_balance_type }}
+                                    <td style="display: none">{{ form_x.fund_balance_type}}
+                                        {{ form_y.fund_balance_type }}
+                                        {{ form_z.fund_balance_type }}
                                         {{ form_x.id}}
                                         {{ form_y.id }}
                                         {{ form_z.id }}

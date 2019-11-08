@@ -32,7 +32,7 @@
                             <a class="nav-link" href="{% url 'report_transit_data' %}">Transit data</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link active" href="{% url 'report_revenues' %}">Revenues</a>
+                            <a class="nav-link active" href="{% url 'report_revenue' %}">revenue</a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" href="{% url 'report_expenses' %}">Expenses</a>
@@ -55,7 +55,7 @@
                             {% if type.funding_type == funding_type and type.government_type == government_type %}
                                 <a class="nav-link disabled" href="#">{{ type.government_type }} - {{ type.funding_type }}</a>
                             {% else %}
-                                <a class="nav-link" href="{% url 'report_revenues' %}/{{ year }}/{{ type.funding_type }}/{{ type.government_type }}">{{ type.government_type }} - {{ type.funding_type }}</a>
+                                <a class="nav-link" href="{% url 'report_revenue' %}/{{ year }}/{{ type.funding_type }}/{{ type.government_type }}">{{ type.government_type }} - {{ type.funding_type }}</a>
                             {% endif %}
                         </li>
                     {% endfor %}
@@ -85,10 +85,10 @@
 
                             {% for form_x in formsets.this_year; form_y in formsets.previous_year; form_z in formsets.two_years_ago %}
                                 <tr>
-                                    <td class="align-top" style="max-width: 5rem">{% if form_x.instance.specific_revenue_source %}
-                                        {{ form_x.instance.specific_revenue_source }}
+                                    <td class="align-top" style="max-width: 5rem">{% if form_x.instance.revenue_source %}
+                                        {{ form_x.instance.revenue_source }}
                                     {% else %}
-                                        {{ form_x.data.specific_revenue_source }}
+                                        {{ form_x.data.revenue_source }}
                                     {% endif %}</td>
                                     <td class="two-years-ago summary-input align-top AutoNumeric-Money" >{{ form_z.reported_value}}</td>
                                     <td class="two-years-ago comments align-top" >{{ form_z.comments }}</td>
@@ -97,9 +97,9 @@
                                     <td class="this-year summary-input align-top AutoNumeric-Money" >{{ form_x.reported_value }}</td>
                                     <td class="this-year comments align-top" >{{ form_x.comments }}</td>
                                     <td>Errors</td>
-                                    <td style="display: none">{{ form_x.specific_revenue_source}}
-                                        {{ form_y.specific_revenue_source }}
-                                        {{ form_z.specific_revenue_source }}
+                                    <td style="display: none">{{ form_x.revenue_source}}
+                                        {{ form_y.revenue_source }}
+                                        {{ form_z.revenue_source }}
                                         {{ form_x.id}}
                                         {{ form_y.id }}
                                         {{ form_z.id }}

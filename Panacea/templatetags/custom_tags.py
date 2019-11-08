@@ -138,8 +138,8 @@ def index(sequence, position):
 
 
 @register.filter
-def transit_mode_from_id(mode_id):
-    mode_name = transit_mode.objects.get(id=mode_id).mode
+def transit_mode_from_id(transit_mode_id):
+    mode_name = transit_mode.objects.get(id=transit_mode_id).mode
     return mode_name
 
 
