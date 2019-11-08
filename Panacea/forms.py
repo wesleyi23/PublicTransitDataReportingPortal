@@ -14,7 +14,7 @@ from .models import custom_user, \
     vanpool_expansion_analysis, \
     cover_sheet, \
     SummaryRevenues, SummaryExpenses, SummaryTransitData, revenue_source, transit_mode, ServiceOffered, transit_metrics, \
-    expenses_source
+    expenses_source, summary_fund_balance, fund_balance_type
 from django.utils.translation import gettext, gettext_lazy as _
 from phonenumber_field.formfields import PhoneNumberField
 from localflavor.us.forms import USStateSelect, USZipCodeField
@@ -653,9 +653,24 @@ class summary_expense_form(forms.ModelForm):
 
     class Meta:
         model = SummaryExpenses
-        fields = ["id", "specific_expense_source", "year", "specific_expense_value", "comments"]
+        fields = ["id", "specific_expense_source", "year", "reported_value", "comments"]
         widgets = {
-            'specific_expense_value': forms.TextInput(attrs={'class': 'form-control'}),
+            'reported_value': forms.TextInput(attrs={'class': 'form-control'}),
+            'comments': forms.Textarea(attrs={'class': 'form-control', "rows": 3}),
+        }
+
+
+class fund_balance_form(forms.ModelForm):
+
+    id = forms.IntegerField(disabled=True)
+    specific_fund_balance_type = forms.ModelChoiceField(disabled=True, queryset=fund_balance_type.objects.all())
+    year = forms.IntegerField(disabled=True)
+
+    class Meta:
+        model = summary_fund_balance
+        fields = ["id", "specific_fund_balance_type", "year", "reported_value", "comments"]
+        widgets = {
+            'reported_value': forms.TextInput(attrs={'class': 'form-control'}),
             'comments': forms.Textarea(attrs={'class': 'form-control', "rows": 3}),
         }
 
@@ -668,10 +683,10 @@ class summary_revenue_form(forms.ModelForm):
 
     class Meta:
         model = SummaryRevenues
-        fields = ["id", "specific_revenue_source", "year", "specific_revenue_value", "comments"]
+        fields = ["id", "specific_revenue_source", "year", "reported_value", "comments"]
         queryset = revenue_source.objects.all()
         widgets = {
-            'specific_revenue_value': forms.TextInput(attrs={'class': 'form-control grand-total-sum', 'onblur': 'findTotal()'}),
+            'reported_value': forms.TextInput(attrs={'class': 'form-control grand-total-sum', 'onblur': 'findTotal_wrapper()'}),
             'comments': forms.Textarea(attrs={'class': 'form-control', "rows": 3}),
         }
 
@@ -684,9 +699,9 @@ class transit_data_form(forms.ModelForm):
 
     class Meta:
         model = SummaryTransitData
-        fields = ['id', 'metric', 'year', 'metric_value', 'comments']
+        fields = ['id', 'metric', 'year', 'reported_value', 'comments']
         widgets = {
-            'metric_value': forms.TextInput(attrs={'class': 'form-control'}),
+            'reported_value': forms.TextInput(attrs={'class': 'form-control'}),
             'comments': forms.Textarea(attrs={'class': 'form-control', "rows": 3}),
         }
 

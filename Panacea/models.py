@@ -315,7 +315,7 @@ class revenue_source(models.Model):
     order_in_summary = models.IntegerField(null=True, blank=True)
     government_type = models.CharField(max_length=100, choices=LEVIATHANS, null=True, blank=True)
     funding_type = models.CharField(max_length=30, choices=FUNDING_KIND, null=True, blank=True)
-    agency_funding_classification  =  models.CharField(max_length= 30, null=True, blank=True)
+    agency_classification  =  models.CharField(max_length= 30, null=True, blank=True)
     def __str__(self):
         return self.specific_revenue_source
 
@@ -372,7 +372,7 @@ class SummaryTransitData(models.Model):
     rollup_mode = models.ForeignKey(rollup_mode, on_delete=models.PROTECT,  related_name='+')
     administration_of_mode = models.CharField(max_length=80, choices=DO_OR_PT)
     metric = models.ForeignKey(transit_metrics, on_delete=models.PROTECT, related_name='+')
-    metric_value = models.FloatField(blank=True, null=True)
+    reported_value = models.FloatField(blank=True, null=True)
     report_by = models.ForeignKey(custom_user, on_delete=models.PROTECT, blank=True, null=True)
     comments = models.TextField(blank=True, null=True)
     history = HistoricalRecords()
@@ -382,7 +382,7 @@ class SummaryRevenues(models.Model):
     organization = models.ForeignKey(organization, on_delete=models.PROTECT, related_name='+')
     year = models.IntegerField()
     specific_revenue_source = models.ForeignKey(revenue_source, on_delete=models.PROTECT, related_name='+')
-    specific_revenue_value = models.FloatField(null=True, blank=True)
+    reported_value = models.FloatField(null=True, blank=True)
     report_by = models.ForeignKey(custom_user, on_delete=models.PROTECT, blank=True, null=True)
     comments = models.TextField(blank=True, null=True)
     history = HistoricalRecords()
@@ -398,7 +398,7 @@ class SummaryExpenses(models.Model):
     organization = models.ForeignKey(organization, on_delete=models.PROTECT, related_name='+')
     year = models.IntegerField()
     specific_expense_source = models.ForeignKey(expenses_source, on_delete=models.PROTECT, related_name='+')
-    specific_expense_value = models.IntegerField(blank=True, null=True)
+    reported_value = models.IntegerField(blank=True, null=True)
     report_by = models.ForeignKey(custom_user, on_delete=models.PROTECT, blank=True, null=True)
     comments = models.TextField(blank=True, null=True)
     history = HistoricalRecords()
@@ -413,7 +413,7 @@ class fund_balance_type(models.Model):
     specific_fund_balance_type = models.CharField(max_length=100)
 
     def __str__(self):
-        return self.specific_expense_source
+        return self.specific_fund_balance_type
 
 
 class summary_fund_balance(models.Model):
@@ -421,7 +421,7 @@ class summary_fund_balance(models.Model):
     organization = models.ForeignKey(organization, on_delete=models.PROTECT, related_name='+')
     year = models.IntegerField()
     specific_fund_balance_type = models.ForeignKey(fund_balance_type, on_delete=models.PROTECT, related_name='+')
-    specific_fund_balance_value = models.IntegerField(blank=True, null=True)
+    reported_value = models.IntegerField(blank=True, null=True)
     report_by = models.ForeignKey(custom_user, on_delete=models.PROTECT, blank=True, null=True)
     comments = models.TextField(blank=True, null=True)
     history = HistoricalRecords()
@@ -433,7 +433,7 @@ class summary_fund_balance(models.Model):
 
 
 class subfundExpenses(models.Model):
-    specific_expense_value = models.ForeignKey(SummaryExpenses, on_delete=models.PROTECT, related_name='+')
+    reported_value = models.ForeignKey(SummaryExpenses, on_delete=models.PROTECT, related_name='+')
     subfund_specification = models.TextField(blank=False, null=True)
 
 
@@ -476,7 +476,7 @@ class ServiceOffered(models.Model):
 
 
 class depreciation(models.Model):
-    depreciation = models.IntegerField(blank =False, null=True)
+    reported_value = models.IntegerField(blank =False, null=True)
     year = models.IntegerField(blank=True, null=True)
     organization = models.ForeignKey(organization, on_delete=models.PROTECT, blank=True, null=True)
     report_by = models.ForeignKey(custom_user, on_delete=models.PROTECT, blank=True, null=True)

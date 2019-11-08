@@ -57,7 +57,7 @@ urlpatterns = [
     path('summary/ntd_upload/', views.ntd_upload, name="ntd_upload"),
     path('summary/cover_sheets/organization', views.cover_sheet_organization_view, name="cover_sheets_organization"),
     path('summary/cover_sheets/service', views.cover_sheet_service_view, name="cover_sheets_service"),
-    path('summary/report_data/', views.summary_report_data, name='summary_report_data'),
+    path('summary/report_data/instructions', views.summary_report_data, name='summary_report_data'),
     path('summary/report_data/confirm_mode', views.summary_modes, name='summary_modes'),
     path('summary/report_data/delete_mode/<mode>/<admin_of_mode>', views.delete_summary_mode, name='delete_summary_mode'),
     path('summary/report_data/delete_mode/', views.delete_summary_mode, name='delete_summary_mode_root'),
@@ -70,8 +70,12 @@ urlpatterns = [
     path('summary/report_data/report_expenses/', views.report_expenses, name='report_expenses'),
     path('summary/report_data/report_expenses/<int:year>', views.report_expenses, name='report_expenses_year'),
     path('summary/report_data/report_expenses/<int:year>/<funding_type>', views.report_expenses, name='report_expenses_year_mode'),
-    path('summary/report_data/report_expenses/', views.ending_balances, name='ending_balances'),
+    path('summary/report_data/ending_balances/', views.ending_balances, name='ending_balances'),
     path('summary/report_data/review_data', views.review_data, name='review_data'),
+    path('summary/report_data/', views.summary_reporting, name='summary_reporting'),
+    path('summary/report_data/<report_type>', views.summary_reporting, name='summary_reporting_report_type'),
+    path('summary/report_data/<report_type>/<int:year>', views.report_revenues, name='summary_reporting_year'),
+    path('summary/report_data/<report_type>/<int:year>/<filter_type_1>/<filter_type_2>', views.report_revenues, name='summary_reporting_year_type'),
    # path('summary/test', views.test, name='test'),
 
 ]
