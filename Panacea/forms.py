@@ -325,7 +325,6 @@ class VanpoolMonthlyReport(forms.ModelForm):
                                                          report_year=report_year,
                                                          report_month=report_month).values(category)
                 old_data = old_data[0][category]
-                print(old_data)
 
                 # Should not happen but in case there is old data that is missing a value (came up during testing)
                 if old_data is None:
@@ -662,7 +661,9 @@ class cover_sheet_service(forms.ModelForm):
 
 
 
-class BaseRevenueForm(BaseFormSet):
+class FormsetCleaner(BaseFormSet):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
     def clean(self):
         """
         Adds validation to check that no two links have the same anchor or URL
@@ -709,6 +710,8 @@ class transit_data_form(forms.ModelForm):
     metric = forms.ModelChoiceField(disabled=True, queryset=transit_metrics.objects.all())
     year = forms.IntegerField(disabled=True)
 
+    def clean(self):
+       print(self.cleaned_data)
     class Meta:
         model = SummaryTransitData
         fields = ['id', 'metric', 'year', 'metric_value', 'comments']

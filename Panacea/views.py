@@ -39,7 +39,7 @@ from .forms import CustomUserCreationForm, \
     statewide_summary_settings, \
     Modify_A_Vanpool_Expansion, organisation_summary_settings, organization_information, cover_sheet_service, \
     cover_sheet_organization, \
-    summary_revenue_form, BaseRevenueForm, summary_expense_form, service_offered, transit_data_form
+    summary_revenue_form, summary_expense_form, service_offered, transit_data_form, FormsetCleaner
 
 from .models import profile, vanpool_report, custom_user, vanpool_expansion_analysis, organization, cover_sheet, \
     SummaryRevenues, SummaryTransitData, SummaryExpenses, expenses_source, ServiceOffered, revenue_source, \
@@ -918,8 +918,6 @@ def report_transit_data(request, year=None, service=None):
                     form.save()
             else:
                 print(formsets[key].errors)
-
-    print(active_service)
 
     return render(request, 'pages/summary/report_transit_data.html', {'formsets': formsets,
                                                                       'form_range': range(len(formsets['this_year'])),

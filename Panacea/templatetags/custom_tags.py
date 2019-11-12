@@ -5,6 +5,7 @@ from Panacea.models import organization, transit_mode
 register = template.Library()
 
 
+
 @register.filter
 def in_category(things, category):
     things = [i for i in things if i.year == category]
