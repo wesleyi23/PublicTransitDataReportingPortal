@@ -82,6 +82,22 @@ class ReportType(models.Model):
     report_owner = models.ForeignKey(custom_user, on_delete=models.PROTECT, blank=True, null=True)
 
 
+class summary_organization_type(models.Model):
+    ORGANIZATION_TYPES = (
+        ("Community provider", "Community provider"),
+        ("Ferry", "Ferry"),
+        ("Intercity bus", "Intercity bus"),
+        ("Medicaid broker", "Medicaid broker"),
+        ("Monorail", "Monorail"),
+        ("Transit", "Transit"),
+        ("Tribe", "Tribe"),
+    )
+
+    name = models.CharField(max_length=120, choices=ORGANIZATION_TYPES)
+
+    def __str__(self):
+        return self.name
+
 
 class organization(models.Model):
     AGENCY_CLASSIFICATIONS = (
@@ -116,7 +132,7 @@ class organization(models.Model):
     # TODO add to agency profile form
     in_jblm_area = models.BooleanField(blank=True, null=True)  # TODO confirm this is no longer needed
     in_puget_sound_area = models.BooleanField(blank=True, null=True)
-    summary_organization_classifications = models.CharField(max_length=50, choices=SUMMARY_ORG_CLASSIFICATIONS, blank=True, null=True)
+    summary_organization_classifications = models.ForeignKey(summary_organization_type, on_delete=models.PROTECT, blank=True, null=True)
     #fixed_route_expansion = models.BooleanField(blank=True, null=True)
 
 
@@ -315,7 +331,7 @@ class revenue_source(models.Model):
     order_in_summary = models.IntegerField(null=True, blank=True)
     government_type = models.CharField(max_length=100, choices=LEVIATHANS, null=True, blank=True)
     funding_type = models.CharField(max_length=30, choices=FUNDING_KIND, null=True, blank=True)
-    agency_classification = models.CharField(max_length= 30, null=True, blank=True)
+    agency_classification = models.ManyToManyField(summary_organization_type, blank=True)
 
     def __str__(self):
         return self.name
@@ -369,7 +385,7 @@ class transit_metrics(models.Model):
     )
 
     name = models.CharField(max_length=120)
-    agency_classification = models.CharField(max_length=80, null=True, blank=True)
+    agency_classification = models.ManyToManyField(summary_organization_type, blank=True)
     order_in_summary = models.IntegerField(null=True, blank=True)
     form_masking_class = models.CharField(max_length=25, choices=FORM_MASKING_CLASSES, null=True, blank=True)
 

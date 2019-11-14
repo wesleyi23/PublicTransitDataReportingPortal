@@ -5,7 +5,7 @@ from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
 from django.db import transaction
 from django.db.models import Min, Sum, Avg
-from django.forms import formset_factory, modelformset_factory
+from django.forms import formset_factory, modelformset_factory, BaseModelFormSet, ModelForm
 from django.http import JsonResponse
 from django.shortcuts import render, redirect
 from django.db.models.functions import datetime
@@ -22,6 +22,7 @@ from .filters import VanpoolExpansionFilter
 from django.conf import settings
 from .emails import send_user_registration_email, notify_user_that_permissions_have_been_requested, active_permissions_request_notification
 import base64
+from django import forms
 
 from .forms import CustomUserCreationForm, \
     custom_user_ChangeForm, \
@@ -44,7 +45,7 @@ from .forms import CustomUserCreationForm, \
 
 from .models import profile, vanpool_report, custom_user, vanpool_expansion_analysis, organization, cover_sheet, \
     revenue, transit_data, expense, expense_source, service_offered, revenue_source, \
-    transit_metrics, transit_mode, fund_balance, fund_balance_type
+    transit_metrics, transit_mode, fund_balance, fund_balance_type, summary_organization_type
 from django.contrib.auth.models import Group
 from .utilities import calculate_latest_vanpool, find_maximum_vanpool, calculate_remaining_months, calculate_if_goal_has_been_reached, \
     generate_summary_report_years, find_user_organization
@@ -1014,12 +1015,12 @@ def report_revenue(request, year=None, funding_type=None, government_type=None):
             formsets[key] = my_formset_factory(queryset=value, prefix=key)
 
     return render(request, 'pages/summary/report_revenue.html', {'formsets': formsets,
-                                                                  'form_range': range(len(formsets['this_year'])),
-                                                                  'all_funding_types': all_funding_types,
-                                                                  'funding_type': funding_type,
-                                                                  'government_type': government_type,
-                                                                  'year': year,
-                                                                  'other_revenue': other_revenue})
+                                                                 'form_range': range(len(formsets['this_year'])),
+                                                                 'all_funding_types': all_funding_types,
+                                                                 'funding_type': funding_type,
+                                                                 'government_type': government_type,
+                                                                 'year': year,
+                                                                 'other_revenue': other_revenue})
 
 
 @login_required(login_url='/Panacea/login')
@@ -1199,27 +1200,51 @@ class DataEntryType:
         else:
             raise Http404("Report type does not exist.")
 
-    def get_transit_metric_id_field_name(self):
+    def get_metric_id_field_name(self):
         if self.type == "revenue":
-            return 'revenue_source_id'
+            return "revenue_source_id"
         elif self.type == "transit_data":
-            return transit_metrics,
+            return "empty"
         elif self.type == "expense":
-            return expense_source
+            return "empty"
         elif self.type == "ending_balances":
-            return fund_balance_type
+            return "empty"
         else:
             raise Http404("Report type does not exist.")
 
-    def confirm_form_complete(self, target_organization, year):
+    def confirm_form_has_all_metrics(self, target_organization, year):
+        report_model = self.get_model()
         metric_model = self.get_metric_model()
-        field_id = self.get_transit_metric_id_field_name()
-        current_transit_metric_ids = list(metric_model.objects.filter(organization=target_organization,
-                                                              year=year).values_list(field_id, flat=True))
-
+        field_id = self.get_metric_id_field_name()
+        classification = target_organization.summary_organization_classifications
+        current_report_metric_ids = list(report_model.objects.filter(organization=target_organization,
+                                                                     year=year).values_list(field_id, flat=True).distinct())
+        #TODO move this logic into a many to many table
+        #TODO Nathan needs to check that this is correct.
         if self.type in ["revenue", "tranist_data"]:
-            all_transit_metric_ids = list(revenue_source.objects.filter(agency_classification=target_organization.summary_organization_classifications).values_list("id", flat=True))
+            if classification == "Transit":
+                all_organization_metris = metric_model.objects.filter(agency_classification__in=[classification, 'All'])
+            elif classification == "Community Provider":
+                pass
+            elif classification == "Ferry":
+                pass
+            elif classification == "Medicaid Broker":
+                pass
+            elif classification == "Intercity Bus":
+                pass
+            elif classification == "Tribe":
+                pass
+            elif classification == "Monorail":
+                pass
+            else:
+                raise ValueError("Invalid classification type")
 
+
+
+        else:
+            all_organization_metris = metric_model
+
+        all_organization_metris = list(all_organization_metris.objects.values_list("id", flat=True))
 
 #
 # all_revenue_sources = list(name.objects.filter(agency_classification=my_classification).values_list("id", flat=True))
@@ -1338,11 +1363,69 @@ def summary_reporting(request, report_type=None, year=None, filter_type_1=None, 
             formsets[key] = my_formset_factory(queryset=value, prefix=key)
 
     return render(request, 'pages/summary/report_revenue.html', {'formsets': formsets,
-                                                                  'form_range': range(len(formsets['this_year'])),
-                                                                  'all_funding_types': all_filter_types,
-                                                                  'funding_type': filter_type_1,
-                                                                  'government_type': filter_type_2,
-                                                                  'year': year,
-                                                                  'other_revenue': other_revenue})
+                                                                 'form_range': range(len(formsets['this_year'])),
+                                                                 'all_funding_types': all_filter_types,
+                                                                 'funding_type': filter_type_1,
+                                                                 'government_type': filter_type_2,
+                                                                 'year': year,
+                                                                 'other_revenue': other_revenue})
 
 
+
+def configure_agency_types(request, model=None):
+
+    if not model or model == "organization":
+        model = "organization"
+        my_model = organization
+        field_name = 'summary_organization_classifications'
+        other_field_list = []
+        one2one = True
+    elif model == "revenue_source":
+        my_model = revenue_source
+        field_name = 'agency_classification'
+        other_field_list = ['funding_type', 'government_type']
+        one2one = False
+    elif model == "transit_metrics":
+        my_model = transit_metrics
+        field_name = 'agency_classification'
+        other_field_list = []
+        one2one = False
+    else:
+        raise Http404("Cant find model")
+
+    if one2one:
+        my_widget = {'name': forms.TextInput(attrs={'class': 'form-control AJAX_instant_submit',
+                                                    'data-form-name': "summary_configure_agency_types"}),
+                     field_name: forms.Select(attrs={'class': 'form-control AJAX_instant_submit',
+                                                     'data-form-name': "summary_configure_agency_types"})}
+    else:
+        my_widget = {'name': forms.TextInput(attrs={'class': 'form-control'}),
+                     field_name: forms.CheckboxSelectMultiple(attrs={'class': 'form-check-inline no-bullet AJAX_instant_submit',
+                                                                     'data-form-name': "summary_configure_agency_types"})}
+
+    if len(other_field_list) > 0:
+        for i in other_field_list:
+            my_widget[i] = forms.Select(attrs={'class': 'form-control AJAX_instant_submit',
+                                               'data-form-name': "summary_configure_agency_types"})
+
+    formset_factory = modelformset_factory(my_model, form=ModelForm, formfield_callback=None,
+                                           formset=BaseModelFormSet, extra=0, can_delete=False,
+                                           can_order=False, max_num=None,
+                                           fields=['name', field_name] + other_field_list,
+                                           exclude=None,
+                                           widgets=my_widget,
+                                           validate_max=False, localized_fields=None,
+                                           labels=None, help_texts=None, error_messages=None,
+                                           min_num=None, validate_min=False, field_classes=None)
+
+    if request.method == 'POST':
+        formset = formset_factory(request.POST)
+        for form in formset:
+            if form.is_valid():
+                form.save()
+        return JsonResponse({'success': True})
+    else:
+        my_queryset = my_model.objects.all()
+        formset = formset_factory(queryset=my_queryset.select_related())
+        return render(request, 'pages/summary/configure_agency_types.html', {'formset': formset,
+                                                                             'model': model})

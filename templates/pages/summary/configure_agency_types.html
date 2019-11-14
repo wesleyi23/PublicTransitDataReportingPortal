@@ -9,8 +9,6 @@
 {% endblock %}
 
 {% block content %}
-    <div class="container-fluid">
-
     <!-- Page Heading -->
     <div class="row">
         <div class="col">
@@ -19,52 +17,51 @@
                 <div class="card-header">
                     <ul class="nav nav-tabs card-header-tabs">
                         <li class="nav-item">
-                            <a class="nav-link active" href="{% url 'Admin_assignPermissions' 'all'%}">All users</a>
+                            <a class="nav-link {% if model == 'organization' %} active {% endif %}" href="{% url 'summary_configure_agency_types' 'organization' %}">Organization</a>
                         </li>
                         <li class="nav-item">
-                            {% if active_requests %}
-                                <a class="nav-link" href="{% url 'Admin_assignPermissions' 'active'%}">Users with active requests</a>
-                            {% else %}
-                                <a class="nav-link disabled" href="#">No users with active requests</a>
-                            {% endif %}
+                            <a class="nav-link {% if model == 'revenue_source' %} active {% endif %}" href="{% url 'summary_configure_agency_types' 'revenue_source' %}">Revenue source</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if model == 'transit_metrics' %} active {% endif %}" href="{% url 'summary_configure_agency_types' 'transit_metrics' %}">Transit metrics</a>
                         </li>
                     </ul>
                 </div>
                 <div class="card-body">
-                    <div id="Admin_assignPermissions_all_err"></div>
-                    <form id="Admin_assignPermissions_all" action="{% url 'Admin_assignPermissions' 'active' %}" method="post" data-err-field="my-errField">
+                    <h3>Summary reporting admin</h3>
+                    <div id="summary_configure_agency_types-err"></div>
+                    <form id="summary_configure_agency_types" action="{% url 'summary_configure_agency_types'%}{{ model }}" method="post" data-err-field="my-errField">
                         {% csrf_token %}
-                        {{Admin_assignPermissions_all.management_form}}
+                        {{ formset.management_form }}
+
                         <div class=""></div>
                         <div class="dataTable_wrapper">
                             <table id="multi_select_datatable" class="table tdt-bootstrap4 dataTable dataTable_wrapper" >
                                 <thead class="table-secondary">
                                 <tr>
                                     <th style="display: none; visibility: hidden;" aria-hidden="true">id</th>
-                                    <th>First name</th>
-                                    <th style="display: none; visibility: hidden;" aria-hidden="true">first_name</th>
-                                    <th>Last name</th>
-                                    <th style="display: none; visibility: hidden;" aria-hidden="true">last_name</th>
-                                    <th>Email</th>
-                                    <th style="display: none; visibility: hidden;" aria-hidden="true">email</th>
-                                    <th>Organization</th>
-                                    <th>Requested Permissions</th>
-                                    <th>Permissions</th>
+                                    <th style="max-width: 20%">Name</th>
+                                    {% if model == 'revenue_source' %}
+                                        <th>Government type</th>
+                                        <th>Funding type</th>
+                                    {% endif %}
+                                    <th>Summary organization type</th>
                                 </tr>
                                 </thead>
                                 <tbody>
-                                {% for form in Admin_assignPermissions_all %}
+                                {% for form in formset %}
                                     <tr>
                                         <td style="display: none; visibility: hidden;" aria-hidden="true">{{ form.id }}</td>
-                                        <td>{{ form.first_name.value }}</td>
-                                        <td style="display: none; visibility: hidden;" aria-hidden="true">{{ form.first_name }}</td>
-                                        <td>{{ form.last_name.value }}</td>
-                                        <td style="display: none; visibility: hidden;" aria-hidden="true">{{ form.last_name }}</td>
-                                        <td>{{ form.email.value }}</td>
-                                        <td style="display: none; visibility: hidden;" aria-hidden="true">{{ form.email }}</td>
-                                        <td>{{ profile_data | get_org_by_custom_user:form.instance.id }}</td>
-                                        <td>{{ profile_data | get_requested_permissions_by_custom_user:form.instance.id }}</td>
-                                        <td class="no-bullet"><fieldset><legend style="display: none">Permissions Group</legend>{{ form.groups }}</fieldset> </td>
+                                        <td>{{ form.name }}</td>
+                                        {% if model == 'revenue_source' %}
+                                            <td>{{ form.government_type }}</td>
+                                            <td>{{ form.funding_type }}</td>
+                                        {% endif %}
+                                        {%  if form.summary_organization_classifications %}
+                                            <td>{{ form.summary_organization_classifications }}</td>
+                                        {% else %}
+                                            <td class="no-bullet"><fieldset>{{ form.agency_classification }}</fieldset> </td>
+                                        {% endif %}
                                     </tr>
                                 {% endfor %}
                                 </tbody>

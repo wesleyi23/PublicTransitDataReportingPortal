@@ -1,5 +1,5 @@
 from django import forms
-from django.forms import BaseModelFormSet
+from django.forms import BaseModelFormSet, BaseModelForm, ModelForm
 from django.forms.formsets import BaseFormSet
 from django.contrib.auth import password_validation, login
 from django.contrib.auth.forms import UserChangeForm, AuthenticationForm
@@ -704,6 +704,13 @@ class transit_data_form(forms.ModelForm):
             'reported_value': forms.TextInput(attrs={'class': 'form-control'}),
             'comments': forms.Textarea(attrs={'class': 'form-control', "rows": 3}),
         }
+
+
+
+
+
+
+
 
 
 

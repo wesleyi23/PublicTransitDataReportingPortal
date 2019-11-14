@@ -76,7 +76,9 @@ urlpatterns = [
     path('summary/report_data/<report_type>', views.summary_reporting, name='summary_reporting_report_type'),
     path('summary/report_data/<report_type>/<int:year>', views.report_revenue, name='summary_reporting_year'),
     path('summary/report_data/<report_type>/<int:year>/<filter_type_1>/<filter_type_2>', views.report_revenue, name='summary_reporting_year_type'),
-   # path('summary/test', views.test, name='test'),
+    path('summary/admin/configure_agency_types/', views.configure_agency_types, name='summary_configure_agency_types'),
+    path('summary/admin/configure_agency_types/<model>', views.configure_agency_types, name='summary_configure_agency_types'),
+    # path('summary/test', views.test, name='test'),
 
 ]
 
