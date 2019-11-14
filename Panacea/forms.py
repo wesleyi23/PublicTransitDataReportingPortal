@@ -3,9 +3,8 @@ from django.forms import BaseModelFormSet
 from django.forms.formsets import BaseFormSet
 from django.contrib.auth import password_validation, login
 from django.contrib.auth.forms import UserChangeForm, AuthenticationForm
-import datetime
-
-from Panacea.utilities import find_user_organization, find_vanpool_organizations
+from datetime import datetime
+from Panacea.utilities import find_user_organization, find_vanpool_organizations, calculate_percent_change
 from .models import custom_user, \
     profile, \
     organization, \
@@ -711,7 +710,32 @@ class transit_data_form(forms.ModelForm):
     year = forms.IntegerField(disabled=True)
 
     def clean(self):
-       print(self.cleaned_data)
+        cleaned_data = super(transit_data_form, self).clean()
+        current_year = datetime.now().year-1
+        if cleaned_data['year'] == current_year:
+            if cleaned_data['metric_value'] == None:
+                pass
+            else:
+                previous_year = current_year -1
+                org_id  = cleaned_data['id'].__getattribute__('organization_id')
+                metric_id = cleaned_data['id'].__getattribute__('metric_id')
+                mode_id = cleaned_data['id'].__getattribute__('mode_id')
+                previous_metric_value = SummaryTransitData.objects.filter(organization_id=org_id, metric_id = metric_id, year= previous_year, mode_id = mode_id).values('metric_value')
+                percent_change = calculate_percent_change(cleaned_data['metric_value'], previous_metric_value[0]['metric_value'])
+                if percent_change > 15 and cleaned_data['comments'] == '':
+                    raise forms.ValidationError('The following data has increased more than 15%. Please revise the data or provide an explanatory comment')
+                elif percent_change < -15 and cleaned_data['comments'] == '':
+                    raise forms.ValidationError('The following data has declined more than 15%. Please revise the data or provide an explanatory comment')
+            print(cleaned_data)
+            print('boo')
+            return cleaned_data
+        else:
+            print(cleaned_data)
+            return cleaned_data
+
+
+
+
     class Meta:
         model = SummaryTransitData
         fields = ['id', 'metric', 'year', 'metric_value', 'comments']

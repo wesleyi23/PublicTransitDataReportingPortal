@@ -11,6 +11,13 @@ from dateutil.relativedelta import relativedelta
 
 #
 
+
+def calculate_percent_change(data1, data2):
+    percent = round((data1 - data2)/data2, 2)
+    percent = percent*100
+    return percent
+
+
 def filter_revenue_sheet_by_classification(classification):
     if classification == 'Transit':
         return 'Transit'

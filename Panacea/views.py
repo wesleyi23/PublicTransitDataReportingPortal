@@ -912,10 +912,15 @@ def report_transit_data(request, year=None, service=None):
     # print(formset.total_form_count())
     if request.method == 'POST':
         for key, value in formsets.items():
-            formsets[key] = my_formset_factory(request.POST, queryset=query_sets[key], prefix=key)
+            formsets[key] = my_formset_factory(data =request.POST, queryset=query_sets[key], prefix=key)
             if formsets[key].is_valid():
                 for form in formsets[key]:
-                    form.save()
+                    print(form.is_valid())
+                    if form.is_valid():
+                        form = form.save(commit = False)
+                        print(form.cleaned_data)
+                        form.updated_time = datetime.datetime.now()
+                        form.save()
             else:
                 print(formsets[key].errors)
 

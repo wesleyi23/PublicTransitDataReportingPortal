@@ -366,6 +366,9 @@ class SummaryTransitData(models.Model):
         ('Purchased', 'Purchased')
     )
 
+
+    #TODO add a timestamp field for date of reporting
+    #TODO figure out a constraint such that only one report per field per year (or delete/store the older one)
     organization = models.ForeignKey(organization, on_delete=models.PROTECT, related_name='+')
     year = models.IntegerField()
     mode = models.ForeignKey(transit_mode, on_delete=models.PROTECT,  related_name='+')
@@ -375,6 +378,7 @@ class SummaryTransitData(models.Model):
     metric_value = models.FloatField(blank=True, null=True)
     report_by = models.ForeignKey(custom_user, on_delete=models.PROTECT, blank=True, null=True)
     comments = models.TextField(blank=True, null=True)
+    updated_time = models.DateTimeField(blank=True, null=True)
     history = HistoricalRecords()
 
 
