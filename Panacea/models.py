@@ -82,6 +82,22 @@ class ReportType(models.Model):
     report_owner = models.ForeignKey(custom_user, on_delete=models.PROTECT, blank=True, null=True)
 
 
+class summary_organization_type(models.Model):
+    ORGANIZATION_TYPES = (
+        ("Community provider", "Community provider"),
+        ("Ferry", "Ferry"),
+        ("Intercity bus", "Intercity bus"),
+        ("Medicaid broker", "Medicaid broker"),
+        ("Monorail", "Monorail"),
+        ("Transit", "Transit"),
+        ("Tribe", "Tribe"),
+    )
+
+    name = models.CharField(max_length=120, choices=ORGANIZATION_TYPES)
+
+    def __str__(self):
+        return self.name
+
 
 class organization(models.Model):
     AGENCY_CLASSIFICATIONS = (
@@ -116,7 +132,7 @@ class organization(models.Model):
     # TODO add to agency profile form
     in_jblm_area = models.BooleanField(blank=True, null=True)  # TODO confirm this is no longer needed
     in_puget_sound_area = models.BooleanField(blank=True, null=True)
-    summary_organization_classifications = models.CharField(max_length=50, choices=SUMMARY_ORG_CLASSIFICATIONS, blank=True, null=True)
+    summary_organization_classifications = models.ForeignKey(summary_organization_type, on_delete=models.PROTECT, blank=True, null=True)
     #fixed_route_expansion = models.BooleanField(blank=True, null=True)
 
 
@@ -311,20 +327,54 @@ class revenue_source(models.Model):
         ('Operating', 'Operating')
     )
 
-    specific_revenue_source = models.CharField(max_length=120, null=True, blank=True)
+    name = models.CharField(max_length=120, null=True, blank=True)
     order_in_summary = models.IntegerField(null=True, blank=True)
     government_type = models.CharField(max_length=100, choices=LEVIATHANS, null=True, blank=True)
     funding_type = models.CharField(max_length=30, choices=FUNDING_KIND, null=True, blank=True)
-    agency_funding_classification  =  models.CharField(max_length= 30, null=True, blank=True)
-    def __str__(self):
-        return self.specific_revenue_source
-
-
-class expenses_source(models.Model):
-    specific_expense_source = models.CharField(max_length=100)
+    agency_classification = models.ManyToManyField(summary_organization_type, blank=True)
 
     def __str__(self):
-        return self.specific_expense_source
+        return self.name
+
+class revenue(models.Model):
+    organization = models.ForeignKey(organization, on_delete=models.PROTECT, related_name='+')
+    year = models.IntegerField()
+    revenue_source = models.ForeignKey(revenue_source, on_delete=models.PROTECT, related_name='+')
+    reported_value = models.FloatField(null=True, blank=True)
+    report_by = models.ForeignKey(custom_user, on_delete=models.PROTECT, blank=True, null=True)
+    comments = models.TextField(blank=True, null=True)
+    history = HistoricalRecords()
+
+
+# class revenue_subfund(models.Model):
+#     revenue = models.ForeignKey(revenue, on_delete=models.PROTECT, related_name='+')
+#     specification = models.TextField(blank=False, null=True)
+
+class expense_source(models.Model):
+    name = models.CharField(max_length=100)
+
+    def __str__(self):
+        return self.name
+
+class expense(models.Model):
+
+    organization = models.ForeignKey(organization, on_delete=models.PROTECT, related_name='+')
+    year = models.IntegerField()
+    expense_source = models.ForeignKey(expense_source, on_delete=models.PROTECT, related_name='+', blank=True, null=True)
+    reported_value = models.IntegerField(blank=True, null=True)
+    report_by = models.ForeignKey(custom_user, on_delete=models.PROTECT, blank=True, null=True)
+    comments = models.TextField(blank=True, null=True)
+    # history = HistoricalRecords()
+
+    class Meta:
+        constraints = [
+            UniqueConstraint(fields=['organization', 'year', 'expense_source'], name='unique_source_report'),
+        ]
+
+
+# class expense_subfund(models.Model):
+#     expense = models.ForeignKey(expense, on_delete=models.PROTECT, related_name='+')
+#     subfund_specification = models.TextField(blank=False, null=True)
 
 
 class transit_metrics(models.Model):
@@ -334,88 +384,69 @@ class transit_metrics(models.Model):
         ("Money", "Money"),
     )
 
-    metric = models.CharField(max_length=120)
-    agency_classification = models.CharField(max_length=80, null=True, blank=True)
+    name = models.CharField(max_length=120)
+    agency_classification = models.ManyToManyField(summary_organization_type, blank=True)
     order_in_summary = models.IntegerField(null=True, blank=True)
     form_masking_class = models.CharField(max_length=25, choices=FORM_MASKING_CLASSES, null=True, blank=True)
 
     def __str__(self):
-        return self.metric
+        return self.name
 
 
 class transit_mode(models.Model):
-    mode = models.CharField(max_length=80, blank=True)
+    name = models.CharField(max_length=90, blank=True)
 
     def __str__(self):
-        return self.mode
+        return self.name
 
 
 class rollup_mode(models.Model):
-    rollup_mode = models.CharField(max_length=80)
+    name = models.CharField(max_length=80)
 
     def __str__(self):
-        return self.rollup_mode
+        return self.name
 
 
 # TODO Take out of camel case so the database table names are clean
-class SummaryTransitData(models.Model):
-
+class transit_data(models.Model):
 
     DO_OR_PT = (
         ('Direct Operated', 'Direct Operated'),
         ('Purchased', 'Purchased')
     )
 
-
-    #TODO add a timestamp field for date of reporting
-    #TODO figure out a constraint such that only one report per field per year (or delete/store the older one)
     organization = models.ForeignKey(organization, on_delete=models.PROTECT, related_name='+')
     year = models.IntegerField()
-    mode = models.ForeignKey(transit_mode, on_delete=models.PROTECT,  related_name='+')
+    transit_mode = models.ForeignKey(transit_mode, on_delete=models.PROTECT, related_name='+')
     rollup_mode = models.ForeignKey(rollup_mode, on_delete=models.PROTECT,  related_name='+')
     administration_of_mode = models.CharField(max_length=80, choices=DO_OR_PT)
-    metric = models.ForeignKey(transit_metrics, on_delete=models.PROTECT, related_name='+')
-    metric_value = models.FloatField(blank=True, null=True)
+    transit_metric = models.ForeignKey(transit_metrics, on_delete=models.PROTECT, related_name='+')
+    reported_value = models.FloatField(blank=True, null=True)
     report_by = models.ForeignKey(custom_user, on_delete=models.PROTECT, blank=True, null=True)
     comments = models.TextField(blank=True, null=True)
-    updated_time = models.DateTimeField(blank=True, null=True)
     history = HistoricalRecords()
 
 
-class SummaryRevenues(models.Model):
+class fund_balance_type(models.Model):
+    fund_balance_type = models.CharField(max_length=100)
+
+    def __str__(self):
+        return self.fund_balance_type
+
+
+class fund_balance(models.Model):
     organization = models.ForeignKey(organization, on_delete=models.PROTECT, related_name='+')
     year = models.IntegerField()
-    specific_revenue_source = models.ForeignKey(revenue_source, on_delete=models.PROTECT, related_name='+')
-    specific_revenue_value = models.FloatField(null=True, blank=True)
-    report_by = models.ForeignKey(custom_user, on_delete=models.PROTECT, blank=True, null=True)
-    comments = models.TextField(blank=True, null=True)
-    history = HistoricalRecords()
-
-
-class subfundRevenues(models.Model):
-    specific_revenue_value = models.ForeignKey(SummaryRevenues, on_delete=models.PROTECT, related_name='+')
-    subfund_specification = models.TextField(blank=False, null=True)
-
-
-class SummaryExpenses(models.Model):
-
-    organization = models.ForeignKey(organization, on_delete=models.PROTECT, related_name='+')
-    year = models.IntegerField(blank = True)
-    specific_expense_source = models.ForeignKey(expenses_source, on_delete=models.PROTECT, related_name='+')
-    specific_expense_value = models.IntegerField(blank=True, null=True)
+    fund_balance_type = models.ForeignKey(fund_balance_type, on_delete=models.PROTECT, related_name='+')
+    reported_value = models.IntegerField(blank=True, null=True)
     report_by = models.ForeignKey(custom_user, on_delete=models.PROTECT, blank=True, null=True)
     comments = models.TextField(blank=True, null=True)
     history = HistoricalRecords()
 
     class Meta:
         constraints = [
-            UniqueConstraint(fields=['organization', 'year', 'specific_expense_source'], name='unique_source_report'),
+            UniqueConstraint(fields=['organization', 'year', 'fund_balance_type'], name='unique_end_balance'),
         ]
-
-
-class subfundExpenses(models.Model):
-    specific_expense_value = models.ForeignKey(SummaryExpenses, on_delete=models.PROTECT, related_name='+')
-    subfund_specification = models.TextField(blank=False, null=True)
 
 
 class cover_sheet(models.Model):
@@ -443,21 +474,18 @@ class cover_sheet(models.Model):
 
 
 # TODO Take out of camel case so the database table names are clean
-class ServiceOffered(models.Model):
+class service_offered(models.Model):
     DO_OR_PT = (
         ('Direct Operated', 'Direct Operated'),
         ('Purchased', 'Purchased')
     )
-    mode = models.ForeignKey(transit_mode, on_delete=models.PROTECT,  related_name = '+', blank=True)
-    administration_of_mode = models.CharField(max_length= 80, choices=DO_OR_PT, blank=False)
+    transit_mode = models.ForeignKey(transit_mode, on_delete=models.PROTECT, related_name ='+', blank=True)
+    administration_of_mode = models.CharField(max_length=80, choices=DO_OR_PT, blank=False)
     organization = models.ForeignKey(organization, on_delete=models.PROTECT, blank=True, null=False)
-
-    def mode_name(self):
-        return self.mode.mode
 
 
 class depreciation(models.Model):
-    depreciation = models.IntegerField(blank =False, null=True)
+    reported_value = models.IntegerField(blank =False, null=True)
     year = models.IntegerField(blank=True, null=True)
     organization = models.ForeignKey(organization, on_delete=models.PROTECT, blank=True, null=True)
     report_by = models.ForeignKey(custom_user, on_delete=models.PROTECT, blank=True, null=True)
@@ -465,20 +493,20 @@ class depreciation(models.Model):
     history = HistoricalRecords()
 
 
-class ending_balance_categories(models.Model):
-    ending_balance_category = models.CharField(max_length=100, blank=False, null = False)
-    def __str__(self):
-        return self.ending_balance_category
-
-
-class ending_balances(models.Model):
-    ending_balance_category = models.ForeignKey(ending_balance_categories, on_delete=models.PROTECT ,related_name = '+')
-    ending_balance_value = models.FloatField()
-    year = models.IntegerField(blank=True, null=True)
-    organization = models.ForeignKey(organization, on_delete=models.PROTECT, blank=True, null=True)
-    report_by = models.ForeignKey(custom_user, on_delete=models.PROTECT, blank=True, null=True)
-    comments = models.TextField(blank=True, null=True)
-    history = HistoricalRecords()
+# class ending_balance_categories(models.Model):
+#     ending_balance_category = models.CharField(max_length=100, blank=False, null = False)
+#     def __str__(self):
+#         return self.ending_balance_category
+#
+#
+# class ending_balances(models.Model):
+#     ending_balance_category = models.ForeignKey(ending_balance_categories, on_delete=models.PROTECT ,related_name = '+')
+#     ending_balance_value = models.FloatField()
+#     year = models.IntegerField(blank=True, null=True)
+#     organization = models.ForeignKey(organization, on_delete=models.PROTECT, blank=True, null=True)
+#     report_by = models.ForeignKey(custom_user, on_delete=models.PROTECT, blank=True, null=True)
+#     comments = models.TextField(blank=True, null=True)
+#     history = HistoricalRecords()
 
 
 

@@ -24,10 +24,13 @@
                             <a class="nav-link" href="{% url 'report_transit_data' %}">Transit data</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{% url 'report_revenues' %}">Revenues</a>
+                            <a class="nav-link" href="{% url 'report_revenue' %}">revenue</a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" href="{% url 'report_expenses' %}">Expenses</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'ending_balances' %}">Ending balances</a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" href="{% url 'review_data' %}">Review</a>
@@ -52,10 +55,10 @@
                                 <tbody>
                                 {%  for mode in modes %}
                                     <tr class="fieldWrapper">
-                                        <td>{{ mode.mode}}</td>
+                                        <td>{{ mode.transit_mode }}</td>
                                         <td>{{ mode.administration_of_mode}}</td>
                                         <td style="text-align: center;">
-                                            <a href="#" class="delete-mode" data-mode="{{ mode.mode }}" data-admin-mode="{{ mode.administration_of_mode }}">
+                                            <a href="#" class="delete-mode" data-mode="{{ mode.transit_mode }}" data-admin-mode="{{ mode.administration_of_mode }}">
                                                 <i class="fa fa-times-circle text-danger"> </i>
                                             </a>
                                         </td>
@@ -88,15 +91,17 @@
                                     <tbody>
 
                                         <tr class="fieldWrapper">
-                                            <td>{{ form.mode}}</td>
+                                            <td>{{ form.transit_mode }}</td>
                                             <td>{{ form.administration_of_mode}}</td>
                                             <td style="text-align: center"><input type="submit" value="Add mode" class="btn btn-sm btn-primary"></td>
                                         </tr>
 
                                     </tbody>
                                 </table>
-
+                            </div>
                         </form>
+
+
                     </div>
                 </div>
             </div>

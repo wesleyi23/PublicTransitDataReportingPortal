@@ -1,9 +1,10 @@
 from django import forms
-from django.forms import BaseModelFormSet
+from django.forms import BaseModelFormSet, BaseModelForm, ModelForm
 from django.forms.formsets import BaseFormSet
 from django.contrib.auth import password_validation, login
 from django.contrib.auth.forms import UserChangeForm, AuthenticationForm
-from datetime import datetime
+import datetime
+
 from Panacea.utilities import find_user_organization, find_vanpool_organizations, calculate_percent_change
 from .models import custom_user, \
     profile, \
@@ -12,8 +13,7 @@ from .models import custom_user, \
     vanpool_report, \
     vanpool_expansion_analysis, \
     cover_sheet, \
-    SummaryRevenues, SummaryExpenses, SummaryTransitData, revenue_source, transit_mode, ServiceOffered, transit_metrics, \
-    expenses_source
+    transit_data, expense, revenue, revenue_source, transit_mode, service_offered, transit_metrics, expense_source, fund_balance, fund_balance_type
 from django.utils.translation import gettext, gettext_lazy as _
 from phonenumber_field.formfields import PhoneNumberField
 from localflavor.us.forms import USStateSelect, USZipCodeField
@@ -631,14 +631,14 @@ class cover_sheet_organization(forms.ModelForm):
             print("validator")
             validate_image_file(image)
 
-class service_offered(forms.ModelForm):
+class service_offered_form(forms.ModelForm):
 
     class Meta:
-        model = ServiceOffered
-        fields = ['administration_of_mode', 'mode']
+        model = service_offered
+        fields = ['administration_of_mode', 'transit_mode']
         widgets = {
-            'mode': forms.Select( choices=transit_mode.objects.all(), attrs={'class': 'form-control'}),
-            'administration_of_mode': forms.Select(choices=ServiceOffered.DO_OR_PT, attrs={'class': 'form-control'})
+            'transit_mode': forms.Select(choices=transit_mode.objects.all(), attrs={'class': 'form-control'}),
+            'administration_of_mode': forms.Select(choices=service_offered.DO_OR_PT, attrs={'class': 'form-control'})
         }
 
 
@@ -675,14 +675,29 @@ class FormsetCleaner(BaseFormSet):
 class summary_expense_form(forms.ModelForm):
 
     id = forms.IntegerField(disabled=True)
-    specific_expense_source = forms.ModelChoiceField(disabled=True, queryset=expenses_source.objects.all())
+    expense_source = forms.ModelChoiceField(disabled=True, queryset=expense_source.objects.all())
     year = forms.IntegerField(disabled=True)
 
     class Meta:
-        model = SummaryExpenses
-        fields = ["id", "specific_expense_source", "year", "specific_expense_value", "comments"]
+        model = expense
+        fields = ["id", "expense_source", "year", "reported_value", "comments"]
         widgets = {
-            'specific_expense_value': forms.TextInput(attrs={'class': 'form-control'}),
+            'reported_value': forms.TextInput(attrs={'class': 'form-control'}),
+            'comments': forms.Textarea(attrs={'class': 'form-control', "rows": 3}),
+        }
+
+
+class fund_balance_form(forms.ModelForm):
+
+    id = forms.IntegerField(disabled=True)
+    fund_balance_type = forms.ModelChoiceField(disabled=True, queryset=fund_balance_type.objects.all())
+    year = forms.IntegerField(disabled=True)
+
+    class Meta:
+        model = fund_balance
+        fields = ["id", "fund_balance_type", "year", "reported_value", "comments"]
+        widgets = {
+            'reported_value': forms.TextInput(attrs={'class': 'form-control'}),
             'comments': forms.Textarea(attrs={'class': 'form-control', "rows": 3}),
         }
 
@@ -690,15 +705,15 @@ class summary_expense_form(forms.ModelForm):
 class summary_revenue_form(forms.ModelForm):
 
     id = forms.IntegerField(disabled=True)
-    specific_revenue_source = forms.ModelChoiceField(disabled=True, queryset=revenue_source.objects.all())
+    revenue_source = forms.ModelChoiceField(disabled=True, queryset=revenue_source.objects.all())
     year = forms.IntegerField(disabled=True)
 
     class Meta:
-        model = SummaryRevenues
-        fields = ["id", "specific_revenue_source", "year", "specific_revenue_value", "comments"]
+        model = revenue
+        fields = ["id", "revenue_source", "year", "reported_value", "comments"]
         queryset = revenue_source.objects.all()
         widgets = {
-            'specific_revenue_value': forms.TextInput(attrs={'class': 'form-control'}),
+            'specific_revenue_value': forms.NumberInput(attrs={'class': 'form-control'}),
             'comments': forms.Textarea(attrs={'class': 'form-control', "rows": 3}),
         }
 
@@ -720,7 +735,7 @@ class transit_data_form(forms.ModelForm):
                 org_id  = cleaned_data['id'].__getattribute__('organization_id')
                 metric_id = cleaned_data['id'].__getattribute__('metric_id')
                 mode_id = cleaned_data['id'].__getattribute__('mode_id')
-                previous_metric_value = SummaryTransitData.objects.filter(organization_id=org_id, metric_id = metric_id, year= previous_year, mode_id = mode_id).values('metric_value')
+                previous_metric_value = transit_data.objects.filter(organization_id=org_id, metric_id = metric_id, year= previous_year, mode_id = mode_id).values('metric_value')
                 percent_change = calculate_percent_change(cleaned_data['metric_value'], previous_metric_value[0]['metric_value'])
                 if percent_change > 15 and cleaned_data['comments'] == '':
                     raise forms.ValidationError('The following data has increased more than 15%. Please revise the data or provide an explanatory comment')
@@ -733,14 +748,11 @@ class transit_data_form(forms.ModelForm):
             print(cleaned_data)
             return cleaned_data
 
-
-
-
     class Meta:
-        model = SummaryTransitData
-        fields = ['id', 'metric', 'year', 'metric_value', 'comments']
+        model = transit_data
+        fields = ['id', 'transit_metric', 'year', 'reported_value', 'comments']
         widgets = {
-            'metric_value': forms.TextInput(attrs={'class': 'form-control'}),
+            'reported_value': forms.TextInput(attrs={'class': 'form-control'}),
             'comments': forms.Textarea(attrs={'class': 'form-control', "rows": 3}),
         }
 

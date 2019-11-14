@@ -232,7 +232,7 @@ def green_house_gas_per_vanpool_mile():
     percent_small_van = 0.60  # update using report found here:G:\Evaluation Group\RVCT and WSRO Vanpool\Info For Greenhouse Gas Calculations\VanpoolSeatingCapcityReport.xlsx (right click on the pivot table and hit refresh to get latest data)
     small_van_mpg = 24.00  # Small Vans are vans with a wheelbase less than 121 inches.  Some but not all 8 passanger vanpool vans have a wheelbase less than 21 inches.  Use the percent of vanpool vans with a passanger capacity of 8 or less.
     large_van_mpg = 17.40
-    co2e_per_gallon = 0.008887  # units = metric tones
+    co2e_per_gallon = 0.008887  # units = transit_metric tones
 
     fleet_fuel_efficiency = (small_van_mpg * percent_small_van) + (large_van_mpg * (1 - percent_small_van))
     co2_per_vanpool_mile_traveled = (1 / fleet_fuel_efficiency) * co2e_per_gallon
@@ -246,7 +246,7 @@ def green_house_gas_per_sov_mile():
     """
 
     sov_miles_per_gallon = 22
-    co2e_per_gallon = 0.008887  # units = metric tones
+    co2e_per_gallon = 0.008887  # units = transit_metric tones
 
     co2_per_sov_mile_traveled = (1 / sov_miles_per_gallon) * co2e_per_gallon
 
@@ -406,6 +406,8 @@ def yearchange(user_org_id, start_year, end_year, measure):
 # TODO make this real
 def get_current_summary_report_year():
     return 2018
+
+
 
 
 
