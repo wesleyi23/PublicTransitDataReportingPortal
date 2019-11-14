@@ -41,7 +41,7 @@ from .forms import CustomUserCreationForm, \
     Modify_A_Vanpool_Expansion, organisation_summary_settings, organization_information, cover_sheet_service, \
     cover_sheet_organization, \
     summary_revenue_form, BaseRevenueForm, summary_expense_form, service_offered, transit_data_form, \
-    fund_balance_form
+    fund_balance_form, service_offered_form
 
 from .models import profile, vanpool_report, custom_user, vanpool_expansion_analysis, organization, cover_sheet, \
     revenue, transit_data, expense, expense_source, service_offered, revenue_source, \
@@ -794,41 +794,35 @@ def summary_report_data(request):
 @group_required('Summary reporter', 'WSDOT staff')
 def summary_modes(request):
     org = find_user_organization(request.user.id)
-    # modes = service_offered.objects.filter(organization_id=org).values('administration_of_mode', 'name')
-    # mode_formset = formset_factory(service_offered, min_num=len(modes), extra=2)
-    # formset = mode_formset(initial=[{'administration_of_mode': x['administration_of_mode'], 'name': x['name']} for x in modes])
-
-    # mode_formset = formset_factory(service_offered, min_num=2)
-    form = service_offered()
 
     # TODO add in date time of changes and user id to this dataset date time as native, foreign key for user
     if request.method == 'POST':
-        form = service_offered(data=request.POST)
+        form = service_offered_form(data=request.POST)
         if form.is_valid():
             print(form.is_valid())
             instance, created = service_offered.objects.get_or_create(organization_id=org.id,
-                                                                      mode=form.cleaned_data["name"],
+                                                                      transit_mode=form.cleaned_data["transit_mode"],
                                                                       administration_of_mode=form.cleaned_data["administration_of_mode"])
             if not created:
                 print("not created")
                 messages.error(request, "This name has already been added")
-
-
+    else:
+        form = service_offered_form()
+    print(form)
     modes = service_offered.objects.filter(organization_id=org).all()
     return render(request, 'pages/summary/summary_modes.html', {'form': form, 'modes': modes, 'org': org})
 
 
 @login_required(login_url='/Panacea/login')
 @group_required('Summary reporter', 'WSDOT staff')
-def delete_summary_mode(request, mode, admin_of_mode):
-    if transit_mode.objects.filter(mode=mode).count() < 1:
-
-        raise ValueError("invalid name")
+def delete_summary_mode(request, name, admin_of_mode):
+    if transit_mode.objects.filter(name=name).count() < 1:
+        raise ValueError("invalid name - transit mode")
     elif admin_of_mode in transit_data.DO_OR_PT:
-        raise ValueError("invalid name administration")
+        raise ValueError("invalid name - administration of mode")
     else:
         user_id = request.user.id
-        transit_mode_id = transit_mode.objects.get(name=mode).id
+        transit_mode_id = transit_mode.objects.get(name=name).id
         user_org_id = profile.objects.get(custom_user_id=user_id).organization_id
         service_to_delete = service_offered.objects.get(organization_id=user_org_id,
                                                         administration_of_mode=admin_of_mode,
@@ -1245,23 +1239,6 @@ class DataEntryType:
             all_organization_metris = metric_model
 
         all_organization_metris = list(all_organization_metris.objects.values_list("id", flat=True))
-
-#
-# all_revenue_sources = list(name.objects.filter(agency_classification=my_classification).values_list("id", flat=True))
-# source_ids = [idx for idx in source_ids if idx in all_revenue_sources]
-#
-# if len(source_ids) != len(all_revenue_sources):
-#     missing_ids = list(set(all_revenue_sources) - set(source_ids))
-#
-#     with transaction.atomic():
-#         for my_id in missing_ids:
-#             revenue.objects.create(year=my_year,
-#                                            revenue_source_id=my_id,
-#                                            organization=my_organization,
-#                                            reported_value=None,
-#                                            report_by=user)
-#
-#
 
 
 @login_required(login_url='/Panacea/login')

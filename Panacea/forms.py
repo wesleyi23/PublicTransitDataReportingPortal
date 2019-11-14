@@ -606,7 +606,8 @@ class cover_sheet_organization(forms.ModelForm):
             print("validator")
             validate_image_file(image)
 
-class service_offered(forms.ModelForm):
+
+class service_offered_form(forms.ModelForm):
 
     class Meta:
         model = service_offered
