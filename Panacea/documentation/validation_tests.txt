@@ -1,0 +1,18 @@
+Tests to be done on different validation sources:
+
+-Vehicle Revenue Speed
+    -revenue vehicle miles over revenue vehicle hours: compares ratio from report year to previous year
+-Revenue Vehicle Hours exceed Total Vehicle Hours:
+    -check to make sure that revenue vehicle hours are not greater than total vehicle hours
+-Revenue Vehicle Miles exceeds Total Vehicle MIles:
+    -check to make sure that revenue vehicle miles are not greater than total vehicle miles
+-Passenger Trips per Revenue Vehicle Miles:
+    -trips per mile: compares ratio from report year to previous year
+-Cost per Revenue Vehicle Hour:
+    -Operating Expenses per Revenue Vehicle Hour: compare ratio from report year to previous year
+-Cost per Revenue Vehicle Mile:
+    -Operating Expenses per Revenue Vehicle Mile: compare ratio from report year to previous year
+-Vehicle Revenue Hours per FTE:
+    -Vehicle Revenue Hours per FTE: compare ratio from report year to previous year
+-Farebox Revenues per Passenger Trip:
+    -compare ration from report year to previous year

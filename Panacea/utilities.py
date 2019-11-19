@@ -37,8 +37,15 @@ def generate_summary_report_years():
     reportYears = [currentYear-3, currentYear-2, currentYear-1]
     return reportYears
 
+def find_user_organization_id(id):
+    print(id)
+    user_profile_data = profile.objects.get(custom_user=id)
+    org = user_profile_data.organization_id
+    return org
+
 def find_user_organization(id):
     user_profile_data = profile.objects.get(custom_user=id)
+    print(user_profile_data)
     org = user_profile_data.organization
     return org
 

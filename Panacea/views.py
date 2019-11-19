@@ -1,4 +1,5 @@
 import json
+from .validators import validation_test_for_transit_data
 
 from django.contrib import messages
 from django.contrib.auth import login, logout
@@ -16,7 +17,8 @@ from dateutil.relativedelta import relativedelta
 import datetime
 from Panacea.decorators import group_required
 from .utilities import monthdelta, get_wsdot_color, get_vanpool_summary_charts_and_table, percent_change_calculation, \
-    find_vanpool_organizations, get_current_summary_report_year, filter_revenue_sheet_by_classification
+    find_vanpool_organizations, get_current_summary_report_year, filter_revenue_sheet_by_classification, \
+    find_user_organization_id
 from django.http import Http404
 from .filters import VanpoolExpansionFilter
 from django.conf import settings
@@ -41,14 +43,14 @@ from .forms import CustomUserCreationForm, \
     Modify_A_Vanpool_Expansion, organisation_summary_settings, organization_information, cover_sheet_service, \
     cover_sheet_organization, \
     summary_revenue_form, summary_expense_form, service_offered, transit_data_form, \
-    fund_balance_form, service_offered_form
+    fund_balance_form, service_offered_form, validation_error_form
 
 from .models import profile, vanpool_report, custom_user, vanpool_expansion_analysis, organization, cover_sheet, \
     revenue, transit_data, expense, expense_source, service_offered, revenue_source, \
-    transit_metrics, transit_mode, fund_balance, fund_balance_type, summary_organization_type
+    transit_metrics, transit_mode, fund_balance, fund_balance_type, summary_organization_type, validation_errors
 from django.contrib.auth.models import Group
 from .utilities import calculate_latest_vanpool, find_maximum_vanpool, calculate_remaining_months, calculate_if_goal_has_been_reached, \
-    generate_summary_report_years, find_user_organization
+    generate_summary_report_years, find_user_organization_id, find_user_organization
 
 
 # region shared_views
@@ -1144,7 +1146,23 @@ def ending_balances(request, year=None):
 @login_required(login_url='/Panacea/login')
 @group_required('Summary reporter', 'WSDOT staff')
 def review_data(request):
-    return render(request, 'pages/summary/review_data.html')
+    user_org = find_user_organization_id(request.user.id)
+    org_name = find_user_organization(request.user.id)
+    report_year = datetime.date.today().year -1
+    mode_list = transit_data.objects.filter(year = report_year, organization_id = user_org).order_by('transit_mode').values_list('transit_mode', 'transit_mode_id__name', 'administration_of_mode').distinct()
+    for mode in mode_list:
+        validation_test_for_transit_data(report_year, mode[0], mode[2], user_org, request.user.id)
+    ve = validation_errors.objects.filter(organization_id = user_org, year = report_year)
+    my_formset_factory = modelformset_factory(model=validation_errors,
+                                             form=validation_error_form,
+                                             extra=0)
+    formset = my_formset_factory(request.POST or None, queryset=ve)
+    if request.method == 'POST':
+        print(formset.is_valid())
+        if formset.is_valid():
+            formset.save()
+    return render(request, 'pages/summary/review_data.html', {'formset': formset,
+                                                              'org_name': org_name})
 
 
 #def test(request):

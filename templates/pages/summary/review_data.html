@@ -8,3 +8,77 @@
 
 
 {% endblock %}
+
+{%  block content %}
+ <div class="container-fluid">
+
+        <!-- Page Heading -->
+
+    </div>
+
+    <div class="container-fluid">
+        <div class="row">
+            <div class="card shadow mb-4 w-100">
+                <div class="card-header">
+                    <ul class="nav nav-tabs card-header-tabs">
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'summary_report_data' %}">Instructions</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'summary_modes' %}">Confirm services</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'report_transit_data' %}">Transit data</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link " href="{% url 'report_revenue' %}">revenue</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'report_expenses' %}">Expenses</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'ending_balances' %}">Ending balances</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link active" href="{% url 'review_data' %}">Review</a>
+                        </li>
+
+                    </ul>
+                </div>
+            <div class="card-body" style="">
+                    <h4>Please resolve the following errors to complete the Summary Report for {{ org_name }}:</h4>
+             <form method="POST" >
+
+                        {% csrf_token  %}
+             <div class="table-responsive" style="padding-top: 1.5rem">
+                <table class="table table-responsive">
+                    <thead>
+                        <th>Year</th>
+                        <th>Mode</th>
+                        <th> Type of Mode</th>
+                        <th>Error</th>
+                        <th>Enter any explanatory comments here</th>
+                    </thead>
+                    {% for form in formset %}
+
+                    <tr>
+                    <td>{{ form.instance.year }}</td>
+                    <td>{{ form.instance.transit_mode }}</td>
+                    <td> {{ form.instance.administration_of_mode }}</td>
+                    <td>{{ form.instance.error }}</td>
+                    <td> {{ form.error_resolution }}</td>
+                    </tr>
+                    {%  endfor %}
+                </table>
+             </div>
+             </form>
+                <input type="submit" value="Submit"  class="btn btn-primary float-right mt-3">
+                                    {{ formset.management_form }}
+
+
+        </div>
+    </div>
+    </div>
+    </div>
+
+{%  endblock %}

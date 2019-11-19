@@ -9,6 +9,7 @@ from django.dispatch import receiver
 from localflavor.us.models import USStateField, USZipCodeField
 from phonenumber_field.modelfields import PhoneNumberField
 import datetime
+
 from simple_history.models import HistoricalRecords
 
 # region shared
@@ -492,6 +493,22 @@ class depreciation(models.Model):
     comments = models.TextField(blank=True, null=True)
     history = HistoricalRecords()
 
+
+
+class validation_errors(models.Model):
+    DO_OR_PT = (
+        ('Direct Operated', 'Direct Operated'),
+        ('Purchased', 'Purchased') )
+    year = models.IntegerField(blank=True, null=True)
+    transit_mode = models.ForeignKey(transit_mode, on_delete=models.PROTECT, related_name= '+', blank=True, null=True)
+    administration_of_mode = models.CharField(max_length=80, choices=DO_OR_PT, blank=False, null=True)
+    organization = models.ForeignKey(organization, on_delete=models.PROTECT, blank=True, null=True)
+    report_by = models.ForeignKey(custom_user, on_delete=models.PROTECT, blank=True, null=True)
+    error = models.TextField(blank=True, null=True)
+    error_resolution = models.TextField(blank=True, null=True)
+
+    class Meta:
+        unique_together = ['year', 'transit_mode', 'administration_of_mode', 'organization', 'error']
 
 # class ending_balance_categories(models.Model):
 #     ending_balance_category = models.CharField(max_length=100, blank=False, null = False)

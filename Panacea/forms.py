@@ -13,7 +13,8 @@ from .models import custom_user, \
     vanpool_report, \
     vanpool_expansion_analysis, \
     cover_sheet, \
-    transit_data, expense, revenue, revenue_source, transit_mode, service_offered, transit_metrics, expense_source, fund_balance, fund_balance_type
+    transit_data, expense, revenue, revenue_source, transit_mode, service_offered, transit_metrics, expense_source, \
+    fund_balance, fund_balance_type, validation_errors
 from django.utils.translation import gettext, gettext_lazy as _
 from phonenumber_field.formfields import PhoneNumberField
 from localflavor.us.forms import USStateSelect, USZipCodeField
@@ -741,11 +742,8 @@ class transit_data_form(forms.ModelForm):
                     raise forms.ValidationError('The following data has increased more than 15%. Please revise the data or provide an explanatory comment')
                 elif percent_change < -15 and cleaned_data['comments'] == '':
                     raise forms.ValidationError('The following data has declined more than 15%. Please revise the data or provide an explanatory comment')
-            print(cleaned_data)
-            print('boo')
             return cleaned_data
         else:
-            print(cleaned_data)
             return cleaned_data
 
     class Meta:
@@ -757,6 +755,13 @@ class transit_data_form(forms.ModelForm):
         }
 
 
+class validation_error_form(forms.ModelForm):
+    class Meta:
+        model = validation_errors
+        fields = ['year', 'error', 'organization', 'administration_of_mode', 'transit_mode','error_resolution']
+        widgets = {
+                'error_resolution': forms.Textarea(attrs={'class': 'form-control', "rows": 3, "required":True})
+            }
 
 # class source_id_formset(BaseModelFormSet):
 #     def __init__(self, source_ids, year, my_user, *args, **kwargs):
