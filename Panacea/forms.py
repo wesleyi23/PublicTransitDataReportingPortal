@@ -356,12 +356,12 @@ class VanpoolMonthlyReport(forms.ModelForm):
                         error_list.append(
                             'The Vanshare Groups in Operation are not equal to the projected number of vanshare groups in operation of {}, based on the {} fold(s) and {} start(s) recorded last month.'.format(old_total, old_van_number['vanshare_group_folds'],old_van_number['vanshare_group_starts'] ))
 
-                if new_data >= old_data * 1.2:
+                if new_data > old_data * 1.2:
                     category = category.replace('_', ' ')
                     category = category.title()
                     error_list.append('{} have increased more than 20%. Please confirm this number.'.format(category))
 
-                elif new_data <= old_data * 0.8:
+                elif new_data < old_data * 0.8:
                     category = category.replace('_', ' ')
                     category = category.title()
                     error_list.append('{} have decreased more than 20%. Please confirm this number'.format(category))
