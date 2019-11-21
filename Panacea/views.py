@@ -1146,23 +1146,36 @@ def ending_balances(request, year=None):
 @login_required(login_url='/Panacea/login')
 @group_required('Summary reporter', 'WSDOT staff')
 def review_data(request):
+
+
     user_org = find_user_organization_id(request.user.id)
     org_name = find_user_organization(request.user.id)
     report_year = datetime.date.today().year -1
     mode_list = transit_data.objects.filter(year = report_year, organization_id = user_org).order_by('transit_mode').values_list('transit_mode', 'transit_mode_id__name', 'administration_of_mode').distinct()
     for mode in mode_list:
         validation_test_for_transit_data(report_year, mode[0], mode[2], user_org, request.user.id)
-    ve = validation_errors.objects.filter(organization_id = user_org, year = report_year)
+    ve = validation_errors.objects.filter(organization_id = user_org, year = report_year, error_resolution__isnull=True)
+    print(ve)
     my_formset_factory = modelformset_factory(model=validation_errors,
                                              form=validation_error_form,
                                              extra=0)
-    formset = my_formset_factory(request.POST or None, queryset=ve)
     if request.method == 'POST':
-        print(formset.is_valid())
-        if formset.is_valid():
-            formset.save()
+        formset = my_formset_factory(data=request.POST, queryset=ve)
+        error_count = formset.total_form_count()
+        for form in formset:
+            if form.is_valid():
+                form.cleaned_data['report_by_id'] = request.user.id
+                form.save(commit=True)
+    else:
+        formset = my_formset_factory(queryset=ve)
+        error_count = formset.total_form_count()
+
+        #TODO transit_mode is kind of messed up, and need a little help resolving
+
+
+
     return render(request, 'pages/summary/review_data.html', {'formset': formset,
-                                                              'org_name': org_name})
+                                                              'org_name': org_name, 'error_count': error_count})
 
 
 #def test(request):

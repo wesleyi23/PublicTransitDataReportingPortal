@@ -46,35 +46,38 @@
                     </ul>
                 </div>
             <div class="card-body" style="">
-                    <h4>Please resolve the following errors to complete the Summary Report for {{ org_name }}:</h4>
-             <form method="POST" >
+                    <h4>Please resolve the following {{ error_count }} error(s) to complete your Summary Report for {{ org_name }}:</h4>
+             <form method="POST" action = "" >
 
                         {% csrf_token  %}
              <div class="table-responsive" style="padding-top: 1.5rem">
                 <table class="table table-responsive">
                     <thead>
+                        <th></th>
                         <th>Year</th>
                         <th>Mode</th>
                         <th> Type of Mode</th>
                         <th>Error</th>
                         <th>Enter any explanatory comments here</th>
                     </thead>
+                    {{ formset.management_form }}
+
                     {% for form in formset %}
 
                     <tr>
-                    <td>{{ form.instance.year }}</td>
+                    <td > {{ form.id.as_hidden }}</td>
+                    <td>{{ form.year }}</td>
                     <td>{{ form.instance.transit_mode }}</td>
-                    <td> {{ form.instance.administration_of_mode }}</td>
-                    <td>{{ form.instance.error }}</td>
+                    <td> {{ form.administration_of_mode }}</td>
+                    <td>{{ form.error }}</td>
                     <td> {{ form.error_resolution }}</td>
                     </tr>
                     {%  endfor %}
                 </table>
              </div>
-             </form>
-                <input type="submit" value="Submit"  class="btn btn-primary float-right mt-3">
-                                    {{ formset.management_form }}
 
+                <input type="submit" value="Submit"  class="btn btn-primary float-right mt-3">
+        </form>
 
         </div>
     </div>

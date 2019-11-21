@@ -758,9 +758,14 @@ class transit_data_form(forms.ModelForm):
 class validation_error_form(forms.ModelForm):
     class Meta:
         model = validation_errors
-        fields = ['year', 'error', 'organization', 'administration_of_mode', 'transit_mode','error_resolution']
+        fields = ['error_resolution', 'year', 'error', 'administration_of_mode', 'transit_mode']
         widgets = {
-                'error_resolution': forms.Textarea(attrs={'class': 'form-control', "rows": 3, "required":True})
+                'error_resolution': forms.Textarea(attrs={'class': 'form-control', "rows": 3}),
+            'year': forms.NumberInput(attrs = {'class': 'form-control', 'readonly': 'readonly'}),
+            'error': forms.Textarea(attrs={'rows':3, 'readonly': 'readonly'}),
+            'administration_of_mode': forms.TextInput(attrs={'class': 'form-control', 'readonly': 'readonly'}),
+            'transit_mode': forms.TextInput(attrs={'class': 'form-control', 'readonly': 'readonly'}),
+            'id': forms.NumberInput(attrs={ 'class': 'form-control','readonly':'readonly'})
             }
 
 # class source_id_formset(BaseModelFormSet):
