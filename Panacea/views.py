@@ -1437,3 +1437,12 @@ def configure_agency_types(request, model=None):
         formset = formset_factory(queryset=my_queryset.select_related())
         return render(request, 'pages/summary/configure_agency_types.html', {'formset': formset,
                                                                              'model': model})
+
+
+@login_required(login_url='/Panacea/login')
+def your_logged_in(request):
+    return render(request, 'you_are_logged_in.html')
+
+
+def login_denied(request):
+    return render(request, 'login_denied.html')

@@ -16,10 +16,24 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from Panacea import views
-
+from Panacea import views_SAML
+from django.conf.urls import url
 
 urlpatterns = [
-    # path('test/', views.testView, name="testView"),
+    # # These are the SAML2 related URLs. You can change "^saml2_auth/" regex to
+    # # any path you want, like "^sso_auth/", "^sso_login/", etc. (required)
+    # url('sso/', include('django_saml2_auth.urls')),
+    #
+    # # The following line will replace the default user login with SAML2 (optional)
+    # # If you want to specific the after-login-redirect-URL, use parameter "?next=/the/path/you/want"
+    # # with this view.
+    # url(r'^accounts/login/$', django_saml2_auth.views.signin),
+    #
+    # # The following line will replace the admin login with SAML2 (optional)
+    # # If you want to specific the after-login-redirect-URL, use parameter "?next=/the/path/you/want"
+    # # with this view.
+    # url(r'^admin/login/$', django_saml2_auth.views.signin),
+    # # path('test/', views.testView, name="testView"),
     path('', views.dashboard, name="dashboard"),
     path('dashboard/', views.dashboard, name="dashboard"),
     path('logout/', views.logout_view, name="logout"),
@@ -79,6 +93,10 @@ urlpatterns = [
     path('summary/report_data/<report_type>/<int:year>/<filter_type_1>/<filter_type_2>', views.report_revenue, name='summary_reporting_year_type'),
     path('summary/admin/configure_agency_types/', views.configure_agency_types, name='summary_configure_agency_types'),
     path('summary/admin/configure_agency_types/<model>', views.configure_agency_types, name='summary_configure_agency_types'),
+    path('logged_in/', views.your_logged_in, name='your_logged_in'),
+    path('login_denied/', views.login_denied, name='login_denied'),
+    path('sso/wsdot/', views_SAML.signin, name="wsdot_sso"),
+    path('sso/wsdot/reply/sso/wsdot', views_SAML.wsdot, name="wsdot_sso_reply"),
     # path('summary/test', views.test, name='test'),
 
 ]
