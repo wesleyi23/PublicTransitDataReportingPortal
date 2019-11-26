@@ -61,6 +61,9 @@ INSTALLED_APPS = [
     'django_filters',
     'simple_history',
     'django_celery_beat',
+    'rest_framework',
+    'rest_framework.authtoken',
+    'rest_auth'
 ]
 
 MIDDLEWARE = [
