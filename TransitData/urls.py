@@ -96,7 +96,7 @@ urlpatterns = [
     path('logged_in/', views.your_logged_in, name='your_logged_in'),
     path('login_denied/', views.login_denied, name='login_denied'),
     path('sso/wsdot/', views_SAML.signin, name="wsdot_sso"),
-    path('sso/wsdot/reply/sso/wsdot', views_SAML.wsdot, name="wsdot_sso_reply"),
+    path('sso/wsdot/reply/', views_SAML.wsdot, name="wsdot_sso_reply"),
     # path('summary/test', views.test, name='test'),
 
 ]

@@ -89,7 +89,7 @@ def _get_metadata():
 
 
 def _get_saml_client(domain):
-    acs_url = domain + get_reverse([wsdot, 'wsdot_sso'])
+    acs_url = domain
     metadata = _get_metadata()
 
     saml_settings = {
