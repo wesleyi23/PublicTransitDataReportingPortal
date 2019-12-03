@@ -81,11 +81,11 @@ MIDDLEWARE = [
 
 EMAIL_BACKEND = "mailer.backend.DbBackend"
 MAILER_EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_HOST_USER = 'ptddatateam@gmail.com'
+EMAIL_HOST = 'smtp.outlook.office365.com'
+EMAIL_HOST_USER = 'ptreportingportal@wsdot.wa.gov'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-DEFAULT_FROM_EMAIL = 'ptddatateam@gmail.com'
+DEFAULT_FROM_EMAIL = 'ptreportingportal@wsdot.wa.gov'
 
 if dev_mode:
     EMAIL_HOST_PASSWORD = 'flyyzcoccfrxyaap'

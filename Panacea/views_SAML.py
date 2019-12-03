@@ -89,7 +89,8 @@ def _get_metadata():
 
 
 def _get_saml_client(domain):
-    acs_url = domain
+    acs_url = domain + '/'
+    print(acs_url)
     metadata = _get_metadata()
 
     saml_settings = {
@@ -229,13 +230,13 @@ def signin(r):
         import urllib.parse as _urlparse
         from urllib.parse import unquote
     next_url = r.GET.get('next', _default_next_url())
-    print(next_url)
+
     try:
         if 'next=' in unquote(next_url):
             next_url = _urlparse.parse_qs(_urlparse.urlparse(unquote(next_url)).query)['next'][0]
     except:
         next_url = r.GET.get('next', _default_next_url())
-
+    print(next_url)
     # Only permit signin requests where the next_url is a safe URL
     if parse_version(get_version()) >= parse_version('2.0'):
         url_ok = is_safe_url(next_url, None)
@@ -256,6 +257,7 @@ def signin(r):
         if key == 'Location':
             redirect_url = value
             break
+    print(redirect_url)
     return HttpResponseRedirect(redirect_url)
 
 

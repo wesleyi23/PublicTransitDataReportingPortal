@@ -1,5 +1,6 @@
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AbstractUser, BaseUserManager, Group  ## A new class is imported. ##
+from django.core.validators import MaxValueValidator
 from django.db import models
 from django.db.models import UniqueConstraint
 from django.db.models.functions import datetime
@@ -208,7 +209,7 @@ class vanpool_report(models.Model):
     loaner_spare_vans_in_fleet = models.IntegerField(blank=True, null=True)
     vanpool_passenger_trips = models.IntegerField(blank=True, null=True)
     vanpool_miles_traveled = models.FloatField(blank=True, null=True)
-    average_riders_per_van = models.FloatField(blank=True, null=True)
+    average_riders_per_van = models.FloatField(blank=True, null=True, validators=[MaxValueValidator(15)])
     average_round_trip_miles = models.FloatField(blank=True, null=True)
     history = HistoricalRecords()
 

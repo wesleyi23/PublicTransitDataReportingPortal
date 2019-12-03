@@ -79,6 +79,7 @@ COPY --from=builder /usr/src/PublicTransitDataReportingPortal/wheels /wheels
 COPY --from=builder /usr/src/PublicTransitDataReportingPortal/requirements.txt .
 RUN pip install --upgrade pip
 RUN pip install --no-cache /wheels/*
+RUN pip install django-rest-auth
 
 
 # copy entrypoint-prod.sh

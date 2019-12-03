@@ -8,16 +8,20 @@ import datetime
 from dateutil import relativedelta
 from TransitData import settings
 from django.template.loader import render_to_string
+from mailer.engine import send_all
 
+@periodic_task(run_every = crontab(minute = 2))
+def email_tasks():
+    send_all()
 
-@shared_task()
-def send_emails_now():
-    send_mail('Late Vanpool Reporting Notice', 'It is an automated email', settings.EMAIL_HOST_USER, ['wesleyi@wsdot.wa.gov'], fail_silently=False)
+#@shared_task()
+#def send_emails_now():
+ #   send_mail('Late Vanpool Reporting Notice', 'It is an automated email', settings.EMAIL_HOST_USER, ['wesleyi@wsdot.wa.gov'], fail_silently=False)
 
 
 @periodic_task(run_every = crontab(hour=7, minute=30, day_of_week= 'monday'), name = "week_late", ignore_result = True)
 def week_late():
-    for i in organization.objects.all():
+    for i in organization.objects.filter(vanpool_program=True):
         bad_orgs = ['Washington State Department of Transportation', 'Test Reporter', 'Test Reporter 2']
         # need to add an active/inactive to orgs, so we aren't spamming random people
         if i.name in bad_orgs:
@@ -48,7 +52,7 @@ def week_late():
 
 @periodic_task(run_every = crontab(minute = 0, hour = 8), name = "check_due_date_of_report", ignore_result = True )
 def check_due_date_of_report():
-    for i in organization.objects.all():
+    for i in organization.objects.filter(vanpool_program = True):
         bad_orgs = ['Washington State Department of Transportation', 'Test Reporter', 'Test Reporter 2']
         # need to add an active/inactive to orgs, so we aren't spamming random people
         if i.name in bad_orgs:

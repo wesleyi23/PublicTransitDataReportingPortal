@@ -11,6 +11,10 @@ from dateutil.relativedelta import relativedelta
 
 #
 
+def complete_data():
+    latest_data = vanpool_report.objects.filter(vanpool_groups_in_operation__isnull=False).values('report_year','report_month').annotate(Count('id')).order_by('-id__count', '-report_year', '-report_month').first()
+    return latest_data
+
 
 def calculate_percent_change(data1, data2):
     percent = round((data1 - data2)/data2, 2)

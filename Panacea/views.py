@@ -18,7 +18,7 @@ import datetime
 from Panacea.decorators import group_required
 from .utilities import monthdelta, get_wsdot_color, get_vanpool_summary_charts_and_table, percent_change_calculation, \
     find_vanpool_organizations, get_current_summary_report_year, filter_revenue_sheet_by_classification, \
-    find_user_organization_id
+    find_user_organization_id, complete_data
 from django.http import Http404
 from .filters import VanpoolExpansionFilter
 from django.conf import settings
@@ -582,6 +582,8 @@ def vanpool_organization_summary(request, org_id=None):
 @group_required('Vanpool reporter', 'WSDOT staff')
 def vanpool_statewide_summary(request):
 
+    latest_complete_data = complete_data()
+
     if request.POST:
         settings_form = statewide_summary_settings(data=request.POST)
         include_agency_classifications = request.POST.getlist("include_agency_classifications")
@@ -613,7 +615,8 @@ def vanpool_statewide_summary(request):
                                                                             'summary_table_data': summary_table_data,
                                                                             'summary_table_data_total': summary_table_data_total,
                                                                             'include_regions': include_regions,
-                                                                            'include_agency_classifications': include_agency_classifications
+                                                                            'include_agency_classifications': include_agency_classifications,
+                                                                            'latest_complete_data': latest_complete_data
                                                                             }
                   )
 
