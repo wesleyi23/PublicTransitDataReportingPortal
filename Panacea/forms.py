@@ -425,6 +425,10 @@ class VanpoolMonthlyReport(forms.ModelForm):
                 attrs={'required': True, 'class': 'form-control input-sm'}),
             'average_round_trip_miles': forms.TextInput(
                 attrs={'required': True, 'class': 'form-control input-sm'}),
+            'operating_cost': forms.TextInput(
+                attrs={'required': False, 'class': 'form-control input-sm'}),
+            'frequency_of_claims': forms.TextInput(
+                attrs={'required': False, 'class': 'form-control input-sm'}),
 
         }
 

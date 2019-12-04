@@ -544,6 +544,18 @@ def Vanpool_data(request):
 
 @login_required(login_url='/Panacea/login')
 @group_required('Vanpool reporter', 'WSDOT staff')
+
+def download_vanpool_data(request, org_id = None):
+    org_id = profile.objects.get(custom_user_id=request.user.id).organization_id
+    org_name = organization.objects.get(id=org_id).name
+    vanpool_data = vanpool_report.objects.filter(organization_id=org_id)
+    return render(request, 'pages/vanpool/download_vanpool_data.html', {'org_name': org_name,
+                                                                        'vanpool_data': vanpool_data})
+
+
+
+@login_required(login_url='/Panacea/login')
+@group_required('Vanpool reporter', 'WSDOT staff')
 def vanpool_organization_summary(request, org_id=None):
 
     if request.POST:

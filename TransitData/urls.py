@@ -44,6 +44,7 @@ urlpatterns = [
     path('vanpool/Report/', views.Vanpool_report, name="Vanpool_report"),
     path('vanpool/Report/<int:year>/<int:month>/', views.Vanpool_report, name="Vanpool_report"),
     path('vanpool/Data/', views.Vanpool_data, name="Vanpool_data"),
+    path('vanpool/download_vanpool_data', views.download_vanpool_data, name = 'download_vanpool_data'),
     path('vanpool/statewide_summary/', views.vanpool_statewide_summary, name="vanpool_statewide_summary"),
     path('vanpool/organization_summary/', views.vanpool_organization_summary, name="vanpool_organization_summary"),
     path('vanpool/organization_summary/<int:org_id>/', views.vanpool_organization_summary, name="vanpool_organization_summary"),

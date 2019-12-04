@@ -211,6 +211,8 @@ class vanpool_report(models.Model):
     vanpool_miles_traveled = models.FloatField(blank=True, null=True)
     average_riders_per_van = models.FloatField(blank=True, null=True, validators=[MaxValueValidator(15)])
     average_round_trip_miles = models.FloatField(blank=True, null=True)
+    frequency_of_claims = models.FloatField(blank=True, null=True)
+    operating_cost = models.FloatField(blank=True, null=True)
     history = HistoricalRecords()
 
     @property

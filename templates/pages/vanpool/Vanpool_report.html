@@ -243,6 +243,29 @@
                                     </td>
                                     <td class="AutoNumeric-Decimal">{{ form.average_round_trip_miles }}</td>
                                 </tr>
+                              <tr class="fieldWrapper">
+                                    <td>{{ form.frequency_of_claims.errors }}</td>
+                                    <td>{{ form.frequency_of_claims.label_tag }}
+                                        <sup>
+                                            <i class="fas fa-question-circle help-popover"
+                                               data-toggle="popover" title="Frequency of claims:"
+                                               data-content="Insurance claims this month."></i>
+                                        </sup>
+                                    </td>
+                                    <td class="AutoNumeric-Int">{{ form.average_round_trip_miles }}</td>
+                                </tr>
+                                <tr class="fieldWrapper">
+                                    <td>{{ form.operating_cost.errors }}</td>
+                                    <td>{{ form.operating_cost.label_tag }}
+                                        <sup>
+                                            <i class="fas fa-question-circle help-popover"
+                                               data-toggle="popover" title="Operating Costs:"
+                                               data-content="Operating Costs (including direct and allocated costs)."></i>
+                                        </sup>
+                                    </td>
+                                    <td class="AutoNumeric-Int">{{ form.operating_cost }}</td>
+                                </tr>
+
                             </table>
                             {% if new_report %}
 
