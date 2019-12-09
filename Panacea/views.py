@@ -20,7 +20,7 @@ from .utilities import monthdelta, get_wsdot_color, get_vanpool_summary_charts_a
     find_vanpool_organizations, get_current_summary_report_year, filter_revenue_sheet_by_classification, \
     find_user_organization_id, complete_data
 from django.http import Http404
-from .filters import VanpoolExpansionFilter
+from .filters import VanpoolExpansionFilter, VanpoolReportFilter
 from django.conf import settings
 from .emails import send_user_registration_email, notify_user_that_permissions_have_been_requested, active_permissions_request_notification
 import base64
@@ -544,13 +544,16 @@ def Vanpool_data(request):
 
 @login_required(login_url='/Panacea/login')
 @group_required('Vanpool reporter', 'WSDOT staff')
-
 def download_vanpool_data(request, org_id = None):
+    print(request.user.id)
     org_id = profile.objects.get(custom_user_id=request.user.id).organization_id
     org_name = organization.objects.get(id=org_id).name
-    vanpool_data = vanpool_report.objects.filter(organization_id=org_id)
+    vanshare_existence = organization.objects.get(id = org_id).vanshare_program
+    vanpool_report_filtered = vanpool_report.objects.filter(organization_id = org_id, vanpool_groups_in_operation__isnull=False)
+    vanpool_data = VanpoolReportFilter(request.GET, queryset=vanpool_report_filtered)
     return render(request, 'pages/vanpool/download_vanpool_data.html', {'org_name': org_name,
-                                                                        'vanpool_data': vanpool_data})
+                                                                        'vanpool_data': vanpool_data,
+                                                                        'vanshare_existence': vanshare_existence})
 
 
 

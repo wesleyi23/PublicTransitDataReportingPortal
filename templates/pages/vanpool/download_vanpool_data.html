@@ -9,24 +9,23 @@
 
 {% endblock %}
 
-{%  block content %}
+{% block content %}
+
+<div class="container-fluid">
+
+        <!-- Page Heading -->
+
+    </div>
+
 
  <div class="card-body" style="font-size: 0.8rem">
                         <form action="" method="get">
                             <div class="well">
-                              <h4 style="margin-top: 0">Create a New Report</h4>
+                              <h4 style="margin-top: 0">Download Vanpool Data</h4>
                                   <div class="row">
                                 <div class="form-group col-sm-4 col-md-3">
-                                    {{ filter.form.vanpool_goal_met.label_tag }}
-                                    {{ filter.form.vanpool_goal_met }}
-                                </div>
-                                      <div class="form-group col-sm-4 col-md-3">
-                                    {{ filter.form.expired.label_tag }}
-                                    {{ filter.form.expired }}
-                                </div>
-                                      <div class="form-group col-sm-4 col-md-3">
-                                    {{ filter.form.awarded_biennium.label_tag}}
-                                    {{ filter.form.awarded_biennium }}
+                                    {{ vanpool_data.form.label_tag }}
+                                    {{ vanpool_data.form.report_year}}
                                 </div>
                                   </div>
                             </div>
@@ -39,15 +38,54 @@
                         <table id="download_vanpool_data_table" class='table tdt-bootstrap4 dataTable dataTable_wrapper'>
                             <thead class="table-secondary" style="font-size: 0.8rem">
                             <tr>
-                               <th></th>
+                               <th>Report Year</th>
+                                <th>Report Month</th>
+                                <th>Vanpool Groups in Operation</th>
+                                <th>Vanpool Group Starts</th>
+                                <th>Vanpool Group Folds</th>
+                                <th>Vans Available</th>
+                                <th> Spare Loaner Vans in Fleet</th>
+                                <th> Vanpool Passenger Trips</th>
+                                <th> Vanpool Miles Traveled</th>
+                                <th> Average Riders per Van</th>
+                                <th> Average Round Trip Miles</th>
+                                <th> Frequency of Claims</th>
+                                <th> Operating Costs</th>
+                                {% if vanshare_existence == True %}
+                                <th> Vanshare Groups in Operation</th>
+                                <th>Vanshare Group Starts</th>
+                                <th> Vanshare Group Folds</th>
+                                <th> Vanshare Passenger Trips </th>
+                                <th> Vanshare Mile Travled</th>
+                                {% endif %}
                             </tr>
                             </thead>
                             <tbody>
+                            {% for row in vanpool_data.qs %}
                             <tr>
-                                <td>
-
-                                </td>
+                            <td>{{ row.report_year }}</td>
+                            <td> {{ row.report_month }}</td>
+                            <td>{{ row.vanpool_groups_in_operation }}</td>
+                            <td>{{ row.vanpool_group_starts }}</td>
+                            <td> {{ row.vanpool_group_folds }}</td>
+                            <td> {{ row.vans_available }}</td>
+                            <td>{{ row.loaner_spare_vans_in_fleet }}</td>
+                            <td>{{ row.vanpool_passenger_trips }}</td>
+                            <td> {{ row.vanpool_miles_traveled }}</td>
+                            <td> {{ row.average_riders_per_van }}</td>
+                            <td> {{ row.average_round_trip_miles }}</td>
+                            <td>{{ row.frequency_of_claims }}</td>
+                            <td>{{ row.operating_cost }}</td>
+                            {% if vanshare_existence == True %}
+                            <td>{{ row.vanshare_groups_in_operation }}</td>
+                            <td>{{ row.vanshare_group_starts }}</td>
+                            <td> {{ row.vanshare_group_folds }}</td>
+                            <td> {{ row.vanshare_passenger_trips }}</td>
+                            <td> {{ row.vanshare_miles_traveled }}</td>
+                             {% endif %}
                             </tr>
+
+                            {% endfor %}
                             </tbody>
                         </table>
 
@@ -57,12 +95,12 @@
             </div>
         </div>
     </div>
+{% endblock %}
 
 
 
 
 
-{%  endblock %}
 
 {% block page_scripts %}
     <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.19/js/jquery.dataTables.js"></script>
@@ -102,6 +140,6 @@
             });
 
         });
-
+</script>
 
 {%  endblock %}
