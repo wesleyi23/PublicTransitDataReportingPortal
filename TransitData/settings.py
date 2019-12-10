@@ -79,19 +79,15 @@ MIDDLEWARE = [
 ]
 
 
-EMAIL_BACKEND = "mailer.backend.DbBackend"
-MAILER_EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.outlook.office365.com'
-EMAIL_HOST_USER = 'ptreportingportal@wsdot.wa.gov'
+if dev_mode:
+    SENDGRID_API_KEY = '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'
+else:
+    SENDGRID_API_KEY = os.environ.get('SENDGRID_API_KEY')
+
+EMAIL_BACKEND = 'sgbackend.SendGridBackend'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 DEFAULT_FROM_EMAIL = 'ptreportingportal@wsdot.wa.gov'
-
-if dev_mode:
-    EMAIL_HOST_PASSWORD = 'flyyzcoccfrxyaap'
-else:
-    EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD")
-
 
 ROOT_URLCONF = 'TransitData.urls'
 

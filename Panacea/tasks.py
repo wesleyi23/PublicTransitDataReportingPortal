@@ -10,9 +10,9 @@ from TransitData import settings
 from django.template.loader import render_to_string
 from mailer.engine import send_all
 
-@periodic_task(run_every = crontab(minute = 2))
-def email_tasks():
-    send_all()
+#@periodic_task(run_every = crontab(minute = 2))
+#def email_tasks():
+ #   send_all()
 
 #@shared_task()
 #def send_emails_now():

@@ -545,12 +545,13 @@ def Vanpool_data(request):
 @login_required(login_url='/Panacea/login')
 @group_required('Vanpool reporter', 'WSDOT staff')
 def download_vanpool_data(request, org_id = None):
-    print(request.user.id)
+    print(settings.SENDGRID_API_KEY)
     org_id = profile.objects.get(custom_user_id=request.user.id).organization_id
     org_name = organization.objects.get(id=org_id).name
     vanshare_existence = organization.objects.get(id = org_id).vanshare_program
     vanpool_report_filtered = vanpool_report.objects.filter(organization_id = org_id, vanpool_groups_in_operation__isnull=False)
     vanpool_data = VanpoolReportFilter(request.GET, queryset=vanpool_report_filtered)
+    send_mail('testing', 'mymessage', settings.DEFAULT_FROM_EMAIL, ['schumen@wsdot.wa.gov'], fail_silently=False)
     return render(request, 'pages/vanpool/download_vanpool_data.html', {'org_name': org_name,
                                                                         'vanpool_data': vanpool_data,
                                                                         'vanshare_existence': vanshare_existence})
