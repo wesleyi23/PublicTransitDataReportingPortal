@@ -80,7 +80,7 @@ MIDDLEWARE = [
 
 
 if dev_mode:
-    SENDGRID_API_KEY = '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'
+    SENDGRID_API_KEY = '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'
 else:
     SENDGRID_API_KEY = os.environ.get('SENDGRID_API_KEY')
 
