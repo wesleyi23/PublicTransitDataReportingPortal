@@ -625,6 +625,7 @@ def vanpool_statewide_summary(request):
             include_regions=include_regions,
             include_agency_classifications=include_agency_classifications)
 
+
     return render(request, 'pages/vanpool/vanpool_statewide_summary.html', {'settings_form': settings_form,
                                                                             'chart_label': x_axis_labels,
                                                                             'all_charts': all_charts,

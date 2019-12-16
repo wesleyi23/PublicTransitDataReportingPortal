@@ -138,6 +138,12 @@ class organization(models.Model):
     #fixed_route_expansion = models.BooleanField(blank=True, null=True)
 
 
+class vanpool_details(models.Model):
+    organization = models.ForeignKey(organization, on_delete=models.PROTECT, related_name="+")
+    vanpool_program_start_date = models.DateField(blank=True, null=True)
+    vanpool_program_end_date = models.DateField(blank=True, null= True)
+
+
 class profile(models.Model):
     custom_user = models.OneToOneField(get_user_model(), on_delete=models.PROTECT)
     profile_submitted = models.BooleanField(default=False)

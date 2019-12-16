@@ -243,7 +243,7 @@ def green_house_gas_per_vanpool_mile():
     percent_small_van = 0.60  # update using report found here:G:\Evaluation Group\RVCT and WSRO Vanpool\Info For Greenhouse Gas Calculations\VanpoolSeatingCapcityReport.xlsx (right click on the pivot table and hit refresh to get latest data)
     small_van_mpg = 24.00  # Small Vans are vans with a wheelbase less than 121 inches.  Some but not all 8 passanger vanpool vans have a wheelbase less than 21 inches.  Use the percent of vanpool vans with a passanger capacity of 8 or less.
     large_van_mpg = 17.40
-    co2e_per_gallon = 0.008887  # units = transit_metric tones
+    co2e_per_gallon = 0.00889  # units = transit_metric tones
 
     fleet_fuel_efficiency = (small_van_mpg * percent_small_van) + (large_van_mpg * (1 - percent_small_van))
     co2_per_vanpool_mile_traveled = (1 / fleet_fuel_efficiency) * co2e_per_gallon
@@ -257,10 +257,9 @@ def green_house_gas_per_sov_mile():
     """
 
     sov_miles_per_gallon = 22
-    co2e_per_gallon = 0.008887  # units = transit_metric tones
+    co2e_per_gallon = 0.00889  # units = transit_metric tones
 
     co2_per_sov_mile_traveled = (1 / sov_miles_per_gallon) * co2e_per_gallon
-
     return co2_per_sov_mile_traveled
 
 
@@ -285,6 +284,10 @@ def get_vanpool_summary_charts_and_table(include_years,
         ("vanpool_passenger_trips", "vanshare_passenger_trips"),
         ("vanpool_groups_in_operation", "vanshare_groups_in_operation"),
     ]
+
+    sov_miles_per_gallon = 22
+    co2e_per_gallon = 0.00889  # units = transit_metric tones
+    co2_per_sov_mile_traveled = (1 / sov_miles_per_gallon) * co2e_per_gallon
 
     all_chart_data = [report for report in
                       vanpool_report.objects.order_by('report_year', 'report_month').all() if
@@ -313,8 +316,8 @@ def get_vanpool_summary_charts_and_table(include_years,
                                              report_year__lte=datetime.datetime.today().year,
                                              organization_id__in=orgs_to_include).order_by('report_year',
                                                                                            'report_month').all()
-
     # TODO once the final data is in we need to confirm that the greenhouse gas calculations are correct
+    print(include_years)
     summary_table_data = vanpool_report.objects.filter(
         report_year__gte=datetime.datetime.today().year - (include_years - 1),
         report_year__lte=datetime.datetime.today().year,
@@ -329,7 +332,8 @@ def get_vanpool_summary_charts_and_table(include_years,
                     F('average_riders_per_van') - 1)) * green_house_gas_per_sov_mile() - Sum(
             F(MEASURES[0][0]) + F(MEASURES[0][1])) * green_house_gas_per_vanpool_mile()
     )
-
+    print(green_house_gas_per_sov_mile())
+    print(green_house_gas_per_vanpool_mile())
     # TODO once the final data is in we need to confirm that the greenhouse gas calculations are correct
     summary_table_data_total = vanpool_report.objects.filter(
         report_year__gte=datetime.datetime.today().year - (include_years - 1),
