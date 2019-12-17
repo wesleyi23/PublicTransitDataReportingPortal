@@ -1,7 +1,9 @@
 import calendar
 import json
 from .models import organization, vanpool_expansion_analysis, vanpool_report, profile
-from django.db.models import Max, Subquery, F, OuterRef, Case, CharField, Value, When, Sum, Count
+from django.db.models import Max, Subquery, F, OuterRef, Case, CharField, Value, When, Sum, Count, Avg, FloatField, \
+    ExpressionWrapper
+from django.db.models.functions import Coalesce
 
 import datetime
 from dateutil.relativedelta import relativedelta
@@ -317,7 +319,6 @@ def get_vanpool_summary_charts_and_table(include_years,
                                              organization_id__in=orgs_to_include).order_by('report_year',
                                                                                            'report_month').all()
     # TODO once the final data is in we need to confirm that the greenhouse gas calculations are correct
-    print(include_years)
     summary_table_data = vanpool_report.objects.filter(
         report_year__gte=datetime.datetime.today().year - (include_years - 1),
         report_year__lte=datetime.datetime.today().year,
@@ -328,12 +329,16 @@ def get_vanpool_summary_charts_and_table(include_years,
         table_total_passenger_trips=Sum(F(MEASURES[1][0]) + F(MEASURES[2][1])),
         table_total_groups_in_operation=Sum(F(MEASURES[2][0]) + F(MEASURES[2][1])) / Count('report_month',
                                                                                            distinct=True),
-        green_house_gas_prevented=Sum((F(MEASURES[0][0]) + F(MEASURES[0][1])) * (
-                    F('average_riders_per_van') - 1)) * green_house_gas_per_sov_mile() - Sum(
-            F(MEASURES[0][0]) + F(MEASURES[0][1])) * green_house_gas_per_vanpool_mile()
+        statewide_average_riders_per_van=ExpressionWrapper(Avg(F('average_riders_per_van')) * Sum(F('vanpool_groups_in_operation')+ F('vanshare_groups_in_operation')) /
+                                         Sum(F('vanpool_groups_in_operation') + F('vanshare_groups_in_operation')), output_field=FloatField())
+
+
     )
-    print(green_house_gas_per_sov_mile())
-    print(green_house_gas_per_vanpool_mile())
+    for year in summary_table_data:
+        total_sov_co2 = year['table_total_miles_traveled'] * year['statewide_average_riders_per_van']* green_house_gas_per_sov_mile()
+        total_van_co2 = year['table_total_miles_traveled'] * green_house_gas_per_vanpool_mile()
+        total_co2_saved = total_sov_co2 - total_van_co2
+        year['total_co2_saved'] = total_co2_saved
     # TODO once the final data is in we need to confirm that the greenhouse gas calculations are correct
     summary_table_data_total = vanpool_report.objects.filter(
         report_year__gte=datetime.datetime.today().year - (include_years - 1),
@@ -341,10 +346,13 @@ def get_vanpool_summary_charts_and_table(include_years,
         organization_id__in=orgs_to_include).aggregate(
         table_total_miles_traveled=Sum(F(MEASURES[0][0]) + F(MEASURES[0][1])),
         table_total_passenger_trips=Sum(F(MEASURES[1][0]) + F(MEASURES[2][1])),
-        green_house_gas_prevented=Sum((F(MEASURES[0][0]) + F(MEASURES[0][1])) * (
-                F('average_riders_per_van') - 1)) * green_house_gas_per_sov_mile() - Sum(
-            F(MEASURES[0][0]) + F(MEASURES[0][1])) * green_house_gas_per_vanpool_mile()
+        statewide_average_riders_per_van=ExpressionWrapper(Avg(F('average_riders_per_van')) * Sum(F('vanpool_groups_in_operation')+ F('vanshare_groups_in_operation')) /
+                                         Sum(F('vanpool_groups_in_operation') + F('vanshare_groups_in_operation')), output_field=FloatField())
     )
+    total_sov_co2 = summary_table_data_total['table_total_miles_traveled'] * summary_table_data_total['statewide_average_riders_per_van'] * green_house_gas_per_sov_mile()
+    total_van_co2 = summary_table_data_total['table_total_miles_traveled'] * green_house_gas_per_vanpool_mile()
+    total_co2_saved = total_sov_co2 - total_van_co2
+    summary_table_data_total['total_co2_saved'] = total_co2_saved
 
     all_charts = list()
     for i in range(len(MEASURES) + 1):

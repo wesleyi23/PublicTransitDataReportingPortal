@@ -222,6 +222,15 @@ class vanpool_report(models.Model):
     history = HistoricalRecords()
 
     @property
+    def report_due_date(self):
+        month = self.report_month
+        year = self.report_year + month // 12
+        month = month % 12 + 1
+        day = 1
+        return datetime.date(year, month, day)
+
+
+    @property
     def status(self):
         if self.report_date is None:
             if datetime.datetime.now().date() > self.report_due_date:
@@ -233,13 +242,7 @@ class vanpool_report(models.Model):
         else:
             return "Error"
 
-    @property
-    def report_due_date(self):
-        month = self.report_month
-        year = self.report_year + month // 12
-        month = month % 12 + 1
-        day = 1
-        return datetime.date(year, month, day)
+
 
     @property
     def report_year_month_label(self):
