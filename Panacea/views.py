@@ -7,10 +7,10 @@ from django.contrib.auth.decorators import login_required
 from django.db import transaction
 from django.db.models import Min, Sum, Avg
 from django.forms import formset_factory, modelformset_factory, BaseModelFormSet, ModelForm
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from django.shortcuts import render, redirect
 from django.db.models.functions import datetime
-from django.core.mail import send_mail
+from django.core.mail import send_mail, BadHeaderError
 from django.template.loader import render_to_string
 from django.db.models import Max
 from dateutil.relativedelta import relativedelta
@@ -18,7 +18,7 @@ import datetime
 from Panacea.decorators import group_required
 from .utilities import monthdelta, get_wsdot_color, get_vanpool_summary_charts_and_table, percent_change_calculation, \
     find_vanpool_organizations, get_current_summary_report_year, filter_revenue_sheet_by_classification, \
-    find_user_organization_id, complete_data
+    find_user_organization_id, complete_data, green_house_gas_per_sov_mile, green_house_gas_per_vanpool_mile
 from django.http import Http404
 from .filters import VanpoolExpansionFilter, VanpoolReportFilter
 from django.conf import settings
@@ -43,7 +43,7 @@ from .forms import CustomUserCreationForm, \
     Modify_A_Vanpool_Expansion, organisation_summary_settings, organization_information, cover_sheet_service, \
     cover_sheet_organization, \
     summary_revenue_form, summary_expense_form, service_offered, transit_data_form, \
-    fund_balance_form, service_offered_form, validation_error_form
+    fund_balance_form, service_offered_form, validation_error_form, email_contact_form
 
 from .models import profile, vanpool_report, custom_user, vanpool_expansion_analysis, organization, cover_sheet, \
     revenue, transit_data, expense, expense_source, service_offered, revenue_source, \
@@ -111,12 +111,27 @@ def dashboard(request):
             next_vanpool_report_status = vanpool_report.objects.get(organization_id=user_org_id,
                                                                     report_month=recent_vanpool_report.report_month + month_add,
                                                                     report_year=recent_vanpool_report.report_year + year_add).status
+
             return next_vanpool_report_status
+
+        def ghg_calculator():
+            current_monthly_sov = green_house_gas_per_sov_mile() * recent_vanpool_report.average_riders_per_van * (recent_vanpool_report.vanpool_miles_traveled + recent_vanpool_report.vanshare_miles_traveled)
+            current_monthly_vanpool_emissions = recent_vanpool_report.vanpool_miles_traveled * green_house_gas_per_vanpool_mile()
+            current_monthly_emissions = current_monthly_sov - current_monthly_vanpool_emissions
+            last_year_monthly_sov = green_house_gas_per_sov_mile() * last_year_report.average_riders_per_van * (last_year_report.vanpool_miles_traveled + last_year_report.vanshare_miles_traveled)
+            last_year_monthly_vanpool_emissions = (last_year_report.vanpool_miles_traveled + last_year_report.vanshare_miles_traveled) * green_house_gas_per_vanpool_mile()
+            last_year_monthly_emissions = last_year_monthly_sov - last_year_monthly_vanpool_emissions
+
+
+            ghg_percent = ((current_monthly_emissions-last_year_monthly_emissions)/last_year_monthly_emissions)
+            return [round(current_monthly_emissions, 2), ghg_percent]
+
         return render(request, 'pages/dashboard.html', {
             'groups_in_operation': get_most_recent_and_change("total_groups_in_operation"),
             'total_passenger_trips': get_most_recent_and_change("total_passenger_trips"),
             'average_riders_per_van': get_most_recent_and_change("average_riders_per_van"),
             'total_miles_traveled': get_most_recent_and_change("total_miles_traveled"),
+            'co2_emissions_avoided': ghg_calculator(),
             'report_status': check_status()
         })
 
@@ -545,7 +560,6 @@ def Vanpool_data(request):
 @login_required(login_url='/Panacea/login')
 @group_required('Vanpool reporter', 'WSDOT staff')
 def download_vanpool_data(request, org_id = None):
-    print(settings.SENDGRID_API_KEY)
     org_id = profile.objects.get(custom_user_id=request.user.id).organization_id
     org_name = organization.objects.get(id=org_id).name
     vanshare_existence = organization.objects.get(id = org_id).vanshare_program
@@ -661,8 +675,6 @@ def Vanpool_Growth(request):
         organizationId = i.id
         start_vanpool_report_year = vanpool_report.objects.filter(organization_id=organizationId, report_date__isnull=False, report_month=12,).first()
         end_vanpool_report_year = vanpool_report.objects.filter(organization_id=organizationId, report_date__isnull=False, report_month=12,).last()
-        print(start_vanpool_report_year.report_year)
-        print(end_vanpool_report_year.report_year)
     return render(request, 'pages/vanpool/VanpoolGrowth.html', {})
 
 
@@ -1466,3 +1478,21 @@ def your_logged_in(request):
 
 def login_denied(request):
     return render(request, 'login_denied.html')
+
+
+def contact_us(request):
+    if request.method == 'GET':
+        form = email_contact_form()
+    else:
+        form = email_contact_form(request.POST)
+        if form.is_valid():
+            subject = form.cleaned_data['subject']
+            from_email = form.cleaned_data['from_email']
+            message = form.cleaned_data['message']
+            try:
+                send_mail(subject, from_email, message, [settings.DEFAULT_FROM_EMAIL])
+            except BadHeaderError:
+                return HttpResponse('Invalid header found')
+            return redirect('success')
+    return render(request, 'contactus.html', {'form':form})
+

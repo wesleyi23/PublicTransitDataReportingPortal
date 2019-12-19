@@ -772,6 +772,12 @@ class validation_error_form(forms.ModelForm):
             'id': forms.NumberInput(attrs={ 'class': 'form-control','readonly':'readonly'})
             }
 
+class email_contact_form(forms.Form):
+    from_email = forms.EmailField(required=True)
+    subject = forms.CharField(required=True)
+    message = forms.CharField(widget=forms.Textarea, required=True)
+
+
 # class source_id_formset(BaseModelFormSet):
 #     def __init__(self, source_ids, year, my_user, *args, **kwargs):
 #         super(source_id_formset, self).__init__(*args, **kwargs)

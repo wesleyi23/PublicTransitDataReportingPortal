@@ -522,6 +522,9 @@ class validation_errors(models.Model):
     class Meta:
         unique_together = ['year', 'transit_mode', 'administration_of_mode', 'organization', 'error']
 
+
+
+
 # class ending_balance_categories(models.Model):
 #     ending_balance_category = models.CharField(max_length=100, blank=False, null = False)
 #     def __str__(self):
