@@ -1,3 +1,4 @@
+pysaml2
 amqp==2.5.1
 Babel==2.7.0
 billiard==3.6.1.0
@@ -18,13 +19,10 @@ kombu==4.6.5
 monotonic==1.5
 more-itertools==7.2.0
 phonenumbers==8.10.21
-pysaml2==4.9.0
 python-crontab==2.3.9
 python-dateutil==2.8.0
 python-stdnum==1.11
 pytz==2019.3
-sendgrid==3.6.5
-sendgrid-django==4.2.0
 six==1.12.0
 sqlparse==0.3.0
 vine==1.3.0
@@ -33,4 +31,16 @@ gunicorn==19.9.0
 whitenoise==4.1.4
 django-mailer==2.0
 django-reorder==0.2.1
+djangorestframework == 3.10.3
+djangorestframework-jwt == 1.11.0
+PyJWT ==1.7.1
+pycparser==2.18
+defusedxml ==0.5.0
+pyOpenSSL==18.0.0
+pycparser==2.18
+requests==2.22.0
+certifi==2019.9.11
+chardet==3.0.4
+idna==2.7
+urllib3==1.23
 

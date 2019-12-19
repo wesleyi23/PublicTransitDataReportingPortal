@@ -166,6 +166,8 @@ def wsdot(r):
 
     authn_response = saml_client.parse_authn_request_response(
         resp, entity.BINDING_HTTP_POST)
+
+    print(authn_response)
     if authn_response is None:
         return HttpResponseRedirect(get_reverse([denied, 'login_denied']))
 
@@ -182,7 +184,8 @@ def wsdot(r):
     is_new_user = False
 
     try:
-        target_user = User.objects.get(username=user_name)
+        #TODO change to custom user get by email
+        target_user = User.objects.get(email=user_email)
         if settings.SAML2_AUTH.get('TRIGGER', {}).get('BEFORE_LOGIN', None):
             import_string(settings.SAML2_AUTH['TRIGGER']['BEFORE_LOGIN'])(user_identity)
     except User.DoesNotExist:
