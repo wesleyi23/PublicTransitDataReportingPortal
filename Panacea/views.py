@@ -1494,5 +1494,5 @@ def contact_us(request):
             except BadHeaderError:
                 return HttpResponse('Invalid header found')
             return redirect('success')
-    return render(request, 'contactus.html', {'form':form})
+    return render(request, 'pages/ContactUs.html', {'form':form})
 

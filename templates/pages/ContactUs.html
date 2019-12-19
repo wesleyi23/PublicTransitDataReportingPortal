@@ -1,0 +1,34 @@
+{% extends 'index.html' %}
+{% load static %}
+
+{% block content %}
+
+    <p> If you are having any issues with the site or with inputting data or if you need to report anything broken, please fill out this contact form and
+    we will respond as soon as possible: </p>
+  <form>
+
+     <table>
+<tbody>
+        <tr>
+            <td> Email</td>
+            <td> {{ form.from_email }}</td>
+            <td> {{ form.errors }}</td>
+        </tr>
+        <tr>
+            <td>Subject</td>
+            <td> {{ form.subject }}</td>
+            <td> {{ form.errors }}</td>
+        </tr>
+    <tr>
+        <td>Message</td>
+        <td> {{ form.message }}</td>
+        <td> {{ form.erros }}</td>
+    </tr>
+</tbody>
+
+     </table>
+
+<input type="submit" value="Looks good" class="btn btn-primary">
+</form>
+
+{%  endblock %}
