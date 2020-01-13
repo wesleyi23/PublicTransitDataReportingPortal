@@ -408,11 +408,12 @@ class transit_metrics(models.Model):
 
 class transit_mode(models.Model):
     name = models.CharField(max_length=90, blank=True)
+    rollup_mode = models.CharField(max_length=90, blank=True, null=True)
 
     def __str__(self):
         return self.name
 
-
+#TODO remove this table
 class rollup_mode(models.Model):
     name = models.CharField(max_length=80)
 
@@ -420,7 +421,6 @@ class rollup_mode(models.Model):
         return self.name
 
 
-# TODO Take out of camel case so the database table names are clean
 class transit_data(models.Model):
 
     DO_OR_PT = (
@@ -431,7 +431,7 @@ class transit_data(models.Model):
     organization = models.ForeignKey(organization, on_delete=models.PROTECT, related_name='+')
     year = models.IntegerField()
     transit_mode = models.ForeignKey(transit_mode, on_delete=models.PROTECT, related_name='+')
-    rollup_mode = models.ForeignKey(rollup_mode, on_delete=models.PROTECT,  related_name='+')
+    rollup_mode = models.ForeignKey(rollup_mode, on_delete=models.PROTECT,  related_name='+', blank=True, null=True)
     administration_of_mode = models.CharField(max_length=80, choices=DO_OR_PT)
     transit_metric = models.ForeignKey(transit_metrics, on_delete=models.PROTECT, related_name='+')
     reported_value = models.FloatField(blank=True, null=True)

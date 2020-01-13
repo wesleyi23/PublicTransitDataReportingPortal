@@ -29,16 +29,16 @@
                             <a class="nav-link" href="{% url 'summary_modes' %}">Confirm services</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{% url 'report_transit_data' %}">Transit data</a>
+                            <a class="nav-link" href="">Transit data</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link active" href="{% url 'report_revenue' %}">revenue</a>
+                            <a class="nav-link" href="">Revenue</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{% url 'report_expenses' %}">Expenses</a>
+                            <a class="nav-link" href="">Expenses</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{% url 'ending_balances' %}">Ending balances</a>
+                            <a class="nav-link" href="">Ending balances</a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" href="{% url 'review_data' %}">Review</a>
@@ -50,12 +50,12 @@
 
 
                 <ul class="nav justify-content-center pt-4" style="font-size: 1.25rem">
-                    {% for type in all_funding_types %}
+                    {% for filter_x in template_data.form_filter_1; form_y in formsets.previous_year; %}
                         <li class="nav-item">
                             {% if type.funding_type == funding_type and type.government_type == government_type %}
                                 <a class="nav-link disabled" href="#">{{ type.government_type }} - {{ type.funding_type }}</a>
                             {% else %}
-                                <a class="nav-link" href="{% url 'report_revenue' %}/{{ year }}/{{ type.funding_type }}/{{ type.government_type }}">{{ type.government_type }} - {{ type.funding_type }}</a>
+                                <a class="nav-link" href="{% url 'summary_reporting_report_type' 'transit_data' template_data.form_filter_1 template_data.form_filter_2 %}"> {{ template_data.form_filter_1 }} - {{ template_data.form_filter_2 }} </a>
                             {% endif %}
                         </li>
                     {% endfor %}

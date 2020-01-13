@@ -1,3 +1,4 @@
+import itertools
 import json
 from .validators import validation_test_for_transit_data
 
@@ -821,7 +822,7 @@ def cover_sheet_service_view(request):
 @login_required(login_url='/Panacea/login')
 @group_required('Summary reporter', 'WSDOT staff')
 def summary_report_data(request):
-    return render(request, 'pages/summary/report_data.html')
+    return render(request, 'pages/summary/summary_report_data_instructions.html')
 
 
 @login_required(login_url='/Panacea/login')
@@ -864,7 +865,7 @@ def delete_summary_mode(request, name, admin_of_mode):
         service_to_delete.delete()
         return redirect('summary_modes')
 
-
+#
 @login_required(login_url='/Panacea/login')
 @group_required('Summary reporter', 'WSDOT staff')
 def report_transit_data(request, year=None, service=None):
@@ -891,7 +892,7 @@ def report_transit_data(request, year=None, service=None):
                                                       administration_of_mode=my_active_service.administration_of_mode,
                                                       transit_mode=my_active_service.transit_mode).values_list('transit_metric_id', flat=True))
 
-        all_transit_metrics = list(transit_metric.objects.filter(agency_classification=classification).values_list("id", flat=True))
+        all_transit_metrics = list(transit_metrics.objects.filter(agency_classification=classification).values_list("id", flat=True))
 
         source_ids = [idx for idx in source_ids if idx in all_transit_metrics]
         if len(source_ids) != len(all_transit_metrics):
@@ -956,221 +957,221 @@ def report_transit_data(request, year=None, service=None):
                                                                       'active_service': active_service,
                                                                       'year': year})
 
-
-@login_required(login_url='/Panacea/login')
-@group_required('Summary reporter', 'WSDOT staff')
-def report_revenue(request, year=None, funding_type=None, government_type=None):
-    user_org = find_user_organization(request.user.id)
-
-    if year is None:
-        year = get_current_summary_report_year()
-    previous_year = year - 1
-    two_years_ago = year - 2
-
-    if funding_type is None:
-        funding_type = 'Operating'
-    if government_type is None:
-        government_type = 'Local'
-
-    my_formset_factory = modelformset_factory(model=revenue,
-                                              form=summary_revenue_form,
-                                              extra=0)
-
-    # Function start TODO move this
-    classification = user_org.summary_organization_classifications
-    classification = filter_revenue_sheet_by_classification(classification)
-
-    def get_or_create_summary_revenue_queryset(my_year, my_organization, user, my_classification, my_funding_type, my_government_type):
-        source_ids = list(revenue.objects.filter(organization_id=user_org.id,
-                                                 year=my_year).values_list('revenue_source_id', flat=True))
-        all_revenue_sources = list(revenue_source.objects.filter(agency_classification=my_classification).values_list("id", flat=True))
-        source_ids = [idx for idx in source_ids if idx in all_revenue_sources]
-
-        if len(source_ids) != len(all_revenue_sources):
-            missing_ids = list(set(all_revenue_sources) - set(source_ids))
-
-            with transaction.atomic():
-                for my_id in missing_ids:
-                    revenue.objects.create(year=my_year,
-                                           revenue_source_id=my_id,
-                                           organization=my_organization,
-                                           reported_value=None,
-                                           report_by=user)
-        return revenue.objects.filter(organization_id=user_org.id,
-                                      year=my_year,
-                                      revenue_source__agency_classification=my_classification,
-                                      revenue_source__government_type=my_government_type,
-                                      revenue_source__funding_type=my_funding_type).order_by('revenue_source__order_in_summary')
-
-    # Function end
-
-    query_sets = {'this_year': get_or_create_summary_revenue_queryset(year, user_org, request.user, classification, funding_type, government_type),
-                  'previous_year': get_or_create_summary_revenue_queryset(previous_year, user_org, request.user, classification, funding_type, government_type),
-                  'two_years_ago': get_or_create_summary_revenue_queryset(two_years_ago, user_org, request.user, classification,  funding_type, government_type)}
-
-    from django_reorder.reorder import reorder
-
-    all_funding_types = revenue_source.objects.filter(agency_classification=classification).values('government_type', 'funding_type').distinct().order_by(reorder(government_type=['Local', 'State', 'Federal', 'Other']))
-
-    def get_grand_total_not_including_current_form(target_model, sum_field_name, excluded_fields_and_values_dict):
-
-        revenue_other_than_current_type = target_model.objects.filter(organization=user_org). \
-            exclude(**excluded_fields_and_values_dict)
-
-        output = {'this_year': revenue_other_than_current_type.filter(year=year).aggregate(Sum(sum_field_name)),
-                  'previous_year': revenue_other_than_current_type.filter(year=previous_year).aggregate(Sum(sum_field_name)),
-                  'two_years_ago':  revenue_other_than_current_type.filter(year=two_years_ago).aggregate(Sum(sum_field_name))}
-
-        return output
-
-    excluded_fields_and_values_dict = {'revenue_source__government_type': government_type,
-                                       'revenue_source__funding_type': funding_type}
-
-    other_revenue = get_grand_total_not_including_current_form(revenue, 'reported_value', excluded_fields_and_values_dict)
-
-    formsets = {}
-    if request.method == 'POST':
-        for key, value in query_sets.items():
-            formsets[key] = my_formset_factory(request.POST, queryset=query_sets[key], prefix=key)
-            if formsets[key].is_valid():
-                for form in formsets[key]:
-                    form.save()
-            else:
-                print(formsets[key].errors)
-    else:
-        for key, value in query_sets.items():
-            formsets[key] = my_formset_factory(queryset=value, prefix=key)
-
-    return render(request, 'pages/summary/report_revenue.html', {'formsets': formsets,
-                                                                 'form_range': range(len(formsets['this_year'])),
-                                                                 'all_funding_types': all_funding_types,
-                                                                 'funding_type': funding_type,
-                                                                 'government_type': government_type,
-                                                                 'year': year,
-                                                                 'other_revenue': other_revenue})
-
-
-@login_required(login_url='/Panacea/login')
-@group_required('Summary reporter', 'WSDOT staff')
-def report_expenses(request, year=None):
-    user_org = find_user_organization(request.user.id)
-
-    if year is None:
-        year = get_current_summary_report_year()
-    previous_year = year - 1
-    two_years_ago = year - 2
-
-    my_formset_factory = modelformset_factory(model=expense,
-                                              form=summary_expense_form,
-                                              extra=0)
-
-    #Function start TODO move this
-    def get_or_create_summary_expenses_queryset(target_year, user_organization, user):
-        source_ids = list(expense.objects.filter(organization_id=user_org.id,
-                                                 year=target_year).values_list('expense_source_id', flat=True))
-
-        all_expense_sources = list(expense_source.objects.values_list("id", flat=True))
-
-        if len(source_ids) != len(all_expense_sources):
-            missing_ids = list(set(all_expense_sources) - set(source_ids))
-            print(missing_ids)
-
-            with transaction.atomic():
-                for my_id in missing_ids:
-                    expense.objects.create(year=target_year,
-                                           expense_source_id=my_id,
-                                           organization=user_organization,
-                                           reported_value=None,
-                                           report_by=user
-                                           )
-        return expense.objects.filter(organization_id=user_org.id,
-                                      year=target_year).order_by('expense_source').all()
-    #Function end
-
-    query_sets = {'this_year': get_or_create_summary_expenses_queryset(year, user_org, request.user),
-                  'previous_year': get_or_create_summary_expenses_queryset(previous_year, user_org, request.user),
-                  'two_years_ago': get_or_create_summary_expenses_queryset(two_years_ago, user_org, request.user)}
-
-    # print(formset.total_form_count())
-
-    if request.method == 'POST':
-
-        formsets = {}
-        for key, value in query_sets.items():
-            formsets[key] = my_formset_factory(request.POST, queryset=value, prefix=key)
-            if formsets[key].is_valid():
-                for form in formsets[key]:
-                    form.save()
-            else:
-                print(formsets[key].errors)
-    else:
-        formsets = {}
-        for key, value in query_sets.items():
-            formsets[key] = my_formset_factory(queryset=value, prefix=key)
-
-    return render(request, 'pages/summary/report_expenses.html', {'formsets': formsets,
-                                                                  'form_range': range(len(formsets['this_year']))})
-
-@login_required(login_url='/Panacea/login')
-@group_required('Summary reporter', 'WSDOT staff')
-def ending_balances(request, year=None):
-    user_org = find_user_organization(request.user.id)
-
-    if year is None:
-        year = get_current_summary_report_year()
-    previous_year = year - 1
-    two_years_ago = year - 2
-
-    my_formset_factory = modelformset_factory(model=fund_balance,
-                                              form=fund_balance_form,
-                                              extra=0)
-
-    #Function start TODO move this and turn into generic function
-    def get_or_create_fund_balance_queryset(target_year, user_organization, user):
-        source_ids = list(fund_balance.objects.filter(organization_id=user_org.id,
-                                                      year=target_year).values_list('fund_balance_type_id', flat=True))
-
-        all_fund_balance_types = list(fund_balance_type.objects.values_list("id", flat=True))
-
-        if len(source_ids) != len(all_fund_balance_types):
-            missing_ids = list(set(all_fund_balance_types) - set(source_ids))
-            print(missing_ids)
-
-            with transaction.atomic():
-                for my_id in missing_ids:
-                    fund_balance.objects.create(year=target_year,
-                                                fund_balance_type_id=my_id,
-                                                organization=user_organization,
-                                                reported_value=None,
-                                                report_by=user
-                                                )
-        return fund_balance.objects.filter(organization_id=user_org.id,
-                                           year=target_year).order_by('fund_balance_type').all()
-    #Function end
-
-    query_sets = {'this_year': get_or_create_fund_balance_queryset(year, user_org, request.user),
-                  'previous_year': get_or_create_fund_balance_queryset(previous_year, user_org, request.user),
-                  'two_years_ago': get_or_create_fund_balance_queryset(two_years_ago, user_org, request.user)}
-
-    # print(formset.total_form_count())
-
-    if request.method == 'POST':
-
-        formsets = {}
-        for key, value in query_sets.items():
-            formsets[key] = my_formset_factory(request.POST, queryset=value, prefix=key)
-            if formsets[key].is_valid():
-                for form in formsets[key]:
-                    form.save()
-            else:
-                print(formsets[key].errors)
-    else:
-        formsets = {}
-        for key, value in query_sets.items():
-            formsets[key] = my_formset_factory(queryset=value, prefix=key)
-
-    return render(request, 'pages/summary/ending_balances.html', {'formsets': formsets,
-                                                                  'form_range': range(len(formsets['this_year']))})
+#
+# @login_required(login_url='/Panacea/login')
+# @group_required('Summary reporter', 'WSDOT staff')
+# def report_revenue(request, year=None, funding_type=None, government_type=None):
+#     user_org = find_user_organization(request.user.id)
+#
+#     if year is None:
+#         year = get_current_summary_report_year()
+#     previous_year = year - 1
+#     two_years_ago = year - 2
+#
+#     if funding_type is None:
+#         funding_type = 'Operating'
+#     if government_type is None:
+#         government_type = 'Local'
+#
+#     my_formset_factory = modelformset_factory(model=revenue,
+#                                               form=summary_revenue_form,
+#                                               extra=0)
+#
+#     # Function start TODO move this
+#     classification = user_org.summary_organization_classifications
+#     classification = filter_revenue_sheet_by_classification(classification)
+#
+#     def get_or_create_summary_revenue_queryset(my_year, my_organization, user, my_classification, my_funding_type, my_government_type):
+#         source_ids = list(revenue.objects.filter(organization_id=user_org.id,
+#                                                  year=my_year).values_list('revenue_source_id', flat=True))
+#         all_revenue_sources = list(revenue_source.objects.filter(agency_classification=my_classification).values_list("id", flat=True))
+#         source_ids = [idx for idx in source_ids if idx in all_revenue_sources]
+#
+#         if len(source_ids) != len(all_revenue_sources):
+#             missing_ids = list(set(all_revenue_sources) - set(source_ids))
+#
+#             with transaction.atomic():
+#                 for my_id in missing_ids:
+#                     revenue.objects.create(year=my_year,
+#                                            revenue_source_id=my_id,
+#                                            organization=my_organization,
+#                                            reported_value=None,
+#                                            report_by=user)
+#         return revenue.objects.filter(organization_id=user_org.id,
+#                                       year=my_year,
+#                                       revenue_source__agency_classification=my_classification,
+#                                       revenue_source__government_type=my_government_type,
+#                                       revenue_source__funding_type=my_funding_type).order_by('revenue_source__order_in_summary')
+#
+#     # Function end
+#
+#     query_sets = {'this_year': get_or_create_summary_revenue_queryset(year, user_org, request.user, classification, funding_type, government_type),
+#                   'previous_year': get_or_create_summary_revenue_queryset(previous_year, user_org, request.user, classification, funding_type, government_type),
+#                   'two_years_ago': get_or_create_summary_revenue_queryset(two_years_ago, user_org, request.user, classification,  funding_type, government_type)}
+#
+#     from django_reorder.reorder import reorder
+#
+#     all_funding_types = revenue_source.objects.filter(agency_classification=classification).values('government_type', 'funding_type').distinct().order_by(reorder(government_type=['Local', 'State', 'Federal', 'Other']))
+#
+#     def get_grand_total_not_including_current_form(target_model, sum_field_name, excluded_fields_and_values_dict):
+#
+#         revenue_other_than_current_type = target_model.objects.filter(organization=user_org). \
+#             exclude(**excluded_fields_and_values_dict)
+#
+#         output = {'this_year': revenue_other_than_current_type.filter(year=year).aggregate(Sum(sum_field_name)),
+#                   'previous_year': revenue_other_than_current_type.filter(year=previous_year).aggregate(Sum(sum_field_name)),
+#                   'two_years_ago':  revenue_other_than_current_type.filter(year=two_years_ago).aggregate(Sum(sum_field_name))}
+#
+#         return output
+#
+#     excluded_fields_and_values_dict = {'revenue_source__government_type': government_type,
+#                                        'revenue_source__funding_type': funding_type}
+#
+#     other_revenue = get_grand_total_not_including_current_form(revenue, 'reported_value', excluded_fields_and_values_dict)
+#
+#     formsets = {}
+#     if request.method == 'POST':
+#         for key, value in query_sets.items():
+#             formsets[key] = my_formset_factory(request.POST, queryset=query_sets[key], prefix=key)
+#             if formsets[key].is_valid():
+#                 for form in formsets[key]:
+#                     form.save()
+#             else:
+#                 print(formsets[key].errors)
+#     else:
+#         for key, value in query_sets.items():
+#             formsets[key] = my_formset_factory(queryset=value, prefix=key)
+#
+#     return render(request, 'pages/summary/report_revenue.html', {'formsets': formsets,
+#                                                                  'form_range': range(len(formsets['this_year'])),
+#                                                                  'all_funding_types': all_funding_types,
+#                                                                  'funding_type': funding_type,
+#                                                                  'government_type': government_type,
+#                                                                  'year': year,
+#                                                                  'other_revenue': other_revenue})
+#
+#
+# @login_required(login_url='/Panacea/login')
+# @group_required('Summary reporter', 'WSDOT staff')
+# def report_expenses(request, year=None):
+#     user_org = find_user_organization(request.user.id)
+#
+#     if year is None:
+#         year = get_current_summary_report_year()
+#     previous_year = year - 1
+#     two_years_ago = year - 2
+#
+#     my_formset_factory = modelformset_factory(model=expense,
+#                                               form=summary_expense_form,
+#                                               extra=0)
+#
+#     #Function start TODO move this
+#     def get_or_create_summary_expenses_queryset(target_year, user_organization, user):
+#         source_ids = list(expense.objects.filter(organization_id=user_org.id,
+#                                                  year=target_year).values_list('expense_source_id', flat=True))
+#
+#         all_expense_sources = list(expense_source.objects.values_list("id", flat=True))
+#
+#         if len(source_ids) != len(all_expense_sources):
+#             missing_ids = list(set(all_expense_sources) - set(source_ids))
+#             print(missing_ids)
+#
+#             with transaction.atomic():
+#                 for my_id in missing_ids:
+#                     expense.objects.create(year=target_year,
+#                                            expense_source_id=my_id,
+#                                            organization=user_organization,
+#                                            reported_value=None,
+#                                            report_by=user
+#                                            )
+#         return expense.objects.filter(organization_id=user_org.id,
+#                                       year=target_year).order_by('expense_source').all()
+#     #Function end
+#
+#     query_sets = {'this_year': get_or_create_summary_expenses_queryset(year, user_org, request.user),
+#                   'previous_year': get_or_create_summary_expenses_queryset(previous_year, user_org, request.user),
+#                   'two_years_ago': get_or_create_summary_expenses_queryset(two_years_ago, user_org, request.user)}
+#
+#     # print(formset.total_form_count())
+#
+#     if request.method == 'POST':
+#
+#         formsets = {}
+#         for key, value in query_sets.items():
+#             formsets[key] = my_formset_factory(request.POST, queryset=value, prefix=key)
+#             if formsets[key].is_valid():
+#                 for form in formsets[key]:
+#                     form.save()
+#             else:
+#                 print(formsets[key].errors)
+#     else:
+#         formsets = {}
+#         for key, value in query_sets.items():
+#             formsets[key] = my_formset_factory(queryset=value, prefix=key)
+#
+#     return render(request, 'pages/summary/report_expenses.html', {'formsets': formsets,
+#                                                                   'form_range': range(len(formsets['this_year']))})
+#
+# @login_required(login_url='/Panacea/login')
+# @group_required('Summary reporter', 'WSDOT staff')
+# def ending_balances(request, year=None):
+#     user_org = find_user_organization(request.user.id)
+#
+#     if year is None:
+#         year = get_current_summary_report_year()
+#     previous_year = year - 1
+#     two_years_ago = year - 2
+#
+#     my_formset_factory = modelformset_factory(model=fund_balance,
+#                                               form=fund_balance_form,
+#                                               extra=0)
+#
+#     #Function start TODO move this and turn into generic function
+#     def get_or_create_fund_balance_queryset(target_year, user_organization, user):
+#         source_ids = list(fund_balance.objects.filter(organization_id=user_org.id,
+#                                                       year=target_year).values_list('fund_balance_type_id', flat=True))
+#
+#         all_fund_balance_types = list(fund_balance_type.objects.values_list("id", flat=True))
+#
+#         if len(source_ids) != len(all_fund_balance_types):
+#             missing_ids = list(set(all_fund_balance_types) - set(source_ids))
+#             print(missing_ids)
+#
+#             with transaction.atomic():
+#                 for my_id in missing_ids:
+#                     fund_balance.objects.create(year=target_year,
+#                                                 fund_balance_type_id=my_id,
+#                                                 organization=user_organization,
+#                                                 reported_value=None,
+#                                                 report_by=user
+#                                                 )
+#         return fund_balance.objects.filter(organization_id=user_org.id,
+#                                            year=target_year).order_by('fund_balance_type').all()
+#     #Function end
+#
+#     query_sets = {'this_year': get_or_create_fund_balance_queryset(year, user_org, request.user),
+#                   'previous_year': get_or_create_fund_balance_queryset(previous_year, user_org, request.user),
+#                   'two_years_ago': get_or_create_fund_balance_queryset(two_years_ago, user_org, request.user)}
+#
+#     # print(formset.total_form_count())
+#
+#     if request.method == 'POST':
+#
+#         formsets = {}
+#         for key, value in query_sets.items():
+#             formsets[key] = my_formset_factory(request.POST, queryset=value, prefix=key)
+#             if formsets[key].is_valid():
+#                 for form in formsets[key]:
+#                     form.save()
+#             else:
+#                 print(formsets[key].errors)
+#     else:
+#         formsets = {}
+#         for key, value in query_sets.items():
+#             formsets[key] = my_formset_factory(queryset=value, prefix=key)
+#
+#     return render(request, 'pages/summary/ending_balances.html', {'formsets': formsets,
+#                                                                   'form_range': range(len(formsets['this_year']))})
 
 
 
@@ -1210,15 +1211,16 @@ def review_data(request):
 
 
 class SummaryDataEntryConstructor:
+    '''This class constructs all of the forms needed to collect summary data'''
 
     def __init__(self, report_type, target_organization, form_filter_1=None, form_filter_2=None):
-        self.report_type = report_type
-        self.target_organization = target_organization
-        self.year = get_current_summary_report_year()
-        self.form_filter_1 = form_filter_1
+        self.report_type = report_type  # reports can be about revenue, transit data, expenses, and ending fund balances
+        self.target_organization = target_organization  # the org submitting a report
+        self.year = get_current_summary_report_year() # TODO this function needs to be updated
+        self.form_filter_1 = form_filter_1 # Forms can be filtered by the selectors at the top of the page for example reporting based on direct operated, fixed route transit
         self.form_filter_2 = form_filter_2
 
-        self.set_default_form_filters()
+        self.set_default_form_filters() # sets the starting filters for the form
 
     def set_default_form_filters(self):
         if self.form_filter_1 is not None:
@@ -1239,6 +1241,7 @@ class SummaryDataEntryConstructor:
                 raise Http404("Report type does not exist.")
 
     def get_model(self):
+        '''returns the appropriate model for the given report type'''
         if self.report_type == "revenue":
             return revenue
         elif self.report_type == "transit_data":
@@ -1251,10 +1254,11 @@ class SummaryDataEntryConstructor:
             raise Http404("Report type does not exist.")
 
     def get_metric_model(self):
+        '''returns the appropriate metric model for the given report type'''
         if self.report_type == "revenue":
             return revenue_source
         elif self.report_type == "transit_data":
-            return transit_metric
+            return transit_metrics
         elif self.report_type == "expense":
             return expense_source
         elif self.report_type == "fund_balance":
@@ -1263,6 +1267,7 @@ class SummaryDataEntryConstructor:
             raise Http404("Report type does not exist.")
 
     def get_metric_model_name(self):
+        '''Returns the metric model as a string.'''
         if self.report_type == "revenue":
             return 'revenue_source'
         elif self.report_type == "transit_data":
@@ -1275,10 +1280,15 @@ class SummaryDataEntryConstructor:
             raise Http404("Report type does not exist.")
 
     def get_metric_id_field_name(self):
-        metric_model = self.get_metric_model()
-        return metric_model.__name__ + '_id'
+        '''Returns the name of the field name of the id field in the metric model as a string.'''
+        if self.report_type == "transit_data":
+            return 'transit_metric_id'
+        else:
+            metric_model = self.get_metric_model()
+            return metric_model.__name__ + '_id'
 
     def get_all_metric_ids(self):
+        '''Returns a distinct list of all metric ids that are needed given the agency classification, if applicable.'''
         classification = self.target_organization.summary_organization_classifications
         if self.report_type in ['transit_data', 'revenue', ]:
             metric_ids = list(self.get_metric_model().objects.filter(agency_classification=classification).values_list('id', flat=True).distinct())
@@ -1289,11 +1299,12 @@ class SummaryDataEntryConstructor:
         return metric_ids
 
     def get_create_metric_dictionary(self, metric):
+        '''Used to create a new empty instance of a report metric. So an empty form may be displayed'''
         create_dictionary = {}
         if self.report_type in ['transit_data', ]:
             create_dictionary = {'year': metric[1],
                                  'organization': self.target_organization,
-                                 'transit_mode': self.form_filter_1,
+                                 'transit_mode': transit_mode.objects.get(name=self.form_filter_1),
                                  'administration_of_mode': self.form_filter_2,
                                  self.get_metric_id_field_name(): metric[0],
                                  'reported_value': None,
@@ -1309,6 +1320,7 @@ class SummaryDataEntryConstructor:
         return create_dictionary
 
     def get_or_create_all_form_metrics(self):
+        '''Gets all reported form metrics applicable to the form type, organization, and year.  If the metric has not been reported it creates it.'''
         report_model = self.get_model()
         field_id = self.get_metric_id_field_name()
 
@@ -1316,7 +1328,7 @@ class SummaryDataEntryConstructor:
                                                                      year__gte=self.year - 2).values_list(field_id, 'year').distinct())
         all_report_metric_ids = self.get_all_metric_ids()
         all_metric_ids_and_years = list(itertools.product(all_report_metric_ids, [self.year, self.year - 1, self.year - 2]))
-
+        print(all_metric_ids_and_years)
         if len(current_report_metric_ids) != len(all_metric_ids_and_years):
             all_metric_ids_and_years = set(map(tuple, all_metric_ids_and_years))
             current_report_metric_ids = set(map(tuple, current_report_metric_ids))
@@ -1329,9 +1341,11 @@ class SummaryDataEntryConstructor:
                         report_model.objects.create(**self.get_create_metric_dictionary(m))
 
         form_metrics = report_model.objects.filter(organization=self.target_organization)
+        print(form_metrics)
         return form_metrics
 
     def get_widgets(self):
+        '''Used to build widgets dynamically based on form type.'''
 
         if self.report_type == 'transit_data':
             widget_css_classes = 'form-control'
@@ -1347,7 +1361,7 @@ class SummaryDataEntryConstructor:
         return widgets
 
     def create_model_formset_factory(self):
-
+        '''Creates a fromset factory based on the information contained in the class information'''
         my_formset_factory = modelformset_factory(self.get_model(), form=ModelForm, formfield_callback=None,
                                                   formset=BaseModelFormSet, extra=0, can_delete=False,
                                                   can_order=False, max_num=None,
@@ -1361,6 +1375,7 @@ class SummaryDataEntryConstructor:
         return my_formset_factory
 
     def get_formset_query_dict(self):
+        '''Builds a dynamic dictionary used for querying the aproriate metrics giving the filter criteria and organization classification'''
         if self.report_type in ['transit_data', ]:
             print(self.target_organization.summary_organization_classifications)
 
@@ -1380,6 +1395,7 @@ class SummaryDataEntryConstructor:
         return query_dict
 
     def get_formsets_labels_and_masking_class(self):
+        '''Builds formsets by year with labels and masking classes'''
         my_formset_factory = self.create_model_formset_factory()
         form_querysets = self.get_or_create_all_form_metrics()
         form_querysets = form_querysets.filter(**self.get_formset_query_dict())
@@ -1399,6 +1415,7 @@ class SummaryDataEntryConstructor:
         return formsets, formset_labels, masking_class
 
     def get_other_measure_totals(self):
+        '''Gets totals from that need to be aggrigated on the page but are not presented due to the filters on the form.'''
         if self.report_type == 'transit_data':
             return None
 
@@ -1419,6 +1436,7 @@ class SummaryDataEntryConstructor:
         return total_not_this_form
 
     def get_header_navigation(self):
+        '''gets the data needed to build header navigation for filters'''
         if self.report_type in ['transit_data', ]:
             filter_count = 2
             my_services_offered = service_offered.objects.filter(organization=self.target_organization)
@@ -1445,6 +1463,7 @@ class SummaryDataEntryConstructor:
 
 
 class SummaryDataEntryTemplateData:
+    '''Simpler wrapper around the SummaryDataEntryConstructor class which just contains only items needed in the template'''
 
     def __init__(self, constructor, report_type):
         self.formsets, self.formset_labels, self.masking_class = constructor.get_formsets_labels_and_masking_class()
@@ -1596,7 +1615,7 @@ def configure_agency_types(request, model=None):
         other_field_list = ['funding_type', 'government_type']
         one2one = False
     elif model == "transit_metric":
-        my_model = transit_metric
+        my_model = transit_metrics
         field_name = 'agency_classification'
         other_field_list = []
         one2one = False

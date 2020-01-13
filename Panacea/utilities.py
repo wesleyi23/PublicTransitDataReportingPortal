@@ -432,7 +432,3 @@ def get_current_summary_report_year():
 
 
 
-
-
-
-
