@@ -151,3 +151,16 @@ def define(val=None):
 def get_AutoNumeric_mask_type(metric):
     print(metric)
     return "Int"
+
+@register.filter
+def capfirst_remove_(string):
+    string = string.replace('_', ' ').capitalize()
+    return string
+
+@register.simple_tag
+def get_form_labels(i, labels):
+    return labels[i]
+
+@register.simple_tag
+def get_masking_class(i, masking_class):
+    return masking_class[i]

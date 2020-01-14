@@ -29,16 +29,16 @@
                             <a class="nav-link" href="{% url 'summary_modes' %}">Confirm services</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="">Transit data</a>
+                            <a class="nav-link {% if report_type == 'transit_data' %}active{% endif %}" href="{% url 'summary_reporting_type' 'transit_data' %}">Transit data</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="">Revenue</a>
+                            <a class="nav-link {% if report_type == 'revenue' %}active{% endif %}" href="{% url 'summary_reporting_type' 'revenue' %}">Revenue</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="">Expenses</a>
+                            <a class="nav-link {% if report_type == 'expense' %}active{% endif %}" href="{% url 'summary_reporting_type' 'expense' %}">Expenses</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="">Ending balances</a>
+                            <a class="nav-link {% if report_type == 'fund_balance' %}active{% endif %}" href="{% url 'summary_reporting_type' 'fund_balance' %}">Ending balances</a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" href="{% url 'review_data' %}">Review</a>
@@ -50,12 +50,12 @@
 
 
                 <ul class="nav justify-content-center pt-4" style="font-size: 1.25rem">
-                    {% for filter_x in template_data.form_filter_1; form_y in formsets.previous_year; %}
+                    {% for type in all_funding_types %}
                         <li class="nav-item">
                             {% if type.funding_type == funding_type and type.government_type == government_type %}
                                 <a class="nav-link disabled" href="#">{{ type.government_type }} - {{ type.funding_type }}</a>
                             {% else %}
-                                <a class="nav-link" href="{% url 'summary_reporting_report_type' 'transit_data' template_data.form_filter_1 template_data.form_filter_2 %}"> {{ template_data.form_filter_1 }} - {{ template_data.form_filter_2 }} </a>
+                                <a class="nav-link" href="{% url 'report_revenue' %}/{{ year }}/{{ type.funding_type }}/{{ type.government_type }}">{{ type.government_type }} - {{ type.funding_type }}</a>
                             {% endif %}
                         </li>
                     {% endfor %}
@@ -63,7 +63,19 @@
 
 
                 <div class="card-body" style="">
-                    <h3>{{ government_type }} - {{ funding_type }}</h3>
+
+                    {% if template_data.nav_filter_count == 2 %}
+                        <ul class="nav justify-content-center pt-2" style="font-size: 1.25rem">
+                            {% for nav_item in template_data.nav_filters %}
+                                <li class="nav-item pl-2 pr-2">
+                                    <a class="nav-link{% if template_data.form_filter_1 == nav_item.0 and template_data.form_filter_2 == nav_item.1 %} disabled {% endif %}" href="{% url 'summary_reporting_filters' template_data.report_type nav_item.0 nav_item.1 %}">{{ nav_item.0 }} - {{ nav_item.1 }}</a>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <h3>{{ template_data.nav_filters }}</h3>
+                    {% endif %}
+
                     <form method="POST" class="disabled-form">
                         {% csrf_token  %}
 
@@ -71,30 +83,26 @@
                             <thead>
                             <tr style="min-height: 3.5rem">
                                 <th width="10%" style="min-width: 125px">Revenue source</th>
-                                <th class="two-years-ago" width="10%" style="min-width: 125px">{{ formsets.two_years_ago.1.year.value }} <a class="edit-column" href="#">(edit)</a></th>
-                                <th class="two-years-ago comments" width="25%" style="min-width: 125px">{{ formsets.two_years_ago.1.year.value }} comments</th>
-                                <th class="previous-year" width="10%" style="min-width: 125px">{{ formsets.previous_year.1.year.value }} <a class="edit-column" href="#">(edit)</a></th>
-                                <th class="previous-year comments" width="25%" style="min-width: 125px">{{ formsets.previous_year.1.year.value }} comments</th>
-                                <th class="this-year" width="10%" style="min-width: 125px">{{ formsets.this_year.1.year.value }} <a class="edit-column" href="#">(edit)</a></th>
-                                <th class="this-year comments" width="25%" style="min-width: 125px">{{ formsets.this_year.1.year.value }} comments</th>
+                                <th class="two-years-ago" width="10%" style="min-width: 125px">{{ template_data.formsets.two_years_ago.1.year.value }} <a class="edit-column" href="#">(edit)</a></th>
+                                <th class="two-years-ago comments" width="25%" style="min-width: 125px">{{ template_data.formsets.two_years_ago.1.year.value }} comments</th>
+                                <th class="previous-year" width="10%" style="min-width: 125px">{{ template_data.formsets.previous_year.1.year.value }} <a class="edit-column" href="#">(edit)</a></th>
+                                <th class="previous-year comments" width="25%" style="min-width: 125px">{{ template_data.formsets.previous_year.1.year.value }} comments</th>
+                                <th class="this-year" width="10%" style="min-width: 125px">{{ template_data.formsets.this_year.1.year.value }} <a class="edit-column" href="#">(edit)</a></th>
+                                <th class="this-year comments" width="25%" style="min-width: 125px">{{ template_data.formsets.this_year.1.year.value }} comments</th>
                                 <th>Validation errors</th>
                                 <th style="display: none">Hidden</th>
                             </tr>
                             </thead>
                             <tbody>
 
-                            {% for form_x in formsets.this_year; form_y in formsets.previous_year; form_z in formsets.two_years_ago %}
+                            {% for form_x in template_data.formsets.this_year; form_y in template_data.formsets.previous_year; form_z in template_data.formsets.two_years_ago %}
                                 <tr>
-                                    <td class="align-top" style="max-width: 5rem">{% if form_x.instance.revenue_source %}
-                                        {{ form_x.instance.revenue_source }}
-                                    {% else %}
-                                        {{ form_x.data.revenue_source }}
-                                    {% endif %}</td>
-                                    <td class="two-years-ago summary-input align-top AutoNumeric-Money" >{{ form_z.reported_value}}</td>
+                                    <td class="align-top" style="max-width: 5rem">{% get_form_labels forloop.counter0 template_data.formset_labels %}</td>
+                                    <td class="two-years-ago summary-input align-top AutoNumeric-{% get_masking_class forloop.counter0 template_data.masking_class %}" >{{ form_z.reported_value}}</td>
                                     <td class="two-years-ago comments align-top" >{{ form_z.comments }}</td>
-                                    <td class="previous-year summary-input align-top AutoNumeric-Money" >{{ form_y.reported_value }}</td>
+                                    <td class="previous-year summary-input align-top AutoNumeric-{% get_masking_class forloop.counter0 template_data.masking_class %}" >{{ form_y.reported_value }}</td>
                                     <td class="previous-year comments align-top" >{{ form_y.comments }}</td>
-                                    <td class="this-year summary-input align-top AutoNumeric-Money" >{{ form_x.reported_value }}</td>
+                                    <td class="this-year summary-input align-top AutoNumeric-{% get_masking_class forloop.counter0 template_data.masking_class %}" >{{ form_x.reported_value }}</td>
                                     <td class="this-year comments align-top" >{{ form_x.comments }}</td>
                                     <td>Errors</td>
                                     <td style="display: none">{{ form_x.revenue_source}}
@@ -109,35 +117,36 @@
                                     </td>
                                 </tr>
                             {% endfor %}
-                            <tr>
-                                <td><b>Sub totals</b></td>
-                                <td style="font-weight: bold; padding-left: 1rem"><span id="sub-total-two-years-ago"></span></td>
-                                <td class="two-years-ago comments"></td>
-                                <td style="font-weight: bold; padding-left: 1rem"><span id="sub-total-previous-year"></span></td>
-                                <td class="previous-year comments"></td>
-                                <td style="font-weight: bold; padding-left: 1rem"><span id="sub-total-this-year"></span></td>
-                                <td class="this-year comments"></td>
-                                <td></td>
-                                <td style="display: none"></td>
-                            </tr>
-                            <tr>
-                                <td><b>Revenue grand totals</b></td>
-                                <td style="font-weight: bold; padding-left: 1rem"><span id="grand-total-two-years-ago"></span></td>
-                                <td class="two-years-ago comments"></td>
-                                <td style="font-weight: bold; padding-left: 1rem"><span id="grand-total-previous-year"></span></td>
-                                <td class="previous-year comments"></td>
-                                <td style="font-weight: bold; padding-left: 1rem"><span id="grand-total-this-year"></span></td>
-                                <td class="this-year comments"></td>
-                                <td></td>
-                                <td style="display: none"></td>
-                            </tr>
-
+                            {% if template_data.show_totals %}
+                                <tr>
+                                    <td><b>Sub totals</b></td>
+                                    <td style="font-weight: bold; padding-left: 1rem"><span id="sub-total-two-years-ago"></span></td>
+                                    <td class="two-years-ago comments"></td>
+                                    <td style="font-weight: bold; padding-left: 1rem"><span id="sub-total-previous-year"></span></td>
+                                    <td class="previous-year comments"></td>
+                                    <td style="font-weight: bold; padding-left: 1rem"><span id="sub-total-this-year"></span></td>
+                                    <td class="this-year comments"></td>
+                                    <td></td>
+                                    <td style="display: none"></td>
+                                </tr>
+                                <tr>
+                                    <td><b>Revenue grand totals</b></td>
+                                    <td style="font-weight: bold; padding-left: 1rem"><span id="grand-total-two-years-ago"></span></td>
+                                    <td class="two-years-ago comments"></td>
+                                    <td style="font-weight: bold; padding-left: 1rem"><span id="grand-total-previous-year"></span></td>
+                                    <td class="previous-year comments"></td>
+                                    <td style="font-weight: bold; padding-left: 1rem"><span id="grand-total-this-year"></span></td>
+                                    <td class="this-year comments"></td>
+                                    <td></td>
+                                    <td style="display: none"></td>
+                                </tr>
+                            {% endif %}
                             </tbody>
                         </table>
 
-                        {{ formsets.this_year.management_form }}
-                        {{ formsets.previous_year.management_form }}
-                        {{ formsets.two_years_ago.management_form }}
+                        {{ template_data.formsets.this_year.management_form }}
+                        {{ template_data.formsets.previous_year.management_form }}
+                        {{ template_data.formsets.two_years_ago.management_form }}
                         <input type="submit" value="Submit"  class="btn btn-primary float-right mt-3">
 
                     </form>
@@ -153,15 +162,17 @@
     <script src="https://cdn.jsdelivr.net/npm/autonumeric@4.5.4"></script>
     <script src="{% static 'js/AutoNumeric_Settings.js' %}"></script>
     <script src="{% static 'js/Summary_Data_Entry_Tables.js' %}"></script>
-    <script src="{% static 'js/findTotal.js' %}"></script>
 
-    <script type="text/javascript">
-        function findTotal_wrapper(){
-            findTotal({{ other_revenue.this_year.reported_value__sum }}, {{ other_revenue.previous_year.reported_value__sum }}, {{ other_revenue.two_years_ago.reported_value__sum }})
-        }
-        $(document).ready(function () {
-            findTotal_wrapper()
-        });
-    </script>
+    {% if template_data.show_totals %}
+        <script src="{% static 'js/findTotal.js' %}"></script>
 
+        <script type="text/javascript">
+            function findTotal_wrapper(){
+                findTotal({{ template_data.other_totals.this_year.reported_value__sum }}, {{ template_data.other_totals.previous_year.reported_value__sum }}, {{ template_data.other_totals.two_years_ago.reported_value__sum }})
+            }
+            $(document).ready(function () {
+                findTotal_wrapper()
+            });
+        </script>
+    {% endif %}
 {% endblock %}

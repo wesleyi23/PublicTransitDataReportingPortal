@@ -1328,7 +1328,6 @@ class SummaryDataEntryConstructor:
                                                                      year__gte=self.year - 2).values_list(field_id, 'year').distinct())
         all_report_metric_ids = self.get_all_metric_ids()
         all_metric_ids_and_years = list(itertools.product(all_report_metric_ids, [self.year, self.year - 1, self.year - 2]))
-        print(all_metric_ids_and_years)
         if len(current_report_metric_ids) != len(all_metric_ids_and_years):
             all_metric_ids_and_years = set(map(tuple, all_metric_ids_and_years))
             current_report_metric_ids = set(map(tuple, current_report_metric_ids))
@@ -1341,7 +1340,6 @@ class SummaryDataEntryConstructor:
                         report_model.objects.create(**self.get_create_metric_dictionary(m))
 
         form_metrics = report_model.objects.filter(organization=self.target_organization)
-        print(form_metrics)
         return form_metrics
 
     def get_widgets(self):
@@ -1377,7 +1375,6 @@ class SummaryDataEntryConstructor:
     def get_formset_query_dict(self):
         '''Builds a dynamic dictionary used for querying the aproriate metrics giving the filter criteria and organization classification'''
         if self.report_type in ['transit_data', ]:
-            print(self.target_organization.summary_organization_classifications)
 
             query_dict = {'transit_mode__name': self.form_filter_1,
                           'administration_of_mode': self.form_filter_2,
@@ -1386,19 +1383,23 @@ class SummaryDataEntryConstructor:
         elif self.report_type in ['revenue', ]:
             query_dict = {'revenue_source__government_type': self.form_filter_1,
                           'revenue_source__funding_type': self.form_filter_2}
-            print(query_dict)
         elif self.report_type in ['expense', 'fund_balance', ]:
             query_dict = {}
         else:
             raise Http404
-        print(query_dict)
         return query_dict
+
+    def get_form_queryset(self):
+        form_querysets = self.get_or_create_all_form_metrics()
+        form_querysets = form_querysets.filter(**self.get_formset_query_dict())
+        return form_querysets
+
 
     def get_formsets_labels_and_masking_class(self):
         '''Builds formsets by year with labels and masking classes'''
         my_formset_factory = self.create_model_formset_factory()
-        form_querysets = self.get_or_create_all_form_metrics()
-        form_querysets = form_querysets.filter(**self.get_formset_query_dict())
+        form_querysets = self.get_form_queryset()
+
         formsets = {}
         i = 0
         for year_x in ['this_year', 'previous_year', 'two_years_ago']:
@@ -1461,6 +1462,16 @@ class SummaryDataEntryConstructor:
 
         return filter_count, filters
 
+    def save_with_post_data(self, post_data):
+        my_formset_factory = self.create_model_formset_factory()
+        query_sets = self.get_form_queryset()
+        i = 0
+        for year_x in ['this_year', 'previous_year', 'two_years_ago']:
+            formset = my_formset_factory(post_data, queryset=query_sets.filter(year=self.year - i).order_by(self.get_metric_id_field_name()), prefix=year_x)
+            for form in formset:
+                form.save()
+            i += 1
+
 
 class SummaryDataEntryTemplateData:
     '''Simpler wrapper around the SummaryDataEntryConstructor class which just contains only items needed in the template'''
@@ -1490,6 +1501,8 @@ def summary_reporting(request, report_type=None, form_filter_1=None, form_filter
         report_type = "transit_data"
 
     requested_form = SummaryDataEntryConstructor(report_type, user_org, form_filter_1=form_filter_1, form_filter_2=form_filter_2)
+    if request.method == 'POST':
+        requested_form.save_with_post_data(request.POST)
 
     template_data = SummaryDataEntryTemplateData(requested_form, report_type)
 
