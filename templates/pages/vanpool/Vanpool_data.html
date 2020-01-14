@@ -17,22 +17,36 @@
                     </p>
                     <div class="collapse multi-collapse" id="multiCollapseExample1">
                         <div class="card card-body mb-2">
-                            {{ form.chart_measure }}
+                            <div class="container-fluid">
+                                <div class="row">
+                                    <div class="col-11">{{ form.chart_measure }}</div>
+                                    <div class="col-1"><input  class="btn btn-sm btn-success" type="submit" value="Update Chart" style="float: right"></div>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
                     <div class="collapse multi-collapse mb-2" id="multiCollapseExample2" >
                         <div class="card card-body" >
+                            <div class="">
+                                <button id="check_all" type="button" class="btn btn-outline-secondary btn-sm float-left mb-2 ml-3" style="width: 10vw;" >Select All</button>
+                            </div>
                             <div class="" id="bullet-kill" >{{ form.chart_organizations }}</div>
                             <div class="">
-                                <button id="check_all" type="button" class="btn btn-outline-secondary btn-sm float-right" style="width: 10vw;" >Select All</button>
+                                <input  class="btn btn-sm btn-success mr-4" type="submit" value="Update Chart" style="float: right">
                             </div>
                         </div>
                     </div>
 
                     <div class="collapse multi-collapse mb-2" id="multiCollapseExample3">
                         <div class="card card-body" >
-                            <div class="" ><fieldset >{{ form.chart_time_frame }}</fieldset></div>
+                            <div class="container-fluid">
+                                <div class="row">
+                                    <div class="col-11"><div class="" ><fieldset >{{ form.chart_time_frame }}</fieldset></div></div>
+                                    <div class="col-1"><input  class="btn btn-sm btn-success" type="submit" value="Update Chart" style="float: right"></div>
+                                </div>
+                            </div>
+
                         </div>
                     </div>
 

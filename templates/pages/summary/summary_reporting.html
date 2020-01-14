@@ -29,16 +29,16 @@
                             <a class="nav-link" href="{% url 'summary_modes' %}">Confirm services</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link {% if report_type == 'transit_data' %}active{% endif %}" href="{% url 'summary_reporting_type' 'transit_data' %}">Transit data</a>
+                            <a class="nav-link {% if template_data.report_type == 'transit_data' %}active{% endif %}" href="{% url 'summary_reporting_type' 'transit_data' %}">Transit data</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link {% if report_type == 'revenue' %}active{% endif %}" href="{% url 'summary_reporting_type' 'revenue' %}">Revenue</a>
+                            <a class="nav-link {% if template_data.report_type == 'revenue' %}active{% endif %}" href="{% url 'summary_reporting_type' 'revenue' %}">Revenue</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link {% if report_type == 'expense' %}active{% endif %}" href="{% url 'summary_reporting_type' 'expense' %}">Expenses</a>
+                            <a class="nav-link {% if template_data.report_type == 'expense' %}active{% endif %}" href="{% url 'summary_reporting_type' 'expense' %}">Expenses</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link {% if report_type == 'fund_balance' %}active{% endif %}" href="{% url 'summary_reporting_type' 'fund_balance' %}">Ending balances</a>
+                            <a class="nav-link {% if template_data.report_type == 'fund_balance' %}active{% endif %}" href="{% url 'summary_reporting_type' 'fund_balance' %}">Ending balances</a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" href="{% url 'review_data' %}">Review</a>
@@ -46,21 +46,6 @@
 
                     </ul>
                 </div>
-
-
-
-                <ul class="nav justify-content-center pt-4" style="font-size: 1.25rem">
-                    {% for type in all_funding_types %}
-                        <li class="nav-item">
-                            {% if type.funding_type == funding_type and type.government_type == government_type %}
-                                <a class="nav-link disabled" href="#">{{ type.government_type }} - {{ type.funding_type }}</a>
-                            {% else %}
-                                <a class="nav-link" href="{% url 'report_revenue' %}/{{ year }}/{{ type.funding_type }}/{{ type.government_type }}">{{ type.government_type }} - {{ type.funding_type }}</a>
-                            {% endif %}
-                        </li>
-                    {% endfor %}
-                </ul>
-
 
                 <div class="card-body" style="">
 
