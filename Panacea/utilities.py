@@ -58,17 +58,13 @@ def build_revenue_table(years, user_org_id):
 
 
 def data_prep_for_transits(years, user_org_id):
-    print(user_org_id)
     '''function for pulling all available data within certain years for a transit and pushing it out to a summary sheet'''
     services_offered = service_offered.objects.filter(organization_id=user_org_id).values('administration_of_mode',
                                                                                           'transit_mode_id')
-    print(services_offered)
     data_transit = transit_data.objects.filter(organization_id=user_org_id, year__in=years)
     function_count = 0
     # dual for loops, one for services offered, one for the years in existence
     for i in services_offered:
-        print(i['transit_mode_id'])
-        print(i['administration_of_mode'])
         filter = data_transit.filter(administration_of_mode=i['administration_of_mode'],
                                      transit_mode_id=i['transit_mode_id'])
         df = read_frame(filter)
