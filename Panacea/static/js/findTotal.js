@@ -8,7 +8,6 @@ function findTotal(this_year_other_total, previous_year_other_total, two_years_a
     }
     for (year of years){
         var arr = document.querySelectorAll('.'.concat(year).concat(' input.grand-total-sum'));
-        console.log(arr)
         var total=0;
         for(var i=0;i<arr.length;i++){
             var my_int = parseInt(arr[i].value.replace(/[^\d.-]/g, ''));
@@ -16,9 +15,7 @@ function findTotal(this_year_other_total, previous_year_other_total, two_years_a
                 total += my_int;
             }
         }
-        console.log(total);
         grand_total = total + dict_other_revenue[year]
-        console.log(grand_total)
         var grand_total_name = 'grand-total-'.concat(year);
         var sub_total_name = 'sub-total-'.concat(year);
         document.getElementById(grand_total_name).innerHTML = '$'.concat(grand_total.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","));

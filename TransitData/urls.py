@@ -83,6 +83,7 @@ urlpatterns = [
     path('summary/report_data/<report_type>/<form_filter_1>/<form_filter_2>', views.summary_reporting, name='summary_reporting_filters'),
     path('summary/admin/configure_agency_types/', views.configure_agency_types, name='summary_configure_agency_types'),
     path('summary/admin/configure_agency_types/<model>', views.configure_agency_types, name='summary_configure_agency_types'),
+    path('summary/view_agency_report', views.view_agency_report, name = 'view_agency_report'),
     path('summary/admin/review_cover_sheets', views.review_cover_sheets, name="review_cover_sheets"),
     path('logged_in/', views.your_logged_in, name='your_logged_in'),
     path('login_denied/', views.login_denied, name='login_denied'),

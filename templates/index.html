@@ -74,6 +74,7 @@
                         {% if request.user|has_group:"Summary reporter" %}
                             <a class="collapse-item" href="{% url 'summary_instructions' %}">Start summary report</a>
                             <a class="collapse-item" href="{% url 'summary_report_data' %}">Report summary data</a>
+                            <a class = "collapse-item" href = "{%  url 'view_agency_report' %}">View agency report</a>
                         {% endif %}
                         <a class="collapse-item" href="{% url 'Vanpool_data' %}">View summary data</a>
 
@@ -276,7 +277,7 @@
 
             </div>
             <div class="d-none d-sm-block" style="position: absolute; bottom: 1.25rem; right: 1.5rem">
-                <img style="height:1.5rem" src="{% static 'img/WSDOT_logo_Green.png' %}">
+                <img style="height:1.5rem" src="{% static 'img/WSDOT_logo_Green.png' %}" alt = "WSDOT Logo">
             </div>
         </footer>
         <!-- End of Footer -->

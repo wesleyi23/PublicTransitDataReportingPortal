@@ -3,32 +3,35 @@
 
 {% block content %}
 
+    <h1 aria-label="Use this sheet to input any questions or problems"> Contact Us</h1>
+
     <p> If you are having any issues with the site or with inputting data or if you need to report anything broken, please fill out this contact form and
     we will respond as soon as possible: </p>
-  <form>
+  <form method="post" aria-label="Email Contact Form" title = "Email Contact Form" type = "text">
+  {% csrf_token %}
 
-     <table>
+     <table style = "padding: 80px">
 <tbody>
         <tr>
-            <td> Email</td>
+            <td aria-label="Email Address of Contact"> Email</td>
             <td> {{ form.from_email }}</td>
             <td> {{ form.errors }}</td>
         </tr>
         <tr>
-            <td>Subject</td>
+            <td aria-label="Subject">Subject</td>
             <td> {{ form.subject }}</td>
             <td> {{ form.errors }}</td>
         </tr>
     <tr>
-        <td>Message</td>
-        <td> {{ form.message }}</td>
-        <td> {{ form.erros }}</td>
+        <td aria-label="Submit Message">Message</td>
+        <td aria-label="text box for message"> {{ form.message }}</td>
+        <td> {{ form.errors }}</td>
     </tr>
 </tbody>
 
      </table>
-
-<input type="submit" value="Looks good" class="btn btn-primary">
+<p></p>
+<input type="submit" value="Submit" aria-label="Submit" class="btn btn-primary" style="width:100px; display:inline-block;margin-left: 40px;">
 </form>
 
 {%  endblock %}

@@ -431,6 +431,7 @@ class transit_data(models.Model):
     organization = models.ForeignKey(organization, on_delete=models.PROTECT, related_name='+')
     year = models.IntegerField()
     transit_mode = models.ForeignKey(transit_mode, on_delete=models.PROTECT, related_name='+')
+    # TODO remove rollup_mode
     rollup_mode = models.ForeignKey(rollup_mode, on_delete=models.PROTECT,  related_name='+', blank=True, null=True)
     administration_of_mode = models.CharField(max_length=80, choices=DO_OR_PT)
     transit_metric = models.ForeignKey(transit_metrics, on_delete=models.PROTECT, related_name='+')

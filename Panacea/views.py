@@ -1,5 +1,11 @@
+import csv
 import itertools
 import json
+
+from django.template import RequestContext
+from django_pandas.io import read_frame
+import pandas as pd
+
 from .validators import validation_test_for_transit_data
 
 from django.contrib import messages
@@ -19,7 +25,8 @@ import datetime
 from Panacea.decorators import group_required
 from .utilities import monthdelta, get_wsdot_color, get_vanpool_summary_charts_and_table, percent_change_calculation, \
     find_vanpool_organizations, get_current_summary_report_year, filter_revenue_sheet_by_classification, \
-    find_user_organization_id, complete_data, green_house_gas_per_sov_mile, green_house_gas_per_vanpool_mile
+    find_user_organization_id, complete_data, green_house_gas_per_sov_mile, green_house_gas_per_vanpool_mile, \
+    data_prep_for_transits, build_revenue_table
 from django.http import Http404
 from .filters import VanpoolExpansionFilter, VanpoolReportFilter
 from django.conf import settings
@@ -64,6 +71,7 @@ def register(request):
             return redirect('dashboard')
     else:
         form = CustomUserCreationForm()
+
     return render(request, 'registration/register.html', {'form': form})
 
 
@@ -81,6 +89,9 @@ def dashboard(request):
     if current_user_profile.profile_complete is True:
         current_user_id = request.user.id
         user_org_id = profile.objects.get(custom_user_id=current_user_id).organization_id
+        if organization.objects.get(id = user_org_id).vanpool_program == False:
+            vp_program = False
+            return render(request, 'pages/dashboard.html', {'user_org': user_org_id, 'vp_program': vp_program})
         recent_vanpool_report = vanpool_report.objects. \
             filter(organization_id=user_org_id, report_date__isnull=False). \
             order_by('-report_year', '-report_month').first()
@@ -127,13 +138,16 @@ def dashboard(request):
             ghg_percent = ((current_monthly_emissions-last_year_monthly_emissions)/last_year_monthly_emissions)
             return [round(current_monthly_emissions, 2), ghg_percent]
 
-        return render(request, 'pages/dashboard.html', {
+        return render(request, 'pages/dashboard.html', { 'user_org': user_org_id,
             'groups_in_operation': get_most_recent_and_change("total_groups_in_operation"),
             'total_passenger_trips': get_most_recent_and_change("total_passenger_trips"),
             'average_riders_per_van': get_most_recent_and_change("average_riders_per_van"),
             'total_miles_traveled': get_most_recent_and_change("total_miles_traveled"),
             'co2_emissions_avoided': ghg_calculator(),
-            'report_status': check_status()
+            'report_status': check_status(),
+            'report_month': report_month,
+            'previous_report_year': previous_report_year,
+            'last_report_year': recent_vanpool_report.report_year
         })
 
     # If the user has completed their profile but has not had permissions assigned
@@ -564,13 +578,20 @@ def download_vanpool_data(request, org_id = None):
     org_id = profile.objects.get(custom_user_id=request.user.id).organization_id
     org_name = organization.objects.get(id=org_id).name
     vanshare_existence = organization.objects.get(id = org_id).vanshare_program
-    vanpool_report_filtered = vanpool_report.objects.filter(organization_id = org_id, vanpool_groups_in_operation__isnull=False)
-    vanpool_data = VanpoolReportFilter(request.GET, queryset=vanpool_report_filtered)
-    send_mail('testing', 'mymessage', settings.DEFAULT_FROM_EMAIL, ['schumen@wsdot.wa.gov'], fail_silently=False)
-    return render(request, 'pages/vanpool/download_vanpool_data.html', {'org_name': org_name,
-                                                                        'vanpool_data': vanpool_data,
-                                                                        'vanshare_existence': vanshare_existence})
+    vanpool_data = vanpool_report.objects.filter(organization_id = org_id, vanpool_groups_in_operation__isnull=False)
 
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="{}.csv"'.format(org_name)
+    writer = csv.writer(response)
+    count = 0
+
+    for k in vanpool_data:
+        if count == 0:
+            writer.writerow(list(k.__dict__.keys())[1:])
+            count +=1
+        else:
+           writer.writerow(list(k.__dict__.values())[1:])
+    return response
 
 
 @login_required(login_url='/Panacea/login')
@@ -865,7 +886,7 @@ def delete_summary_mode(request, name, admin_of_mode):
         service_to_delete.delete()
         return redirect('summary_modes')
 
-#
+
 @login_required(login_url='/Panacea/login')
 @group_required('Summary reporter', 'WSDOT staff')
 def report_transit_data(request, year=None, service=None):
@@ -970,10 +991,9 @@ def review_data(request):
     for mode in mode_list:
         validation_test_for_transit_data(report_year, mode[0], mode[2], user_org, request.user.id)
     ve = validation_errors.objects.filter(organization_id = user_org, year = report_year, error_resolution__isnull=True)
-    print(ve)
     my_formset_factory = modelformset_factory(model=validation_errors,
-                                              form=validation_error_form,
-                                              extra=0)
+                                             form=validation_error_form,
+                                             extra=0)
     if request.method == 'POST':
         formset = my_formset_factory(data=request.POST, queryset=ve)
         error_count = formset.total_form_count()
@@ -1377,20 +1397,39 @@ def your_logged_in(request):
 def login_denied(request):
     return render(request, 'login_denied.html')
 
-
+@login_required(login_url='/Panacea/login')
 def contact_us(request):
-    if request.method == 'GET':
-        form = email_contact_form()
-    else:
+    if request.method == 'POST':
         form = email_contact_form(request.POST)
         if form.is_valid():
             subject = form.cleaned_data['subject']
             from_email = form.cleaned_data['from_email']
             message = form.cleaned_data['message']
             try:
-                send_mail(subject, from_email, message, [settings.DEFAULT_FROM_EMAIL])
+                print('something')
+                send_mail(subject, message, from_email, [settings.DEFAULT_FROM_EMAIL,], fail_silently=False)
             except BadHeaderError:
                 return HttpResponse('Invalid header found')
-            return redirect('success')
+            return redirect('dashboard')
+    else:
+        form = email_contact_form()
+
     return render(request, 'pages/ContactUs.html', {'form':form})
+
+
+
+
+@login_required(login_url='/Panacea/login')
+def view_agency_report(request):
+    #TODO replace with a real function
+    years = [2016, 2017, 2018]
+    current_user_id = request.user.id
+    user_org_id = profile.objects.get(custom_user_id=current_user_id).organization_id
+    print(user_org_id)
+    enddf = data_prep_for_transits(years, user_org_id)
+    transit_heading_years = ['Annual Operating Information'] + years +['One Year Change (%)']
+    operating_data = enddf.to_dict(orient = 'records')
+    build_revenue_table(years, user_org_id)
+
+    return render(request, 'pages/summary/view_agency_report.html', {'data':operating_data, 'years': transit_heading_years})
 

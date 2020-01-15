@@ -773,8 +773,8 @@ class validation_error_form(forms.ModelForm):
             }
 
 class email_contact_form(forms.Form):
-    from_email = forms.EmailField(required=True)
-    subject = forms.CharField(required=True)
+    from_email = forms.EmailField(required=True, label="Sender Email")
+    subject = forms.CharField(required=True, label="Subject of Message")
     message = forms.CharField(widget=forms.Textarea, required=True)
 
 

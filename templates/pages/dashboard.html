@@ -4,8 +4,24 @@
 {% block content %}
     <div class="container-fluid">
         <!-- Page Heading -->
-        <h1 class="h3 mb-2 text-gray-800">Dashboard</h1>
-        {% if request.user|has_group:"Vanpool reporter" %}
+        <h1 class="h3 mb-2 text-gray-800" align = "center">Dashboard</h1>
+
+    {%  if vp_program  == False%}
+        <div class="col-xl-12 col-md-12 mb-4">
+                    <div class="card border-left-primary shadow h-100 py-2">
+                        <div class="card-body">
+                            <div class="row no-gutters align-items-center">
+                                <div class="col mr-2">
+
+      <div> Welcome to the Vanpool Reporting Portal. Please check out the reporting and setting functions. </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+    {% endif %}
+
+
+        {% if request.user|has_group:"Vanpool reporter" and user_org != 1 %}
             <div class="row">
                 <!-- Groups In Operation -->
                 <div class="col-xl-3 col-md-6 mb-4">
@@ -81,13 +97,15 @@
                                     <div class="h5 mb-0 font-weight-bold text-gray-800">{{co2_emissions_avoided | print_dashboard_cards_data | safe}}</div>
                                 </div>
                                 <div class="col-auto">
-                                    <i class="fas fa-car fa-2x text-gray-300"></i>
+                                    <i class="fas fa-road fa-2x text-gray-300"></i>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
+            <p class="mb-2 text-gray-800" align = "center"> Percent changes represent the difference between the month of {{ report_month| print_long_date_name }} {{ previous_report_year }} and the month of {{ report_month| print_long_date_name }} {{ last_report_year }}</p>
+
             {% if report_status == "Past due" %}
                 <!-- Past Due -->
                 <div class="row">
@@ -95,7 +113,7 @@
                         <div class="card border-left-warning shadow h-100 ">
                             <div class="card-header text-warning"><b>Vanpool Report Past Due</b></div>
                             <div class="card-body">
-                                It looks like your vanpool report is past due.  <a href="{% url 'Vanpool_report' %}">Click here to complete it.</a>
+                                It looks like your vanpool report is past due.  <a href="{% url 'Vanpool_report' %}">Click here to complete it. </a> If you need to make revisions to a previous month, please start there first.</a>
                             </div>
                         </div>
                     </div>

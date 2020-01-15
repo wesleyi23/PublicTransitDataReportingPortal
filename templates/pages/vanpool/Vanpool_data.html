@@ -16,7 +16,7 @@
                         <input  class="btn btn-success" type="submit" value="Update Chart" style="float: right">
                     </p>
                     <div class="collapse multi-collapse" id="multiCollapseExample1">
-                        <div class="card card-body mb-2">
+                        <div class="card card-body mb-2"  aria-label="Change Chart Measure">
                             <div class="container-fluid">
                                 <div class="row">
                                     <div class="col-11">{{ form.chart_measure }}</div>
@@ -33,7 +33,7 @@
                             </div>
                             <div class="" id="bullet-kill" >{{ form.chart_organizations }}</div>
                             <div class="">
-                                <input  class="btn btn-sm btn-success mr-4" type="submit" value="Update Chart" style="float: right">
+                                <input  class="btn btn-sm btn-success mr-4" type="submit" value="Update Chart" style="float: right" >
                             </div>
                         </div>
                     </div>
@@ -42,7 +42,7 @@
                         <div class="card card-body" >
                             <div class="container-fluid">
                                 <div class="row">
-                                    <div class="col-11"><div class="" ><fieldset >{{ form.chart_time_frame }}</fieldset></div></div>
+                                    <div class="col-11"><div class="" aria-label="Set Time Frame"><fieldset >{{ form.chart_time_frame }}</fieldset></div></div>
                                     <div class="col-1"><input  class="btn btn-sm btn-success" type="submit" value="Update Chart" style="float: right"></div>
                                 </div>
                             </div>

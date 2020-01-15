@@ -1,6 +1,9 @@
 import calendar
 import json
-from .models import organization, vanpool_expansion_analysis, vanpool_report, profile
+
+from django_pandas.io import read_frame
+import pandas as pd
+from .models import organization, vanpool_expansion_analysis, vanpool_report, profile, transit_data, service_offered, transit_mode, revenue
 from django.db.models import Max, Subquery, F, OuterRef, Case, CharField, Value, When, Sum, Count, Avg, FloatField, \
     ExpressionWrapper
 from django.db.models.functions import Coalesce
@@ -12,6 +15,97 @@ from dateutil.relativedelta import relativedelta
 #####
 
 #
+
+def get_farebox_and_vp_revenues(years, user_org_id):
+    farebox = transit_data.objects.filter(organization_id=user_org_id, year__in=years, transit_metric__name='Farebox Revenues',
+                                transit_mode_id__in= [1,2,4,5,6,7,8,9,10]).values('year').annotate(reported_value = Sum('reported_value'))
+    farebox = read_frame(farebox)
+    farebox['revenue_source'] = 'Farebox Revenues'
+    vanpool = transit_data.objects.filter(organization_id=user_org_id, year__in=years,
+                                          transit_metric__name='Farebox Revenues',
+                                          transit_mode_id__in=[3]).values('year').annotate(reported_value=Sum('reported_value'))
+    vanpool = read_frame(vanpool)
+    vanpool['revenue_source'] = 'Vanpooling Revenue'
+    fares = pd.concat([farebox, vanpool], axis=0)
+    return fares
+
+def other_operating_sub_total(years, user_org_id):
+    other_op = revenue.objects.filter(organization_id=user_org_id, year__in=years, revenue_source__name__in= ['Other-Advertising',
+        'Other-Gain (Loss) on Sale of Assets', 'Other-Interest', 'Other-MISC']).values('year').annotate(reported_value = Sum('reported_value'))
+    other_op = read_frame(other_op)
+    other_op['revenue_source'] = 'Other Operating Sub-Total'
+    return other_op
+
+def build_revenue_table(years, user_org_id):
+    data_revenue = revenue.objects.filter(organization_id = user_org_id, year__in = years)
+    df = read_frame(data_revenue)
+    count = 0
+    for year in years:
+        testdf = df[df.year == year]
+        print(testdf.columns)
+        testdf = testdf[testdf.reported_value.notna()][['id', 'revenue_source', 'reported_value']]
+        testdf['year'] = year
+        if count == 0:
+            finaldf = testdf
+            count += 1
+        else:
+            finaldf = pd.concat([testdf, finaldf], axis=0)
+    fares = get_farebox_and_vp_revenues(years, user_org_id)
+    other_op = other_operating_sub_total(years, user_org_id)
+    finaldf = pd.concat([finaldf, fares, other_op], axis=0)
+    finaldf = finaldf.pivot(index='revenue_source', columns='year', values='reported_value').fillna(0)
+
+
+
+def data_prep_for_transits(years, user_org_id):
+    '''function for pulling all available data within certain years for a transit and pushing it out to a summary sheet'''
+    services_offered = service_offered.objects.filter(organization_id=user_org_id).values('administration_of_mode',
+                                                                                          'transit_mode_id')
+    data_transit = transit_data.objects.filter(organization_id=user_org_id, year__in=years)
+    function_count = 0
+    # dual for loops, one for services offered, one for the years in existence
+    for i in services_offered:
+        filter = data_transit.filter(administration_of_mode=i['administration_of_mode'],
+                                     transit_mode_id=i['transit_mode_id'])
+        df = read_frame(filter)
+        count = 0
+        for year in years:
+            testdf = df[df.year == year]
+            testdf = testdf[testdf.reported_value.notna()][['id', 'transit_metric', 'reported_value']]
+            testdf['year'] = year
+            if count == 0:
+                finaldf = testdf
+                count += 1
+            else:
+                finaldf = pd.concat([testdf, finaldf], axis=0)
+                # pivot method here turns transit metics into the index and years into columns
+        finaldf = finaldf.pivot(index='transit_metric', columns='year', values='reported_value').fillna(0)
+        order_list = ['Revenue Vehicle Hours', 'Total Vehicle Hours', 'Revenue Vehicle Miles',
+                      'Total Vehicle Miles', 'Passenger Trips',
+                      'Diesel Fuel Consumed (gallons)', 'Gasoline Fuel Consumed (gallons)',
+                      'Propane Fuel Consumed (gallons)', 'Electricity Consumed (kWh)',
+                      'Employees - FTEs', 'Operating Expenses', 'Farebox Revenues']
+        # orders the index based on Summary styling
+        finaldf = finaldf.reindex(order_list).dropna()
+        finaldf = finaldf.reset_index()
+        # adds a percent change column
+        finaldf['Percentage Change'] = ((finaldf.iloc[:, 3] - finaldf.iloc[:, 2]) / finaldf.iloc[:, 2])* 100
+        finaldf['role'] = 'body'
+        transit_name = transit_mode.objects.filter(id=i['transit_mode_id']).values('name')[0]['name']
+        mode_name = '{} ({})'.format(transit_name, i['administration_of_mode'])
+        mode_list = [mode_name, '', '', '', '', 'heading']
+        columns_list = finaldf.columns.tolist()
+        mode_list_df = pd.DataFrame(dict(zip(columns_list, mode_list)), index = [0])
+        finaldf = pd.concat([mode_list_df, finaldf]).reset_index(drop=True)
+        if function_count == 0:
+            enddf = finaldf
+            function_count += 1
+        else:
+            enddf = pd.concat([enddf, finaldf], axis=0)
+    enddf = enddf.fillna('-')
+    enddf.columns = ['transit_metric', 'year1', 'year2', 'year3', 'percent_change', 'role']
+    return enddf
+
 
 def complete_data():
     latest_data = vanpool_report.objects.filter(vanpool_groups_in_operation__isnull=False).values('report_year','report_month').annotate(Count('id')).order_by('-id__count', '-report_year', '-report_month').first()
@@ -429,6 +523,16 @@ def yearchange(user_org_id, start_year, end_year, measure):
 # TODO make this real
 def get_current_summary_report_year():
     return 2018
+
+
+class Echo:
+    """An object that implements just the write method of the file-like
+    interface.
+    """
+    def write(self, value):
+        """Write the value by returning it, instead of storing in a buffer."""
+        return value
+
 
 
 
