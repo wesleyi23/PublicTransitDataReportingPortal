@@ -1364,6 +1364,10 @@ def configure_agency_types(request, model=None):
         return render(request, 'pages/summary/configure_agency_types.html', {'formset': formset,
                                                                              'model': model})
 
+def review_cover_sheets(request):
+
+    return render(request, 'pages/summary/review_cover_sheets.html')
+
 
 @login_required(login_url='/Panacea/login')
 def your_logged_in(request):
