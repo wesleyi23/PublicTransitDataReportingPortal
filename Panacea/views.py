@@ -1425,7 +1425,6 @@ def view_agency_report(request):
     years = [2016, 2017, 2018]
     current_user_id = request.user.id
     user_org_id = profile.objects.get(custom_user_id=current_user_id).organization_id
-    print(user_org_id)
     enddf = data_prep_for_transits(years, user_org_id)
     transit_heading_years = ['Annual Operating Information'] + years +['One Year Change (%)']
     operating_data = enddf.to_dict(orient = 'records')
