@@ -26,7 +26,7 @@ from Panacea.decorators import group_required
 from .utilities import monthdelta, get_wsdot_color, get_vanpool_summary_charts_and_table, percent_change_calculation, \
     find_vanpool_organizations, get_current_summary_report_year, filter_revenue_sheet_by_classification, \
     find_user_organization_id, complete_data, green_house_gas_per_sov_mile, green_house_gas_per_vanpool_mile, \
-    data_prep_for_transits, build_revenue_table
+    data_prep_for_transits, build_revenue_table, build_expense_table
 from django.http import Http404
 from .filters import VanpoolExpansionFilter, VanpoolReportFilter
 from django.conf import settings
@@ -1420,7 +1420,7 @@ def contact_us(request):
 
 
 @login_required(login_url='/Panacea/login')
-def view_agency_report(request):
+def view_annual_operating_information(request):
     #TODO replace with a real function
     years = [2016, 2017, 2018]
     current_user_id = request.user.id
@@ -1428,7 +1428,25 @@ def view_agency_report(request):
     enddf = data_prep_for_transits(years, user_org_id)
     transit_heading_years = ['Annual Operating Information'] + years +['One Year Change (%)']
     operating_data = enddf.to_dict(orient = 'records')
-    build_revenue_table(years, user_org_id)
-
     return render(request, 'pages/summary/view_agency_report.html', {'data':operating_data, 'years': transit_heading_years})
+
+@login_required(login_url='/Panacea/login')
+def view_financial_information(request):
+    years = [2016, 2017, 2018]
+    current_user_id = request.user.id
+    user_org_id = profile.objects.get(custom_user_id=current_user_id).organization_id
+    revenuedf = build_revenue_table(years, user_org_id)
+    financial_data = revenuedf.to_dict(orient = 'records')
+    financial_heading_years = ['Financial Information'] + years + ['One Year Change(%)']
+    build_expense_table(years, user_org_id)
+    return render(request, 'pages/summary/view_financial_report.html', {'financial_data':financial_data, 'finance_years': financial_heading_years})
+
+@login_required(login_url='/Panacea/login')
+def view_rollup(request):
+    years = [2016, 2017, 2018]
+    current_user_id = request.user.id
+    user_org_id = profile.objects.get(custom_user_id=current_user_id).organization_id
+    return render(request, 'pages/summary/view_agency_rollup.html')
+
+
 

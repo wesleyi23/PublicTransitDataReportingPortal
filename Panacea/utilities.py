@@ -1,9 +1,10 @@
 import calendar
 import json
-
+import numpy as np
 from django_pandas.io import read_frame
 import pandas as pd
-from .models import organization, vanpool_expansion_analysis, vanpool_report, profile, transit_data, service_offered, transit_mode, revenue
+from .models import revenue_source, organization, vanpool_expansion_analysis, vanpool_report, profile, transit_data, \
+    service_offered, transit_mode, revenue, expense, depreciation, fund_balance
 from django.db.models import Max, Subquery, F, OuterRef, Case, CharField, Value, When, Sum, Count, Avg, FloatField, \
     ExpressionWrapper
 from django.db.models.functions import Coalesce
@@ -15,6 +16,10 @@ from dateutil.relativedelta import relativedelta
 #####
 
 #
+def calculate_percent_change(data1, data2):
+    percent = round((data1 - data2)/data2, 2)
+    percent = percent*100
+    return percent
 
 def get_farebox_and_vp_revenues(years, user_org_id):
     farebox = transit_data.objects.filter(organization_id=user_org_id, year__in=years, transit_metric__name='Farebox Revenues',
@@ -36,13 +41,94 @@ def other_operating_sub_total(years, user_org_id):
     other_op['revenue_source'] = 'Other Operating Sub-Total'
     return other_op
 
+def add_fund_types_and_headings(df):
+    '''this function '''
+    government_type_list = []
+    funding_type_list = []
+    for revenue in df.revenue_source.tolist():
+        output = revenue_source.objects.filter(name = revenue).values('government_type', 'funding_type')
+        try:
+            government_type_list.append(output[0]['government_type'])
+            funding_type_list.append(output[0]['funding_type'])
+        except:
+            government_type_list.append('')
+            funding_type_list.append('')
+    df['government_type'] = government_type_list
+    df['funding_type'] = funding_type_list
+    return df
+
+
+
+def make_headings(df):
+    '''function that adds relevant headings to table'''
+    total_heading = list(set(zip(df['government_type'], df['funding_type'])))
+    if ('State', 'Capital') in total_heading:
+        mode_list = ['State Capital Grant Revenues', '', '', '', '', 'heading', '', '']
+        df = add_a_list_to_a_dataframe(df, mode_list)
+    if ('Federal', 'Capital') in total_heading:
+        mode_list = ['Federal Capital Grant Revenues', '', '', '', '', 'heading', '', '']
+        df = add_a_list_to_a_dataframe(df, mode_list)
+    mode_list = ['Operating Related Revenues', '', '', '', '', 'heading', '', '']
+    df = add_a_list_to_a_dataframe(df, mode_list)
+    return df
+
+def add_a_list_to_a_dataframe(df, added_list):
+    columns_list = df.columns.tolist()
+    intermediate_df = pd.DataFrame(dict(zip(columns_list, added_list)), index=[0])
+    df = pd.concat([intermediate_df, df], axis=0).reset_index(drop=True)
+    return df
+
+def calculate_subtotals(df, years, subtotal_value):
+    df = df[years]
+    res = list(df.sum(axis=0)[years])
+    percent_change = calculate_percent_change(res[1], res[2])
+    result_list = [subtotal_value] + res + [percent_change] + ['subtotal','', '']
+    return result_list
+
+def make_subtotals(df,years):
+    '''function to add up and grab relevant subtotals for revenue table'''
+    total_heading = list(set(zip(df['government_type'], df['funding_type'])))
+    if ('State', 'Capital') in total_heading:
+        filtered_df = df[(df['government_type'] == 'State') & (df['funding_type'] == 'Capital')]
+        result_list = calculate_subtotals(filtered_df, years, 'Total State Capital')
+        df = add_a_list_to_a_dataframe(df, result_list)
+    if ('Federal', 'Capital') in total_heading:
+        filtered_df = df[(df['government_type'] == 'Federal') & (df['funding_type'] == 'Capital')]
+        result_list = calculate_subtotals(filtered_df, years, 'Total Federal Capital')
+        df = add_a_list_to_a_dataframe(df, result_list)
+    filtered_df = df[df['funding_type'] == 'Operating']
+    result_list = calculate_subtotals(filtered_df, years, 'Total (Excludes Capital Revenue)')
+    df = add_a_list_to_a_dataframe(df, result_list)
+    return df
+
+def reindex_revenue_table(df):
+    revenue_order_list = ['Operating Related Revenues', 'Sales Tax', 'Other Local Taxes', 'MVET', 'Farebox Revenues', 'Vanpooling Revenue', 'Federal Section §5307 Operating', 'Federal Section §5307 Preventative',
+     'Federal Section §5311 Operating', 'FTA JARC (§5316) Program', 'Other Federal Operating', 'State Rural Mobility Operating Grants',
+     'State Regional Mobility Operating Grants', 'State Special Needs Operating Grants', 'State Operating Distribution', 'Sales Tax Equalization',
+     'Other State Operating Grants', 'Other Operating Sub-Total', 'Other-Advertising', 'Other-Interest', 'Other-Gain (Loss) on Sale of Assets',
+     'Other-MISC', 'Total (Excludes Capital Revenue)', 'Federal Capital Grant Revenues', 'Federal Section §5307 Capital Grants',
+     'Federal Section §5309 Capital Grants', 'Federal Section §5310 Capital Grants', 'Federal Section §5311 Capital Grants', 'FTA JARC (§5316) Capital Program',
+     'CM/AQ and Other Federal Grants', 'Total Federal Capital', 'State Capital Grant Revenues', 'State Rural Mobility Grants', 'State Regional Mobility Grants',
+     'State Special Needs Grants', 'Sales Tax Equalization-Capital', 'State Vanpool Grants', 'Other State Capital Funds', 'Total State Capital']
+    df = df.set_index('revenue_source')
+    df = df.reindex(revenue_order_list).dropna()
+    df = df.reset_index()
+    return df
+
+
+def index_others(df):
+    index_list = df[df['revenue_source'].isin(['Other Operating Sub-Total','Other-Advertising', 'Other-Interest', 'Other-Gain (Loss) on Sale of Assets','Other-MISC'])].index
+    df.loc[index_list, 'role'] = 'other_indent'
+    index_list = df[df['revenue_source'].isin(['Other Operating Sub-Total'])].index
+    df.loc[index_list, 'role'] = 'subtotal'
+    return df
+
 def build_revenue_table(years, user_org_id):
     data_revenue = revenue.objects.filter(organization_id = user_org_id, year__in = years)
     df = read_frame(data_revenue)
     count = 0
     for year in years:
         testdf = df[df.year == year]
-        print(testdf.columns)
         testdf = testdf[testdf.reported_value.notna()][['id', 'revenue_source', 'reported_value']]
         testdf['year'] = year
         if count == 0:
@@ -54,8 +140,33 @@ def build_revenue_table(years, user_org_id):
     other_op = other_operating_sub_total(years, user_org_id)
     finaldf = pd.concat([finaldf, fares, other_op], axis=0)
     finaldf = finaldf.pivot(index='revenue_source', columns='year', values='reported_value').fillna(0)
+    finaldf = finaldf.reset_index()
+
+    finaldf['percent_change'] = ((finaldf.iloc[:, 3] - finaldf.iloc[:, 2]) / finaldf.iloc[:, 2]) * 100
+    finaldf = finaldf.fillna('-')
+    finaldf = finaldf.replace(np.inf, 100.00)
+    finaldf['role'] = 'body'
+    finaldf = add_fund_types_and_headings(finaldf)
+    finaldf = make_headings(finaldf)
+    finaldf = make_subtotals(finaldf, years)
+    finaldf = reindex_revenue_table(finaldf)
+    finaldf = index_others(finaldf)
+    finaldf.columns = ['revenue_source', 'year1', 'year2', 'year3', 'percent_change', 'role', 'government_type', 'funding_type']
+    return finaldf
 
 
+def build_expense_table(years, user_org_id):
+    from .models import fund_balance
+    from .models import depreciation
+    data_expense = expense.objects.filter(organization = user_org_id, year__in = years)
+    fund_balance = fund_balance.objects.filter(organization = user_org_id, year__in = years)
+    depreciation = depreciation.objects.filter(organization = user_org_id, year__in = years)
+    df_expense = read_frame(data_expense)
+    fund_balance = read_frame(fund_balance)
+    depreciation = read_frame(depreciation)
+    df_expense = df_expense.rename({'expense_source': 'revenue_source'})
+    fund_balance = fund_balance.rename({'fund_balance_type': 'revenue_source'})
+    depreciation['revenue_source'] = 'depreciation'
 
 def data_prep_for_transits(years, user_org_id):
     '''function for pulling all available data within certain years for a transit and pushing it out to a summary sheet'''
@@ -115,10 +226,7 @@ def complete_data():
     return latest_data
 
 
-def calculate_percent_change(data1, data2):
-    percent = round((data1 - data2)/data2, 2)
-    percent = percent*100
-    return percent
+
 
 
 def filter_revenue_sheet_by_classification(classification):

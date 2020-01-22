@@ -5,15 +5,24 @@
 
 
 {%  block content %}
- <div class="container-fluid">
 
-        <!-- Page Heading -->
 
-    </div>
-
-    <div class="container-fluid">
+  <div class="container-fluid">
         <div class="row">
             <div class="card shadow mb-4 w-100">
+                <div class="card-header">
+       <ul class="nav nav-tabs card-header-tabs">
+                        <li class="nav-item">
+                            <a class="nav-link-active" href="{% url 'view_transit_data' %}">Annual Operating Information</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'view_financial_data' %}">Financial Information</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'view_rollup_data' %}">Total Funds By Source</a>
+                        </li>
+                    </ul>
+                </div>
                 <div class="card-body" style="">
 <table id="summary_report" class='table tdt-bootstrap4 dataTable dataTable_wrapper'>
     <thead class="table-secondary">
@@ -55,11 +64,23 @@
     {% endfor %}
     </tbody>
 </table>
+        <table id="summary_revenues" class='table tdt-bootstrap4 dataTable dataTable_wrapper'>
+    <thead class="table-secondary">
+    {% for year in finance_years %}
+    <th  class="d-none d-md-table-cell" scope="col">{{ year }}</th>
+    {% endfor %}
+    </thead>
+    <tbody>
+
+    </tbody>
+        </table>
+
 
             </div>
         </div>
     </div>
     </div>
+
 
 
 {%  endblock %}
@@ -110,7 +131,31 @@
         });
 
 
-
     </script>
+     <script type="text/javascript">
+        $(document).ready( function () {
+            var table = $('#summary_revenues').DataTable({
+                "colReorder": true,
+                "scrollX": true,
+                "sScrollX": "100%",
+                "sScrollXInner": "100%",
+                 "scrollY": "700px",
+                "scrollCollapse": true,
+                "paging": false,
+                "bLengthChange": false,
+                 "bInfo": false,
+                "bFilter": false,
+                "bSort": false,
 
+            });
+            $('.dataTables_filter').addClass('form-inline');
+            $('.dataTables_filter').css({"float":"left", "margin-bottom":"2px", "margin-left":"2px"})
+
+
+            $(document).on('click', '#sidebarToggle', function () {
+                table.draw();
+            });
+
+        });
+</script>
 {% endblock %}

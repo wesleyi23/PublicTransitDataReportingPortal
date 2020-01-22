@@ -445,7 +445,7 @@ class fund_balance_type(models.Model):
     name = models.CharField(max_length=100)
 
     def __str__(self):
-        return self.fund_balance_type
+        return self.name
 
 
 class fund_balance(models.Model):
