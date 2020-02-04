@@ -10,6 +10,7 @@ from django.dispatch import receiver
 from localflavor.us.models import USStateField, USZipCodeField
 from phonenumber_field.modelfields import PhoneNumberField
 import datetime
+from jsonfield import JSONField
 
 from simple_history.models import HistoricalRecords
 
@@ -345,6 +346,7 @@ class revenue_source(models.Model):
     government_type = models.CharField(max_length=100, choices=LEVIATHANS, null=True, blank=True)
     funding_type = models.CharField(max_length=30, choices=FUNDING_KIND, null=True, blank=True)
     agency_classification = models.ManyToManyField(summary_organization_type, blank=True)
+    heading = models.CharField(max_length = 200, null=True, blank = True)
 
     def __str__(self):
         return self.name
@@ -365,6 +367,7 @@ class revenue(models.Model):
 
 class expense_source(models.Model):
     name = models.CharField(max_length=100)
+    heading = models.CharField(max_length = 200, null=True, blank = True)
 
     def __str__(self):
         return self.name
@@ -443,6 +446,7 @@ class transit_data(models.Model):
 
 class fund_balance_type(models.Model):
     name = models.CharField(max_length=100)
+    heading = models.CharField(max_length = 200, null=True, blank = True)
 
     def __str__(self):
         return self.name
@@ -498,6 +502,9 @@ class service_offered(models.Model):
     organization = models.ForeignKey(organization, on_delete=models.PROTECT, blank=True, null=False)
 
 
+
+
+
 class depreciation(models.Model):
     reported_value = models.IntegerField(blank =False, null=True)
     year = models.IntegerField(blank=True, null=True)
@@ -522,6 +529,15 @@ class validation_errors(models.Model):
 
     class Meta:
         unique_together = ['year', 'transit_mode', 'administration_of_mode', 'organization', 'error']
+
+
+class stylesheets(models.Model):
+    transit_revenue = models.CharField(max_length = 200, blank=True, null = True)
+    transit_expense = models.CharField(max_length=200, blank=True, null= True)
+    ferry_expense = models.CharField(max_length=200, blank=True, null= True)
+    ferry_revenue = models.CharField(max_length=200, blank=True, null= True)
+
+
 
 
 

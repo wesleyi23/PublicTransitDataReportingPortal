@@ -26,7 +26,7 @@ from Panacea.decorators import group_required
 from .utilities import monthdelta, get_wsdot_color, get_vanpool_summary_charts_and_table, percent_change_calculation, \
     find_vanpool_organizations, get_current_summary_report_year, filter_revenue_sheet_by_classification, \
     find_user_organization_id, complete_data, green_house_gas_per_sov_mile, green_house_gas_per_vanpool_mile, \
-    data_prep_for_transits, build_revenue_table, build_expense_table
+    data_prep_for_transits, build_revenue_table, build_expense_table, build_total_funds_by_source
 from django.http import Http404
 from .filters import VanpoolExpansionFilter, VanpoolReportFilter
 from django.conf import settings
@@ -1438,7 +1438,6 @@ def view_financial_information(request):
     revenuedf = build_revenue_table(years, user_org_id)
     financial_data = revenuedf.to_dict(orient = 'records')
     financial_heading_years = ['Financial Information'] + years + ['One Year Change(%)']
-    build_expense_table(years, user_org_id)
     return render(request, 'pages/summary/view_financial_report.html', {'financial_data':financial_data, 'finance_years': financial_heading_years})
 
 @login_required(login_url='/Panacea/login')
@@ -1446,7 +1445,36 @@ def view_rollup(request):
     years = [2016, 2017, 2018]
     current_user_id = request.user.id
     user_org_id = profile.objects.get(custom_user_id=current_user_id).organization_id
-    return render(request, 'pages/summary/view_agency_rollup.html')
+    rollup_data = build_total_funds_by_source(years, user_org_id)
+    rollup_heading = ['Total Funds by Source'] + years + ['One Year Change (%)']
+    rollup_data = rollup_data.to_dict(orient = 'records')
+    return render(request, 'pages/summary/view_agency_rollup.html', {'rollup_data': rollup_data, 'rollup_heading': rollup_heading})
+
+@login_required(login_url='/Panacea/login')
+def view_statewide_measures(request):
+    years = [2013, 2014, 2015, 2016, 2017, 2018]
+
+    return render(request, 'pages/summary/view_statewide_measures')
+
+@login_required(login_url='/Panacea/login')
+def view_performance_measures(request):
+    years = [2013, 2014, 2015, 2016, 2017, 2018]
+
+    return render(request, 'pages/summary/view_performance_measures')
+
+
+@login_required(login_url='/Panacea/login')
+def view_statewide_rollup(request):
+    years = [2013, 2014, 2015, 2016, 2017, 2018]
+
+    return render(request, 'pages/summary/view_statewide_rollup')
+
+@login_required(login_url='/Panacea/login')
+def view_statewide_statistics(request):
+    years = [2013, 2014, 2015, 2016, 2017, 2018]
+    return render(request, 'pages/summary/view_statewide_statistics')
+
+
 
 
 
