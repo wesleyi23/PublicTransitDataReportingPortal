@@ -26,7 +26,8 @@ from Panacea.decorators import group_required
 from .utilities import monthdelta, get_wsdot_color, get_vanpool_summary_charts_and_table, percent_change_calculation, \
     find_vanpool_organizations, get_current_summary_report_year, filter_revenue_sheet_by_classification, \
     find_user_organization_id, complete_data, green_house_gas_per_sov_mile, green_house_gas_per_vanpool_mile, \
-    data_prep_for_transits, build_revenue_table, build_expense_table, build_total_funds_by_source
+    data_prep_for_transits, build_revenue_table, build_expense_table, build_total_funds_by_source, \
+    generate_performance_measure_table
 from django.http import Http404
 from .filters import VanpoolExpansionFilter, VanpoolReportFilter
 from django.conf import settings
@@ -1454,25 +1455,37 @@ def view_rollup(request):
 def view_statewide_measures(request):
     years = [2013, 2014, 2015, 2016, 2017, 2018]
 
-    return render(request, 'pages/summary/view_statewide_measures')
+    return render(request, 'pages/summary/view_statewide_measures.html')
 
 @login_required(login_url='/Panacea/login')
 def view_performance_measures(request):
     years = [2013, 2014, 2015, 2016, 2017, 2018]
+    performance_measure_list = []
+    list_of_headings = []
+    performance_measure_dictionary = {'Revenue Vehicle Hours by Service Mode': ("Revenue Vehicle Hours"), 'Revenue Vehicle Miles by Service Mode': ('Revenue Vehicle Miles'),
+    'Passenger Trips by Service Mode':('Passenger Trips'), 'Farebox Revenues by Service Mode': ('Farebox Revenues'), 'Operating Expenses by Service Mode': ('Operating Expenses'),
+    'Operating Costs per Passenger Trip': ('Operating Expenses', 'Passenger Trips'), 'Operating Cost per Revenue Vehicle Hour':('Operating Expenses', 'Revenue Vehicle Hours'),
+    'Passenger Trips per Revenue Vehicle Hour':('Passenger Trips', 'Revenue Vehicle Hours'), 'Passenger Trips per Revenue Vehicle Mile':('Passenger Trips', 'Revenue Vehicle Miles'),
+                                      'Revenue Vehicle Hours per Employee': ('Revenue Vehicle Hours', 'Employees - FTEs'), 'Farebox Recovery Ratio/Vanpool Revenue Recovery': ('Farebox Revenues', 'Operating Expenses')}
+    for key, measure in performance_measure_dictionary.items():
+        df = generate_performance_measure_table(measure, years)
+        heading_list = [key] + years + ['One Year Change (%)']
+        list_of_headings.append(heading_list)
+        performance_measure_list.append(df.to_dict(orient = 'records'))
 
-    return render(request, 'pages/summary/view_performance_measures')
+    return render(request, 'pages/summary/view_performance_measures.html', {'headings': list_of_headings, 'data': performance_measure_list, 'titles': performance_measure_dictionary.keys()})
 
 
 @login_required(login_url='/Panacea/login')
 def view_statewide_rollup(request):
     years = [2013, 2014, 2015, 2016, 2017, 2018]
 
-    return render(request, 'pages/summary/view_statewide_rollup')
+    return render(request, 'pages/summary/view_statewide_rollup.html')
 
 @login_required(login_url='/Panacea/login')
 def view_statewide_statistics(request):
     years = [2013, 2014, 2015, 2016, 2017, 2018]
-    return render(request, 'pages/summary/view_statewide_statistics')
+    return render(request, 'pages/summary/view_statewide_statistics.html')
 
 
 

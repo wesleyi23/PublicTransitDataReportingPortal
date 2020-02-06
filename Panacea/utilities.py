@@ -6,7 +6,7 @@ import pandas as pd
 from .models import revenue_source, organization, vanpool_expansion_analysis, vanpool_report, profile, transit_data, \
     service_offered, transit_mode, revenue, expense, depreciation, fund_balance, stylesheets
 from django.db.models import Max, Subquery, F, OuterRef, Case, CharField, Value, When, Sum, Count, Avg, FloatField, \
-    ExpressionWrapper
+    ExpressionWrapper, Q
 from django.db.models.functions import Coalesce
 
 import datetime
@@ -16,6 +16,26 @@ from dateutil.relativedelta import relativedelta
 #####
 
 #
+
+def generate_performance_measure_table(metric, years):
+    if len(metric) == 2:
+        df = read_frame(transit_data.objects.filter(organization__summary_organization_classifications_id=6, year__in=years,reported_value__isnull=False).values('year', 'rollup_mode__name').annotate(
+        reported_value=Sum('reported_value', filter=Q(transit_metric__name=metric[0]))/ Sum('reported_value', filter = Q(transit_metric__name = metric[1]))))
+    else:
+        df = read_frame(transit_data.objects.filter(organization__summary_organization_classifications_id=6, year__in=years, reported_value__isnull=False).values('year', 'rollup_mode__name').annotate(reported_value=Sum('reported_value', filter=Q(transit_metric__name=metric))))
+    df = df.dropna(thresh=3)
+    df = df.pivot(index = 'rollup_mode__name', columns = 'year', values= 'reported_value')
+    rollup_mode_list = ['Fixed Route', 'Route Deviated', 'Demand Response', 'Vanpool', 'Commuter Rail', 'Light Rail']
+    df = df.reindex(rollup_mode_list)
+    df = df.reset_index()
+    df['percent_change'] = ((df.iloc[:, 6] - df.iloc[:, 5]) / df.iloc[:, 5]) * 100
+    df = df.fillna('-')
+    df = df.replace(np.inf, 100.00)
+    df.columns = ['title', 'year1', 'year2', 'year3', 'year4', 'year5', 'year6', 'percent_change']
+    return df
+
+
+
 def calculate_percent_change(data1, data2):
     percent = round((data1 - data2)/data2, 2)
     percent = percent*100

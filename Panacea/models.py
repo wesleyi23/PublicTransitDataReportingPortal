@@ -538,6 +538,11 @@ class stylesheets(models.Model):
     ferry_revenue = models.CharField(max_length=200, blank=True, null= True)
 
 
+class statewide_measures(models.Model):
+    title = models.CharField(max_length= 200, null=True, blank=True)
+    transit_data_files = models.CharField(max_length=500, blank=True, null=True)
+    data_type = models.CharField(max_length=40, null=True, blank=True)
+    measure_type = models.CharField(max_length=40, null=True, blank = True)
 
 
 

@@ -1,10 +1,32 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
+{% extends 'index.html' %}
+{% load custom_tags %}
+{%  load humanize %}
+{% load static  %}
 
-</body>
-</html>
+
+{%  block content %}
+  <div class="container-fluid">
+        <div class="row">
+            <div class="card shadow mb-4 w-100">
+                <div class="card-header">
+       <ul class="nav nav-tabs card-header-tabs">
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'view_statewide_rollup' %}">Statewide Transit Agency Statistics Roll-Up</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'view_performance_measures' %}">Performance Measures</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link-active" href="{% url 'view_statewide_measures' %}">Statewide Measures</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'view_statewide_statistics' %}">Statewide Transit Agency Statistics</a>
+                        </li>
+                    </ul>
+                </div>
+                <div class="card-body" style="">
+                </div>
+            </div>
+        </div>
+  </div>
+{%  endblock %}
