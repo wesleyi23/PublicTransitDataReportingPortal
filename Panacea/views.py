@@ -27,7 +27,8 @@ from .utilities import monthdelta, get_wsdot_color, get_vanpool_summary_charts_a
     find_vanpool_organizations, get_current_summary_report_year, filter_revenue_sheet_by_classification, \
     find_user_organization_id, complete_data, green_house_gas_per_sov_mile, green_house_gas_per_vanpool_mile, \
     data_prep_for_transits, build_revenue_table, build_expense_table, build_total_funds_by_source, \
-    generate_performance_measure_table
+    generate_performance_measure_table, generate_mode_by_agency_tables, create_statewide_revenue_table, \
+    create_statewide_expense_table
 from django.http import Http404
 from .filters import VanpoolExpansionFilter, VanpoolReportFilter
 from django.conf import settings
@@ -1454,16 +1455,23 @@ def view_rollup(request):
 @login_required(login_url='/Panacea/login')
 def view_statewide_measures(request):
     years = [2013, 2014, 2015, 2016, 2017, 2018]
-
-    return render(request, 'pages/summary/view_statewide_measures.html')
+    statewide_measure_list = []
+    list_of_headings = []
+    statewide_measure_dictionary = {'Revenue Vehicle Hours by Service Mode': ("Revenue Vehicle Hours"), 'Revenue Vehicle Miles by Service Mode': ('Revenue Vehicle Miles'),
+    'Passenger Trips by Service Mode':('Passenger Trips'), 'Farebox Revenues by Service Mode': ('Farebox Revenues'), 'Operating Expenses by Service Mode': ('Operating Expenses')}
+    for key, measure in statewide_measure_dictionary.items():
+        df = generate_performance_measure_table(measure, years)
+        heading_list = [key] + years + ['One Year Change (%)']
+        list_of_headings.append(heading_list)
+        statewide_measure_list.append(df.to_dict(orient = 'records'))
+    return render(request, 'pages/summary/view_statewide_measures.html', {'headings': list_of_headings, 'data': statewide_measure_list, 'titles': statewide_measure_dictionary.keys()})
 
 @login_required(login_url='/Panacea/login')
 def view_performance_measures(request):
     years = [2013, 2014, 2015, 2016, 2017, 2018]
     performance_measure_list = []
     list_of_headings = []
-    performance_measure_dictionary = {'Revenue Vehicle Hours by Service Mode': ("Revenue Vehicle Hours"), 'Revenue Vehicle Miles by Service Mode': ('Revenue Vehicle Miles'),
-    'Passenger Trips by Service Mode':('Passenger Trips'), 'Farebox Revenues by Service Mode': ('Farebox Revenues'), 'Operating Expenses by Service Mode': ('Operating Expenses'),
+    performance_measure_dictionary = {
     'Operating Costs per Passenger Trip': ('Operating Expenses', 'Passenger Trips'), 'Operating Cost per Revenue Vehicle Hour':('Operating Expenses', 'Revenue Vehicle Hours'),
     'Passenger Trips per Revenue Vehicle Hour':('Passenger Trips', 'Revenue Vehicle Hours'), 'Passenger Trips per Revenue Vehicle Mile':('Passenger Trips', 'Revenue Vehicle Miles'),
                                       'Revenue Vehicle Hours per Employee': ('Revenue Vehicle Hours', 'Employees - FTEs'), 'Farebox Recovery Ratio/Vanpool Revenue Recovery': ('Farebox Revenues', 'Operating Expenses')}
@@ -1478,13 +1486,17 @@ def view_performance_measures(request):
 
 @login_required(login_url='/Panacea/login')
 def view_statewide_rollup(request):
-    years = [2013, 2014, 2015, 2016, 2017, 2018]
-
+    year = 2017
+    revenue_df = create_statewide_revenue_table(year)
+    expense_df = create_statewide_expense_table(year)
     return render(request, 'pages/summary/view_statewide_rollup.html')
 
 @login_required(login_url='/Panacea/login')
 def view_statewide_statistics(request):
-    years = [2013, 2014, 2015, 2016, 2017, 2018]
+    year = 2017
+    transit_mode_names = ['Fixed Route', 'Commuter Bus', 'Trolley Bus', 'Route Deviated', 'Demand Response', 'Vanpool', 'Commuter Rail', 'Light Rail', 'Streetcar']
+    for mode in transit_mode_names:
+        df = generate_mode_by_agency_tables(mode, year)
     return render(request, 'pages/summary/view_statewide_statistics.html')
 
 
