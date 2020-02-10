@@ -32,6 +32,11 @@
                         <li class="nav-item">
                             <a class="nav-link" href="{% url 'summary_reporting_type' 'fund_balance' %}">Ending balances</a>
                         </li>
+                        {% if ready_to_submit %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'submit_data' %}">Submit data</a>
+                        </li>
+                        {% endif %}
                         <li class="nav-item">
                             <a class="nav-link" href="{% url 'review_data' %}">Review</a>
                         </li>
@@ -90,11 +95,11 @@
                                     </thead>
                                     <tbody>
 
-                                        <tr class="fieldWrapper">
-                                            <td>{{ form.transit_mode }}</td>
-                                            <td>{{ form.administration_of_mode}}</td>
-                                            <td style="text-align: center"><input type="submit" value="Add mode" class="btn btn-sm btn-primary"></td>
-                                        </tr>
+                                    <tr class="fieldWrapper">
+                                        <td>{{ form.transit_mode }}</td>
+                                        <td>{{ form.administration_of_mode}}</td>
+                                        <td style="text-align: center"><input type="submit" value="Add mode" class="btn btn-sm btn-primary"></td>
+                                    </tr>
 
                                     </tbody>
                                 </table>
@@ -103,9 +108,18 @@
 
 
                     </div>
+                    <div class="text-center">
+                        <a class="btn btn-lg btn-primary" href="{% url 'accept_modes' %}">Confirm service</a>
+                    </div>
                 </div>
+
+
+
+
             </div>
+
         </div>
+
     </div>
 
 

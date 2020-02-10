@@ -135,6 +135,7 @@ class organization(models.Model):
     # TODO add to agency profile form
     in_jblm_area = models.BooleanField(blank=True, null=True)  # TODO confirm this is no longer needed
     in_puget_sound_area = models.BooleanField(blank=True, null=True)
+    summary_reporter = models.BooleanField(default=True)
     summary_organization_classifications = models.ForeignKey(summary_organization_type, on_delete=models.PROTECT, blank=True, null=True)
     #fixed_route_expansion = models.BooleanField(blank=True, null=True)
 
@@ -376,7 +377,7 @@ class expense(models.Model):
 
     organization = models.ForeignKey(organization, on_delete=models.PROTECT, related_name='+')
     year = models.IntegerField()
-    expense_source = models.ForeignKey(expense_source, on_delete=models.PROTECT, related_name='+', blank=True, null=True)
+    expense_source = models.ForeignKey(expense_source, on_delete=models.PROTECT, related_name='+')
     reported_value = models.IntegerField(blank=True, null=True)
     report_by = models.ForeignKey(custom_user, on_delete=models.PROTECT, blank=True, null=True)
     comments = models.TextField(blank=True, null=True)
@@ -443,10 +444,14 @@ class transit_data(models.Model):
     comments = models.TextField(blank=True, null=True)
     history = HistoricalRecords()
 
+    #TODO make this contraint work
+
+    # class Meta:
+    #     unique_together = ['year', 'transit_mode', 'transit_metric', 'organization', 'administration_of_mode']
+
 
 class fund_balance_type(models.Model):
     name = models.CharField(max_length=100)
-    heading = models.CharField(max_length = 200, null=True, blank = True)
 
     def __str__(self):
         return self.name
@@ -489,9 +494,38 @@ class cover_sheet(models.Model):
     monorail_ownership = models.CharField(max_length=250, blank=True, null=True)
     community_planning_region = models.CharField(max_length=50, blank=True, null=True)
     organization_logo = models.BinaryField(editable=True, blank=True, null=True)
+    published_version = models.BooleanField(blank=True, null=True, default=True)
+    history = HistoricalRecords()
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['organization'], name="unique_organization")
+        ]
+
+    def is_identical_to_published_version(self):
+        db_record = cover_sheet.objects.get(id=self.id)
+        print(self.id)
+        published_record = cover_sheet.history.filter(id=self.id, published_version=True).order_by('-history_date').first()
+        if not published_record:
+            if db_record.published_version:
+                print('using db_record')
+                published_record = db_record
+            else:
+                return False
+
+        new_values = [(k, v) for k, v in self.__dict__.items() if k != '_state' and k != "published_version"]
+        equals_published_record = True
+        for key, value in new_values:
+            if not published_record.__dict__[key] == value:
+                equals_published_record = False
+
+        return equals_published_record
+
+    def save(self, *args, **kwargs):
+        self.published_version = self.is_identical_to_published_version()
+        super(cover_sheet, self).save(*args, **kwargs)
 
 
-# TODO Take out of camel case so the database table names are clean
 class service_offered(models.Model):
     DO_OR_PT = (
         ('Direct Operated', 'Direct Operated'),
@@ -561,6 +595,93 @@ class statewide_measures(models.Model):
 #     report_by = models.ForeignKey(custom_user, on_delete=models.PROTECT, blank=True, null=True)
 #     comments = models.TextField(blank=True, null=True)
 #     history = HistoricalRecords()
+class summary_report_status(models.Model):
+
+    STATUS = (
+        ("With user", "With user"),
+        ("With WSDOT", "With WSDOT"),
+        ("Complete", "Complete")
+    )
+
+    year = models.IntegerField()
+    organization = models.ForeignKey(organization, on_delete=models.PROTECT)
+    cover_sheet_status = models.CharField(default="With user", max_length=80, choices=STATUS)
+    cover_sheet_submitted_for_review = models.BooleanField(default=False)
+    data_report_status = models.CharField(default="With user", max_length=80, choices=STATUS)
+    data_report_submitted_for_review = models.BooleanField(default=False)
+    history = HistoricalRecords()
+
+    class Meta:
+        unique_together = ('year', 'organization',)
+
+
+class summary_organization_progress(models.Model):
+
+    organization = models.ForeignKey(organization, on_delete=models.PROTECT)
+    started = models.BooleanField(default=False)
+    address_and_organization = models.BooleanField(default=False)
+    organization_details = models.BooleanField(default=False)
+    service_cover_sheet = models.BooleanField(default=False)
+    confirm_service = models.BooleanField(default=False)
+    transit_data = models.BooleanField(default=False)
+    revenue = models.BooleanField(default=False)
+    expenses = models.BooleanField(default=False)
+    ending_balances = models.BooleanField(default=False)
+
+
+class cover_sheet_review_notes(models.Model):
+    NOTE_AREAS = (
+        ("Address", "Address"),
+        ("Organization", "Organization"),
+        ("Service", "Service"),
+    )
+
+    NOTE_STATUS = (
+        ("Open", "Open"),
+        ("Closed", "Closed"),
+        ("Waiting", "Waiting"),
+    )
+
+    year = models.IntegerField()
+    summary_report_status = models.ForeignKey(summary_report_status, on_delete=models.PROTECT)
+    note = models.TextField(blank=True, null=True)
+    note_area = models.CharField(max_length=80, choices=NOTE_AREAS)
+    note_field = models.CharField(max_length=80, blank=True, null=True)
+    wsdot_note = models.BooleanField(default=True)
+    parent_note = models.IntegerField(blank=True, null=True)
+    note_status = models.CharField(max_length=50, choices=NOTE_STATUS, default="Open")
+    custom_user = models.ForeignKey(custom_user, on_delete=models.PROTECT, blank=True, null=True)
+    date = models.DateTimeField(auto_now_add=True, blank=True, null=True)
+
+    def save(self, *args, **kwargs):
+        if not self.id:
+            if self.parent_note:
+                parent_note = cover_sheet_review_notes.objects.get(id=self.parent_note)
+                if self.wsdot_note:
+                    parent_note.note_status = "Open"
+                else:
+                    parent_note.note_status = "Waiting"
+                parent_note.save()
+
+        super(cover_sheet_review_notes, self).save(*args, **kwargs)
+
+# class ending_balance_categories(models.Model):
+#     ending_balance_category = models.CharField(max_length=100, blank=False, null = False)
+#     def __str__(self):
+#         return self.ending_balance_category
+#
+#
+# class ending_balances(models.Model):
+#     ending_balance_category = models.ForeignKey(ending_balance_categories, on_delete=models.PROTECT ,related_name = '+')
+#     ending_balance_value = models.FloatField()
+#     year = models.IntegerField(blank=True, null=True)
+#     organization = models.ForeignKey(organization, on_delete=models.PROTECT, blank=True, null=True)
+#     report_by = models.ForeignKey(custom_user, on_delete=models.PROTECT, blank=True, null=True)
+#     comments = models.TextField(blank=True, null=True)
+#     history = HistoricalRecords()
+
+
+
 
 
 

@@ -1,0 +1,427 @@
+{% extends 'index.html' %}
+{% load humanize %}
+{% load custom_tags %}
+{% load static %}
+{% load widget_tweaks %}
+
+{% block head_content %}
+
+
+{% endblock %}
+
+{% block content %}
+
+    <div class="container-fluid">
+
+        <!-- Page Heading -->
+
+    </div>
+
+    <div class="container-fluid">
+        <div class="row">
+            <div class="card shadow mb-4 w-100">
+                <div class="card-header">
+                    <ul class="nav nav-tabs card-header-tabs">
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'summary_tracking' %}">Tracking</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link active" href="{% url 'wsdot_review_cover_sheets' %}">Review cover sheets</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'wsdot_review_data' %}">Review Data</a>
+                        </li>
+                    </ul>
+                </div>
+                <div class="card-body" style="">
+                    <h1>{{ year }} {% get_org_name organization_id %}{% if published_version %}<span class="badge badge-success ml-3">No changes</span>{% endif %}</h1>
+
+                    {% if not cover_sheet_submitted %}
+                        <div class="alert alert-warning" role="alert">
+                            This organization has not submitted their coversheet for this year.
+                        </div>
+                    {% else %}
+                        {% if cover_sheet_status == "With user" %}
+                            <div class="alert alert-danger" role="alert">
+                                This coversheet is with our customer for their review.
+                            </div>
+                        {% elif cover_sheet_status == "Complete" %}
+                            <div class="alert alert-success" role="alert">
+                                The review of this coversheet is complete.
+                            </div>
+                        {% endif %}
+                        <form action={% url 'wsdot_review_cover_sheets_year_org' year organization_id %} method="post" enctype="multipart/form-data">
+                            {% csrf_token  %}
+                            <div class="row">
+                                <div class="col-6">
+                                    <div class="row">
+                                        <div class="col-11">
+                                            <div style="padding-bottom: 0.5rem">Organization logo:
+                                                <sup>
+                                                    <i class="fas fa-question-circle help-popover"
+                                                       data-toggle="popover" title="Governing body:"
+                                                       data-content="Upload an image file (e.g., jpg, png, tif) of your agency’s logo. While it is not a requirement, WSDOT prefers logos without slogans or catchphrases."></i>
+                                                </sup>
+                                            </div>
+                                            <div class="text-center" style="padding-top:0.5rem">
+                                                <img src="data:image/png;base64, {{ base64_logo }}" id="preview" class="img-fluid img-thumbnail" style="width:66%">
+                                            </div>
+                                            <div class="text-center pt-2">
+                                                {{ cover_sheet_form.organization_logo_input }}
+                                                <label class="btn btn-primary" style="" for="id_{{ cover_sheet_form.organization_logo_input.name }}"><i class="fas fa-upload"></i>  Choose a file</label>
+                                            </div>
+                                            {{ cover_sheet_form.organization_logo_input.errors }}
+                                        </div>
+                                        <div class="col-1 text-right">
+                                            <a href="#" onclick="generate_modal('Organization', '{{ cover_sheet_form.organization_logo_input.name }}')"><i class="fas fa-sticky-note text-primary"></i></a>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-11">
+                                            <table class="w-100" style="margin-bottom: 1rem">
+                                                <tr>
+                                                    <td>{{ cover_sheet_form.executive_officer_first_name.label_tag}}</td>
+                                                    <td>{{ cover_sheet_form.executive_officer_last_name.label_tag}}</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>{{ cover_sheet_form.executive_officer_first_name }} </td>
+                                                    <td>{{ cover_sheet_form.executive_officer_last_name }}</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>{{ cover_sheet_form.executive_officer_first_name.errors }} </td>
+                                                    <td>{{ cover_sheet_form.executive_officer_last_name.errors }}</td>
+                                                </tr>
+                                            </table>
+                                        </div>
+
+                                        <div class="col-1 text-right">
+                                            <a href="#" onclick="generate_modal('Organization', '{{ cover_sheet_form.executive_officer_last_name.name }}')"><i class="fas fa-sticky-note text-primary"></i></a>
+                                        </div>
+
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-11">
+                                            {{ cover_sheet_form.executive_officer_title.label_tag }}
+                                            <p>{{ cover_sheet_form.executive_officer_title }}</p>
+                                            {{ cover_sheet_form.executive_officer_title.errors }}
+                                        </div>
+                                        <div class="col-1 text-right">
+                                            <a href="#" onclick="generate_modal('Organization', '{{ cover_sheet_form.executive_officer_title.name }}')"><i class="fas fa-sticky-note text-primary"></i></a>
+                                        </div>
+                                    </div>
+
+                                    <div class="row">
+                                        <div class="col-11">
+                                            {{ cover_sheet_form.service_website_url.label_tag }}
+                                            <p>{{ cover_sheet_form.service_website_url }}</p>
+                                            {{ cover_sheet_form.service_website_url.errors }}
+                                        </div>
+                                        <div class="col-1 text-right">
+                                            <a href="#" onclick="generate_modal('Organization', '{{ cover_sheet_form.service_website_url.name }}')"><i class="fas fa-sticky-note text-primary"></i></a>
+                                        </div>
+                                    </div>
+
+                                    <div class="row">
+                                        <div class="col-11">
+                                            {{ cover_sheet_form.congressional_districts.label_tag }}
+                                            <sup>
+                                                <i class="fas fa-question-circle help-popover"
+                                                   data-toggle="popover" title="Congressional districts: "
+                                                   data-content="The United States congressional districts within your service area."></i>
+                                            </sup>
+                                            <p>{{ cover_sheet_form.congressional_districts }}</p>
+                                            {{ cover_sheet_form.congressional_districts.errors}}
+                                        </div>
+                                        <div class="col-1 text-right">
+                                            <a href="#" onclick="generate_modal('Organization', '{{ cover_sheet_form.congressional_districts.name }}')"><i class="fas fa-sticky-note text-primary"></i></a>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-11">
+                                            {{ cover_sheet_form.legislative_districts.label_tag }}
+                                            <sup>
+                                                <i class="fas fa-question-circle help-popover"
+                                                   data-toggle="popover" title="Legislative districts:"
+                                                   data-content="The Washington state legislative districts within your service area."></i>
+                                            </sup>
+                                            <p>{{ cover_sheet_form.legislative_districts}}</p>
+                                            {{ cover_sheet_form.legislative_districts.errors}}
+                                        </div>
+                                        <div class="col-1 text-right">
+                                            <a href="#" onclick="generate_modal('Organization', '{{ cover_sheet_form.legislative_districts.name }}')"><i class="fas fa-sticky-note text-primary"></i></a>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-11">
+                                            {{ cover_sheet_form.type_of_government.label_tag }}
+                                            <sup>
+                                                <i class="fas fa-question-circle help-popover"
+                                                   data-toggle="popover" title="Type of government:"
+                                                   data-content="<b>For transit agencies:</b> Public Transportation Benefit Area, City Transit System, County Public Transportation Authority or Regional Transit Authority. <br><b>For other providers:</b> If you are a public agency, the description that most closely matches your governance structure (e.g., Tribal council, General purpose government). If you are a nonprofit organization, write “Nonprofit organization.” If you are a for-profit, private organization, write “For-profit organization.”"></i>
+                                            </sup>
+                                            <p>{{ cover_sheet_form.type_of_government}}</p>
+                                            {{ cover_sheet_form.type_of_government.errors}}
+                                        </div>
+                                        <div class="col-1 text-right">
+                                            <a href="#" onclick="generate_modal('Organization', '{{ cover_sheet_form.type_of_government.name }}')"><i class="fas fa-sticky-note text-primary"></i></a>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-11">
+                                            {{ cover_sheet_form.governing_body.label_tag }}
+                                            <sup>
+                                                <i class="fas fa-question-circle help-popover"
+                                                   data-toggle="popover" title="Governing body:"
+                                                   data-content="Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur."></i>
+                                            </sup>
+                                            <p>{{ cover_sheet_form.governing_body}}</p>
+                                            {{ cover_sheet_form.governing_body.errors}}
+                                        </div>
+                                        <div class="col-1 text-right">
+                                            <a href="#" onclick="generate_modal('Organization', '{{ cover_sheet_form.governing_body.name }}')"><i class="fas fa-sticky-note text-primary"></i></a>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+
+                                    {%  for note in organization_notes %}
+                                        {% if not note.parent_note %}
+                                            <div class="card mb-1">
+                                                <div class="card-body">
+                                                    {% if note.custom_user == request.user %}
+                                                        <a class="text-danger float-right help-popover" data-toggle="tooltip" data-placement="top" title="Delete note" href="{% url 'delete_cover_sheet_note' note.id %}"><i class="far fa-trash-alt"></i></a>
+                                                    {% endif %}
+                                                    {% if note.wsdot_note %}
+                                                        <h5 class="card-title">WSDOT note:</h5>
+                                                    {% else %}
+                                                        <h5 class="card-title">Customer note:</h5>
+                                                    {% endif %}
+                                                    <div class="card-text">{{ note.note }}</div>
+                                                    <div class="row card-text mt-2">
+                                                        <div class="col-6">
+                                                            <button type="button" class="btn btn-outline-primary btn-sm" onclick="generate_modal('{{ note.note_area }}', '{{ note.note_field }}', '{{ note.id }}')">Reply</button>
+                                                        </div>
+                                                        <div class="col-6 text-right font-weight-light">{{ note.custom_user }} - {{ note.date }}</div>
+                                                    </div>
+                                                    {% for child_note in child_notes %}
+                                                        {% if child_note.parent_note == note.id %}
+                                                            <div class="card mt-2 mb-2">
+                                                                <div class="card-body">
+                                                                    {% if child_note.custom_user == request.user %}
+                                                                        <a class="text-danger float-right help-popover" data-toggle="tooltip" data-placement="top" title="Delete note" href="{% url 'delete_cover_sheet_note' child_note.id %}"><i class="far fa-trash-alt"></i></a>
+                                                                    {% endif %}
+                                                                    {% if child_note.wsdot_note %}
+                                                                        <h5 class="card-title">WSDOT note:</h5>
+                                                                    {% else %}
+                                                                        <h5 class="card-title">Customer note:</h5>
+                                                                    {% endif %}
+                                                                    <div class="card-text">{{ child_note.note }}</div>
+                                                                    <div class="row card-text mt-2">
+                                                                        <div class="col-6"></div>
+                                                                        <div class="col-6 text-right font-weight-light">{{ child_note.custom_user }} - {{ child_note.date }}</div>
+                                                                    </div>
+                                                                </div>
+
+                                                            </div>
+                                                        {% endif %}
+                                                    {% endfor %}
+                                                </div>
+
+                                            </div>
+                                        {% endif %}
+                                    {% endfor %}
+                                </div>
+
+                            </div>
+                            <hr>
+                            <div class="row">
+                                <div class="col-6">
+                                    <div class="row">
+                                        <div class="col-11">
+                                            {{ cover_sheet_form.intermodal_connections.label_tag }}
+                                            <sup>
+                                                <i class="fas fa-question-circle help-popover"
+                                                   data-toggle="popover" title="Intermodal connections:"
+                                                   data-content="Provide a list of the transportation systems (public and private) that your system connects to. You may also include the locations where you make these connections."></i>
+                                            </sup>
+                                            <p>{{ cover_sheet_form.intermodal_connections}}</p>
+                                        </div>
+                                        <div class="col-1 text-right">
+                                            <a href="#" onclick="generate_modal('Service', '{{ cover_sheet_form.intermodal_connections.name }}')"><i class="fas fa-sticky-note text-primary"></i></a>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-11">
+                                            {{ cover_sheet_form.fares_description.label_tag }}
+                                            <sup>
+                                                <i class="fas fa-question-circle help-popover"
+                                                   data-toggle="popover" title="Fares Description:"
+                                                   data-content="Provide a basic list of your fares (e.g., adult, youth, senior, paratransit, monthly pass) and the website URL for more detailed fare information. If you do not collect fares, write “Fare-free.”"></i>
+                                            </sup>
+                                            <p>{{ cover_sheet_form.fares_description}}</p>
+                                        </div>
+                                        <div class="col-1 text-right">
+                                            <a href="#" onclick="generate_modal('Service', '{{ cover_sheet_form.fares_description.name }}')"><i class="fas fa-sticky-note text-primary"></i></a>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    {%  for note in service_notes %}
+                                        {% if not note.parent_note %}
+                                            <div class="card mb-1">
+                                                <div class="card-body">
+                                                    {% if note.custom_user == request.user %}
+                                                        <a class="text-danger float-right help-popover" data-toggle="tooltip" data-placement="top" title="Delete note" href="{% url 'delete_cover_sheet_note' note.id %}"><i class="far fa-trash-alt"></i></a>
+                                                    {% endif %}
+                                                    {% if note.wsdot_note %}
+                                                        <h5 class="card-title">WSDOT note:</h5>
+                                                    {% else %}
+                                                        <h5 class="card-title">Customer note:</h5>
+                                                    {% endif %}
+                                                    <div class="card-text">{{ note.note }}</div>
+                                                    <div class="row card-text mt-2">
+                                                        <div class="col-6">
+                                                            <button type="button" class="btn btn-outline-primary btn-sm" onclick="generate_modal('{{ note.note_area }}', '{{ note.note_field }}', '{{ note.id }}')">Reply</button>
+                                                        </div>
+                                                        <div class="col-6 text-right font-weight-light">{{ note.custom_user }} - {{ note.date }}</div>
+                                                    </div>
+                                                    {% for child_note in child_notes %}
+                                                        {% if child_note.parent_note == note.id %}
+                                                            <div class="card mt-2 mb-2">
+                                                                <div class="card-body">
+                                                                    {% if child_note.custom_user == request.user %}
+                                                                        <a class="text-danger float-right help-popover" data-toggle="tooltip" data-placement="top" title="Delete note" href="{% url 'delete_cover_sheet_note' child_note.id %}"><i class="far fa-trash-alt"></i></a>
+                                                                    {% endif %}
+                                                                    {% if child_note.wsdot_note %}
+                                                                        <h5 class="card-title">WSDOT note:</h5>
+                                                                    {% else %}
+                                                                        <h5 class="card-title">Customer note:</h5>
+                                                                    {% endif %}
+                                                                    <div class="card-text">{{ child_note.note }}</div>
+                                                                    <div class="row card-text mt-2">
+                                                                        <div class="col-6"></div>
+                                                                        <div class="col-6 text-right font-weight-light">{{ child_note.custom_user }} - {{ child_note.date }}</div>
+                                                                    </div>
+                                                                </div>
+
+                                                            </div>
+                                                        {% endif %}
+                                                    {% endfor %}
+
+                                                </div>
+                                            </div>
+                                        {% endif %}
+                                    {% endfor %}
+
+                                </div>
+                            </div>
+                            <hr>
+                            <div class="text-center">
+                                <input id="update_coversheet" type="submit" value="Save cover sheet" class="btn btn-primary" style="">
+                            </div>
+                            <hr class="">
+                            <div class="mt-5 text-center">
+                                <a class="btn btn-warning mr-5" style="min-width: 12rem" href="{%  url 'return_cover_sheet_to_user' summary_report_status_id %}" role="button">Send back to user</a>
+                                <a class="btn btn-success" style="min-width: 12rem" href="{%  url 'approve_cover_sheet' summary_report_status_id %}" role="button">Approve coversheet</a>
+
+                            </div>
+                        </form>
+                    {% endif %}
+                    <hr class="mt-5">
+
+
+                    <div class="row">
+                        <div class="col-6">
+                            {% if previous_organization.organization_id  %}
+                                <a class="btn btn-primary" style="float: left;min-width: 6rem" href="{%  url 'wsdot_review_cover_sheets_year_org' year previous_organization.organization_id %}" role="button">Previous</a>
+                            {% endif %}
+                        </div>
+                        <div class="col-6" >
+                            {% if next_organization.organization_id %}
+                                <a class="btn btn-primary" style="float: right;min-width: 6rem" href="{%  url 'wsdot_review_cover_sheets_year_org' year next_organization.organization_id %}" role="button">Next</a>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Button trigger modal -->
+
+
+    <!-- Modal -->
+    <div class="modal fade" id="note_modal" tabindex="-1" role="dialog" aria-labelledby="Note_modal" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLongTitle">Add a note</h5>
+                </div>
+                <form id="note_form" action="{% url 'base_wsdot_note_url' year summary_report_status_id %}" method="post">
+                    {% csrf_token  %}
+                    <div class="modal-body">
+                        {{  new_note_form }}
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                        <input type="submit" value="Add note"  class="btn btn-primary float-right">
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+{%  endblock %}
+
+{% block page_scripts %}
+
+    <script>
+        $(document).on("click", ".browse", function() {
+            var file = $(this).parents().find(".file");
+            file.trigger("click");
+        });
+        $('input[type="file"]').change(function(e) {
+            var fileName = e.target.files[0].name;
+            $("#file").val(fileName);
+
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                // get loaded data and render thumbnail.
+                document.getElementById("preview").src = e.target.result;
+            };
+            // read the image file as a data URL.
+            reader.readAsDataURL(this.files[0]);
+        });
+    </script>
+
+    <script>
+        $(function () {
+            $('.help-popover').popover({
+                container: 'body',
+                animation: false,
+                trigger: 'hover',
+                html:true
+            })
+        })
+
+    </script>
+
+    <script>
+        function generate_modal(field_name, note_area, parent_note=null) {
+            let note_form = $('#note_form')
+            let base_url = '{% url 'base_wsdot_note_url' year summary_report_status_id %}'
+            let base_url_child = '{% url 'base_wsdot_note_child_url' %}'
+            if(!parent_note){
+                note_form.attr('action', base_url.concat("/", field_name, "/", note_area, "/"))
+            } else {
+                note_form.attr('action', base_url_child.concat("/", parent_note, "/"))
+            }
+
+            $('#note_modal').modal()
+
+        }
+    </script>
+
+
+{% endblock %}

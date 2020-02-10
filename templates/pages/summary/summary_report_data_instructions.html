@@ -40,6 +40,11 @@
                         <li class="nav-item">
                             <a class="nav-link" href="{% url 'summary_reporting_type' 'fund_balance' %}">Ending balances</a>
                         </li>
+                        {% if ready_to_submit %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'submit_data' %}">Submit data</a>
+                        </li>
+                        {% endif %}
                         <li class="nav-item">
                             <a class="nav-link" href="{% url 'review_data' %}">Review</a>
                         </li>
@@ -48,6 +53,9 @@
                 <div class="card-body" style="">
                     <h1>Summary of public transportation reporting</h1>
                     <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+                    <div class="text-center">
+                        <a class="btn btn-primary btn-lg" href="{% url 'summary_modes' %}">Let's get started</a>
+                    </div>
                 </div>
             </div>
         </div>

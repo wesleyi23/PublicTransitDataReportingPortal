@@ -1,0 +1,53 @@
+{% extends 'index.html' %}
+{% load humanize %}
+{% load custom_tags %}
+{% load static %}
+{% load widget_tweaks %}
+
+{% block head_content %}
+
+
+{% endblock %}
+
+{% block content %}
+
+    <div class="container-fluid">
+
+        <!-- Page Heading -->
+
+    </div>
+
+    <div class="container-fluid">
+        <div class="row">
+            <div class="card shadow mb-4 w-100">
+                <div class="card-header">
+                    <ul class="nav nav-tabs card-header-tabs">
+                        <li class="nav-item">
+                            <a class="nav-link active" href="{% url 'customer_review_instructions' %}">Review instructions</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'customer_review_cover_sheets' %}">Review cover sheets</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'customer_review_data' %}">Review Data</a>
+                        </li>
+                    </ul>
+                </div>
+                <div class="card-body" style="">
+                    <h1>Instructions</h1>
+                    Here are the instructions for how you complete the review of your submited data.
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+{%  endblock %}
+
+{% block page_scripts %}
+
+
+
+
+{% endblock %}

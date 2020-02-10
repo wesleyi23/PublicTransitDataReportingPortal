@@ -1,0 +1,67 @@
+{% extends 'index.html' %}
+{% load humanize %}
+{% load custom_tags %}
+{% load static %}
+{% load widget_tweaks %}
+
+{% block head_content %}
+    <link href="{% static 'css/slidder.css'%}" rel="stylesheet">
+
+{% endblock %}
+
+{% block content %}
+
+    <div class="container-fluid">
+
+        <!-- Page Heading -->
+
+    </div>
+
+    <div class="container-fluid">
+        <div class="row">
+            <div class="card shadow mb-4 w-100">
+                <div class="card-header">
+                    <ul class="nav nav-tabs card-header-tabs">
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'summary_instructions' %}">Instructions</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'organizational_information' %}">Address & organization type</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'cover_sheets_organization' %}">Your organization</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'cover_sheets_service' %}">Your service</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link active" href="{% url 'submit_cover_sheet' %}">Submit cover sheet</a>
+                        </li>
+                    </ul>
+                </div>
+                <div class="card-body" style="min-height: 25rem">
+                    <div class="text-center mt-5">
+                        <p class="pb-2 h2"><b>You have completed your cover sheet!</b></p>
+                        <p class="h4">
+                            You may go back and review what you have entered using the tabs above.</p>
+                        <p class="pb-5 h4">
+                            When you are ready you may submit your coversheet for review.
+                        </p>
+                        <a href="{% url 'submit_cover_sheet_submit' %}" class="btn btn-primary btn-lg" role="button" aria-disabled="true">Submit your cover sheet</a>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+
+
+
+
+{%  endblock %}
+
+{% block page_scripts %}
+
+
+{% endblock %}

@@ -1,4 +1,6 @@
+import base64
 import csv
+import datetime
 import itertools
 import json
 
@@ -11,24 +13,30 @@ from .validators import validation_test_for_transit_data
 from django.contrib import messages
 from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import Group
+from django.core.mail import send_mail, BadHeaderError
 from django.db import transaction
+from django.db.models import Max
 from django.db.models import Min, Sum, Avg
-from django.forms import formset_factory, modelformset_factory, BaseModelFormSet, ModelForm
+from django.db.models.functions import datetime
+from django.forms import modelformset_factory, BaseModelFormSet, ModelForm
+from django.http import Http404, HttpResponseRedirect
 from django.http import JsonResponse, HttpResponse
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.db.models.functions import datetime
 from django.core.mail import send_mail, BadHeaderError
 from django.template.loader import render_to_string
 from django.db.models import Max
 from dateutil.relativedelta import relativedelta
 import datetime
+from django.urls import reverse
 from Panacea.decorators import group_required
 from .utilities import monthdelta, get_wsdot_color, get_vanpool_summary_charts_and_table, percent_change_calculation, \
     find_vanpool_organizations, get_current_summary_report_year, filter_revenue_sheet_by_classification, \
     find_user_organization_id, complete_data, green_house_gas_per_sov_mile, green_house_gas_per_vanpool_mile, \
     data_prep_for_transits, build_revenue_table, build_expense_table, build_total_funds_by_source, \
     generate_performance_measure_table, generate_mode_by_agency_tables, create_statewide_revenue_table, \
-    create_statewide_expense_table
+    create_statewide_expense_table, create_all_summary_report_statuses
 from django.http import Http404
 from .filters import VanpoolExpansionFilter, VanpoolReportFilter
 from django.conf import settings
@@ -52,15 +60,23 @@ from .forms import CustomUserCreationForm, \
     statewide_summary_settings, \
     Modify_A_Vanpool_Expansion, organisation_summary_settings, organization_information, cover_sheet_service, \
     cover_sheet_organization, \
-    summary_revenue_form, summary_expense_form, service_offered, transit_data_form, \
-    fund_balance_form, service_offered_form, validation_error_form, email_contact_form
-
+    transit_data_form, \
+    service_offered_form, validation_error_form, email_contact_form, change_user_org, \
+    cover_sheet_wsdot_review, add_cover_sheet_review_note
 from .models import profile, vanpool_report, custom_user, vanpool_expansion_analysis, organization, cover_sheet, \
     revenue, transit_data, expense, expense_source, service_offered, revenue_source, \
-    transit_metrics, transit_mode, fund_balance, fund_balance_type, summary_organization_type, validation_errors
+    transit_metrics, transit_mode, fund_balance, fund_balance_type, summary_organization_type, validation_errors,  summary_report_status, cover_sheet_review_notes, summary_organization_progress
 from django.contrib.auth.models import Group
-from .utilities import calculate_latest_vanpool, find_maximum_vanpool, calculate_remaining_months, calculate_if_goal_has_been_reached, \
-    generate_summary_report_years, find_user_organization_id, find_user_organization
+from .utilities import calculate_latest_vanpool, find_maximum_vanpool, calculate_remaining_months, \
+    calculate_if_goal_has_been_reached, \
+    find_user_organization_id, find_user_organization, get_all_cover_sheet_steps_completed, \
+    get_cover_sheet_submitted, get_all_data_steps_completed, get_data_submitted, reset_summary_reporter_tracking, \
+    reset_all_orgs_summary_progress
+from .utilities import monthdelta, get_wsdot_color, get_vanpool_summary_charts_and_table, percent_change_calculation, \
+    find_vanpool_organizations, get_current_summary_report_year, filter_revenue_sheet_by_classification, \
+    complete_data, green_house_gas_per_sov_mile, green_house_gas_per_vanpool_mile, \
+    data_prep_for_transits, build_revenue_table
+from .validators import validation_test_for_transit_data
 
 
 # region shared_views
@@ -87,78 +103,99 @@ def index(request):
 def dashboard(request):
     current_user_profile = profile.objects.get(custom_user=request.user)
 
+    if not current_user_profile.profile_submitted:
+        return redirect('ProfileSetup')
+
+    if current_user_profile.profile_submitted and not current_user_profile.profile_complete:
+        return render(request, 'pages/ProfileComplete.html')
+
     # If the user is registered and has had permissions assigned
     if current_user_profile.profile_complete is True:
         current_user_id = request.user.id
         user_org_id = profile.objects.get(custom_user_id=current_user_id).organization_id
-        if organization.objects.get(id = user_org_id).vanpool_program == False:
+        user_context = {'user_org': user_org_id}
+
+        if organization.objects.get(id=user_org_id).vanpool_program == False:
             vp_program = False
-            return render(request, 'pages/dashboard.html', {'user_org': user_org_id, 'vp_program': vp_program})
-        recent_vanpool_report = vanpool_report.objects. \
-            filter(organization_id=user_org_id, report_date__isnull=False). \
-            order_by('-report_year', '-report_month').first()
-        report_month = recent_vanpool_report.report_month
-        previous_report_year = recent_vanpool_report.report_year - 1
-        last_year_report = vanpool_report.objects.get(organization_id=user_org_id,
-                                                      report_year=previous_report_year,
-                                                      report_month=report_month)
+            user_context.update({'vp_program': vp_program})
+        else:
+            recent_vanpool_report = vanpool_report.objects. \
+                filter(organization_id=user_org_id, report_date__isnull=False). \
+                order_by('-report_year', '-report_month').first()
+            report_month = recent_vanpool_report.report_month
+            previous_report_year = recent_vanpool_report.report_year - 1
+            last_year_report = vanpool_report.objects.get(organization_id=user_org_id,
+                                                          report_year=previous_report_year,
+                                                          report_month=report_month)
 
-        def get_most_recent_and_change(measure):
-            """Return a list where first item is the current months stat and the second item is the year over year grouwth"""
-            current_monthly_stat = getattr(recent_vanpool_report, measure)
-            last_year_stat = getattr(last_year_report, measure)
-            if last_year_stat is None:
-                year_over_year_growth = "NA"
-            else:
-                year_over_year_growth = (current_monthly_stat/last_year_stat) - 1
-
-            return [current_monthly_stat, year_over_year_growth]
-
-        def check_status():
-            """Returns the report status (if it is past due) of the report for the report after the most recent report"""
-            def get_month_year_addition(month):
-                if month == 12:
-                    return -11, 1
+            def get_most_recent_and_change(measure):
+                """Return a list where first item is the current months stat and the second item is the year over year grouwth"""
+                current_monthly_stat = getattr(recent_vanpool_report, measure)
+                last_year_stat = getattr(last_year_report, measure)
+                if last_year_stat is None:
+                    year_over_year_growth = "NA"
                 else:
-                    return 1, 0
-            month_add, year_add = get_month_year_addition(recent_vanpool_report.report_month)
-            next_vanpool_report_status = vanpool_report.objects.get(organization_id=user_org_id,
-                                                                    report_month=recent_vanpool_report.report_month + month_add,
-                                                                    report_year=recent_vanpool_report.report_year + year_add).status
+                    year_over_year_growth = (current_monthly_stat / last_year_stat) - 1
 
-            return next_vanpool_report_status
+                return [current_monthly_stat, year_over_year_growth]
 
-        def ghg_calculator():
-            current_monthly_sov = green_house_gas_per_sov_mile() * recent_vanpool_report.average_riders_per_van * (recent_vanpool_report.vanpool_miles_traveled + recent_vanpool_report.vanshare_miles_traveled)
-            current_monthly_vanpool_emissions = recent_vanpool_report.vanpool_miles_traveled * green_house_gas_per_vanpool_mile()
-            current_monthly_emissions = current_monthly_sov - current_monthly_vanpool_emissions
-            last_year_monthly_sov = green_house_gas_per_sov_mile() * last_year_report.average_riders_per_van * (last_year_report.vanpool_miles_traveled + last_year_report.vanshare_miles_traveled)
-            last_year_monthly_vanpool_emissions = (last_year_report.vanpool_miles_traveled + last_year_report.vanshare_miles_traveled) * green_house_gas_per_vanpool_mile()
-            last_year_monthly_emissions = last_year_monthly_sov - last_year_monthly_vanpool_emissions
+            def check_status():
+                """Returns the report status (if it is past due) of the report for the report after the most recent report"""
 
+                def get_month_year_addition(month):
+                    if month == 12:
+                        return -11, 1
+                    else:
+                        return 1, 0
 
-            ghg_percent = ((current_monthly_emissions-last_year_monthly_emissions)/last_year_monthly_emissions)
-            return [round(current_monthly_emissions, 2), ghg_percent]
+                month_add, year_add = get_month_year_addition(recent_vanpool_report.report_month)
+                next_vanpool_report_status = vanpool_report.objects.get(organization_id=user_org_id,
+                                                                        report_month=recent_vanpool_report.report_month + month_add,
+                                                                        report_year=recent_vanpool_report.report_year + year_add).status
 
-        return render(request, 'pages/dashboard.html', { 'user_org': user_org_id,
-            'groups_in_operation': get_most_recent_and_change("total_groups_in_operation"),
-            'total_passenger_trips': get_most_recent_and_change("total_passenger_trips"),
-            'average_riders_per_van': get_most_recent_and_change("average_riders_per_van"),
-            'total_miles_traveled': get_most_recent_and_change("total_miles_traveled"),
-            'co2_emissions_avoided': ghg_calculator(),
-            'report_status': check_status(),
-            'report_month': report_month,
-            'previous_report_year': previous_report_year,
-            'last_report_year': recent_vanpool_report.report_year
-        })
+                return next_vanpool_report_status
 
-    # If the user has completed their profile but has not had permissions assigned
-    elif current_user_profile.profile_submitted is True:
-        return render(request, 'pages/ProfileComplete.html')
+            def ghg_calculator():
+                current_monthly_sov = green_house_gas_per_sov_mile() * recent_vanpool_report.average_riders_per_van * (
+                        recent_vanpool_report.vanpool_miles_traveled + recent_vanpool_report.vanshare_miles_traveled)
+                current_monthly_vanpool_emissions = recent_vanpool_report.vanpool_miles_traveled * green_house_gas_per_vanpool_mile()
+                current_monthly_emissions = current_monthly_sov - current_monthly_vanpool_emissions
+                last_year_monthly_sov = green_house_gas_per_sov_mile() * last_year_report.average_riders_per_van * (
+                        last_year_report.vanpool_miles_traveled + last_year_report.vanshare_miles_traveled)
+                last_year_monthly_vanpool_emissions = (
+                                                              last_year_report.vanpool_miles_traveled + last_year_report.vanshare_miles_traveled) * green_house_gas_per_vanpool_mile()
+                last_year_monthly_emissions = last_year_monthly_sov - last_year_monthly_vanpool_emissions
 
-    # If the user is a new user
-    else:
-        return redirect('ProfileSetup')
+                ghg_percent = ((current_monthly_emissions - last_year_monthly_emissions) / last_year_monthly_emissions)
+                return [round(current_monthly_emissions, 2), ghg_percent]
+
+            user_context.update({'user_org': user_org_id,
+                                 'groups_in_operation': get_most_recent_and_change(
+                                     "total_groups_in_operation"),
+                                 'total_passenger_trips': get_most_recent_and_change(
+                                     "total_passenger_trips"),
+                                 'average_riders_per_van': get_most_recent_and_change(
+                                     "average_riders_per_van"),
+                                 'total_miles_traveled': get_most_recent_and_change(
+                                     "total_miles_traveled"),
+                                 'co2_emissions_avoided': ghg_calculator(),
+                                 'report_status': check_status(),
+                                 'report_month': report_month,
+                                 'previous_report_year': previous_report_year,
+                                 'last_report_year': recent_vanpool_report.report_year
+                                 })
+
+        if not organization.objects.get(id=user_org_id).summary_reporter:
+            user_context.update({'summary_reporter': False})
+        else:
+            org_progress, created = summary_organization_progress.objects.get_or_create(organization_id=user_org_id)
+
+            user_context.update({'summary_reporter': True,
+                                 'summary_report_status': summary_report_status.objects.get(year=get_current_summary_report_year(), organization_id=user_org_id),
+                                 'summary_organization_progress': org_progress
+                                 })
+
+    return render(request, 'pages/dashboard.html', user_context)
 
 
 # TODO rename forms to not be camel case
@@ -223,7 +260,8 @@ def ProfileSetup_ReportSelection(request):
 
 @login_required(login_url='/Panacea/login')
 def handler404(request, exception):
-    return render(request, 'pages/error_404.html', status = 404)
+    return render(request, 'pages/error_404.html', status=404)
+
 
 @login_required(login_url='/Panacea/login')
 def UserProfile(request):
@@ -260,7 +298,8 @@ def OrganizationProfileUsers(request):
     # TODO could this be valueslist?
     vals = profile.objects.filter(organization_id=org_id).values('custom_user')
     vals = [i['custom_user'] for i in vals]
-    cust = custom_user.objects.filter(id__in=vals).values('first_name', 'last_name', 'email', 'date_joined', 'last_login')
+    cust = custom_user.objects.filter(id__in=vals).values('first_name', 'last_name', 'email', 'date_joined',
+                                                          'last_login')
     org_name = org.name
     return render(request, 'pages/OrganizationProfileUsers.html', {'org_name': org_name, 'users': cust})
 
@@ -281,6 +320,13 @@ def OrganizationProfile(request, redirect_to=None):
             form.save()
             if redirect_to:
                 print(redirect_to)
+                if redirect_to == "organizational_information":
+                    summary_progress, created = summary_organization_progress.objects.get_or_create(
+                        organization=find_user_organization(request.user.id))
+                    summary_progress.address_and_organization = True
+                    summary_progress.save()
+                    return redirect("cover_sheets_organization")
+
                 return redirect(redirect_to)
             else:
                 return redirect('OrganizationProfile')
@@ -356,10 +402,12 @@ def Admin_assignPermissions(request, active=None):
 
         return JsonResponse({'success': True})
     else:
-        formset = assign_permissions_formset(queryset=custom_user.objects.filter(id__in=profile_data.values_list('custom_user_id')))
+        formset = assign_permissions_formset(
+            queryset=custom_user.objects.filter(id__in=profile_data.values_list('custom_user_id')))
         if active_requests and active == 'active':
-            return render(request, 'pages/assign_permissions_active_requests.html', {'Admin_assignPermissions_all': formset,
-                                                                                     'profile_data': profile_data})
+            return render(request, 'pages/assign_permissions_active_requests.html',
+                          {'Admin_assignPermissions_all': formset,
+                           'profile_data': profile_data})
         else:
             return render(request, 'pages/AssignPermissions.html', {'Admin_assignPermissions_all': formset,
                                                                     'profile_data': profile_data,
@@ -384,6 +432,7 @@ def help_page(request):
 @login_required(login_url='/Panacea/login')
 def logout_view(request):
     logout(request)
+
 
 # endregion
 
@@ -430,13 +479,14 @@ def Vanpool_report(request, year=None, month=None):
 
     # Respond to POST request
     if request.method == 'POST':
-        form = VanpoolMonthlyReport(user_organization=user_organization, data=request.POST, instance=form_data, record_id = form_data.id, report_month=month, report_year=year)
+        form = VanpoolMonthlyReport(user_organization=user_organization, data=request.POST, instance=form_data,
+                                    record_id=form_data.id, report_month=month, report_year=year)
         if form.is_valid():
             form.save()
             successful_submit = True  # Triggers a modal that says the form was submitted
             new_report = False
 
-        #TODO Fix this show it shows the form
+        # TODO Fix this show it shows the form
         else:
             form = VanpoolMonthlyReport(user_organization=user_organization, data=request.POST, instance=form_data,
                                         record_id=form_data.id, report_month=month, report_year=year)
@@ -444,7 +494,8 @@ def Vanpool_report(request, year=None, month=None):
 
     # If not POST
     else:
-        form = VanpoolMonthlyReport(user_organization=user_organization, instance=form_data, record_id = form_data.id, report_month=month, report_year=year)
+        form = VanpoolMonthlyReport(user_organization=user_organization, instance=form_data, record_id=form_data.id,
+                                    report_month=month, report_year=year)
         successful_submit = False
 
     if new_report == False:
@@ -468,9 +519,9 @@ def Vanpool_report(request, year=None, month=None):
 @group_required('WSDOT staff')
 def Vanpool_expansion_submission(request):
     if request.method == 'POST':
-        form = submit_a_new_vanpool_expansion(data = request.POST)
+        form = submit_a_new_vanpool_expansion(data=request.POST)
         if form.is_valid():
-            instance = form.save(commit = False)
+            instance = form.save(commit=False)
             instance.deadline = instance.latest_vehicle_acceptance + relativedelta(months=+18)
             instance.expansion_goal = int(round(instance.expansion_vans_awarded * .8, 0) + \
                                           instance.vanpools_in_service_at_time_of_award)
@@ -481,7 +532,7 @@ def Vanpool_expansion_submission(request):
             # the redirect here is to the expansion page, which triggers the sqlite queries to populate the rest of the data
             return JsonResponse({'redirect': '../Expansion/'})
         else:
-            return render(request, 'pages/Vanpool_expansion_submission.html', {'form':form})
+            return render(request, 'pages/Vanpool_expansion_submission.html', {'form': form})
     else:
         form = submit_a_new_vanpool_expansion(data=request.POST)
     return render(request, 'pages/vanpool/Vanpool_expansion_submission.html', {'form': form})
@@ -545,7 +596,10 @@ def Vanpool_data(request):
 
     if form.is_valid:
         # Get data for x axis labels
-        all_chart_data = [report for report in vanpool_report.objects.filter(organization_id__in=org_list).order_by('organization', 'report_year', 'report_month').all() if
+        all_chart_data = [report for report in
+                          vanpool_report.objects.filter(organization_id__in=org_list).order_by('organization',
+                                                                                               'report_year',
+                                                                                               'report_month').all() if
                           chart_time_frame <= report.report_due_date <= datetime.datetime.today().date()]
         x_axis_labels = [report.report_year_month_label for report in all_chart_data]
         x_axis_labels = list(dict.fromkeys(x_axis_labels))
@@ -554,10 +608,13 @@ def Vanpool_data(request):
         chart_datasets = {}
         color_i = 0
         for org in org_list:
-            chart_dataset = [report for report in vanpool_report.objects.filter(organization_id=org).order_by('organization', 'report_year', 'report_month').all() if
+            chart_dataset = [report for report in
+                             vanpool_report.objects.filter(organization_id=org).order_by('organization', 'report_year',
+                                                                                         'report_month').all() if
                              chart_time_frame <= report.report_due_date <= datetime.datetime.today().date()]
             chart_dataset = [getattr(report, chart_measure) for report in chart_dataset]
-            chart_datasets[organization.objects.get(id=org).name] = [json.dumps(list(chart_dataset)), get_wsdot_color(color_i)]
+            chart_datasets[organization.objects.get(id=org).name] = [json.dumps(list(chart_dataset)),
+                                                                     get_wsdot_color(color_i)]
             color_i = color_i + 1
 
         # Set chart title
@@ -692,13 +749,13 @@ def Vanpool_Growth(request):
     #         self.most_recent_year_folds
     #         self.most_recent_year_start
 
-
-
     listOfAgencies = find_vanpool_organizations()
     for i in listOfAgencies:
         organizationId = i.id
-        start_vanpool_report_year = vanpool_report.objects.filter(organization_id=organizationId, report_date__isnull=False, report_month=12,).first()
-        end_vanpool_report_year = vanpool_report.objects.filter(organization_id=organizationId, report_date__isnull=False, report_month=12,).last()
+        start_vanpool_report_year = vanpool_report.objects.filter(organization_id=organizationId,
+                                                                  report_date__isnull=False, report_month=12, ).first()
+        end_vanpool_report_year = vanpool_report.objects.filter(organization_id=organizationId,
+                                                                report_date__isnull=False, report_month=12, ).last()
     return render(request, 'pages/vanpool/VanpoolGrowth.html', {})
 
 
@@ -706,48 +763,59 @@ def Vanpool_Growth(request):
 @login_required(login_url='/Panacea/login')
 @group_required('WSDOT staff')
 def Operation_Summary(request):
-    total_vp = vanpool_report.objects.values('report_year').annotate(Sum('vanpool_groups_in_operation')).filter(report_month=12, vanpool_groups_in_operation__isnull=False)
+    total_vp = vanpool_report.objects.values('report_year').annotate(Sum('vanpool_groups_in_operation')).filter(
+        report_month=12, vanpool_groups_in_operation__isnull=False)
     years = [i['report_year'] for i in total_vp]
     print(years)
-    total_vp = vanpool_report.objects.values('report_year').annotate(Sum('vanpool_groups_in_operation')).filter(report_month = 12, vanpool_groups_in_operation__isnull=False)
+    total_vp = vanpool_report.objects.values('report_year').annotate(Sum('vanpool_groups_in_operation')).filter(
+        report_month=12, vanpool_groups_in_operation__isnull=False)
     vp_percent_change = percent_change_calculation(total_vp, 'vanpool_groups_in_operation__sum')
-    total_vs =vanpool_report.objects.values('report_year').annotate(Sum('vanshare_groups_in_operation')).filter(report_month = 12, vanshare_groups_in_operation__isnull=False)
+    total_vs = vanpool_report.objects.values('report_year').annotate(Sum('vanshare_groups_in_operation')).filter(
+        report_month=12, vanshare_groups_in_operation__isnull=False)
     vs_percent_change = percent_change_calculation(total_vs, 'vanshare_groups_in_operation__sum')
-    total_starts = vanpool_report.objects.values('report_year').annotate(Sum('vanpool_group_starts')).filter(vanpool_groups_in_operation__isnull=False)
+    total_starts = vanpool_report.objects.values('report_year').annotate(Sum('vanpool_group_starts')).filter(
+        vanpool_groups_in_operation__isnull=False)
     starts_percent_change = percent_change_calculation(total_starts, 'vanpool_group_starts__sum')
-    total_folds = vanpool_report.objects.values('report_year').annotate(Sum('vanpool_group_folds')).filter(vanpool_groups_in_operation__isnull=False)
+    total_folds = vanpool_report.objects.values('report_year').annotate(Sum('vanpool_group_folds')).filter(
+        vanpool_groups_in_operation__isnull=False)
     folds_percent_change = percent_change_calculation(total_folds, 'vanpool_group_folds__sum')
     zipped = zip(total_starts, total_vp)
     starts_as_a_percent = []
     for i in zipped:
-        percent = round((i[0]['vanpool_group_starts__sum']/i[1]['vanpool_groups_in_operation__sum'])*100, 2)
+        percent = round((i[0]['vanpool_group_starts__sum'] / i[1]['vanpool_groups_in_operation__sum']) * 100, 2)
         starts_as_a_percent.append(percent)
     folds_as_a_percent = []
     zipped = zip(total_folds, total_vp)
     for i in zipped:
-        percent = round((i[0]['vanpool_group_folds__sum']/i[1]['vanpool_groups_in_operation__sum'])*100, 2)
+        percent = round((i[0]['vanpool_group_folds__sum'] / i[1]['vanpool_groups_in_operation__sum']) * 100, 2)
         folds_as_a_percent.append(percent)
     zipped = zip(total_starts, total_folds)
     net_vanpool = []
     for start, fold in zipped:
         net_vanpool.append(start['vanpool_group_starts__sum'] - fold['vanpool_group_folds__sum'])
-    avg_riders = vanpool_report.objects.values('report_year').annotate(Avg('average_riders_per_van')).filter(vanpool_groups_in_operation__isnull=False)
-    avg_miles = vanpool_report.objects.values('report_year').annotate(Avg('average_round_trip_miles')).filter(vanpool_groups_in_operation__isnull=False)
+    avg_riders = vanpool_report.objects.values('report_year').annotate(Avg('average_riders_per_van')).filter(
+        vanpool_groups_in_operation__isnull=False)
+    avg_miles = vanpool_report.objects.values('report_year').annotate(Avg('average_round_trip_miles')).filter(
+        vanpool_groups_in_operation__isnull=False)
     print(avg_riders)
     print(avg_miles)
     vp_totals = zip(total_vp, vp_percent_change)
     vs_totals = zip(total_vs, vs_percent_change)
     starts = zip(total_starts, starts_percent_change)
     folds = zip(total_folds, folds_percent_change)
-    empty_list = ['']*len(total_vp)
+    empty_list = [''] * len(total_vp)
     starts_as_percent = zip(starts_as_a_percent, empty_list)
     folds_as_percent = zip(folds_as_a_percent, empty_list)
     net_vans = zip(net_vanpool, empty_list)
     average_riders = zip(avg_riders, empty_list)
     average_miles = zip(avg_miles, empty_list)
 
-    return render(request, 'pages/vanpool/OperationSummary.html', {'vp_totals': vp_totals, 'vs_totals': vs_totals, 'starts':starts, 'folds': folds, 'starts_as_a_percent': starts_as_percent,
-                                                                   'folds_as_percent': folds_as_percent, 'net_vans': net_vans, 'average_riders': average_riders, 'average_miles': average_miles, 'years':years})
+    return render(request, 'pages/vanpool/OperationSummary.html',
+                  {'vp_totals': vp_totals, 'vs_totals': vs_totals, 'starts': starts, 'folds': folds,
+                   'starts_as_a_percent': starts_as_percent,
+                   'folds_as_percent': folds_as_percent, 'net_vans': net_vans, 'average_riders': average_riders,
+                   'average_miles': average_miles, 'years': years})
+
 
 # endregion
 
@@ -755,8 +823,49 @@ def Operation_Summary(request):
 # region summary
 @login_required(login_url='/Panacea/login')
 @group_required('Summary reporter', 'WSDOT staff')
+def pick_up_where_you_left_off(request):
+    summary_status = summary_report_status.objects.get(year=get_current_summary_report_year(), organization=find_user_organization(request.user.id))
+    org_progress, created = summary_organization_progress.objects.get_or_create(organization=find_user_organization(request.user.id))
+
+    if not org_progress.started:
+        return redirect('summary_instructions')
+    elif not org_progress.address_and_organization:
+        return redirect('cover_sheets_organization')
+    elif not org_progress.organization_details:
+        return redirect('cover_sheets_organization')
+    elif not org_progress.service_cover_sheet:
+        return redirect('cover_sheets_service')
+    elif not summary_status.cover_sheet_submitted_for_review:
+        return redirect('submit_cover_sheet')
+    elif not org_progress.confirm_service:
+        return redirect('summary_report_data')
+    elif not org_progress.transit_data:
+        return redirect('summary_reporting_type', 'transit_data')
+    elif not org_progress.revenue:
+        return redirect('summary_reporting_type', 'revenue')
+    elif not org_progress.expenses:
+        return redirect('summary_reporting_type', 'expense')
+    elif not org_progress.ending_balances:
+        return redirect('summary_reporting_type', 'fund_balance')
+    elif not summary_status.data_report_submitted_for_review:
+        return redirect('submit_data')
+    else:
+        raise Http404("Can't find where you left off.")
+
+
+@login_required(login_url='/Panacea/login')
+@group_required('Summary reporter', 'WSDOT staff')
 def summary_instructions(request):
-    return render(request, 'pages/summary/summary_instructions.html', {})
+    user_org = find_user_organization(request.user.id)
+    if get_cover_sheet_submitted(user_org.id):
+        return redirect('cover_sheet_submitted')
+
+    summary_progress, created = summary_organization_progress.objects.get_or_create(organization=user_org)
+    summary_progress.started = True
+    summary_progress.save()
+    ready_to_submit = get_all_cover_sheet_steps_completed(user_org.id)
+
+    return render(request, 'pages/summary/summary_instructions.html', {'ready_to_submit': ready_to_submit})
 
 
 @login_required(login_url='/Panacea/login')
@@ -768,16 +877,16 @@ def organizational_information(request):
     form = organization_profile(instance=org)
     if request.POST:
         if form.is_valid():
+            # most times this form get submitted to the OrganizationProfile view so this is never called
             form.save()
+
             return redirect('organizational_information')
 
-    return render(request, 'pages/summary/organizational_information.html', {'org_name': org_name, 'form': form})
+    ready_to_submit = get_all_cover_sheet_steps_completed(org.id)
 
-
-@login_required(login_url='/Panacea/login')
-@group_required('Summary reporter', 'WSDOT staff')
-def ntd_upload(request):
-    return render(request, 'pages/summary/ntd_upload.html', {})
+    return render(request, 'pages/summary/organizational_information.html', {'org_name': org_name,
+                                                                             'form': form,
+                                                                             'ready_to_submit': ready_to_submit})
 
 
 @login_required(login_url='/Panacea/login')
@@ -788,38 +897,49 @@ def cover_sheet_organization_view(request):
     org_name = org.name
     cover_sheet_instance, created = cover_sheet.objects.get_or_create(organization_id=org.id)
     form = cover_sheet_organization(instance=cover_sheet_instance)
-
+    notes = cover_sheet_review_notes.objects.filter(year=get_current_summary_report_year(), summary_report_status__organization=org, note_area="Organization")
+    new_note_form = add_cover_sheet_review_note()
     try:
         base64_logo = base64.encodebytes(cover_sheet_instance.organization_logo).decode("utf-8")
     except:
         base64_logo = ""
 
     if request.POST:
-        form = cover_sheet_organization(data=request.POST, files=request.FILES)
+        form = cover_sheet_organization(instance=cover_sheet_instance, data=request.POST, files=request.FILES)
 
         if form.is_valid():
             instance = form.save(commit=False)
-            instance.organization = org
-            instance.id = cover_sheet_instance.id
             filepath = request.FILES.get('organization_logo_input', False)
-
+            # TODO correct this view now that it redirects to the next page if it is submitted
             if filepath:
                 instance.organization_logo = filepath.read()
                 base64_logo = base64.encodebytes(instance.organization_logo).decode("utf-8")
             else:
-                instance.organization_logo = cover_sheet_instance.organization_logo
+                if cover_sheet_instance.organization_logo:
+                    instance.organization_logo = cover_sheet_instance.organization_logo
+                else:
+                    instance.organization_logo = None
 
             instance.save()
+            summary_progress, created = summary_organization_progress.objects.get_or_create(
+                organization=find_user_organization(request.user.id))
+            summary_progress.organization_details = True
+            summary_progress.save()
+            return redirect('cover_sheets_service')
 
+    ready_to_submit = get_all_cover_sheet_steps_completed(org.id)
     return render(request, 'pages/summary/cover_sheet_organization.html', {'form': form,
                                                                            'org_name': org_name,
-                                                                           'base64_logo': base64_logo})
+                                                                           'base64_logo': base64_logo,
+                                                                           'year': get_current_summary_report_year(),
+                                                                           'notes': notes,
+                                                                           'new_note_form': new_note_form,
+                                                                           'ready_to_submit': ready_to_submit})
 
 
 @login_required(login_url='/Panacea/login')
 @group_required('Summary reporter', 'WSDOT staff')
 def cover_sheet_service_view(request):
-
     user_profile_data = profile.objects.get(custom_user=request.user.id)
     org = user_profile_data.organization
     service_type = org.summary_organization_classifications
@@ -827,6 +947,7 @@ def cover_sheet_service_view(request):
     cover_sheet_instance, created = cover_sheet.objects.get_or_create(organization=org)
 
     form = cover_sheet_service(instance=cover_sheet_instance)
+    ready_to_submit = get_all_cover_sheet_steps_completed(org.id)
 
     if request.POST:
         form = cover_sheet_service(data=request.POST, instance=cover_sheet_instance)
@@ -834,19 +955,74 @@ def cover_sheet_service_view(request):
         if form.is_valid():
             print("valid")
             form.save()
+            summary_progress, created = summary_organization_progress.objects.get_or_create(
+                organization=find_user_organization(request.user.id))
+            summary_progress.service_cover_sheet = True
+            summary_progress.save()
+
+            return redirect('submit_cover_sheet')
         else:
             print("Error")
             for error in form.errors:
                 print(error)
 
-    return render(request, 'pages/summary/cover_sheet_service.html', {'service_type': service_type, 'form': form})
+    return render(request, 'pages/summary/cover_sheet_service.html', {'service_type': service_type,
+                                                                      'form': form,
+                                                                      'ready_to_submit': ready_to_submit})
+
+
+@login_required(login_url='/Panacea/login')
+@group_required('Summary reporter', 'WSDOT staff')
+def submit_cover_sheet(request):
+    return render(request, 'pages/summary/submit_cover_sheet.html', {})
+
+
+@login_required(login_url='/Panacea/login')
+@group_required('Summary reporter', 'WSDOT staff')
+def submit_cover_sheet_submit(request):
+    user_org = find_user_organization(request.user.id)
+    ready_to_submit = get_all_cover_sheet_steps_completed(user_org.id)
+    if not ready_to_submit:
+        raise Http404("Your coversheet is not ready to be submitted. Please go through each tab and confirm your data has been updated.")
+
+    report_status = summary_report_status.objects.get(year=get_current_summary_report_year(), organization=user_org)
+    report_status.cover_sheet_submitted_for_review = True
+    report_status.cover_sheet_status = "With WSDOT"
+    report_status.save()
+
+    return redirect('summary_report_data')
+
+
+@login_required(login_url='/Panacea/login')
+@group_required('Summary reporter', 'WSDOT staff')
+def cover_sheet_submitted(request):
+    cover_sheet_status = summary_report_status.objects.get(year=get_current_summary_report_year(), organization=find_user_organization(request.user.id)).cover_sheet_status
+    return render(request, 'pages/summary/cover_sheet_submitted.html', {'cover_sheet_status': cover_sheet_status})
+
+
+@login_required(login_url='/Panacea/login')
+@group_required('Summary reporter', 'WSDOT staff')
+def ntd_upload(request):
+    return render(request, 'pages/summary/ntd_upload.html', {})
 
 
 @login_required(login_url='/Panacea/login')
 @group_required('Summary reporter', 'WSDOT staff')
 def summary_report_data(request):
-    return render(request, 'pages/summary/summary_report_data_instructions.html')
+    user_org = find_user_organization(request.user.id)
+    if get_data_submitted(user_org.id):
+        return redirect('data_submitted')
 
+    ready_to_submit = get_all_data_steps_completed(user_org.id)
+
+    return render(request, 'pages/summary/summary_report_data_instructions.html', {'ready_to_submit': ready_to_submit})
+
+
+@login_required(login_url='/Panacea/login')
+@group_required('Summary reporter', 'WSDOT staff')
+def data_submitted(request):
+    data_status = summary_report_status.objects.get(year=get_current_summary_report_year(), organization=find_user_organization(request.user.id)).data_report_status
+    return render(request, 'pages/summary/data_submitted.html', {'data_status': data_status})
 
 @login_required(login_url='/Panacea/login')
 @group_required('Summary reporter', 'WSDOT staff')
@@ -860,7 +1036,8 @@ def summary_modes(request):
             print(form.is_valid())
             instance, created = service_offered.objects.get_or_create(organization_id=org.id,
                                                                       transit_mode=form.cleaned_data["transit_mode"],
-                                                                      administration_of_mode=form.cleaned_data["administration_of_mode"])
+                                                                      administration_of_mode=form.cleaned_data[
+                                                                          "administration_of_mode"])
             if not created:
                 print("not created")
                 messages.error(request, "This name has already been added")
@@ -868,7 +1045,20 @@ def summary_modes(request):
         form = service_offered_form()
     print(form)
     modes = service_offered.objects.filter(organization_id=org).all()
-    return render(request, 'pages/summary/summary_modes.html', {'form': form, 'modes': modes, 'org': org})
+    ready_to_submit = get_all_data_steps_completed(find_user_organization_id(request.user.id))
+    return render(request, 'pages/summary/summary_modes.html', {'form': form,
+                                                                'modes': modes,
+                                                                'org': org,
+                                                                'ready_to_submit': ready_to_submit})
+
+
+@login_required(login_url='/Panacea/login')
+@group_required('Summary reporter', 'WSDOT staff')
+def accept_modes(request):
+    org_progress, created = summary_organization_progress.objects.get_or_create(organization=find_user_organization(request.user.id))
+    org_progress.confirm_service = True
+    org_progress.save()
+    return redirect('summary_reporting')
 
 
 @login_required(login_url='/Panacea/login')
@@ -891,111 +1081,18 @@ def delete_summary_mode(request, name, admin_of_mode):
 
 @login_required(login_url='/Panacea/login')
 @group_required('Summary reporter', 'WSDOT staff')
-def report_transit_data(request, year=None, service=None):
-
-    # TODO move to table
-    # def crosswalk_modes_to_rollup_modes(mode):
-    #     mode_rollup_mode_dic = {1:1, 6:6, 8:1, 11:1, 5:1, 2:2, 4:2, 7:3, 9:3, 16:4, 3:8, 10:7}
-    #     print(mode_rollup_mode_dic[mode.transit_mode_id])
-    #     return mode_rollup_mode_dic[mode.transit_mode_id]
-
-    # Function start TODO move this
-    def find_service(user_org):
-        service_offered.objects.filter(organization_id=user_org)
-        return service_offered.objects.filter(organization_id=user_org)
-
-    def get_or_create_summary_transit_queryset(my_year, my_organization, user, my_active_service):
-        classification = my_organization.summary_organization_classifications
-        classification = filter_revenue_sheet_by_classification(classification)
-        count = 0
-
-        # rollup_mode = crosswalk_modes_to_rollup_modes(my_active_service)
-        source_ids = list(transit_data.objects.filter(organization_id=user_org.id,
-                                                      year=my_year,
-                                                      administration_of_mode=my_active_service.administration_of_mode,
-                                                      transit_mode=my_active_service.transit_mode).values_list('transit_metric_id', flat=True))
-
-        all_transit_metrics = list(transit_metrics.objects.filter(agency_classification=classification).values_list("id", flat=True))
-
-        source_ids = [idx for idx in source_ids if idx in all_transit_metrics]
-        if len(source_ids) != len(all_transit_metrics):
-            missing_ids = list(set(all_transit_metrics) - set(source_ids))
-            with transaction.atomic():
-                for my_id in missing_ids:
-                    transit_data.objects.create(year=my_year,
-                                                administration_of_mode=my_active_service.administration_of_mode,
-                                                transit_mode_id=my_active_service.transit_mode_id,
-                                                transit_metric_id=my_id,
-                                                organization=my_organization,
-                                                reported_value=None,
-                                                report_by=user)
-
-        qs = transit_data.objects.filter(organization_id=user_org.id,
-                                         administration_of_mode=my_active_service.administration_of_mode,
-                                         transit_mode_id=my_active_service.transit_mode_id,
-                                         year=my_year)
-        return qs.order_by('transit_mode_id', 'administration_of_mode')
-
-    # Function end
-
-    user_org = find_user_organization(request.user.id)
-
-    if year is None:
-        year = get_current_summary_report_year()
-    previous_year = year - 1
-    two_years_ago = year - 2
-    my_formset_factory = modelformset_factory(model=transit_data,
-                                              form=transit_data_form,
-                                              extra=0)
-    services = find_service(user_org)
-    if service:
-        active_service = service_offered.objects.get(id=service)
-    else:
-        active_service = services[0]
-
-    query_sets = {'this_year': get_or_create_summary_transit_queryset(year, user_org, request.user, active_service),
-                  'previous_year': get_or_create_summary_transit_queryset(previous_year, user_org, request.user, active_service),
-                  'two_years_ago': get_or_create_summary_transit_queryset(two_years_ago, user_org, request.user, active_service)}
-
-
-    formsets = {}
-    for key, value in query_sets.items():
-        formsets[key] = my_formset_factory(queryset=value, prefix=key)
-
-    # print(formset.total_form_count())
-    if request.method == 'POST':
-        for key, value in formsets.items():
-            formsets[key] = my_formset_factory(request.POST, queryset=query_sets[key], prefix=key)
-            if formsets[key].is_valid():
-                for form in formsets[key]:
-                    form.save()
-            else:
-                print(formsets[key].errors)
-
-    print(active_service)
-
-    return render(request, 'pages/summary/report_transit_data.html', {'formsets': formsets,
-                                                                      'form_range': range(len(formsets['this_year'])),
-                                                                      'services': services,
-                                                                      'active_service': active_service,
-                                                                      'year': year})
-
-
-@login_required(login_url='/Panacea/login')
-@group_required('Summary reporter', 'WSDOT staff')
 def review_data(request):
-
-
     user_org = find_user_organization_id(request.user.id)
     org_name = find_user_organization(request.user.id)
-    report_year = datetime.date.today().year -1
-    mode_list = transit_data.objects.filter(year = report_year, organization_id = user_org).order_by('transit_mode').values_list('transit_mode', 'transit_mode_id__name', 'administration_of_mode').distinct()
+    report_year = datetime.date.today().year - 1
+    mode_list = transit_data.objects.filter(year=report_year, organization_id=user_org).order_by(
+        'transit_mode').values_list('transit_mode', 'transit_mode_id__name', 'administration_of_mode').distinct()
     for mode in mode_list:
         validation_test_for_transit_data(report_year, mode[0], mode[2], user_org, request.user.id)
-    ve = validation_errors.objects.filter(organization_id = user_org, year = report_year, error_resolution__isnull=True)
+    ve = validation_errors.objects.filter(organization_id=user_org, year=report_year, error_resolution__isnull=True)
     my_formset_factory = modelformset_factory(model=validation_errors,
-                                             form=validation_error_form,
-                                             extra=0)
+                                              form=validation_error_form,
+                                              extra=0)
     if request.method == 'POST':
         formset = my_formset_factory(data=request.POST, queryset=ve)
         error_count = formset.total_form_count()
@@ -1007,9 +1104,7 @@ def review_data(request):
         formset = my_formset_factory(queryset=ve)
         error_count = formset.total_form_count()
 
-        #TODO transit_mode is kind of messed up, and need a little help resolving
-
-
+        # TODO transit_mode is kind of messed up, and need a little help resolving
 
     return render(request, 'pages/summary/review_data.html', {'formset': formset,
                                                               'org_name': org_name, 'error_count': error_count})
@@ -1019,13 +1114,24 @@ class SummaryDataEntryConstructor:
     '''This class constructs all of the forms needed to collect summary data'''
 
     def __init__(self, report_type, target_organization, form_filter_1=None, form_filter_2=None):
+        self.REPORT_TYPES = ['transit_data', 'revenue', 'expense', 'fund_balance']
+
         self.report_type = report_type  # reports can be about revenue, transit data, expenses, and ending fund balances
         self.target_organization = target_organization  # the org submitting a report
-        self.year = get_current_summary_report_year() # TODO this function needs to be updated
-        self.form_filter_1 = form_filter_1 # Forms can be filtered by the selectors at the top of the page for example reporting based on direct operated, fixed route transit
+        self.year = get_current_summary_report_year()  # TODO this function needs to be updated
+        self.form_filter_1 = form_filter_1  # Forms can be filtered by the selectors at the top of the page for example reporting based on direct operated, fixed route transit
         self.form_filter_2 = form_filter_2
+        # These control how the form moves to the next form
+        self.max_form_increment = 0 #if the max increment is meet it will move to the next report type, otherwise it will go to the next set of filters
+        self.current_increment = 0
 
-        self.set_default_form_filters() # sets the starting filters for the form
+        self.set_default_form_filters()  # sets the starting filters for the form
+        self.set_max_form_increment()
+        self.nav_filter_count, self.nav_filters = self.get_header_navigation()
+        self.set_current_increment()
+
+        print(self.current_increment)
+
 
     def set_default_form_filters(self):
         if self.form_filter_1 is not None:
@@ -1037,13 +1143,43 @@ class SummaryDataEntryConstructor:
                 self.form_filter_2 = 'Operating'
             elif self.report_type == "transit_data":
                 # TODO Make this into something that makes more sense
-                self.form_filter_1 = self.get_model().objects.filter(organization=self.target_organization).order_by('transit_mode__name').values_list('transit_mode__name').first()[0]
-                self.form_filter_2 = self.get_model().objects.filter(organization=self.target_organization).order_by('administration_of_mode').values_list('administration_of_mode').first()[0]
+                self.form_filter_1 = service_offered.objects.filter(organization=self.target_organization).order_by('transit_mode__name').values_list('transit_mode__name').first()[0]
+                self.form_filter_2 = service_offered.objects.filter(organization=self.target_organization).order_by('transit_mode__name').values_list('administration_of_mode').first()[0]
+                # self.form_filter_1 = self.get_model().objects.filter(organization=self.target_organization).order_by(
+                #     'transit_mode__name').values_list('transit_mode__name').first()[0]
+                # self.form_filter_2 = self.get_model().objects.filter(organization=self.target_organization).order_by(
+                #     'administration_of_mode').values_list('administration_of_mode').first()[0]
             elif self.report_type in ["expense", "fund_balance"]:
                 self.form_filter_1 = None
                 self.form_filter_2 = None
             else:
-                raise Http404("Report type does not exist.")
+                raise Http404("Report type does not exist. -1")
+
+    def set_max_form_increment(self):
+        '''returns the appropriate model for the given report type'''
+        if self.report_type == "revenue":
+            self.max_form_increment = 7
+        elif self.report_type == "transit_data":
+            self.max_form_increment = service_offered.objects.filter(organization=self.target_organization).count()
+        elif self.report_type == "expense":
+            self.max_form_increment = 1
+        elif self.report_type == "fund_balance":
+            self.max_form_increment = 1
+        else:
+            raise Http404("Report type does not exist. -2")
+
+    def set_current_increment(self):
+        '''returns the appropriate model for the given report type'''
+        if self.report_type == "revenue":
+            self.current_increment = self.nav_filters.index([self.form_filter_1, self.form_filter_2]) + 1
+        elif self.report_type == "transit_data":
+            self.current_increment = self.nav_filters.index([self.form_filter_1, self.form_filter_2]) + 1
+        elif self.report_type == "expense":
+            self.current_increment = 1
+        elif self.report_type == "fund_balance":
+            self.current_increment = 1
+        else:
+            raise Http404("Report type does not exist. -3")
 
     def get_model(self):
         '''returns the appropriate model for the given report type'''
@@ -1056,7 +1192,7 @@ class SummaryDataEntryConstructor:
         elif self.report_type == "fund_balance":
             return fund_balance
         else:
-            raise Http404("Report type does not exist.")
+            raise Http404("Report type does not exist. -4")
 
     def get_metric_model(self):
         '''returns the appropriate metric model for the given report type'''
@@ -1069,7 +1205,7 @@ class SummaryDataEntryConstructor:
         elif self.report_type == "fund_balance":
             return fund_balance_type
         else:
-            raise Http404("Report type does not exist.")
+            raise Http404("Report type does not exist. -5")
 
     def get_metric_model_name(self):
         '''Returns the metric model as a string.'''
@@ -1082,7 +1218,7 @@ class SummaryDataEntryConstructor:
         elif self.report_type == "fund_balance":
             return 'fund_balance_type'
         else:
-            raise Http404("Report type does not exist.")
+            raise Http404("Report type does not exist. -6")
 
     def get_metric_id_field_name(self):
         '''Returns the name of the field name of the id field in the metric model as a string.'''
@@ -1096,7 +1232,9 @@ class SummaryDataEntryConstructor:
         '''Returns a distinct list of all metric ids that are needed given the agency classification, if applicable.'''
         classification = self.target_organization.summary_organization_classifications
         if self.report_type in ['transit_data', 'revenue', ]:
-            metric_ids = list(self.get_metric_model().objects.filter(agency_classification=classification).values_list('id', flat=True).distinct())
+            metric_ids = list(
+                self.get_metric_model().objects.filter(agency_classification=classification).values_list('id',
+                                                                                                         flat=True).distinct())
         elif self.report_type in ['fund_balance', 'expense', ]:
             metric_ids = list(self.get_metric_model().objects.values_list('id', flat=True).distinct())
         else:
@@ -1129,22 +1267,26 @@ class SummaryDataEntryConstructor:
         '''Gets all reported form metrics applicable to the form type, organization, and year.  If the metric has not been reported it creates it.'''
         model = self.get_model()
         if self.report_type == "transit_data":
-            report_model = model.objects.filter(transit_mode__name=self.form_filter_1, administration_of_mode=self.form_filter_2)
+            report_model = model.objects.filter(transit_mode__name=self.form_filter_1,
+                                                administration_of_mode=self.form_filter_2)
         else:
             report_model = model.objects
         field_id = self.get_metric_id_field_name()
 
         current_report_metric_ids = list(report_model.filter(organization=self.target_organization,
-                                                             year__gte=self.year - 2).values_list(field_id, 'year').distinct())
+                                                             year__gte=self.year - 2).values_list(field_id,
+                                                                                                  'year').distinct())
         all_report_metric_ids = self.get_all_metric_ids()
-        all_metric_ids_and_years = list(itertools.product(all_report_metric_ids, [self.year, self.year - 1, self.year - 2]))
+        all_metric_ids_and_years = list(
+            itertools.product(all_report_metric_ids, [self.year, self.year - 1, self.year - 2]))
         print(all_metric_ids_and_years)
         if len(current_report_metric_ids) != len(all_metric_ids_and_years):
+
             all_metric_ids_and_years = set(map(tuple, all_metric_ids_and_years))
             current_report_metric_ids = set(map(tuple, current_report_metric_ids))
             missing_metrics = list(all_metric_ids_and_years - current_report_metric_ids)
             # missing_metrics = all_metric_ids_and_years.symmetric_difference(current_report_metric_ids)
-            #TODO there are some metrics that are currently filtered out that orgs previously reported on. How do we want to deal with these?
+            # TODO there are some metrics that are currently filtered out that orgs previously reported on. How do we want to deal with these?
             if len(missing_metrics) > 0:
                 with transaction.atomic():
                     for m in missing_metrics:
@@ -1157,10 +1299,9 @@ class SummaryDataEntryConstructor:
         '''Used to build widgets dynamically based on form type.'''
 
         if self.report_type == 'transit_data':
-            widget_attrs = {'class':'form-control'}
+            widget_attrs = {'class': 'form-control'}
         else:
-            widget_attrs = {'class': 'form-control grand-total-sum', 'onchange':  'findTotal_wrapper();'}
-
+            widget_attrs = {'class': 'form-control grand-total-sum', 'onchange': 'findTotal_wrapper();'}
 
         widgets = {'id': forms.NumberInput(),
                    self.get_metric_model_name(): forms.Select(),
@@ -1175,7 +1316,8 @@ class SummaryDataEntryConstructor:
         my_formset_factory = modelformset_factory(self.get_model(), form=ModelForm, formfield_callback=None,
                                                   formset=BaseModelFormSet, extra=0, can_delete=False,
                                                   can_order=False, max_num=None,
-                                                  fields=["id", self.get_metric_model_name(), "year", "reported_value", "comments"],
+                                                  fields=["id", self.get_metric_model_name(), "year", "reported_value",
+                                                          "comments"],
                                                   exclude=None,
                                                   widgets=self.get_widgets(),
                                                   validate_max=False, localized_fields=None,
@@ -1215,7 +1357,9 @@ class SummaryDataEntryConstructor:
         formsets = {}
         i = 0
         for year_x in ['this_year', 'previous_year', 'two_years_ago']:
-            formsets[year_x] = my_formset_factory(queryset=form_querysets.filter(year=self.year - i).order_by(self.get_metric_id_field_name()), prefix=year_x)
+            formsets[year_x] = my_formset_factory(
+                queryset=form_querysets.filter(year=self.year - i).order_by(self.get_metric_id_field_name()),
+                prefix=year_x)
             i += 1
         formset_labels = form_querysets.filter(year=self.year).order_by(self.get_metric_id_field_name()).values_list(
             self.get_metric_model_name() + "__name", flat=True)
@@ -1238,10 +1382,12 @@ class SummaryDataEntryConstructor:
                 total_not_this_form[year_x] = {'reported_value__sum': 0}
         else:
             report_model = self.get_model()
-            total_not_this_form_queryset = report_model.objects.filter(organization=self.target_organization).exclude(**self.get_formset_query_dict())
+            total_not_this_form_queryset = report_model.objects.filter(organization=self.target_organization).exclude(
+                **self.get_formset_query_dict())
             i = 0
             for year_x in ['this_year', 'previous_year', 'two_years_ago']:
-                total_not_this_form[year_x] = total_not_this_form_queryset.filter(year=self.year - i).aggregate(Sum('reported_value'))
+                total_not_this_form[year_x] = total_not_this_form_queryset.filter(year=self.year - i).aggregate(
+                    Sum('reported_value'))
                 if total_not_this_form[year_x]['reported_value__sum'] == None:
                     total_not_this_form[year_x]['reported_value__sum'] = 0
                 i += 1
@@ -1252,13 +1398,16 @@ class SummaryDataEntryConstructor:
         '''gets the data needed to build header navigation for filters'''
         if self.report_type in ['transit_data', ]:
             filter_count = 2
-            my_services_offered = service_offered.objects.filter(organization=self.target_organization).order_by('transit_mode__name')
+            my_services_offered = service_offered.objects.filter(organization=self.target_organization).order_by(
+                'transit_mode__name')
             filters = []
             for service in my_services_offered:
                 filters.append([service.transit_mode.name, service.administration_of_mode])
         elif self.report_type in ['revenue', ]:
             filter_count = 2
-            revenues = revenue_source.objects.filter(agency_classification=self.target_organization.summary_organization_classifications).values('government_type', 'funding_type').distinct()
+            revenues = revenue_source.objects.filter(
+                agency_classification=self.target_organization.summary_organization_classifications).values(
+                'government_type', 'funding_type').distinct()
 
             filters = []
             for source in revenues:
@@ -1286,10 +1435,57 @@ class SummaryDataEntryConstructor:
         query_sets = self.get_form_queryset()
         i = 0
         for year_x in ['this_year', 'previous_year', 'two_years_ago']:
-            formset = my_formset_factory(post_data, queryset=query_sets.filter(year=self.year - i).order_by(self.get_metric_id_field_name()), prefix=year_x)
-            for form in formset:
-                form.save()
+            formset = my_formset_factory(post_data, queryset=query_sets.filter(year=self.year - i).order_by(
+                self.get_metric_id_field_name()), prefix=year_x)
+            if formset.is_valid():
+                for form in formset:
+                    print('form_valid')
+                    if form.is_valid():
+                        form.save()
+            #         else:
+            #
+            #             print(form.errors)
+            # else:
+            #     print(formset.errors)
+
             i += 1
+
+
+    def go_to_next_form(self):
+        self.current_increment = self.current_increment + 1
+        if self.current_increment > self.max_form_increment:
+            org_progress = summary_organization_progress.objects.get(organization=self.target_organization)
+            if self.report_type == 'fund_balance':
+                org_progress.ending_balances = True
+                org_progress.save()
+                if get_all_data_steps_completed(self.target_organization.id):
+                    return redirect('submit_data')
+                else:
+                    raise Http404("You are not ready to submit your data.  Please be sure you have reviewed each section.")
+            else:
+
+                if self.report_type == "revenue":
+                    org_progress.revenue = True
+                    org_progress.save()
+                elif self.report_type == "transit_data":
+                    org_progress.transit_data = True
+                    org_progress.save()
+                elif self.report_type == "expense":
+                    org_progress.expenses = True
+                    org_progress.save()
+                elif self.report_type == "fund_balance":
+                    raise Http404("Report type does not exist. -7a")
+                else:
+                    raise Http404("Report type does not exist. -7b")
+
+                new_report_type = self.REPORT_TYPES[self.REPORT_TYPES.index(self.report_type)+1]
+                print(new_report_type)
+                return redirect('summary_reporting_type', new_report_type)
+        else:
+            self.form_filter_1 = self.nav_filters[self.current_increment - 1][0]
+            self.form_filter_2 = self.nav_filters[self.current_increment - 1][1]
+            return redirect('summary_reporting_filters', self.report_type, self.form_filter_1, self.form_filter_2)
+
 
 
 class SummaryDataEntryTemplateData:
@@ -1303,7 +1499,8 @@ class SummaryDataEntryTemplateData:
         self.form_filter_2 = constructor.form_filter_2
         self.other_totals = constructor.get_other_measure_totals()
         self.masking_types = []
-        self.nav_filter_count, self.nav_filters = constructor.get_header_navigation()
+        self.nav_filter_count = constructor.nav_filter_count
+        self.nav_filters = constructor.nav_filters
 
         if constructor.report_type == "transit_data":
             self.show_totals = False
@@ -1319,15 +1516,36 @@ def summary_reporting(request, report_type=None, form_filter_1=None, form_filter
     if report_type is None:
         report_type = "transit_data"
 
-    requested_form = SummaryDataEntryConstructor(report_type, user_org, form_filter_1=form_filter_1, form_filter_2=form_filter_2)
+    requested_form = SummaryDataEntryConstructor(report_type, user_org, form_filter_1=form_filter_1,
+                                                 form_filter_2=form_filter_2)
     if request.method == 'POST':
         requested_form.save_with_post_data(request.POST)
+        return requested_form.go_to_next_form()
 
     template_data = SummaryDataEntryTemplateData(requested_form, report_type)
 
-    return render(request, 'pages/summary/summary_reporting.html', {'template_data': template_data})
+    ready_to_submit = get_all_data_steps_completed(find_user_organization_id(request.user.id))
+
+    return render(request, 'pages/summary/summary_reporting.html', {'template_data': template_data,
+                                                                    'ready_to_submit': ready_to_submit})
+
+@login_required(login_url='/Panacea/login')
+@group_required('Summary reporter', 'WSDOT staff')
+def submit_data(request):
+    ready_to_submit = get_all_data_steps_completed(find_user_organization_id(request.user.id))
+    return render(request, 'pages/summary/submit_data.html', {'ready_to_submit': ready_to_submit})
 
 
+@login_required(login_url='/Panacea/login')
+@group_required('Summary reporter', 'WSDOT staff')
+def submit_data_submit(request):
+    status = summary_report_status.objects.get(year=get_current_summary_report_year(), organization=find_user_organization(request.user.id))
+    status.data_report_submitted_for_review = True
+    status.data_report_status = "With WSDOT"
+    status.save()
+    return redirect('dashboard')
+
+@login_required(login_url='/Panacea/login')
 def configure_agency_types(request, model=None):
 
     if not model or model == "organization":
@@ -1356,8 +1574,9 @@ def configure_agency_types(request, model=None):
                                                      'data-form-name': "summary_configure_agency_types"})}
     else:
         my_widget = {'name': forms.TextInput(attrs={'class': 'form-control'}),
-                     field_name: forms.CheckboxSelectMultiple(attrs={'class': 'form-check-inline no-bullet AJAX_instant_submit',
-                                                                     'data-form-name': "summary_configure_agency_types"})}
+                     field_name: forms.CheckboxSelectMultiple(
+                         attrs={'class': 'form-check-inline no-bullet AJAX_instant_submit',
+                                'data-form-name': "summary_configure_agency_types"})}
 
     if len(other_field_list) > 0:
         for i in other_field_list:
@@ -1384,11 +1603,8 @@ def configure_agency_types(request, model=None):
         my_queryset = my_model.objects.all()
         formset = formset_factory(queryset=my_queryset.select_related())
         return render(request, 'pages/summary/configure_agency_types.html', {'formset': formset,
+
                                                                              'model': model})
-
-def review_cover_sheets(request):
-
-    return render(request, 'pages/summary/review_cover_sheets.html')
 
 
 @login_required(login_url='/Panacea/login')
@@ -1398,6 +1614,7 @@ def your_logged_in(request):
 
 def login_denied(request):
     return render(request, 'login_denied.html')
+
 
 @login_required(login_url='/Panacea/login')
 def contact_us(request):
@@ -1499,6 +1716,369 @@ def view_statewide_statistics(request):
         df = generate_mode_by_agency_tables(mode, year)
     return render(request, 'pages/summary/view_statewide_statistics.html')
 
+@login_required(login_url='/Panacea/login')
+@group_required('WSDOT staff')
+def create_new_tracking_year(request, year):
+    # TODO add summary reporter flag
+    all_orgs = organization.objects.filter(summary_reporter=True).all()
+
+    with transaction.atomic():
+        for org in all_orgs:
+            t = summary_report_status.objects.get_or_create(organization=org, year=year)
+
+    return summary_tracking(request)
+
+
+@login_required(login_url='/Panacea/login')
+@group_required('WSDOT staff')
+def summary_tracking(request, year=None):
+    if year is None:
+        year = summary_report_status.objects.aggregate(Max('year'))
+        year = year['year__max']
+        print(year)
+    if request.POST:
+        pass
+    else:
+        pass
+    tracking_data = summary_report_status.objects.filter(year=year, organization__summary_reporter=True).order_by(
+        'organization__name')
+    print(tracking_data)
+
+    return render(request, 'pages/summary/admin/summary_tracking.html', {'year': year, 'tracking_data': tracking_data})
+
+
+@login_required(login_url='/Panacea/login')
+@group_required('WSDOT staff')
+def summary_yearly_setup(request, action=None):
+
+    if action:
+        if action == "reset_summary_reporter_tracking":
+            year = get_current_summary_report_year()
+            reset_summary_reporter_tracking(year)
+        elif action == "reset_all_orgs_summary_progress":
+            reset_all_orgs_summary_progress()
+        elif action == "create_all_summary_report_statuses":
+            year = get_current_summary_report_year()
+            summary_orgs = organization.objects.filter(summary_reporter=True)
+            print(summary_orgs)
+            for org in summary_orgs:
+                summary_report_status.objects.get_or_create(year=year, organization=org)
+        else:
+            raise Http404("Action not found")
+
+    return render(request, 'pages/summary/admin/summary_yearly_setup.html', {})
+
+
+@login_required(login_url='/Panacea/login')
+@group_required('WSDOT staff')
+def summary_yearly_setup_instructions(request):
+    return render(request, 'pages/summary/admin/summary_yearly_setup_instructions.html', {})
+
+
+
+@login_required(login_url='/Panacea/login')
+@group_required('WSDOT staff')
+def wsdot_review_cover_sheets(request, year=None, organization_id=None):
+    if year is None:
+        year = summary_report_status.objects.aggregate(Max('year'))
+        year = year['year__max']
+    if organization_id is None:
+        cover_sheet_organization = summary_report_status.objects.filter(year=year,
+                                                                        organization__summary_reporter=True).order_by(
+            'organization__name').first()
+        organization_id = cover_sheet_organization.organization_id
+
+        print(organization_id)
+
+    organization_status = get_object_or_404(summary_report_status, year=year, organization_id=organization_id)
+    summary_report_status_id = organization_status.id
+    organization_name = organization.objects.get(id=organization_id).name
+
+    cover_sheet_submitted = organization_status.cover_sheet_submitted_for_review
+    cover_sheet_status = organization_status.cover_sheet_status
+
+    next_organization = summary_report_status.objects.filter(year=year, organization__summary_reporter=True).order_by(
+        'organization__name').filter(organization__name__gt=organization_name).first()
+    previous_organization = summary_report_status.objects.filter(year=year,
+                                                                 organization__summary_reporter=True).order_by(
+        'organization__name').filter(organization__name__lt=organization_name).last()
+
+    if cover_sheet_submitted:
+        if request.POST:
+            cover_sheet_form = cover_sheet_wsdot_review(data=request.POST, instance=cover_sheet.objects.get(organization_id=organization_id), files=request.FILES)
+            if cover_sheet_form.is_valid():
+                instance = cover_sheet_form.save(commit=False)
+                filepath = request.FILES.get('organization_logo_input', False)
+
+                if filepath:
+                    instance.organization_logo = filepath.read()
+                else:
+                    if instance.organization_logo:
+                        instance.organization_logo = instance.organization_logo
+                    else:
+                        instance.organization_logo = None
+            instance.save()
+        else:
+            cover_sheet_form = cover_sheet_wsdot_review(instance=cover_sheet.objects.get(organization_id=organization_id))
+        try:
+            base64_logo = base64.encodebytes(cover_sheet.objects.get(organization_id=organization_id).organization_logo).decode("utf-8")
+        except:
+            base64_logo = ""
+
+        organization_notes = cover_sheet_review_notes.objects.filter(year=year,
+                                                                     summary_report_status=summary_report_status.objects.get(organization_id=organization_id),
+                                                                     note_area='Organization')
+        service_notes = cover_sheet_review_notes.objects.filter(year=year,
+                                                                summary_report_status=summary_report_status.objects.get(
+                                                                    organization_id=organization_id),
+                                                                note_area='Service')
+        child_notes = cover_sheet_review_notes.objects.filter(year=year,
+                                                              summary_report_status=summary_report_status.objects.get(
+                                                                  organization_id=organization_id),
+                                                              parent_note__isnull=False)
+
+
+        new_note_form = add_cover_sheet_review_note()
+
+    else:
+        cover_sheet_form = ""
+        organization_notes = ""
+        new_note_form = ""
+        service_notes = ""
+
+    return render(request, 'pages/summary/admin/wsdot_review_cover_sheet.html',
+                  {'cover_sheet_id': organization_status.id,
+                   'cover_sheet_submitted': cover_sheet_submitted,
+                   'cover_sheet_status': cover_sheet_status,
+                   'summary_report_status_id': summary_report_status_id,
+                   'organization_id': organization_id,
+                   'year': year,
+                   'next_organization': next_organization,
+                   'previous_organization': previous_organization,
+                   'cover_sheet_form': cover_sheet_form,
+                   'organization_notes': organization_notes,
+                   'service_notes': service_notes,
+                   'child_notes': child_notes,
+                   'new_note_form': new_note_form,
+                   'published_version': cover_sheet.objects.get(organization_id=organization_id).published_version,
+                   'base64_logo': base64_logo})
+
+
+# TODO Come back through and change this to be object oriented code about a notes object.
+@login_required(login_url='/Panacea/login')
+def base_note(request):
+    # this is used to build the base url to submit a new note it is never actually called.
+    raise PermissionError
+
+
+@login_required(login_url='/Panacea/login')
+@group_required('WSDOT staff')
+def add_cover_sheet_note_wsdot(request, year, summary_report_status_id, note_area, note_field):
+
+    print(note_area)
+    print(cover_sheet_review_notes.NOTE_AREAS)
+
+    if request.POST:
+        form = add_cover_sheet_review_note(request.POST)
+        instance = form.save(commit=False)
+        instance.year = year
+        instance.summary_report_status_id = summary_report_status_id
+        instance.wsdot_note = True
+        instance.note_area = note_area
+        instance.note_field = note_field
+        instance.custom_user = request.user
+        instance.save()
+    url = reverse('wsdot_review_cover_sheets_year_org', kwargs={'year': year,
+                                                                'organization_id': summary_report_status.objects.get(id=summary_report_status_id).organization_id})
+    return HttpResponseRedirect(url)
+
+
+@login_required(login_url='/Panacea/login')
+def add_cover_sheet_child_note_wsdot(request, parent_note):
+    parent_note = cover_sheet_review_notes.objects.get(id=parent_note)
+    if request.POST:
+        form = add_cover_sheet_review_note(request.POST)
+        instance = form.save(commit=False)
+        instance.year = parent_note.year
+        instance.summary_report_status_id = parent_note.summary_report_status_id
+        instance.wsdot_note = True
+        instance.note_area = parent_note.note_area
+        instance.note_field = parent_note.note_field
+        instance.custom_user = request.user
+        instance.parent_note = parent_note.id
+        instance.save()
+    url = reverse('wsdot_review_cover_sheets_year_org', kwargs={'year': parent_note.year,
+                                                                'organization_id': summary_report_status.objects.get(
+                                                                    id=parent_note.summary_report_status_id).organization_id})
+    return HttpResponseRedirect(url)
+
+
+@login_required(login_url='/Panacea/login')
+def add_cover_sheet_child_note_customer(request, parent_note):
+    parent_note = cover_sheet_review_notes.objects.get(id=parent_note)
+    if request.POST:
+        form = add_cover_sheet_review_note(request.POST)
+        instance = form.save(commit=False)
+        instance.year = parent_note.year
+        instance.summary_report_status_id = parent_note.summary_report_status_id
+        instance.wsdot_note = False
+        instance.note_area = parent_note.note_area
+        instance.note_field = parent_note.note_field
+        instance.custom_user = request.user
+        instance.parent_note = parent_note.id
+        instance.save()
+    url = reverse('customer_review_cover_sheets')
+    return HttpResponseRedirect(url)
+
+
+@login_required(login_url='/Panacea/login')
+def add_cover_sheet_note_customer(request, year, note_area, note_field):
+    if note_area == "Organization":
+        url = reverse('cover_sheets_organization')
+    elif note_area == "Service":
+        url = reverse('cover_sheets_service')
+    else:
+        raise PermissionError
+
+
+    if request.POST:
+        form = add_cover_sheet_review_note(request.POST)
+        instance = form.save(commit=False)
+        instance.year = year
+        instance.summary_report_status_id = summary_report_status.objects.get(organization_id=find_user_organization_id(request.user.id), year=year).id
+        instance.wsdot_note = False
+        instance.note_area = note_area
+        instance.note_area = note_field
+        instance.custom_user = request.user
+        instance.save()
+
+    return HttpResponseRedirect(url)
+
+
+@login_required(login_url='/Panacea/login')
+def delete_cover_sheet_note(request, note_id):
+    note = cover_sheet_review_notes.objects.get(id=note_id)
+    note_year = note.year
+    note_organization_id = summary_report_status.objects.get(id=note.summary_report_status_id).organization_id
+
+    if note.wsdot_note:
+        url = reverse('wsdot_review_cover_sheets_year_org', kwargs={'year': note_year,
+                                                                    'organization_id': note_organization_id})
+    else:
+        if note.note_area == "Organization":
+            url = reverse('customer_review_cover_sheets')
+        elif note.note_area == "Service":
+            url = reverse('customer_review_cover_sheets')
+        else:
+            raise PermissionError
+
+    if not note.custom_user == request.user:
+        raise PermissionError
+    else:
+        note.delete()
+
+
+    return HttpResponseRedirect(url)
+
+@login_required(login_url='/Panacea/login')
+@group_required('WSDOT staff')
+def approve_cover_sheet(request, summary_report_status_id):
+    cover_sheet_status = summary_report_status.objects.get(id=summary_report_status_id)
+    cover_sheet_status.cover_sheet_status = "Complete"
+    cover_sheet_status.save()
+
+    url = reverse('wsdot_review_cover_sheets_year_org', kwargs={'year': cover_sheet_status.year,
+                                                                'organization_id': cover_sheet_status.organization_id})
+    return HttpResponseRedirect(url)
+
+
+
+@login_required(login_url='/Panacea/login')
+@group_required('WSDOT staff')
+def return_cover_sheet_to_user(request, summary_report_status_id):
+    cover_sheet_status = summary_report_status.objects.get(id=summary_report_status_id)
+    cover_sheet_status.cover_sheet_status = "With user"
+    cover_sheet_status.save()
+
+    url = reverse('wsdot_review_cover_sheets_year_org', kwargs={'year': cover_sheet_status.year,
+                                                                'organization_id': cover_sheet_status.organization_id})
+    return HttpResponseRedirect(url)
+
+
+
+@login_required(login_url='/Panacea/login')
+@group_required('WSDOT staff')
+def wsdot_review_data(request):
+    if request.POST:
+        pass
+    else:
+        pass
+    return render(request, 'pages/summary/admin/wsdot_review_data.html')
+
+
+@login_required(login_url='/Panacea/login')
+def customer_review_cover_sheets(request):
+    year = get_current_summary_report_year()
+    organization_id = find_user_organization_id(request.user.id)
+    org_summary_report_status = summary_report_status.objects.get(year=year, organization_id=organization_id)
+
+    notes = cover_sheet_review_notes.objects.filter(year=year,
+                                                    summary_report_status=summary_report_status.objects.get(organization_id=organization_id),
+                                                    parent_note__isnull=True).exclude(note_status="Closed")
+    child_notes = cover_sheet_review_notes.objects.filter(year=year,
+                                                          summary_report_status=summary_report_status.objects.get(organization_id=organization_id),
+                                                          parent_note__isnull=False)
+    new_note_form = add_cover_sheet_review_note()
+
+
+    return render(request, 'pages/summary/customer_review_cover_sheet.html', {'year': year,
+                                                                              'organization_id': organization_id,
+                                                                              'org_summary_report_status': org_summary_report_status,
+                                                                              'notes': notes,
+                                                                              'child_notes': child_notes,
+                                                                              'new_note_form': new_note_form})
+
+
+@login_required(login_url='/Panacea/login')
+def customer_review_data(request):
+    return render(request, 'pages/summary/customer_review_cover_sheet.html')
+
+
+@login_required(login_url='/Panacea/login')
+def customer_review_instructions(request):
+    return render(request, 'pages/summary/customer_review_instructions.html')
+
+@login_required(login_url='/Panacea/login')
+def accept_wsdot_edit(request, note_id):
+
+    note = cover_sheet_review_notes.objects.get(id=note_id)
+    note.note_status = "Closed"
+    note.save()
+    unresolved_notes_count = cover_sheet_review_notes.objects.filter(summary_report_status=note.summary_report_status, parent_note__isnull=True).exclude(note_status="Closed").count()
+    if unresolved_notes_count == 0:
+        report_status = summary_report_status.objects.get(id=note.summary_report_status_id)
+        report_status.cover_sheet_status = "With WSDOT"
+        report_status.cover_sheet_submitted_for_review = True
+        report_status.save()
+
+
+    url = reverse('customer_review_cover_sheets')
+    return HttpResponseRedirect(url)
+
+
+@login_required(login_url='/Panacea/login')
+@group_required('WSDOT staff')
+def test_tools(request):
+    if request.POST:
+        custom_user_id = request.POST.get('custom_user')
+        my_instance = profile.objects.get(custom_user_id=custom_user_id)
+        print(request.POST)
+        form = change_user_org(request.POST, instance=my_instance)
+        if form.is_valid():
+            form.save()
+    else:
+        form = change_user_org()
+    return render(request, 'pages/test_tools.html', {'form': form})
 
 
 

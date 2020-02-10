@@ -1,0 +1,15 @@
+{% extends 'index.html' %}
+
+{% block content %}
+    <div class="container-fluid">
+
+        <!-- Page Heading -->
+        <h1 class="h3 mb-2 text-gray-800">Test tools</h1>
+    </div>
+    <form action = "{% url 'test_tools' %}" method="post" id="post-form">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <div id="errormessage"></div>
+        <input type="submit" value="update org" class="btn btn-primary">
+    </form>
+{% endblock %}

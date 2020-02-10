@@ -1,0 +1,65 @@
+{% extends 'index.html' %}
+{% load humanize %}
+{% load custom_tags %}
+{% load static %}
+{% load widget_tweaks %}
+
+{% block head_content %}
+
+
+{% endblock %}
+
+{% block content %}
+
+    <div class="container-fluid">
+
+        <!-- Page Heading -->
+
+    </div>
+
+    <div class="container-fluid">
+        <div class="row">
+            <div class="card shadow mb-4 w-100">
+                <div class="card-header">
+                    <ul class="nav nav-tabs card-header-tabs">
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'yearly_setup_instructions' %}">Instructions</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link active" href="{% url 'yearly_setup' %}">Yearly setup</a>
+                        </li>
+                    </ul>
+                </div>
+                <div class="card-body" style="">
+                    <h3>Reset current year's summary reporter tracking:</h3>
+                    <a href="{% url 'yearly_setup_action' 'reset_summary_reporter_tracking' %}" class="btn btn-primary" role="button">Reset</a>
+                    <h3>Reset individual agency progress tracking</h3>
+                    <a href="{% url 'yearly_setup_action' 'reset_all_orgs_summary_progress' %}" class="btn btn-primary" role="button">Reset</a>
+                    <h3>Create summary report status</h3>
+                    <a href="{% url 'yearly_setup_action' 'create_all_summary_report_statuses' %}" class="btn btn-primary" role="button">Reset</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+
+
+{%  endblock %}
+
+{% block page_scripts %}
+
+    <script>
+        $(function () {
+            $('.help-popover').popover({
+                container: 'body',
+                animation: false,
+                trigger: 'hover',
+                html:true
+            })
+        })
+
+    </script>
+
+{% endblock %}

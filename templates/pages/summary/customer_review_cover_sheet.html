@@ -1,0 +1,146 @@
+{% extends 'index.html' %}
+{% load humanize %}
+{% load custom_tags %}
+{% load static %}
+{% load widget_tweaks %}
+
+{% block head_content %}
+
+
+{% endblock %}
+
+{% block content %}
+
+    <div class="container-fluid">
+
+        <!-- Page Heading -->
+
+    </div>
+
+    <div class="container-fluid">
+        <div class="row">
+            <div class="card shadow mb-4 w-100">
+                <div class="card-header">
+                    <ul class="nav nav-tabs card-header-tabs">
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'customer_review_instructions' %}">Review instructions</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link active" href="{% url 'customer_review_cover_sheets' %}">Review cover sheets</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'customer_review_data' %}">Review Data</a>
+                        </li>
+                    </ul>
+                </div>
+                <div class="card-body" style="">
+                    <h1>{{ year }} {% get_org_name organization_id %} cover sheet review</h1>
+
+                    {% if not org_summary_report_status.cover_sheet_submitted_for_review %}
+                        <div class="alert alert-danger" role="alert">
+                            Your organization has not submitted a coversheet for this year.  To submit it please go here: [link to be added]
+                        </div>
+                    {% else %}
+                        {% if org_summary_report_status.cover_sheet_status == "With WSDOT" %}
+                            <div class="alert alert-info" role="alert">
+                                This coversheet is with WSDOT for its review.
+                            </div>
+                        {% elif org_summary_report_status.cover_sheet_status == "Complete" %}
+                            <div class="alert alert-success" role="alert">
+                                The review of this coversheet is complete.
+                            </div>
+                        {% else %}
+                            <h2>Please work to resolve the following issues:</h2>
+                            <table class="table">
+                                <thead>
+                                <th>WSDOT note</th>
+                                <th>Field edited</th>
+                                <th>Previous value</th>
+                                <th>Updated value</th>
+                                <th>Approve/Reply</th>
+                                </thead>
+                                {% for note in notes %}
+                                    <tbody>
+                                    <tr>
+                                        <td><b class="text-danger">{{ note.note }}</b></td>
+                                        <td>{% get_cover_sheet_field_name_verbose note.note_field %}</td>
+                                        <td>{% cover_sheet_note_previous_value note %}</td>
+                                        <td>{% cover_sheet_note_current_value note %}</td>
+                                        <td> <button type="button" class="btn btn-secondary mb-1" style="min-width: 12rem" onclick="generate_modal('{{ note.id }}')">Reply with note</button>
+                                            <a href="{% url 'accept_wsdot_edit' note.id %}" type="button" class="btn btn-primary" style="min-width: 12rem">Accept edits</a></td>
+                                    </tr>
+                                    {% for child_note in child_notes %}
+                                        {% if child_note.parent_note == note.id %}
+                                            <tr>
+                                                <td style="border: none"></td>
+
+                                                <td colspan="3" style="border: none">
+                                                    <div class="card mt-2 mb-2 mr-5">
+                                                        <div class="card-body pt-1 pb-1">
+                                                            {% if child_note.custom_user == request.user %}
+                                                                <a class="text-danger float-right help-popover" data-toggle="tooltip" data-placement="top" title="Delete note" href="{% url 'delete_cover_sheet_note' child_note.id %}"><i class="far fa-trash-alt"></i></a>
+                                                            {% endif %}
+                                                            {% if child_note.wsdot_note %}
+                                                                <h5 class="card-title">WSDOT note:</h5>
+                                                            {% else %}
+                                                                <h5 class="card-title">Customer note:</h5>
+                                                            {% endif %}
+                                                            <div class="card-text">{{ child_note.note }}</div>
+                                                            <div class="row card-text mt-2">
+                                                                <div class="col-6"></div>
+                                                                <div class="col-6 text-right font-weight-light">{{ child_note.custom_user }} - {{ child_note.date }}</div>
+                                                            </div>
+                                                        </div>
+                                                </td>
+                                                <td style="border: none"></td>
+
+                                            </tr>
+                                        {% endif %}
+                                    {% endfor %}
+                                {% endfor %}
+                                </tbody>
+                            </table>
+                        {% endif %}
+                    {% endif %}
+                    <hr class="mt-5">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal fade" id="note_modal" tabindex="-1" role="dialog" aria-labelledby="Note_modal" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLongTitle">Add a note</h5>
+                </div>
+                <form id="note_form" action="{% url 'base_wsdot_note_url' year org_summary_report_status.id %}" method="post">
+                    {% csrf_token  %}
+                    <div class="modal-body">
+                        {{  new_note_form }}
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                        <input type="submit" value="Add note"  class="btn btn-primary float-right">
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+{%  endblock %}
+
+{% block page_scripts %}
+    <script>
+        function generate_modal(parent_note) {
+            let note_form = $('#note_form')
+            let base_url = '{% url 'base_add_cover_sheet_child_note_customer' %}'
+            note_form.attr('action', base_url.concat("/", parent_note, "/"))
+
+            $('#note_modal').modal()
+
+        }
+    </script>
+
+{% endblock %}

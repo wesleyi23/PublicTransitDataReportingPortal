@@ -1,0 +1,62 @@
+{% extends 'index.html' %}
+{% load humanize %}
+{% load custom_tags %}
+{% load static %}
+{% load widget_tweaks %}
+
+{% block head_content %}
+
+
+{% endblock %}
+
+{% block content %}
+
+    <div class="container-fluid">
+
+        <!-- Page Heading -->
+
+    </div>
+
+    <div class="container-fluid">
+        <div class="row">
+            <div class="card shadow mb-4 w-100">
+                <div class="card-header">
+                    <ul class="nav nav-tabs card-header-tabs">
+                        <li class="nav-item">
+                            <a class="nav-link active" href="{% url 'yearly_setup_instructions' %}">Instructions</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'yearly_setup' %}">Yearly setup</a>
+                        </li>
+                    </ul>
+                </div>
+                <div class="card-body" style="">
+                <h3>Yearly setup instructions</h3>
+                    Here are the instructions to set up the summary reporting portal each year.
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+
+
+{%  endblock %}
+
+{% block page_scripts %}
+
+    <script>
+        $(function () {
+            $('.help-popover').popover({
+                container: 'body',
+                animation: false,
+                trigger: 'hover',
+                html:true
+            })
+        })
+
+    </script>
+
+{% endblock %}

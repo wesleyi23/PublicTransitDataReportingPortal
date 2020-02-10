@@ -1,10 +1,12 @@
 import calendar
 import json
-import numpy as np
+
+from django.db import transaction
 from django_pandas.io import read_frame
 import pandas as pd
+import numpy as np
 from .models import revenue_source, organization, vanpool_expansion_analysis, vanpool_report, profile, transit_data, \
-    service_offered, transit_mode, revenue, expense, depreciation, fund_balance, stylesheets
+    service_offered, transit_mode, revenue, expense, depreciation, fund_balance, stylesheets,  summary_organization_progress, summary_report_status
 from django.db.models import Max, Subquery, F, OuterRef, Case, CharField, Value, When, Sum, Count, Avg, FloatField, \
     ExpressionWrapper, Q
 from django.db.models.functions import Coalesce
@@ -16,6 +18,14 @@ from dateutil.relativedelta import relativedelta
 #####
 
 #
+
+def create_all_summary_report_statuses():
+    year = get_current_summary_report_year()
+    summary_orgs = organization.objects.filter(summary_reporter = True)
+    for org in summary_orgs:
+        summary_report_status.objects.get_or_create(year = year, organization = org)
+
+
 
 def create_statewide_expense_table(year):
     from .models import depreciation
@@ -485,7 +495,10 @@ def complete_data():
     return latest_data
 
 
-
+def calculate_percent_change(data1, data2):
+    percent = round((data1 - data2)/data2, 2)
+    percent = percent*100
+    return percent
 
 
 def filter_revenue_sheet_by_classification(classification):
@@ -902,5 +915,47 @@ class Echo:
         return value
 
 
+def get_all_cover_sheet_steps_completed(organization_id):
+    organization_progress, created = summary_organization_progress.objects.get_or_create(organization_id=organization_id)
+    result = organization_progress.started and \
+             organization_progress.address_and_organization and \
+             organization_progress.organization_details and \
+             organization_progress.service_cover_sheet
 
+    return result
+
+
+def get_cover_sheet_submitted(organization_id):
+    return summary_report_status.objects.get(year=get_current_summary_report_year(), organization_id=organization_id).cover_sheet_submitted_for_review
+
+
+def get_all_data_steps_completed(organization_id):
+    organization_progress, created = summary_organization_progress.objects.get_or_create(organization_id=organization_id)
+    result = organization_progress.confirm_service and \
+             organization_progress.transit_data and \
+             organization_progress.revenue and \
+             organization_progress.expenses and \
+             organization_progress.ending_balances
+
+    return result
+
+def get_data_submitted(organization_id):
+    return summary_report_status.objects.get(year=get_current_summary_report_year(),
+                                             organization_id=organization_id).data_report_submitted_for_review
+
+@transaction.atomic
+def reset_summary_reporter_tracking(year):
+    year_reports = summary_report_status.objects.filter(year=year)
+    for item in year_reports:
+        item.cover_sheet_status = "With user"
+        item.cover_sheet_submitted_for_review = False
+        item.data_report_status = "With user"
+        item.data_report_submitted_for_review = False
+        item.save()
+
+
+@transaction.atomic
+def reset_all_orgs_summary_progress():
+    for item in summary_organization_progress.objects.all():
+        item.delete()
 

@@ -14,7 +14,7 @@ from .models import custom_user, \
     vanpool_expansion_analysis, \
     cover_sheet, \
     transit_data, expense, revenue, revenue_source, transit_mode, service_offered, transit_metrics, expense_source, \
-    fund_balance, fund_balance_type, validation_errors
+    fund_balance, fund_balance_type, validation_errors, cover_sheet_review_notes
 from django.utils.translation import gettext, gettext_lazy as _
 from phonenumber_field.formfields import PhoneNumberField
 from localflavor.us.forms import USStateSelect, USZipCodeField
@@ -611,12 +611,13 @@ class cover_sheet_organization(forms.ModelForm):
 
     class Meta:
         model = cover_sheet
-        fields = ['executive_officer_first_name', 'executive_officer_last_name', 'service_website_url',
+        fields = ['executive_officer_first_name', 'executive_officer_last_name', 'executive_officer_title', 'service_website_url',
                   'service_area_description', 'congressional_districts', 'legislative_districts', 'type_of_government',
                   'governing_body']
         widgets = {
             'executive_officer_first_name': forms.TextInput(attrs={'class': 'form-control'}),
             'executive_officer_last_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'executive_officer_title': forms.TextInput(attrs={'class': 'form-control'}),
             'service_website_url': forms.URLInput(attrs={'class': 'form-control',
                                                          'label': 'Service website URL'}),
             'service_area_description': forms.TextInput(attrs={'class': 'form-control'}),
@@ -663,7 +664,54 @@ class cover_sheet_service(forms.ModelForm):
             'tax_rate_description': forms.Textarea(attrs={'class': 'form-control'}),
         }
 
+class cover_sheet_wsdot_review(forms.ModelForm):
+    organization_logo_input = forms.FileField(required=False,
+                                              widget=forms.FileInput(attrs={'class': 'my-custom-file-input',
+                                                                            'accept': '.jpg, .jpeg, .png, .tif'}))
 
+    class Meta:
+        model = cover_sheet
+        exclude = ['id', 'organization', 'transit_development_plan_url', 'monorail_ownership', 'community_planning_region',]
+
+        widgets = {
+            'executive_officer_first_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'executive_officer_last_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'executive_officer_title': forms.TextInput(attrs={'class': 'form-control'}),
+            'service_website_url': forms.URLInput(attrs={'class': 'form-control',
+                                                         'label': 'Service website URL'}),
+            'service_area_description': forms.TextInput(attrs={'class': 'form-control'}),
+            'congressional_districts': forms.TextInput(attrs={'class': 'form-control'}),
+            'legislative_districts': forms.TextInput(attrs={'class': 'form-control'}),
+            'type_of_government': forms.TextInput(attrs={'class': 'form-control'}),
+            'governing_body': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
+            'transit_mode': forms.Select(choices=transit_mode.objects.all(), attrs={'class': 'form-control'}),
+            'administration_of_mode': forms.Select(choices=service_offered.DO_OR_PT, attrs={'class': 'form-control'}),
+            'intermodal_connections': forms.Textarea(attrs={'class': 'form-control'}),
+            'fares_description': forms.Textarea(attrs={'class': 'form-control'}),
+            'service_and_eligibility': forms.Textarea(attrs={'class': 'form-control'}),
+            'days_of_service': forms.TextInput(attrs={'class': 'form-control'}),
+            'current_operations': forms.Textarea(attrs={'class': 'form-control'}),
+            'revenue_service_vehicles': forms.TextInput(attrs={'class': 'form-control'}),
+            'tax_rate_description': forms.Textarea(attrs={'class': 'form-control'}),
+        }
+
+    def clean_organization_logo_input(self):
+        from Panacea.validators import validate_image_file
+        image = self.cleaned_data.get('organization_logo_input')
+        # import pdb; pdb.set_trace()
+
+        print(image)
+        if image is not None:
+            print("validator")
+            validate_image_file(image)
+
+class add_cover_sheet_review_note(forms.ModelForm):
+    class Meta:
+        model = cover_sheet_review_notes
+        fields = ['note', ]
+        widgets = {
+            'note': forms.Textarea(attrs={'class': 'form-control', 'rows':2}),
+        }
 
 class FormsetCleaner(BaseFormSet):
     def __init__(self, *args, **kwargs):
@@ -764,13 +812,13 @@ class validation_error_form(forms.ModelForm):
         model = validation_errors
         fields = ['error_resolution', 'year', 'error', 'administration_of_mode', 'transit_mode']
         widgets = {
-                'error_resolution': forms.Textarea(attrs={'class': 'form-control', "rows": 3}),
+            'error_resolution': forms.Textarea(attrs={'class': 'form-control', "rows": 3}),
             'year': forms.NumberInput(attrs = {'class': 'form-control', 'readonly': 'readonly'}),
             'error': forms.Textarea(attrs={'rows':3, 'readonly': 'readonly'}),
             'administration_of_mode': forms.TextInput(attrs={'class': 'form-control', 'readonly': 'readonly'}),
             'transit_mode': forms.TextInput(attrs={'class': 'form-control', 'readonly': 'readonly'}),
             'id': forms.NumberInput(attrs={ 'class': 'form-control','readonly':'readonly'})
-            }
+        }
 
 class email_contact_form(forms.Form):
     from_email = forms.EmailField(required=True, label="Sender Email")
@@ -818,3 +866,13 @@ class email_contact_form(forms.Form):
 
 
 # endregion
+
+
+class change_user_org(forms.ModelForm):
+    class Meta:
+        model = profile
+        fields = ['custom_user', 'organization']
+        widgets = {
+            'custom_user': forms.Select(),
+            'organization': forms.Select(),
+        }

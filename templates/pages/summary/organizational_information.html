@@ -34,9 +34,11 @@
                         <li class="nav-item">
                             <a class="nav-link" href="{% url 'cover_sheets_service' %}">Your service</a>
                         </li>
+                        {% if ready_to_submit %}
                         <li class="nav-item">
-                            <a class="nav-link" href="{% url 'ntd_upload' %}">NTD data upload</a>
+                            <a class="nav-link" href="{% url 'submit_cover_sheet' %}">Submit cover sheet</a>
                         </li>
+                        {% endif %}
                     </ul>
                 </div>
                 <div class="card-body" style="">

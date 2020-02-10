@@ -74,6 +74,7 @@
                         {% if request.user|has_group:"Summary reporter" %}
                             <a class="collapse-item" href="{% url 'summary_instructions' %}">Start summary report</a>
                             <a class="collapse-item" href="{% url 'summary_report_data' %}">Report summary data</a>
+                            <a class="collapse-item" href="{% url 'customer_review_instructions' %}">Review summary reports</a>
                             <a class = "collapse-item" href = "{%  url 'view_transit_data' %}">View agency report</a>
                             <a class = "collapse-item" href = "{%  url 'view_statewide_rollup' %}">View statewide reports</a>
                         {% endif %}
@@ -162,7 +163,8 @@
                 </a>
                 <div id="collapseSummaryAdmin" class="collapse" data-parent="#accordionSidebar">
                     <div class="bg-white py-2 collapse-inner rounded">
-                        <a class="collapse-item" href="{% url 'review_cover_sheets' %}">Review cover sheets</a>
+                        <a class="collapse-item" href="{% url 'summary_tracking' %}">Summary tracking</a>
+                        <a class="collapse-item" href="{% url 'yearly_setup_instructions' %}">Yearly setup</a>
                     </div>
                 </div>
             </li>
@@ -179,7 +181,8 @@
                          <a class="collapse-item" href="{% url 'Admin_reports' %}">Reports</a>
                          <a class="collapse-item" href="{% url 'Admin_ReminderEmail' %}">Reminder Emails</a>
                         {% endcomment %}
-                        <a class="collapse-item" href="{% url 'Admin_assignPermissions' "active"%}">Assign Permissions</a>
+                        <a class="collapse-item" href="{% url 'Admin_assignPermissions' "active"%}">Assign permissions</a>
+                        <a class="collapse-item" href="{% url 'test_tools' %}">Testing tools</a>
                     </div>
                 </div>
             </li>

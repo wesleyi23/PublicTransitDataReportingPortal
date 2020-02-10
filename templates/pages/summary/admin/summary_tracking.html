@@ -1,0 +1,98 @@
+{% extends 'index.html' %}
+{% load humanize %}
+{% load custom_tags %}
+{% load static %}
+{% load widget_tweaks %}
+
+{% block head_content %}
+
+
+{% endblock %}
+
+{% block content %}
+
+    <div class="container-fluid">
+
+        <!-- Page Heading -->
+
+    </div>
+
+    <div class="container-fluid">
+        <div class="row">
+            <div class="card shadow mb-4 w-100">
+                <div class="card-header">
+                    <ul class="nav nav-tabs card-header-tabs">
+                        <li class="nav-item">
+                            <a class="nav-link active" href="{% url 'summary_tracking' %}">Tracking</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'wsdot_review_cover_sheets' %}">Review cover sheets</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'wsdot_review_data' %}">Review Data</a>
+                        </li>
+                    </ul>
+                </div>
+                <div class="card-body" style="">
+                    <h1>{{ year }} - Summary reporter tracking</h1>
+                    <div class="dataTable_wrapper">
+                        <table id="summary_tracking_datatable" class="table table-hover tdt-bootstrap4 dataTable dataTable_wrapper">
+                            <thead class="table-secondary">
+                            <th width="5%" style="text-align: center">View</th>
+                            <th>Organization</th>
+                            <th>Cover sheet submitted</th>
+                            <th>Cover sheet status</th>
+                            <th>Data submitted</th>
+                            <th>Data review status</th>
+                            </thead>
+                            <tbody>
+                            {% for org in tracking_data %}
+                                <tr>
+                                    <td style="text-align: center"><a href="{%  url 'wsdot_review_cover_sheets_year_org' year org.organization_id %}"><i class="fas fa-file pr-4"></i></a></i><i class="fas fa-table"></i></td>
+                                    <td>{% get_org_name  org.organization_id %}</td>
+                                    <td>{{ org.cover_sheet_submitted_for_review }}</td>
+                                    <td>{{ org.cover_sheet_status }}</td>
+                                    <td>{{ org.data_report_submitted_for_review }}</td>
+                                    <td>{{ org.data_report_status }}</td>
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+{%  endblock %}
+
+{% block page_scripts %}
+    <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.19/js/jquery.dataTables.js"></script>
+    <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.19/js/dataTables.bootstrap4.min.js "></script>
+    <script type="text/javascript">
+        $(document).ready( function () {
+            var table = $('#summary_tracking_datatable').DataTable({
+                "scrollX": true,
+                "sScrollX": "100%",
+                "sScrollXInner": "100%",
+                "bLengthChange": false,
+                "dom": '<"top"fl>rt<"bottom"ip><"clear">',
+                "paging": false,
+                "columnDefs": [
+                    { "max-width": "50px", "targets": 1 }
+                ],
+            });
+            $('.dataTables_filter').addClass('form-inline');
+            $('.dataTables_filter').css({"float":"left", "margin-bottom":"1rem", "margin-left":"2px"});
+
+            $(document).on('click', '#sidebarToggle', function () {
+                table.draw();
+            });
+
+        });
+
+    </script>
+
+{% endblock %}

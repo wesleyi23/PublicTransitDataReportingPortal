@@ -1,0 +1,49 @@
+{% extends 'index.html' %}
+{% load humanize %}
+{% load custom_tags %}
+{% load static %}
+{% load widget_tweaks %}
+
+{% block head_content %}
+    <link href="{% static 'css/slidder.css'%}" rel="stylesheet">
+
+{% endblock %}
+
+{% block content %}
+
+    <div class="container-fluid">
+
+        <!-- Page Heading -->
+
+    </div>
+
+    <div class="container-fluid">
+        <div class="row">
+            <div class="card shadow mb-4 w-100">
+                <div class="card-body" style="min-height: 25rem">
+                    <div class="text-center mt-5">
+                        {% if cover_sheet_status == "Complete" %}
+                        <p class="pb-2 h2"><b>The review of your coversheet has been completed!</b></p>
+                        {% elif cover_sheet_status == "With WSDOT" %}
+                        <p class="pb-2 h2"><b>Your coversheet is being reviewed by WSDOT.</b></p>
+                        {% else %}
+                        <p class="pb-2 h2"><b>There are some items awaiting your review. <br>
+                            <a href="{% url 'customer_review_cover_sheets' %}">Click here to review these items.</a></b></p>
+                        {% endif %}
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+
+
+
+
+{%  endblock %}
+
+{% block page_scripts %}
+
+
+{% endblock %}

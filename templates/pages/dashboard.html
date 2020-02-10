@@ -1,27 +1,35 @@
 {% extends 'index.html' %}
 {% load custom_tags %}
+{% load static %}
+
+{% block head_content %}
+    {% if request.user|has_group:"Summary reporter" and user_org != 1 and summary_reporter != False %}
+        <link href="{% static 'css/progress_bar.css'%}" rel="stylesheet">
+    {% endif %}
+{% endblock %}
+
 
 {% block content %}
     <div class="container-fluid">
         <!-- Page Heading -->
         <h1 class="h3 mb-2 text-gray-800" align = "center">Dashboard</h1>
 
-    {%  if vp_program  == False%}
-        <div class="col-xl-12 col-md-12 mb-4">
-                    <div class="card border-left-primary shadow h-100 py-2">
-                        <div class="card-body">
-                            <div class="row no-gutters align-items-center">
-                                <div class="col mr-2">
+        {%  if vp_program  == False and summary_reporter == False %}
 
-      <div> Welcome to the Vanpool Reporting Portal. Please check out the reporting and setting functions. </div>
-                                </div>
-                            </div>
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+
+                            <div> Welcome to the Public Transporation Reporting Portal. Please check out the reporting and setting functions. </div>
                         </div>
                     </div>
-    {% endif %}
+                </div>
+            </div>
+        {% endif %}
 
 
-        {% if request.user|has_group:"Vanpool reporter" and user_org != 1 %}
+        {% if request.user|has_group:"Vanpool reporter" and user_org != 1 and vp_program != False %}
             <div class="row">
                 <!-- Groups In Operation -->
                 <div class="col-xl-3 col-md-6 mb-4">
@@ -73,7 +81,7 @@
                 </div>
 
                 <!-- Average Riders Per Van -->
-               <div class="col-xl-3 col-md-6 mb-4">
+                <div class="col-xl-3 col-md-6 mb-4">
                     <div class="card border-left-info shadow h-100 py-2">
                         <div class="card-body">
                             <div class="row no-gutters align-items-center">
@@ -88,7 +96,7 @@
                         </div>
                     </div>
                 </div>
-           <div class="col-xl-3 col-md-6 mb-4">
+                <div class="col-xl-3 col-md-6 mb-4">
                     <div class="card border-left-primary shadow h-100 py-2">
                         <div class="card-body">
                             <div class="row no-gutters align-items-center">
@@ -119,6 +127,63 @@
                     </div>
                 </div>
             {% endif %}
+        {% endif %}
+        {% if request.user|has_group:"Summary reporter" and user_org != 1 and summary_reporter != False %}
+            <div class="card border-left-primary shadow h-100 py-2 pt-3">
+                <div class="card-body">
+                    <h3>Summary reporting</h3>
+                    {% if summary_organization_progress.started == False %}
+                        <div class="alert alert-info" role="alert">
+                            Welcome to this years summary report!  Let's get started:
+                            <br>
+                            <a href="{% url 'summary_instructions' %}" role="button" class="mt-2 btn btn-primary">Start your report</a>
+                        </div>
+                    {% endif %}
+                    {% if summary_report_status.cover_sheet_submitted_for_review and summary_report_status.cover_sheet_status == "With user" %}
+                        <div class="alert alert-warning" role="alert">
+                            WSDOT has completed its review of your cover sheet and has a few questions:
+                            <br>
+                            <a href="{% url 'customer_review_cover_sheets' %}" role="button" class="mt-2 btn btn-warning">Cover sheet review</a>
+                        </div>
+                    {% endif %}
+                    {% if summary_report_status.cover_sheet_submitted_for_review and summary_report_status.cover_sheet_status == "With WSDOT" %}
+                        <div class="alert alert-info" role="alert">
+                            Your cover sheet is with WSDOT for its review.
+                        </div>
+                    {% endif %}
+                    {% if summary_report_status.cover_sheet_submitted_for_review and summary_report_status.cover_sheet_status == "Complete" %}
+                        <div class="alert alert-success" role="alert">
+                            Your cover sheet is completed!
+                        </div>
+                    {% endif %}
+                    {% if summary_report_status.data_report_submitted_for_review and summary_report_status.data_report_status == "Complete" %}
+                        <div class="alert alert-success" role="alert">
+                            Your data report is completed!
+                        </div>
+                    {% endif %}
+                    {% if summary_report_status.data_report_submitted_for_review and summary_report_status.data_report_status == "With WSDOT" %}
+                        <div class="alert alert-info" role="alert">
+                            Your data report is with WSDOT for its review.
+                        </div>
+                    {% endif %}
+                    {% if summary_report_status.data_report_submitted_for_review and summary_report_status.data_report_status == "With user" %}
+                        <div class="alert alert-warning" role="alert">
+                            WSDOT has completed its review of your data and has a few questions:
+                            <br>
+                            <a href="#" role="button" class="mt-2 btn btn-warning">Data report review</a>
+                        </div>
+                    {% endif %}
+                    {% if summary_organization_progress.started == True and not summary_report_status.data_report_submitted_for_review or not summary_report_status.cover_sheet_submitted_for_review %}
+                        <div class="alert alert-info" role="alert">
+                            It looks like you still have some work to do on your summary report.
+                            <br>
+                            <a href="{% url 'pick_up_where_you_left_off' %}" role="button" class="mt-2 btn btn-info">Pick up where you left off</a>
+                        </div>
+                    {% endif %}
+                </div>
+
+            </div>
+
         {% endif %}
     </div>
 {% endblock %}

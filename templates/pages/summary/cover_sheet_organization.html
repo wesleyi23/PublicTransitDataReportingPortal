@@ -12,12 +12,6 @@
 {% block content %}
 
     <div class="container-fluid">
-
-        <!-- Page Heading -->
-
-    </div>
-
-    <div class="container-fluid">
         <div class="row">
             <div class="card shadow mb-4 w-100">
                 <div class="card-header">
@@ -34,9 +28,11 @@
                         <li class="nav-item">
                             <a class="nav-link" href="{% url 'cover_sheets_service' %}">Your service</a>
                         </li>
+                       {% if ready_to_submit %}
                         <li class="nav-item">
-                            <a class="nav-link" href="{% url 'ntd_upload' %}">NTD data upload</a>
+                            <a class="nav-link" href="{% url 'submit_cover_sheet' %}">Submit cover sheet</a>
                         </li>
+                        {% endif %}
                     </ul>
                 </div>
                 <div class="card-body" style="">
@@ -61,6 +57,10 @@
                                                 <td>{{ form.executive_officer_last_name.errors }}</td>
                                             </tr>
                                         </table>
+
+                                        {{ form.executive_officer_title.label_tag }}
+                                        <p>{{ form.executive_officer_title }}</p>
+                                        {{ form.executive_officer_title.errors }}
 
                                         {{ form.service_website_url.label_tag }}
                                         <p>{{ form.service_website_url }}</p>
@@ -128,7 +128,7 @@
                                 </div>
                             </div>
                         </div>
-                        <input id="update_coversheet_organization" type="submit" value="Update Report" class="btn btn-secondary float-left" style="position: absolute; bottom: 1rem; right: 1.25rem">
+                        <input id="update_coversheet_organization" type="submit" value="Update Report" class="btn btn-primary float-left" style="position: absolute; bottom: 1rem; right: 1.25rem">
                     </form>
                 </div>
             </div>
@@ -172,5 +172,17 @@
             })
         })
 
+    </script>
+
+    <script>
+        $(function(){
+            $('input[type="url"]').on('blur', function(){
+                var string = $(this).val();
+                if (!string.match(/^https?:/) && string.length) {
+                    string = "http://" + string;
+                    $(this).val(string)
+                }
+            });
+        });
     </script>
 {% endblock %}
