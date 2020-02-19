@@ -269,7 +269,6 @@ function get_input_label_text(elem){
 
 function get_field_by_label_and_class(label_text, field_class){
     let all_labels = document.querySelectorAll('.label_values');
-    console.log(all_labels);
     for(let i=0; i < all_labels.length; i++){
         console.log(all_labels[i].textContent);
         if(all_labels[i].textContent == label_text){
