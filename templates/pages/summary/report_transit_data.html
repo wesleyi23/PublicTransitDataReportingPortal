@@ -1,135 +1,135 @@
-{% extends 'index.html' %}
-{% load humanize %}
-{% load custom_tags %}
-{% load static %}
-{% load widget_tweaks %}
-{% load multifor %}
-
-
-{% block head_content %}
-
-
-{% endblock %}
-
-
-{% block content %}
-
-    <div class="container-fluid">
-        <div class="row">
-            <div class="card shadow mb-4 w-100">
-                <div class="card-header">
-                    <ul class="nav nav-tabs card-header-tabs">
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'summary_report_data' %}">Instructions</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'summary_modes' %}">Confirm services</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link active" href="{% url 'report_transit_data' %}">Transit data</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'report_revenue' %}">Revenue</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'report_expenses' %}">Expenses</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'ending_balances' %}">Ending balances</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'review_data' %}">Review</a>
-                        </li>
-
-                    </ul>
-                </div>
-
-                <ul class="nav justify-content-center pt-4" style="font-size: 1.25rem">
-                    {% for service in services %}
-                        <li class="nav-item pl-2 pr-2">
-                            {% if service.id == active_service.id %}
-                                <a class="nav-link disabled" href="#">{{ service.transit_mode }}</a>
-                            {% else %}
-                                <a class="nav-link" href="{% url 'report_transit_data_year_mode' year service.id %}">{{ service.transit_mode }}</a>
-                            {% endif %}
-                        </li>
-                    {% endfor %}
-                </ul>
-
-
-                <div class="card-body" style="">
-
-                    <form method="POST" class="disabled-form">
-                        {% csrf_token  %}
-
-                        <table class="table table-striped table-responsive">
-                            <thead>
-                            <h3>{{ active_service.transit_mode }} - {{ active_service.administration_of_mode }}</h3>
-                            <tr style="min-height: 3.5rem">
-                                <th width="10%" style="min-width: 125px">Revenue source</th>
-                                <th class="two-years-ago" width="10%" style="min-width: 125px">{{ formsets.two_years_ago.1.year.value }} <a class="edit-column" href="#">(edit)</a></th>
-                                <th class="two-years-ago comments" width="25%" style="min-width: 125px">{{ formsets.two_years_ago.1.year.value }} comments</th>
-                                <th class="previous-year" width="10%" style="min-width: 125px">{{ formsets.previous_year.1.year.value }} <a class="edit-column" href="#">(edit)</a></th>
-                                <th class="previous-year comments" width="25%" style="min-width: 125px">{{ formsets.previous_year.1.year.value }} comments</th>
-                                <th class="this-year" width="10%" style="min-width: 125px">{{ formsets.this_year.1.year.value }} <a class="edit-column" href="#">(edit)</a></th>
-                                <th class="this-year comments" width="25%" style="min-width: 125px">{{ formsets.this_year.1.year.value }} comments</th>
-                                <th>Validation errors</th>
-                                <th style="display: none">Hidden</th>
-                            </tr>
-                            </thead>
-                            <tbody>
-
-                            {% for form_x in formsets.this_year; form_y in formsets.previous_year; form_z in formsets.two_years_ago %}
-                                {% if form_x.instance.transit_metric %}
-                                    {% define form_x.instance.transit_metric as transit_metric %}
-                                {% else %}
-                                    {% define form_x.data.transit_metric as transit_metric %}
-                                {% endif %}
-                                <tr>
-                                    <td class="align-top" style="max-width: 5rem">{{ transit_metric }}</td>
-
-                                    <td class="two-years-ago summary-input align-top AutoNumeric-{{ transit_metric.form_masking_class }}" >{{ form_z.reported_value }}</td>
-                                    <td class="two-years-ago comments align-top" >{{ form_z.comments }}</td>
-                                    <td class="previous-year summary-input align-top AutoNumeric-{{ transit_metric.form_masking_class }}" >{{ form_y.reported_value }}</td>
-                                    <td class="previous-year comments align-top" >{{ form_y.comments }}</td>
-                                    <td class="this-year summary-input align-top AutoNumeric-{{ transit_metric.form_masking_class }}" >{{ form_x.reported_value }}</td>
-                                    <td class="this-year comments align-top" >{{ form_x.comments }}</td>
-                                    <td>Errors</td>
-                                    <td style="display: none">
-                                        {{ form_x.transit_metric}}
-                                        {{ form_y.transit_metric }}
-                                        {{ form_z.transit_metric }}
-                                        {{ form_x.id}}
-                                        {{ form_y.id }}
-                                        {{ form_z.id }}
-                                        {{ form_x.year}}
-                                        {{ form_y.year }}
-                                        {{ form_z.year }}
-                                    </td>
-                                </tr>
-                            {% endfor %}
-                            <tr>
-
-                            </tbody>
-                        </table>
-
-                        {{ formsets.this_year.management_form }}
-                        {{ formsets.previous_year.management_form }}
-                        {{ formsets.two_years_ago.management_form }}
-                        <input type="submit" value="Submit"  class="btn btn-primary float-right mt-3">
-
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
-
-
-{%  endblock %}
-
-{% block page_scripts %}
-    <script src="https://cdn.jsdelivr.net/npm/autonumeric@4.5.4"></script>
-    <script src="{% static 'js/AutoNumeric_Settings.js' %}"></script>
-    <script src="{% static 'js/Summary_Data_Entry_Tables.js' %}"></script>
-
-{% endblock %}
+{#{% extends 'index.html' %}#}
+{#{% load humanize %}#}
+{#{% load custom_tags %}#}
+{#{% load static %}#}
+{#{% load widget_tweaks %}#}
+{#{% load multifor %}#}
+{##}
+{##}
+{#{% block head_content %}#}
+{##}
+{##}
+{#{% endblock %}#}
+{##}
+{##}
+{#{% block content %}#}
+{##}
+{#    <div class="container-fluid">#}
+{#        <div class="row">#}
+{#            <div class="card shadow mb-4 w-100">#}
+{#                <div class="card-header">#}
+{#                    <ul class="nav nav-tabs card-header-tabs">#}
+{#                        <li class="nav-item">#}
+{#                            <a class="nav-link" href="{% url 'summary_report_data' %}">Instructions</a>#}
+{#                        </li>#}
+{#                        <li class="nav-item">#}
+{#                            <a class="nav-link" href="{% url 'summary_modes' %}">Confirm services</a>#}
+{#                        </li>#}
+{#                        <li class="nav-item">#}
+{#                            <a class="nav-link active" href="{% url 'report_transit_data' %}">Transit data</a>#}
+{#                        </li>#}
+{#                        <li class="nav-item">#}
+{#                            <a class="nav-link" href="{% url 'report_revenue' %}">Revenue</a>#}
+{#                        </li>#}
+{#                        <li class="nav-item">#}
+{#                            <a class="nav-link" href="{% url 'report_expenses' %}">Expenses</a>#}
+{#                        </li>#}
+{#                        <li class="nav-item">#}
+{#                            <a class="nav-link" href="{% url 'ending_balances' %}">Ending balances</a>#}
+{#                        </li>#}
+{#                        <li class="nav-item">#}
+{#                            <a class="nav-link" href="{% url 'review_data' %}">Review</a>#}
+{#                        </li>#}
+{##}
+{#                    </ul>#}
+{#                </div>#}
+{##}
+{#                <ul class="nav justify-content-center pt-4" style="font-size: 1.25rem">#}
+{#                    {% for service in services %}#}
+{#                        <li class="nav-item pl-2 pr-2">#}
+{#                            {% if service.id == active_service.id %}#}
+{#                                <a class="nav-link disabled" href="#">{{ service.transit_mode }}</a>#}
+{#                            {% else %}#}
+{#                                <a class="nav-link" href="{% url 'report_transit_data_year_mode' year service.id %}">{{ service.transit_mode }}</a>#}
+{#                            {% endif %}#}
+{#                        </li>#}
+{#                    {% endfor %}#}
+{#                </ul>#}
+{##}
+{##}
+{#                <div class="card-body" style="">#}
+{##}
+{#                    <form method="POST" class="disabled-form">#}
+{#                        {% csrf_token  %}#}
+{##}
+{#                        <table class="table table-striped table-responsive">#}
+{#                            <thead>#}
+{#                            <h3>{{ active_service.transit_mode }} - {{ active_service.administration_of_mode }}</h3>#}
+{#                            <tr style="min-height: 3.5rem">#}
+{#                                <th width="10%" style="min-width: 125px">Revenue source</th>#}
+{#                                <th class="two-years-ago" width="10%" style="min-width: 125px">{{ formsets.two_years_ago.1.year.value }} <a class="edit-column" href="#">(edit)</a></th>#}
+{#                                <th class="two-years-ago comments" width="25%" style="min-width: 125px">{{ formsets.two_years_ago.1.year.value }} comments</th>#}
+{#                                <th class="previous-year" width="10%" style="min-width: 125px">{{ formsets.previous_year.1.year.value }} <a class="edit-column" href="#">(edit)</a></th>#}
+{#                                <th class="previous-year comments" width="25%" style="min-width: 125px">{{ formsets.previous_year.1.year.value }} comments</th>#}
+{#                                <th class="this-year" width="10%" style="min-width: 125px">{{ formsets.this_year.1.year.value }} <a class="edit-column" href="#">(edit)</a></th>#}
+{#                                <th class="this-year comments" width="25%" style="min-width: 125px">{{ formsets.this_year.1.year.value }} comments</th>#}
+{#                                <th>Validation errors</th>#}
+{#                                <th style="display: none">Hidden</th>#}
+{#                            </tr>#}
+{#                            </thead>#}
+{#                            <tbody>#}
+{##}
+{#                            {% for form_x in formsets.this_year; form_y in formsets.previous_year; form_z in formsets.two_years_ago %}#}
+{#                                {% if form_x.instance.transit_metric %}#}
+{#                                    {% define form_x.instance.transit_metric as transit_metric %}#}
+{#                                {% else %}#}
+{#                                    {% define form_x.data.transit_metric as transit_metric %}#}
+{#                                {% endif %}#}
+{#                                <tr>#}
+{#                                    <td class="align-top" style="max-width: 5rem">{{ transit_metric }}</td>#}
+{##}
+{#                                    <td class="two-years-ago summary-input align-top AutoNumeric-{{ transit_metric.form_masking_class }}" >{{ form_z.reported_value }}</td>#}
+{#                                    <td class="two-years-ago comments align-top" >{{ form_z.comments }}</td>#}
+{#                                    <td class="previous-year summary-input align-top AutoNumeric-{{ transit_metric.form_masking_class }}" >{{ form_y.reported_value }}</td>#}
+{#                                    <td class="previous-year comments align-top" >{{ form_y.comments }}</td>#}
+{#                                    <td class="this-year summary-input align-top AutoNumeric-{{ transit_metric.form_masking_class }}" >{{ form_x.reported_value }}</td>#}
+{#                                    <td class="this-year comments align-top" >{{ form_x.comments }}</td>#}
+{#                                    <td>Errors</td>#}
+{#                                    <td style="display: none">#}
+{#                                        {{ form_x.transit_metric}}#}
+{#                                        {{ form_y.transit_metric }}#}
+{#                                        {{ form_z.transit_metric }}#}
+{#                                        {{ form_x.id}}#}
+{#                                        {{ form_y.id }}#}
+{#                                        {{ form_z.id }}#}
+{#                                        {{ form_x.year}}#}
+{#                                        {{ form_y.year }}#}
+{#                                        {{ form_z.year }}#}
+{#                                    </td>#}
+{#                                </tr>#}
+{#                            {% endfor %}#}
+{#                            <tr>#}
+{##}
+{#                            </tbody>#}
+{#                        </table>#}
+{##}
+{#                        {{ formsets.this_year.management_form }}#}
+{#                        {{ formsets.previous_year.management_form }}#}
+{#                        {{ formsets.two_years_ago.management_form }}#}
+{#                        <input type="submit" value="Submit"  class="btn btn-primary float-right mt-3">#}
+{##}
+{#                    </form>#}
+{#                </div>#}
+{#            </div>#}
+{#        </div>#}
+{#    </div>#}
+{##}
+{##}
+{#{%  endblock %}#}
+{##}
+{#{% block page_scripts %}#}
+{#    <script src="https://cdn.jsdelivr.net/npm/autonumeric@4.5.4"></script>#}
+{#    <script src="{% static 'js/AutoNumeric_Settings.js' %}"></script>#}
+{#    <script src="{% static 'js/Summary_Data_Entry_Tables.js' %}"></script>#}
+{##}
+{#{% endblock %}#}

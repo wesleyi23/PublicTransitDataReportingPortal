@@ -1434,6 +1434,8 @@ class SummaryDataEntryConstructor:
         query_sets = self.get_form_queryset()
         i = 0
         for year_x in ['this_year', 'previous_year', 'two_years_ago']:
+            query = query_sets.filter(year=self.year - i).order_by(
+                self.get_metric_id_field_name())
             formset = my_formset_factory(post_data, queryset=query_sets.filter(year=self.year - i).order_by(
                 self.get_metric_id_field_name()), prefix=year_x)
             if formset.is_valid():

@@ -908,6 +908,13 @@ def get_all_cover_sheet_steps_completed(organization_id):
     return result
 
 
+def get_url_for_first_missed_step(organization_id):
+    organization_progress, created = summary_organization_progress.objects.get_or_create(organization_id=organization_id)
+    if created:
+        pass
+    pass
+
+
 def get_cover_sheet_submitted(organization_id):
     return summary_report_status.objects.get(year=get_current_summary_report_year(), organization_id=organization_id).cover_sheet_submitted_for_review
 

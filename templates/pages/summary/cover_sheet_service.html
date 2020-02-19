@@ -35,9 +35,9 @@
                             <a class="nav-link active" href="{% url 'cover_sheets_service' %}">Your service</a>
                         </li>
                         {% if ready_to_submit %}
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'submit_cover_sheet' %}">Submit cover sheet</a>
-                        </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'submit_cover_sheet' %}">Submit cover sheet</a>
+                            </li>
                         {% endif %}
                     </ul>
                 </div>
@@ -111,8 +111,9 @@
                                             <strong>{{ error|escape }}</strong>
                                         </div>
                                     {% endfor %}
-                                    <input id="update_coversheet_service" type="submit" value="Update Report" class="btn btn-primary float-left" style="position: absolute; bottom: 1rem; right: 1.25rem">
+
                                 </div>
+                                <input id="update_coversheet_service" type="submit" value="Update or confirm" class="btn btn-primary float-left" style="position: absolute; bottom: 1rem; right: 1.25rem">
                             </div>
                         </div>
                     </form>

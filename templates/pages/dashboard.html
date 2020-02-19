@@ -173,7 +173,7 @@
                             <a href="#" role="button" class="mt-2 btn btn-warning">Data report review</a>
                         </div>
                     {% endif %}
-                    {% if summary_organization_progress.started == True and not summary_report_status.data_report_submitted_for_review or not summary_report_status.cover_sheet_submitted_for_review %}
+                    {% if summary_organization_progress.started == True and not summary_report_status.data_report_submitted_for_review and not summary_report_status.cover_sheet_submitted_for_review %}
                         <div class="alert alert-info" role="alert">
                             It looks like you still have some work to do on your summary report.
                             <br>

@@ -10,7 +10,7 @@ from django.dispatch import receiver
 from localflavor.us.models import USStateField, USZipCodeField
 from phonenumber_field.modelfields import PhoneNumberField
 import datetime
-from jsonfield import JSONField
+
 
 from simple_history.models import HistoricalRecords
 

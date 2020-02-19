@@ -2,7 +2,6 @@
 {% load custom_tags %}
 {%  load humanize %}
 {% load static  %}
-{%  load multifor %}
 
 
 {%  block content %}
@@ -30,93 +29,4 @@
             </div>
         </div>
   </div>
-<div class="card-body" style="">
-<h2 align = "left"> Statewide Transit Agency Staistics</h2>
-                            <br>
-                    {%  for heading in headings; dataframe in data %}
-
-                            <br>
-                            <br>
-                        <table id="performance_measures" class='table tdt-bootstrap4 dataTable dataTable_wrapper display' style = " width: 100%;table-layout: fixed;">
-                        <thead class="table-secondary">
-                        {%  for th in heading %}
-                        <th scope="col" class="d-none d-md-table-cell" scope="col"> {{ th }}</th>
-                            {% endfor  %}
-                        </thead>
-                        <tbody>
-                        {% for datum in dataframe %}
-                            <tr>
-                            <td>{{ datum.organization__name }}</td>
-                            <td>{{ datum.classification }}</td>
-                            <td> {{ datum.RevenueVehicleHours |floatformat:"0"| intcomma }} </td>
-                            <td> {{ datum.TotalVehicleHours |floatformat:"0"| intcomma }} </td>
-                            <td> {{ datum.RevenueVehicleMiles|floatformat:"0"| intcomma }} </td>
-                            <td>{{ datum.TotalVehicleMiles|floatformat:"0"| intcomma }}</td>
-                            <td> {{ datum.PassengerTrips|floatformat:"0"| intcomma }}</td>
-                            <td>{{ datum.Employees |floatformat:1| intcomma }}</td>
-                            <td>${{ datum.OperatingExpenses |floatformat:"0"| intcomma }}</td>
-                            <td> ${{ datum.FareboxRevenues |floatformat:"0"| intcomma }} </td>
-                            <td>{{ datum.PassengerTripsRevenueHour |floatformat:1| intcomma }} </td>
-                            <td>{{ datum.PassengerTripsRevenueMile |floatformat:2| intcomma }} </td>
-                            <td>{{ datum.RevenueHoursFTE |floatformat:"0"| intcomma }} </td>
-                            <td> ${{ datum.OperatingExpensesRevenueHour |floatformat:2| intcomma  }}</td>
-                            <td> ${{ datum.OperatingExpensesRevenueMile |floatformat:2| intcomma }} </td>
-                            <td>${{ datum.OperatingExpensesPassengerTrip|floatformat:2| intcomma }} </td>
-                            <td> {{ datum.FareboxRecoveryRatio|floatformat:2| intcomma }}% </td>
-
-
-
-                            {%  endfor %}
-                        </tbody>
-                        </table>
-                        <br>
-                    {%  endfor %}
-
-                </div>
-            </div>
-        </div>
-  </div>
-{%  endblock %}
-
-{% block page_scripts %}
-<script src="https://cdn.jsdelivr.net/npm/autonumeric@4.5.4"></script>
-    <script src="{% static 'js/AutoNumeric_Settings.js' %}"></script>
-      <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.19/js/jquery.dataTables.js"></script>
-    <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.19/js/dataTables.bootstrap4.min.js "></script>
-    <script type="text/javascript" charset="utf8" src="https://code.jquery.com/jquery-3.3.1.js "> </script>
-    <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.19/js/jquery.dataTables.min.js"> </script>
-    <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/buttons/1.5.6/js/dataTables.buttons.min.js"> </script>
-    <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/buttons/1.5.6/js/buttons.bootstrap4.min.js"> </script>
-    <script type="text/javascript" charset="utf8" src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.3/jszip.min.js"> </script>
-    <script type="text/javascript" charset="utf8" src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/pdfmake.min.js"> </script>
-    <script type="text/javascript" charset="utf8" src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"> </script>
-    <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/buttons/1.5.6/js/buttons.html5.min.js"> </script>
-    <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/buttons/1.5.6/js/buttons.print.min.js"> </script>
-    <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/buttons/1.5.6/js/buttons.colVis.min.js"> </script>
-
-    <script type="text/javascript">
-        $(document).ready( function () {$('table.display').DataTable({
-                "colReorder": true,
-                "scrollY": 200,
-                "scrollX": true,
-                "scrollCollapse": true,
-                "paging": false,
-                "bLengthChange": false,
-                 "bInfo": false,
-                "bFilter": false,
-                "bSort": false,
-
-            });
-            $('.dataTables_filter').addClass('form-inline');
-            $('.dataTables_filter').css({"float":"left", "margin-bottom":"2px", "margin-left":"2px"})
-
-
-            $(document).on('click', '#sidebarToggle', function () {
-                table.draw();
-            });
-
-        });
-
-
-    </script>
 {%  endblock %}

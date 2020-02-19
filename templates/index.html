@@ -72,9 +72,9 @@
                 <div id="collapseSummaryReport" class="collapse" data-parent="#accordionSidebar">
                     <div class="bg-white py-2 collapse-inner rounded">
                         {% if request.user|has_group:"Summary reporter" %}
-                            <a class="collapse-item" href="{% url 'summary_instructions' %}">Start summary report</a>
-                            <a class="collapse-item" href="{% url 'summary_report_data' %}">Report summary data</a>
-                            <a class="collapse-item" href="{% url 'customer_review_instructions' %}">Review summary reports</a>
+                            <a class="collapse-item" href="{% url 'summary_instructions' %}">Coversheet report</a>
+                            <a class="collapse-item" href="{% url 'summary_report_data' %}">Report data</a>
+                            <a class="collapse-item" href="{% url 'customer_review_instructions' %}">Review summary report</a>
                             <a class = "collapse-item" href = "{%  url 'view_transit_data' %}">View agency report</a>
                             <a class = "collapse-item" href = "{%  url 'view_statewide_rollup' %}">View statewide reports</a>
                         {% endif %}
@@ -240,13 +240,13 @@
                                 <i class="fas fa-user fa-sm fa-fw mr-2 text-gray-400"></i>
                                 Profile
                             </a>
-                            <a class="dropdown-item" href="#">
-                                <i class="fas fa-cogs fa-sm fa-fw mr-2 text-gray-400"></i>
-                                Settings
+                            <a class="dropdown-item" href="{% url 'OrganizationProfile' %}">
+                                <i class="fas fa-building fa-sm fa-fw mr-2 text-gray-400"></i>
+                                Organization
                             </a>
                             <a class="dropdown-item" href="#">
-                                <i class="fas fa-list fa-sm fa-fw mr-2 text-gray-400"></i>
-                                Activity Log
+                                <i class="fas fa-question-circle fa-sm fa-fw mr-2 text-gray-400"></i>
+                                Help
                             </a>
                             <div class="dropdown-divider"></div>
                             <a class="dropdown-item" href="{% url 'logout' %}">

@@ -34,7 +34,7 @@
                                 <table style="border-collapse: separate; border-spacing: .5rem">
                                     {% for group in auth_groups %}
                                         <tr>
-                                            <td>{% if request.user|has_group:group.name %}{{group.name}}{% else %}&nbsp;{% endif %}</td>
+                                            {% if request.user|has_group:group.name %}<td>{{group.name}}</td>{% endif %}
                                         </tr>
                                     {% endfor %}
                                 </table>
@@ -66,7 +66,7 @@
                             </div>
                         </div>
                         <input type="submit" value="Submit"  class="btn btn-primary float-right mt-3">
-                        <a href="."  class="btn btn-secondary float-right mr-2 mt-3" >Cancel</a>
+                        <a href="#carouselIndicators" data-slide="prev" class="btn btn-secondary float-right mr-2 mt-3" >Cancel</a>
                         </form>
                     </div>
 
