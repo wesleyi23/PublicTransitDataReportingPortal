@@ -3,7 +3,7 @@
 ###########
 # Build Docker image
 #
-# 1. Change directory to directory with this file
+# 1. From windows command line change directory to directory with this file
 # 2. Run docker build: docker build -t  wsdotdev.azurecr.io/ptd_report:latest .
 # 3. Run docker image: docker run -p 8000:8000 [image id]
 #
@@ -36,6 +36,9 @@ RUN apk add gcc python-dev musl-dev
 
 # lint
 RUN pip install --upgrade pip
+RUN pip install cython
+RUN pip install --upgrade cython
+
 # RUN pip install flake8
 COPY . /usr/src/PublicTransitDataReportingPortal/
 # RUN flake8 --ignore=E501,F401 .

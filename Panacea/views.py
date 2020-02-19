@@ -114,7 +114,7 @@ def dashboard(request):
         user_org_id = profile.objects.get(custom_user_id=current_user_id).organization_id
         user_context = {'user_org': user_org_id}
 
-        if organization.objects.get(id=user_org_id).vanpool_program == False:
+        if organization.objects.get(id=user_org_id).vanpool_program == False and request.user.groups.filter(name__in=['Vanpool reporter']).exists():
             vp_program = False
             user_context.update({'vp_program': vp_program})
         else:
@@ -184,7 +184,7 @@ def dashboard(request):
                                  'last_report_year': recent_vanpool_report.report_year
                                  })
 
-        if not organization.objects.get(id=user_org_id).summary_reporter:
+        if not organization.objects.get(id=user_org_id).summary_reporter and not request.user.groups.filter(name__in=['Summary reporter']).exists():
             user_context.update({'summary_reporter': False})
         else:
             org_progress, created = summary_organization_progress.objects.get_or_create(organization_id=user_org_id)
