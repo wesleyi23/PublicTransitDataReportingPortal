@@ -34,9 +34,9 @@ from Panacea.decorators import group_required
 from .utilities import monthdelta, get_wsdot_color, get_vanpool_summary_charts_and_table, percent_change_calculation, \
     find_vanpool_organizations, get_current_summary_report_year, filter_revenue_sheet_by_classification, \
     find_user_organization_id, complete_data, green_house_gas_per_sov_mile, green_house_gas_per_vanpool_mile, \
-    data_prep_for_transits, build_revenue_table, build_expense_table, build_total_funds_by_source, \
+    build_revenue_table, build_expense_table, build_total_funds_by_source, \
     generate_performance_measure_table, generate_mode_by_agency_tables, create_statewide_revenue_table, \
-    create_statewide_expense_table, create_all_summary_report_statuses
+    create_statewide_expense_table, create_all_summary_report_statuses, build_operations_data_table
 from django.http import Http404
 from .filters import VanpoolExpansionFilter, VanpoolReportFilter
 from django.conf import settings
@@ -74,8 +74,7 @@ from .utilities import calculate_latest_vanpool, find_maximum_vanpool, calculate
     reset_all_orgs_summary_progress
 from .utilities import monthdelta, get_wsdot_color, get_vanpool_summary_charts_and_table, percent_change_calculation, \
     find_vanpool_organizations, get_current_summary_report_year, filter_revenue_sheet_by_classification, \
-    complete_data, green_house_gas_per_sov_mile, green_house_gas_per_vanpool_mile, \
-    data_prep_for_transits, build_revenue_table
+    complete_data, green_house_gas_per_sov_mile, green_house_gas_per_vanpool_mile, build_revenue_table
 from .validators import validation_test_for_transit_data
 
 
@@ -1640,31 +1639,35 @@ def contact_us(request):
 
 @login_required(login_url='/Panacea/login')
 def view_annual_operating_information(request):
-    #TODO replace with a real function
-    years = [2016, 2017, 2018]
+    current_year = get_current_summary_report_year()
+    years = [current_year-2, current_year-1, current_year]
     current_user_id = request.user.id
     user_org_id = profile.objects.get(custom_user_id=current_user_id).organization_id
-    enddf = data_prep_for_transits(years, user_org_id)
-    transit_heading_years = ['Annual Operating Information'] + years +['One Year Change (%)']
-    operating_data = enddf.to_dict(orient = 'records')
-    return render(request, 'pages/summary/view_agency_report.html', {'data':operating_data, 'years': transit_heading_years})
+    org_classification = organization.objects.get(id = user_org_id).summary_organization_classifications
+    df = build_operations_data_table(years, [user_org_id], org_classification)
+    heading_list = ['Annual Operating Information'] + years +['One Year Change (%)']
+    data = df.to_dict(orient = 'records')
+    return render(request, 'pages/summary/view_agency_report.html', {'data':data, 'years': heading_list})
 
 @login_required(login_url='/Panacea/login')
 def view_financial_information(request):
-    years = [2016, 2017, 2018]
+    current_year = get_current_summary_report_year()
+    years = [current_year - 2, current_year - 1, current_year]
     current_user_id = request.user.id
     user_org_id = profile.objects.get(custom_user_id=current_user_id).organization_id
-    revenuedf = build_revenue_table(years, user_org_id)
+    org_classification = organization.objects.get(id=user_org_id).summary_organization_classifications
+    revenuedf = build_revenue_table(years, [user_org_id], org_classification)
     financial_data = revenuedf.to_dict(orient = 'records')
     financial_heading_years = ['Financial Information'] + years + ['One Year Change(%)']
     return render(request, 'pages/summary/view_financial_report.html', {'financial_data':financial_data, 'finance_years': financial_heading_years})
 
 @login_required(login_url='/Panacea/login')
 def view_rollup(request):
-    years = [2016, 2017, 2018]
+    current_year = get_current_summary_report_year()
+    years = [current_year-2, current_year-1, current_year]
     current_user_id = request.user.id
     user_org_id = profile.objects.get(custom_user_id=current_user_id).organization_id
-    rollup_data = build_total_funds_by_source(years, user_org_id)
+    rollup_data = build_total_funds_by_source(years, [user_org_id])
     rollup_heading = ['Total Funds by Source'] + years + ['One Year Change (%)']
     rollup_data = rollup_data.to_dict(orient = 'records')
     return render(request, 'pages/summary/view_agency_rollup.html', {'rollup_data': rollup_data, 'rollup_heading': rollup_heading})
@@ -1708,13 +1711,34 @@ def view_statewide_rollup(request):
     expense_df = create_statewide_expense_table(year)
     return render(request, 'pages/summary/view_statewide_rollup.html')
 
+def view_statewide_operating(request):
+    current_year = get_current_summary_report_year()
+    years = [current_year-2, current_year-1, current_year]
+    current_user_id = request.user.id
+    user_org_id = profile.objects.get(custom_user_id=current_user_id).organization_id
+    org_classification = organization.objects.get(id = user_org_id).summary_organization_classifications
+    org_list = list(organization.objects.filter(summary_organization_classifications = org_classification).value_list('id', flat = True))
+
+    return render(request)
+
+def view_statewide_revenue(request):
+    return render(request)
+
+def view_statewide_investment_tables(request):
+    return render(request)
+
+
 @login_required(login_url='/Panacea/login')
 def view_statewide_statistics(request):
+    statewide_mode_statistics_list = []
+    list_of_headings = []
     year = 2017
     transit_mode_names = ['Fixed Route', 'Commuter Bus', 'Trolley Bus', 'Route Deviated', 'Demand Response', 'Vanpool', 'Commuter Rail', 'Light Rail', 'Streetcar']
     for mode in transit_mode_names:
-        df = generate_mode_by_agency_tables(mode, year)
-    return render(request, 'pages/summary/view_statewide_statistics.html')
+        df, heading = generate_mode_by_agency_tables(mode, year)
+        statewide_mode_statistics_list.append(df.to_dict(orient = 'records'))
+        list_of_headings.append(heading)
+    return render(request, 'pages/summary/view_statewide_statistics.html', {'headings': list_of_headings, 'data':statewide_mode_statistics_list})
 
 @login_required(login_url='/Panacea/login')
 @group_required('WSDOT staff')

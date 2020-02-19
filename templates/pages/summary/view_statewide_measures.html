@@ -2,7 +2,7 @@
 {% load custom_tags %}
 {%  load humanize %}
 {% load static  %}
-
+{% load multifor %}
 
 {%  block content %}
   <div class="container-fluid">
@@ -29,4 +29,149 @@
             </div>
         </div>
   </div>
+
+    <div class="card-body" style="">
+                    {%  for heading in headings; dataframe in data; title in titles %}
+
+                        <h2 align = "center"> {{ title }}</h2>
+                            <br>
+                        <table id="performance_measures" class='table tdt-bootstrap4 dataTable dataTable_wrapper' style = " width: 100%;table-layout: fixed;">
+                        <thead class="table-secondary">
+                        {%  for th in heading %}
+                        <th scope="col" class="d-none d-md-table-cell" scope="col"> {{ th }}</th>
+                            {% endfor  %}
+                        </thead>
+                        <tbody>
+                        {% for datum in dataframe %}
+                            <tr>
+
+                            {% if title ==  'Farebox Revenues by Service Mode'  %}
+                                {% if datum.title == 'Total' %}
+                                <td style="padding-left:120px" class = 'font-weight-bold font-italic'>{{ datum.title }}</td>
+                            <td class = 'font-weight-bold font-italic'>${{ datum.year1 |floatformat:"0"| intcomma }}</td>
+                            <td class = 'font-weight-bold font-italic'>${{ datum.year2 |floatformat:"0"| intcomma }}</td>
+                            <td class = 'font-weight-bold font-italic'>${{ datum.year3|floatformat:"0"| intcomma }}</td>
+                            <td class = 'font-weight-bold font-italic'>${{ datum.year4|floatformat:"0"| intcomma }}</td>
+                            <td class = 'font-weight-bold font-italic'>${{ datum.year5|floatformat:"0"| intcomma }}</td>
+                            <td class = 'font-weight-bold font-italic'>${{ datum.year6|floatformat:"0"| intcomma }}</td>
+                                    <td class = 'font-weight-bold font-italic'>{{ datum.percent_change|floatformat:2| intcomma }}</td>
+
+                                {% else %}
+                                    <td>{{ datum.title }}</td>
+                            <td>${{ datum.year1 |floatformat:"0"| intcomma }}</td>
+                            <td>${{ datum.year2 |floatformat:"0"| intcomma }}</td>
+                            <td>${{ datum.year3|floatformat:"0"| intcomma }}</td>
+                            <td>${{ datum.year4|floatformat:"0"| intcomma }}</td>
+                            <td>${{ datum.year5|floatformat:"0"| intcomma }}</td>
+                            <td>${{ datum.year6|floatformat:"0"| intcomma }}</td>
+                                    <td>{{ datum.percent_change|floatformat:2| intcomma }}</td>
+                                    {% endif %}
+
+                            {% elif title == 'Operating Expenses by Service Mode'  %}
+                              {% if datum.title == 'Total' %}
+                                <td style="padding-left:120px" class = 'font-weight-bold font-italic'>{{ datum.title }}</td>
+                            <td class = 'font-weight-bold font-italic'>${{ datum.year1 |floatformat:"0"| intcomma }}</td>
+                            <td class = 'font-weight-bold font-italic'>${{ datum.year2 |floatformat:"0"| intcomma }}</td>
+                            <td class = 'font-weight-bold font-italic'>${{ datum.year3|floatformat:"0"| intcomma }}</td>
+                            <td class = 'font-weight-bold font-italic'>${{ datum.year4|floatformat:"0"| intcomma }}</td>
+                            <td class = 'font-weight-bold font-italic'>${{ datum.year5|floatformat:"0"| intcomma }}</td>
+                            <td class = 'font-weight-bold font-italic'>${{ datum.year6|floatformat:"0"| intcomma }}</td>
+                                    <td class = 'font-weight-bold font-italic'>{{ datum.percent_change|floatformat:2| intcomma }}</td>
+
+                                {% else %}
+                                    <td>{{ datum.title }}</td>
+                            <td>${{ datum.year1 |floatformat:"0"| intcomma }}</td>
+                            <td>${{ datum.year2 |floatformat:"0"| intcomma }}</td>
+                            <td>${{ datum.year3|floatformat:"0"| intcomma }}</td>
+                            <td>${{ datum.year4|floatformat:"0"| intcomma }}</td>
+                            <td>${{ datum.year5|floatformat:"0"| intcomma }}</td>
+                            <td>${{ datum.year6|floatformat:"0"| intcomma }}</td>
+                                    <td>{{ datum.percent_change|floatformat:2| intcomma }}</td>
+                                    {% endif %}
+
+                            {% else %}
+                             {% if datum.title == 'Total' %}
+                                <td style="padding-left:120px" class = 'font-weight-bold font-italic'>{{ datum.title }}</td>
+                            <td class = 'font-weight-bold font-italic'>{{ datum.year1 |floatformat:"0"| intcomma }}</td>
+                            <td class = 'font-weight-bold font-italic'>{{ datum.year2 |floatformat:"0"| intcomma }}</td>
+                            <td class = 'font-weight-bold font-italic'>{{ datum.year3|floatformat:"0"| intcomma }}</td>
+                            <td class = 'font-weight-bold font-italic'>{{ datum.year4|floatformat:"0"| intcomma }}</td>
+                            <td class = 'font-weight-bold font-italic'>{{ datum.year5|floatformat:"0"| intcomma }}</td>
+                            <td class = 'font-weight-bold font-italic'>{{ datum.year6|floatformat:"0"| intcomma }}</td>
+                                    <td class = 'font-weight-bold font-italic'>{{ datum.percent_change|floatformat:2| intcomma }}</td>
+
+                                {% else %}
+                                    <td>{{ datum.title }}</td>
+                            <td>{{ datum.year1 |floatformat:"0"| intcomma }}</td>
+                            <td>{{ datum.year2 |floatformat:"0"| intcomma }}</td>
+                            <td>{{ datum.year3|floatformat:"0"| intcomma }}</td>
+                            <td>{{ datum.year4|floatformat:"0"| intcomma }}</td>
+                            <td>{{ datum.year5|floatformat:"0"| intcomma }}</td>
+                            <td>{{ datum.year6|floatformat:"0"| intcomma }}</td>
+                                    <td>{{ datum.percent_change|floatformat:2| intcomma }}</td>
+                                    {% endif %}
+
+
+                            {% endif %}
+
+                            </tr>
+                            {%  endfor %}
+
+                        </tbody>
+                        </table>
+                        <br>
+                    {%  endfor %}
+
+                </div>
+            </div>
+        </div>
+  </div>
+{%  endblock %}
+
+{% block page_scripts %}
+<script src="https://cdn.jsdelivr.net/npm/autonumeric@4.5.4"></script>
+    <script src="{% static 'js/AutoNumeric_Settings.js' %}"></script>
+      <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.19/js/jquery.dataTables.js"></script>
+    <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.19/js/dataTables.bootstrap4.min.js "></script>
+    <script type="text/javascript" charset="utf8" src="https://code.jquery.com/jquery-3.3.1.js "> </script>
+    <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.19/js/jquery.dataTables.min.js"> </script>
+    <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/buttons/1.5.6/js/dataTables.buttons.min.js"> </script>
+    <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/buttons/1.5.6/js/buttons.bootstrap4.min.js"> </script>
+    <script type="text/javascript" charset="utf8" src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.3/jszip.min.js"> </script>
+    <script type="text/javascript" charset="utf8" src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/pdfmake.min.js"> </script>
+    <script type="text/javascript" charset="utf8" src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"> </script>
+    <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/buttons/1.5.6/js/buttons.html5.min.js"> </script>
+    <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/buttons/1.5.6/js/buttons.print.min.js"> </script>
+    <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/buttons/1.5.6/js/buttons.colVis.min.js"> </script>
+
+    <script type="text/javascript">
+        $(document).ready( function () {
+            var table = $('#performance_measures').DataTable({
+                "colReorder": true,
+                "scrollX": true,
+                "sScrollX": "100%",
+                "sScrollXInner": "100%",
+                 "scrollY": "700px",
+                "scrollCollapse": true,
+                "paging": false,
+                "bLengthChange": false,
+                 "bInfo": false,
+                "bFilter": false,
+                "bSort": false,
+                "dom": 'B<"top"i>rt<"bottom"flp><"clear">',
+                "buttons": ['excel', 'csv']
+
+            });
+            $('.dataTables_filter').addClass('form-inline');
+            $('.dataTables_filter').css({"float":"left", "margin-bottom":"2px", "margin-left":"2px"})
+
+
+            $(document).on('click', '#sidebarToggle', function () {
+                table.draw();
+            });
+
+        });
+
+
+    </script>
 {%  endblock %}

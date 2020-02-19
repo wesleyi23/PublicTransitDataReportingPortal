@@ -452,6 +452,7 @@ class transit_data(models.Model):
 
 class fund_balance_type(models.Model):
     name = models.CharField(max_length=100)
+    heading = models.CharField(max_length=50, default = 'Ending Balances, December 31')
 
     def __str__(self):
         return self.name
@@ -464,6 +465,7 @@ class fund_balance(models.Model):
     reported_value = models.IntegerField(blank=True, null=True)
     report_by = models.ForeignKey(custom_user, on_delete=models.PROTECT, blank=True, null=True)
     comments = models.TextField(blank=True, null=True)
+    heading = models.CharField(max_length= 50, blank=True, null=True, default = 'Ending Balances, December 31')
     history = HistoricalRecords()
 
     class Meta:
@@ -570,6 +572,8 @@ class stylesheets(models.Model):
     transit_expense = models.CharField(max_length=200, blank=True, null= True)
     ferry_expense = models.CharField(max_length=200, blank=True, null= True)
     ferry_revenue = models.CharField(max_length=200, blank=True, null= True)
+    transit_data = models.CharField(max_length=200, blank=True, null=True)
+    ferry_data = models.CharField(max_length=200, blank=True, null=True)
 
 
 class statewide_measures(models.Model):

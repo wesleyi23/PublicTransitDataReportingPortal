@@ -26,20 +26,27 @@ def create_all_summary_report_statuses():
         summary_report_status.objects.get_or_create(year = year, organization = org)
 
 
+def data_check(year, models_list, summary_reporter_type):
+    '''this function creates null value for the purpose of building tables'''
+
+
+
 
 def create_statewide_expense_table(year):
     from .models import depreciation
     df = read_frame(transit_data.objects.filter(organization__summary_organization_classifications_id=6, year=year, transit_metric_id=9).values('organization__name',
     'transit_mode__rollup_mode').annotate(reported_value=Sum('reported_value')))
-    depreciation = read_frame(depreciation.objects.filter(year = year).values('organization__name').annotate(depreciation = Sum('reported_value')))
-    debt_service = read_frame(fund_balance.objects.filter(organization__summary_organization_classifications_id = 6, year = year, fund_balance_type = 12).values('organization__name').annotate(debt_service = Sum('reported_value')))
-    expenses = read_frame( expense.objects.filter(organization__summary_organization_classifications_id =6, year = year, expense_source_id__in = [1,2]).values('expense_source__name', 'organization__name').annotate(reported_value = Sum('reported_value')))
-    revenue_capital = read_frame(revenue.objects.filter(organization__summary_organization_classifications_id = 6, year = year, revenue_source__funding_type = 'Capital').values('organization__name').annotate(capital_expenses = Sum('reported_value')))
-    print(df.columns)
-    print(depreciation.columns)
-    print(debt_service.columns)
-    print(expenses.columns)
-    print(revenue_capital.columns)
+
+    depreciation = read_frame(depreciation.objects.filter(year = year).values('organization__name').annotate(reported_value = Sum('reported_value')))
+    debt_service = read_frame(fund_balance.objects.filter(organization__summary_organization_classifications_id = 6, year = year, fund_balance_type = 12).values('organization__name').annotate(reported_value = Sum('reported_value')))
+    expenses = read_frame(expense.objects.filter(organization__summary_organization_classifications_id =6, year = year, expense_source_id__in = [1,2]).values('expense_source__name', 'organization__name').annotate(reported_value = Sum('reported_value')))
+    revenue_capital = read_frame(revenue.objects.filter(organization__summary_organization_classifications_id = 6, year = year, revenue_source__funding_type = 'Capital').values('organization__name').annotate(reported_value = Sum('reported_value')))
+    depreciation['data_type'] = 'Depreciation'
+    debt_service['data_type'] = 'Debt Service'
+    print(depreciation)
+    print(debt_service)
+    print(expenses)
+    print(revenue_capital)
 
 
 
@@ -59,7 +66,6 @@ def create_statewide_revenue_table(year):
     revenues['title'] = revenues['revenue_source_id__government_type'] + ' ' + revenues['revenue_source_id__funding_type'] + ' Revenue'
     df = revenues.pivot(index = 'organization__name', columns= 'title', values = 'reported_value')
     df = pd.concat([df, fares, vanpool], axis = 1).fillna(0)
-    df.to_csv(r'C:\Users\SchumeN\Documents\django\testrevenues.csv')
     df = df.reset_index()
     subtotal = pd.DataFrame(df[df['index'] != 'Sound Transit'].sum(axis = 0)).transpose()
     subtotal.at[0, 'index'] = 'Sub-Totals'
@@ -82,12 +88,37 @@ def create_dependent_statistics(df):
     df['Operating Expenses/Revenue Hour'] = df['Operating Expenses']/df['Revenue Vehicle Hours']
     df['Operating Expenses/ Revenue Mile'] = df['Operating Expenses']/df['Revenue Vehicle Miles']
     df['Operating Expenses/Passenger Trip'] = df['Operating Expenses']/df['Passenger Trips']
-    df['Farebox Recovery Ratio'] = df['Farebox Revenues']/df['Operating Expenses']
+    df['Farebox Recovery Ratio'] = df['Farebox Revenues']/df['Operating Expenses']*100
     df = df.replace(np.inf, 0)
+    return df
+
+def organization_names_and_classifications(df):
+    '''code to add classifications and organization names to the mode by agency table'''
+    org_names = df.organization__name.tolist()
+    list_of_orgs = organization.objects.filter(name__in=org_names).values('name', 'classification')
+    classification_dic = dict(zip([name['name'] for name in list_of_orgs], [name['classification'] for name in list_of_orgs]))
+    df['classification'] = df['organization__name'].apply(lambda x: classification_dic[x])
+    return df
+
+def sum_and_average_function(category, df):
+    '''builds the sum and average rows for each mode'''
+    if "Statewide" in category:  # builds statewide version; excludes other aggregate sums and averages
+        statewidedf = df[df.classification.isin(['Urban', 'Small Urban', 'Rural'])]
+        sums = statewidedf[['Revenue Vehicle Hours', 'Total Vehicle Hours', 'Revenue Vehicle Miles', 'Total Vehicle Miles','Passenger Trips', 'Employees - FTEs', 'Operating Expenses', 'Farebox Revenues']].sum()
+        avgs = statewidedf[['Passenger Trips/Revenue Hour', 'Passenger Trips/Revenue Mile', 'Revenue Hours/FTE','Operating Expenses/Revenue Hour', 'Operating Expenses/ Revenue Mile','Operating Expenses/Passenger Trip', 'Farebox Recovery Ratio']].mean()
+    else:
+        sums = df[df.classification == category][['Revenue Vehicle Hours', 'Total Vehicle Hours', 'Revenue Vehicle Miles', 'Total Vehicle Miles','Passenger Trips', 'Employees - FTEs', 'Operating Expenses', 'Farebox Revenues']].sum()
+        avgs = df[df.classification == category][['Passenger Trips/Revenue Hour', 'Passenger Trips/Revenue Mile', 'Revenue Hours/FTE','Operating Expenses/Revenue Hour', 'Operating Expenses/ Revenue Mile', 'Operating Expenses/Passenger Trip','Farebox Recovery Ratio']].mean()
+    changeddf = pd.DataFrame(pd.concat([sums, avgs])).transpose()
+    changeddf['classification'] = 'Totals/Averages'
+    changeddf['organization__name'] = category
+    changeddf = changeddf.set_index('organization__name')
+    df = pd.concat([df, changeddf])
     return df
 
 
 def generate_mode_by_agency_tables(mode, year):
+    '''this function generates stats for each transit mode by agency'''
     #TODO condense this, functionalize; figure out what to do about Central Transit
     if mode == 'Demand Response':
         # DR Taxi services is its own mode that gets collapsed in, so have to build some special bits of this
@@ -98,58 +129,44 @@ def generate_mode_by_agency_tables(mode, year):
         df = read_frame(transit_data.objects.filter(organization__summary_organization_classifications_id=6, year=year,reported_value__isnull=False, transit_mode__name= mode, transit_metric_id__in=[1, 2, 3, 4, 5, 8, 9, 10]).values('organization__name','transit_metric__name').annotate(reported_value = Sum('reported_value')))
     df = df.pivot(index = 'organization__name', columns = 'transit_metric__name', values = 'reported_value').fillna(0)
     df = df.reset_index()
-    org_names = df.organization__name.tolist()
-    list_of_orgs = organization.objects.filter(name__in = org_names).values('name', 'classification')
-    classification_dic = dict(zip([name['name'] for name in list_of_orgs], [name['classification'] for name in list_of_orgs]))
-    df['classification'] = df['organization__name'].apply(lambda x: classification_dic[x])
+    df = organization_names_and_classifications(df)
     df = create_dependent_statistics(df)
     df = df.set_index('organization__name')
-    if ['Rural'] in df.classification.unique():
+    if ['Rural'] in df.classification.unique():  # check to see if there's more than one type of agency in the list
         categories = ['Urban', 'Small Urban', 'Rural', 'Statewide {}'.format(mode)]
         for category in categories:
-            if "Statewide" in category:
-                statewidedf = df[df.classification.isin(['Urban', 'Small Urban', 'Rural'])]
-                sums = statewidedf[['Revenue Vehicle Hours', 'Total Vehicle Hours', 'Revenue Vehicle Miles', 'Total Vehicle Miles','Passenger Trips', 'Employees - FTEs', 'Operating Expenses', 'Farebox Revenues']].sum()
-                avgs = statewidedf[['Passenger Trips/Revenue Hour', 'Passenger Trips/Revenue Mile', 'Revenue Hours/FTE','Operating Expenses/Revenue Hour', 'Operating Expenses/ Revenue Mile','Operating Expenses/Passenger Trip', 'Farebox Recovery Ratio']].mean()
-                changeddf = pd.DataFrame(pd.concat([sums, avgs])).transpose()
-                changeddf['classification'] = 'Sums/Averages'
-                changeddf['organization__name'] = category
-                changeddf = changeddf.set_index('organization__name')
-                df = pd.concat([df, changeddf])
-
-            else:
-                sums = df[df.classification == category][['Revenue Vehicle Hours', 'Total Vehicle Hours', 'Revenue Vehicle Miles', 'Total Vehicle Miles', 'Passenger Trips', 'Employees - FTEs', 'Operating Expenses', 'Farebox Revenues']].sum()
-                avgs = df[df.classification == category][['Passenger Trips/Revenue Hour', 'Passenger Trips/Revenue Mile', 'Revenue Hours/FTE', 'Operating Expenses/Revenue Hour', 'Operating Expenses/ Revenue Mile', 'Operating Expenses/Passenger Trip', 'Farebox Recovery Ratio']].mean()
-                changeddf = pd.DataFrame(pd.concat([sums, avgs])).transpose()
-                changeddf['classification'] = 'Sums/Averages'
-                changeddf['organization__name'] = category
-                changeddf = changeddf.set_index('organization__name')
-                df = pd.concat([df, changeddf])
-    else:
+            df = sum_and_average_function(category, df)
+    else: # code for the more rarely used modes, where there's only a couple of agencies in a mode, i.e. Commuter Rail, Light Rail
         category = 'Statewide {}'.format(mode)
-        sums = df[['Revenue Vehicle Hours', 'Total Vehicle Hours', 'Revenue Vehicle Miles', 'Total Vehicle Miles','Passenger Trips', 'Employees - FTEs', 'Operating Expenses', 'Farebox Revenues']].sum()
-        avgs = df[['Passenger Trips/Revenue Hour', 'Passenger Trips/Revenue Mile', 'Revenue Hours/FTE','Operating Expenses/Revenue Hour', 'Operating Expenses/ Revenue Mile','Operating Expenses/Passenger Trip', 'Farebox Recovery Ratio']].mean()
-        changeddf = pd.DataFrame(pd.concat([sums, avgs])).transpose()
-        changeddf['classification'] = 'Sums/Averages'
-        changeddf['organization__name'] = category
-        changeddf = changeddf.set_index('organization__name')
-        df = pd.concat([df, changeddf])
+        df = sum_and_average_function(category, df)
     df = df.reindex(columns = ['classification', 'Revenue Vehicle Hours', 'Total Vehicle Hours', 'Revenue Vehicle Miles', 'Total Vehicle Miles', 'Passenger Trips','Employees - FTEs',
                                'Operating Expenses', 'Farebox Revenues','Passenger Trips/Revenue Hour', 'Passenger Trips/Revenue Mile', 'Revenue Hours/FTE', 'Operating Expenses/Revenue Hour',
                                'Operating Expenses/ Revenue Mile', 'Operating Expenses/Passenger Trip', 'Farebox Recovery Ratio'])
-    return df
+    df = df.reset_index()
+    heading_list =  df.columns.tolist()
+    heading_list = [mode, 'System Category'] + heading_list[2:]
+    col_list = df.columns.tolist()
+    col_list = [i.replace(' ', '') for i in col_list]
+    col_list = [i.replace('/', '') for i in col_list]
+    col_list = [i.replace('-FTEs', '') for i in col_list]
+    df.columns = col_list
+    return df, heading_list
 
 
 def generate_performance_measure_table(metric, years):
     if len(metric) == 2:
-        df = read_frame(transit_data.objects.filter(organization__summary_organization_classifications_id=6, year__in=years,reported_value__isnull=False).values('year', 'rollup_mode__name').annotate(
+        df = read_frame(transit_data.objects.filter(organization__summary_organization_classifications=6, year__in=years,reported_value__isnull=False).values('year', 'rollup_mode__name').annotate(
         reported_value=Sum('reported_value', filter=Q(transit_metric__name=metric[0]))/ Sum('reported_value', filter = Q(transit_metric__name = metric[1]))))
     else:
-        df = read_frame(transit_data.objects.filter(organization__summary_organization_classifications_id=6, year__in=years, reported_value__isnull=False).values('year', 'rollup_mode__name').annotate(reported_value=Sum('reported_value', filter=Q(transit_metric__name=metric))))
+        df = read_frame(transit_data.objects.filter(organization__summary_organization_classifications=6, year__in=years, reported_value__isnull=False).values('year', 'rollup_mode__name').annotate(reported_value=Sum('reported_value', filter=Q(transit_metric__name=metric))))
     df = df.dropna(thresh=3)
     df = df.pivot(index = 'rollup_mode__name', columns = 'year', values= 'reported_value')
     rollup_mode_list = ['Fixed Route', 'Route Deviated', 'Demand Response', 'Vanpool', 'Commuter Rail', 'Light Rail']
     df = df.reindex(rollup_mode_list)
+    if metric in ["Revenue Vehicle Hours", 'Revenue Vehicle Miles', 'Passenger Trips', 'Farebox Revenues', 'Operating Expenses']:
+        df = df.append(df.sum().rename('Total'))
+    if metric == ('Farebox Revenues', 'Operating Expenses'):
+        df = df*100
     df = df.reset_index()
     df['percent_change'] = ((df.iloc[:, 6] - df.iloc[:, 5]) / df.iloc[:, 5]) * 100
     df = df.fillna('-')
@@ -160,25 +177,94 @@ def generate_performance_measure_table(metric, years):
 
 
 def calculate_percent_change(data1, data2):
-    percent = round((data1 - data2)/data2, 2)
+    print(data1)
+    print(data2)
+    percent = (data2 - data1)/data1
     percent = percent*100
+    print(percent)
     return percent
 
-def get_farebox_and_vp_revenues(years, user_org_id):
-    farebox = transit_data.objects.filter(organization_id=user_org_id, year__in=years, transit_metric__name='Farebox Revenues',
-                                transit_mode_id__in= [1,2,4,5,6,7,8,9,10]).values('year').annotate(reported_value = Sum('reported_value'))
-    farebox = read_frame(farebox)
-    farebox['revenue_source'] = 'Farebox Revenues'
-    vanpool = transit_data.objects.filter(organization_id=user_org_id, year__in=years,
+
+
+
+def index_others(df):
+    index_list = df[df['revenue_source'].isin(['Other Operating Sub-Total','Other-Advertising', 'Other-Interest', 'Other-Gain (Loss) on Sale of Assets','Other-MISC'])].index
+    df.loc[index_list, 'role'] = 'other_indent'
+    index_list = df[df['revenue_source'].isin(['Other Operating Sub-Total'])].index
+    df.loc[index_list, 'role'] = 'subtotal'
+    return df
+
+def percent_change(df):
+    df['percent_change'] = ((df.iloc[:, 3] - df.iloc[:, 2]) / df.iloc[:, 2]) * 100
+    df = df.fillna('-')
+    df = df.replace(np.inf, 100.00)
+    return df
+
+def build_total_funds_by_source(years, user_org_id):
+    local = read_frame(revenue.objects.filter(organization_id__in = user_org_id, year__in = years, revenue_source__government_type = 'Local', reported_value__isnull=False).values('year').annotate(Local_Revenues = Sum('reported_value')))
+    state = read_frame(revenue.objects.filter(organization_id__in =user_org_id, year__in=years, revenue_source__government_type='State', reported_value__isnull=False).values('year').annotate(State_Revenues = Sum('reported_value')))
+    fed = read_frame(revenue.objects.filter(organization_id__in =user_org_id, year__in=years,revenue_source__government_type='Federal', reported_value__isnull=False).values('year').annotate(Federal_Revenues=Sum('reported_value')))
+    df = pd.concat([local.set_index('year'), state.set_index('year'), fed.set_index('year')], axis = 1)
+    df = df.transpose()
+    df = df.dropna(thresh=3)
+    total_list = list(df.sum(axis = 1))
+    df['body'] = 'body'
+    total_list = ['Total Revenues (all sources)'] + total_list + ['subtotal']
+    df = df.reset_index()
+    df = df.append(dict(zip(df.columns.tolist(), total_list)), ignore_index = True)
+    df = percent_change(df)
+    heading_list = ['Revenues', '', '', '', 'heading', '']
+    df = add_a_list_to_a_dataframe(df, heading_list)
+    df['index'] = df['index'].str.replace('_', ' ')
+    df.columns = ['revenue_source', 'year1', 'year2', 'year3', 'role', 'percent_change']
+    investmentdf = build_investment_table(years, user_org_id)
+    df = pd.concat([df, investmentdf], axis=0)
+    df.revenue_source = df.revenue_source.str.replace('_', ' ')
+    return df
+
+
+def build_investment_table(years, user_org_id):
+    operating = read_frame(transit_data.objects.filter(organization_id__in = user_org_id, year__in=years, transit_metric__name= 'Operating Expenses', reported_value__isnull=False).values('year').annotate(Operating_Investment = Sum('reported_value')))
+    local_cap = read_frame(revenue.objects.filter(organization_id__in = user_org_id, year__in=years, revenue_source__name__in= ['Local Capital Funds', 'Other Local Capital'], reported_value__isnull=False).values('year').annotate(Local_Capital_Investment = Sum('reported_value')))
+    state_cap = read_frame(revenue.objects.filter(organization_id__in=user_org_id, year__in=years, revenue_source__government_type='State', revenue_source__funding_type='Capital', reported_value__isnull=False).values('year').annotate(State_Capital_Investment = Sum('reported_value')))
+    federal_cap = read_frame(revenue.objects.filter(organization_id__in = user_org_id, year__in = years, revenue_source__government_type='Federal', revenue_source__funding_type='Capital', reported_value__isnull = False).values('year').annotate(Federal_Capital_Investment = Sum('reported_value')))
+    other_cap = read_frame(expense.objects.filter(organization_id__in = user_org_id, year__in = years, expense_source__name__in= ['Other-Expenditures', 'Interest', 'Principal'], reported_value__isnull=False).values('year').annotate(Other_Capital_Investment = Sum('reported_value')))
+    df = pd.concat([operating.set_index('year'), local_cap.set_index('year'), state_cap.set_index('year'), federal_cap.set_index('year'), other_cap.set_index('year')], axis=1)
+    df = df.transpose()
+    df = df.dropna(thresh=3)
+    total_list = list(df.sum(axis=1))
+    df['role'] = 'body'
+    total_list = ['Total Investment'] + total_list + ['subtotal']
+    df = df.reset_index()
+    df = df.append(dict(zip(df.columns.tolist(), total_list)), ignore_index=True)
+    df = percent_change(df)
+    heading_list = ['Investments', '', '', '', 'heading', '']
+    df = add_a_list_to_a_dataframe(df, heading_list)
+    df['index'] = df['index'].str.replace('_', ' ')
+    df.columns = ['revenue_source', 'year1', 'year2', 'year3', 'role', 'percent_change']
+    return df
+
+
+def get_farebox_and_vp_revenues(years, user_org_id, classification):
+    '''calculates_total farebox revenues and vanpool revenue for revenue tables'''
+    farebox_modes = list(service_offered.objects.filter(organization_id__in=user_org_id).values_list('transit_mode_id', flat=True))
+    farebox_modes = [i for i in farebox_modes if i != 3] #filtering out the vanpool so it is not double counted
+    farebox = transit_data.objects.filter(organization_id__in=user_org_id, year__in=years, transit_metric__name='Farebox Revenues',transit_mode_id__in= farebox_modes).values('year').annotate(reported_value = Sum('reported_value'))
+    fares = read_frame(farebox)
+    fares['revenue_source'] = 'Farebox Revenues'
+    if str(classification) == 'Transit':
+        vanpool = transit_data.objects.filter(organization_id__in=user_org_id, year__in=years,
                                           transit_metric__name='Farebox Revenues',
-                                          transit_mode_id__in=[3]).values('year').annotate(reported_value=Sum('reported_value'))
-    vanpool = read_frame(vanpool)
-    vanpool['revenue_source'] = 'Vanpooling Revenue'
-    fares = pd.concat([farebox, vanpool], axis=0)
+                                          transit_mode_id =3).values('year').annotate(reported_value=Sum('reported_value'))
+        vanpool = read_frame(vanpool)
+        vanpool['revenue_source'] = 'Vanpooling Revenue'
+        fares = pd.concat([fares, vanpool], axis=0)
     return fares
 
 def other_operating_sub_total(years, user_org_id):
-    other_op = revenue.objects.filter(organization_id=user_org_id, year__in=years, revenue_source__name__in= ['Other-Advertising',
+    '''calculates the other operating subtotal'''
+    #TODO add different ferry revenues in here that generate other op subtotal
+    other_op = revenue.objects.filter(organization_id__in=user_org_id, year__in=years, revenue_source__name__in= ['Other-Advertising',
         'Other-Gain (Loss) on Sale of Assets', 'Other-Interest', 'Other-MISC']).values('year').annotate(reported_value = Sum('reported_value'))
     other_op = read_frame(other_op)
     other_op['revenue_source'] = 'Other Operating Sub-Total'
@@ -224,7 +310,9 @@ def add_a_list_to_a_dataframe(df, added_list):
 def calculate_subtotals(df, years, subtotal_value):
     df = df[years]
     res = list(df.sum(axis=0)[years])
+    print(res)
     percent_change = calculate_percent_change(res[1], res[2])
+    print(percent_change)
     result_list = [subtotal_value] + res + [percent_change] + ['subtotal','', '']
     return result_list
 
@@ -240,122 +328,35 @@ def make_subtotals(df,years):
         result_list = calculate_subtotals(filtered_df, years, 'Total Federal Capital')
         df = add_a_list_to_a_dataframe(df, result_list)
     filtered_df = df[df['funding_type'] == 'Operating']
+    df.to_csv(r'C:\Users\SchumeN\Documents\django\testferry.csv')
     result_list = calculate_subtotals(filtered_df, years, 'Total (Excludes Capital Revenue)')
     df = add_a_list_to_a_dataframe(df, result_list)
     return df
 
 
-
-def reindex_revenue_table(df):
-    revenue_order_list = ['Operating Related Revenues', 'Sales Tax', 'Other Local Taxes', 'MVET', 'Farebox Revenues', 'Vanpooling Revenue', 'Federal Section §5307 Operating', 'Federal Section §5307 Preventative',
-     'Federal Section §5311 Operating', 'FTA JARC (§5316) Program', 'Other Federal Operating', 'State Rural Mobility Operating Grants',
-     'State Regional Mobility Operating Grants', 'State Special Needs Operating Grants', 'State Operating Distribution', 'Sales Tax Equalization',
-     'Other State Operating Grants', 'Other Operating Sub-Total', 'Other-Advertising', 'Other-Interest', 'Other-Gain (Loss) on Sale of Assets',
-     'Other-MISC', 'Total (Excludes Capital Revenue)', 'Federal Capital Grant Revenues', 'Federal Section §5307 Capital Grants',
-     'Federal Section §5309 Capital Grants', 'Federal Section §5310 Capital Grants', 'Federal Section §5311 Capital Grants', 'FTA JARC (§5316) Capital Program',
-     'CM/AQ and Other Federal Grants', 'Total Federal Capital', 'State Capital Grant Revenues', 'State Rural Mobility Grants', 'State Regional Mobility Grants',
-     'State Special Needs Grants', 'Sales Tax Equalization-Capital', 'State Vanpool Grants', 'Other State Capital Funds', 'Total State Capital']
-    df = df.set_index('revenue_source')
-    df = df.reindex(revenue_order_list).dropna()
-    df = df.reset_index()
-    return df
-
-
-def index_others(df):
-    index_list = df[df['revenue_source'].isin(['Other Operating Sub-Total','Other-Advertising', 'Other-Interest', 'Other-Gain (Loss) on Sale of Assets','Other-MISC'])].index
-    df.loc[index_list, 'role'] = 'other_indent'
-    index_list = df[df['revenue_source'].isin(['Other Operating Sub-Total'])].index
-    df.loc[index_list, 'role'] = 'subtotal'
-    return df
-
-def percent_change(df):
-    #TODO make this zero division error proof
-    df['percent_change'] = ((df.iloc[:, 3] - df.iloc[:, 2]) / df.iloc[:, 2]) * 100
-    df = df.fillna('-')
-    df = df.replace(np.inf, 100.00)
-    return df
-
-def build_total_funds_by_source(years, user_org_id):
-    local = read_frame(revenue.objects.filter(organization_id = user_org_id, year__in = years, revenue_source__government_type = 'Local', reported_value__isnull=False).values('year').annotate(Local_Revenues = Sum('reported_value')))
-    state = read_frame(revenue.objects.filter(organization_id =user_org_id, year__in=years, revenue_source__government_type='State', reported_value__isnull=False).values('year').annotate(State_Revenues = Sum('reported_value')))
-    fed = read_frame(revenue.objects.filter(organization_id =user_org_id, year__in=years,revenue_source__government_type='Federal', reported_value__isnull=False).values('year').annotate(Federal_Revenues=Sum('reported_value')))
-    df = pd.concat([local.set_index('year'), state.set_index('year'), fed.set_index('year')], axis = 1)
-    df = df.transpose()
-    df = df.dropna(thresh=3)
-    total_list = list(df.sum(axis = 1))
-    df['body'] = 'body'
-    total_list = ['Total Revenues (all sources)'] + total_list + ['subtotal']
-    df = df.reset_index()
-    df = df.append(dict(zip(df.columns.tolist(), total_list)), ignore_index = True)
-    df = percent_change(df)
-
-    heading_list = ['Revenues', '', '', '', 'heading', '']
-    df = add_a_list_to_a_dataframe(df, heading_list)
-    df['index'] = df['index'].str.replace('_', ' ')
-    df.columns = ['revenue_source', 'year1', 'year2', 'year3', 'role', 'percent_change']
-    investmentdf = build_investment_table(years, user_org_id)
-    df = pd.concat([df, investmentdf], axis=0)
-    df.revenue_source = df.revenue_source.str.replace('_', ' ')
-    return df
-
-
-def build_investment_table(years, user_org_id):
-    operating = read_frame(transit_data.objects.filter(organization_id = user_org_id, year__in=years, transit_metric__name= 'Operating Expenses', reported_value__isnull=False).values('year').annotate(Operating_Investment = Sum('reported_value')))
-    local_cap = read_frame(revenue.objects.filter(organization_id = user_org_id, year__in=years, revenue_source__name__in= ['Local Capital Funds', 'Other Local Capital'], reported_value__isnull=False).values('year').annotate(Local_Capital_Investment = Sum('reported_value')))
-    state_cap = read_frame(revenue.objects.filter(organization_id=user_org_id, year__in=years, revenue_source__government_type='State', revenue_source__funding_type='Capital', reported_value__isnull=False).values('year').annotate(State_Capital_Investment = Sum('reported_value')))
-    federal_cap = read_frame(revenue.objects.filter(organization_id = user_org_id, year__in = years, revenue_source__government_type='Federal', revenue_source__funding_type='Capital', reported_value__isnull = False).values('year').annotate(Federal_Capital_Investment = Sum('reported_value')))
-    other_cap = read_frame(expense.objects.filter(organization_id = user_org_id, year__in = years, expense_source__name__in= ['Other-Expenditures', 'Interest', 'Principal'], reported_value__isnull=False).values('year').annotate(Other_Capital_Investment = Sum('reported_value')))
-    df = pd.concat([operating.set_index('year'), local_cap.set_index('year'), state_cap.set_index('year'), federal_cap.set_index('year'), other_cap.set_index('year')], axis=1)
-    df = df.transpose()
-    df = df.dropna(thresh=3)
-    total_list = list(df.sum(axis=1))
-    df['role'] = 'body'
-    total_list = ['Total Investment'] + total_list + ['subtotal']
-    df = df.reset_index()
-    df = df.append(dict(zip(df.columns.tolist(), total_list)), ignore_index=True)
-    df['percent_change'] = ((df.iloc[:, 3] - df.iloc[:, 2]) / df.iloc[:, 2]) * 100
-    df = df.fillna('-')
-    df = df.replace(np.inf, 100.00)
-
-    heading_list = ['Investments', '', '', '', 'heading', '']
-    df = add_a_list_to_a_dataframe(df, heading_list)
-    df['index'] = df['index'].str.replace('_', ' ')
-    df.columns = ['revenue_source', 'year1', 'year2', 'year3', 'role', 'percent_change']
-    return df
-
-
-
-def build_revenue_table(years, user_org_id):
-    data_revenue = revenue.objects.filter(organization_id = user_org_id, year__in = years)
+def build_revenue_table(years, user_org_id, classification):
+    data_revenue = revenue.objects.filter(organization_id__in = user_org_id, year__in = years)
     df = read_frame(data_revenue)
-    count = 0
-    for year in years:
-        testdf = df[df.year == year]
-        testdf = testdf[testdf.reported_value.notna()][['id', 'revenue_source', 'reported_value']]
-        testdf['year'] = year
-        if count == 0:
-            finaldf = testdf
-            count += 1
-        else:
-            finaldf = pd.concat([testdf, finaldf], axis=0)
-    # TODO make sure this works for cp sheets
-    fares = get_farebox_and_vp_revenues(years, user_org_id)
+    df = df[df.reported_value.notna()][['revenue_source', 'reported_value', 'year']]
+    fares = get_farebox_and_vp_revenues(years, user_org_id, classification)
     other_op = other_operating_sub_total(years, user_org_id)
-    finaldf = pd.concat([finaldf, fares, other_op], axis=0)
+    finaldf = pd.concat([df, fares, other_op], axis=0)
     finaldf = finaldf.pivot(index='revenue_source', columns='year', values='reported_value').fillna(0)
     finaldf = finaldf.reset_index()
-    finaldf['percent_change'] = ((finaldf.iloc[:, 3] - finaldf.iloc[:, 2]) / finaldf.iloc[:, 2]) * 100
-    finaldf = finaldf.fillna('-')
-    finaldf = finaldf.replace(np.inf, 100.00)
+    finaldf = percent_change(finaldf)
     finaldf['role'] = 'body'
     finaldf = add_fund_types_and_headings(finaldf)
     finaldf = make_headings(finaldf)
     finaldf = make_subtotals(finaldf, years)
-    finaldf = reindex_revenue_table(finaldf)
+    revenue_list = call_stylesheets(classification, 'revenue')
+    finaldf = finaldf.set_index('revenue_source')
+    finaldf = finaldf.reindex(revenue_list).dropna(thresh=1)
+    finaldf = finaldf.reset_index()
     finaldf = index_others(finaldf)
-    expensedf = build_expense_table(years, user_org_id)
     finaldf.columns = ['revenue_source', 'year1', 'year2', 'year3', 'percent_change', 'role', 'government_type', 'funding_type']
-    finaldf = pd.concat([finaldf, expensedf], axis = 0)
+    if str(classification) == 'Transit':
+        expensedf = build_expense_table(years, user_org_id, classification)
+        finaldf = pd.concat([finaldf, expensedf], axis = 0)
     return finaldf
 
 #TODO need some backstop functionality for the fact that for any given mode or expense, possibility that there's no previous data
@@ -377,24 +378,27 @@ def make_expense_subtotals(df, years):
     for key, value in expenditure_dic.items():
         if len(df[df.revenue_source.isin(value)]) > 0:
             result_list = calculate_subtotals(df[df.revenue_source.isin(value)], years, key)
+            print(result_list)
             df = add_a_list_to_a_dataframe(df, result_list)
     return df
 
-def reindex_table_expense(df, user_org_id):
-    if organization.objects.filter(id = user_org_id).values_list('summary_organization_classifications__name', flat=True)[0] == 'Transit':
+def reindex_table_expense(df, user_org_id, classification):
+    df = df.set_index('revenue_source')
+    if str(classification) == 'Transit':
         expense_index = stylesheets.objects.filter(transit_expense__isnull=False).values_list('transit_expense', flat=True)
-        df = df.set_index('revenue_source')
-        df = df.reindex(expense_index).dropna()
-        df = df.reset_index()
-        return df
+    elif str(classification) == 'Ferry':
+        expense_index = stylesheets.objects.filter(transit_expense__isnull=False).values_list('ferry_expense',flat=True)
+    df = df.reindex(expense_index).dropna(thresh = 1)
+    df = df.reset_index()
+    return df
 
 
-def build_expense_table(years, user_org_id):
+def build_expense_table(years, user_org_id, classification):
     from .models import fund_balance
     from .models import depreciation
-    data_expense = expense.objects.filter(organization = user_org_id, year__in = years, reported_value__isnull= False).values('id', 'reported_value', 'year', 'expense_source_id__name', 'expense_source_id__heading')
-    fund_balance = fund_balance.objects.filter(organization = user_org_id, year__in = years).values('id', 'reported_value', 'year', 'fund_balance_type__name', 'fund_balance_type__heading')
-    depreciation = depreciation.objects.filter(organization = user_org_id, year__in = years)
+    data_expense = expense.objects.filter(organization_id__in = user_org_id, year__in = years, reported_value__isnull= False).values('reported_value', 'year', 'expense_source_id__name', 'expense_source_id__heading')
+    fund_balance = fund_balance.objects.filter(organization_id__in = user_org_id, year__in = years, reported_value__isnull=False).values('reported_value', 'year', 'fund_balance_type__name', 'fund_balance_type__heading')
+    depreciation = depreciation.objects.filter(organization_id__in = user_org_id, year__in = years)
     df_expense = read_frame(data_expense)
     fund_balance = read_frame(fund_balance)
     depreciation = read_frame(depreciation)
@@ -405,86 +409,70 @@ def build_expense_table(years, user_org_id):
         depreciation['heading'] = 'Other Expenditures'
     df = pd.concat([fund_balance, df_expense, depreciation], axis = 0)
     headings_list = pull_headings(df)
-    count = 0
-    for year in years:
-        testdf = df[df.year == year]
-        testdf = testdf[testdf.reported_value.notna()][['id', 'revenue_source', 'reported_value']]
-        testdf['year'] = year
-        if count == 0:
-            finaldf = testdf
-            count += 1
-        else:
-            finaldf = pd.concat([testdf, finaldf], axis=0)
-
-    finaldf = finaldf.pivot(index='revenue_source', columns='year', values='reported_value').fillna(0)
-    finaldf = finaldf.reset_index()
-    finaldf['percent_change'] = ((finaldf.iloc[:, 3] - finaldf.iloc[:, 2]) / finaldf.iloc[:, 2]) * 100
-    finaldf = finaldf.fillna('-')
-    finaldf = finaldf.replace(np.inf, 100.00)
-    finaldf['role'] = 'body'
-    finaldf = add_headings(finaldf, headings_list)
-    finaldf = make_expense_subtotals(finaldf, years)
-    finaldf = reindex_table_expense(finaldf, user_org_id)
-    finaldf['government_type'] = ''
-    finaldf['funding_type'] = ''
-    finaldf.columns = ['revenue_source', 'year1', 'year2', 'year3', 'percent_change', 'role', 'government_type', 'funding_type']
-    return finaldf
+    df = df.pivot(index='revenue_source', columns='year', values='reported_value').fillna(0)
+    df = df.reset_index()
+    df = percent_change(df)
+    df['role'] = 'body'
+    df = add_headings(df, headings_list)
+    df = make_expense_subtotals(df, years)
+    df = reindex_table_expense(df, user_org_id, classification)
+    df['government_type'] = ''
+    df['funding_type'] = ''
+    df.columns = ['revenue_source', 'year1', 'year2', 'year3', 'percent_change', 'role', 'government_type', 'funding_type']
+    return df
 
 
+def call_stylesheets(classification, type):
+    '''associated function for creating stylesheets for the Summary tables '''
+    classification = str(classification)
+    if classification == 'Transit' and type == 'data':
+        return list(stylesheets.objects.filter(transit_data__isnull=False).values_list('transit_data', flat=True))
+    elif classification == 'Transit' and type == 'revenue':
+        return list(stylesheets.objects.filter(transit_revenue__isnull=False).values_list('transit_revenue', flat=True))
+    elif classification == 'Ferry' and type == 'data':
+        return list(stylesheets.objects.filter(ferry_data__isnull=False).values_list('ferry_data', flat=True))
+    elif classification == 'Ferry' and type == 'revenue':
+        return list(stylesheets.objects.filter(ferry_revenue__isnull=False).values_list('ferry_revenue', flat=True))
 
 
-
-def data_prep_for_transits(years, user_org_id):
+def build_operations_data_table(years, org_id, classification):
     '''function for pulling all available data within certain years for a transit and pushing it out to a summary sheet'''
-    services_offered = service_offered.objects.filter(organization_id=user_org_id).values('administration_of_mode',
-                                                                                          'transit_mode_id')
-    data_transit = transit_data.objects.filter(organization_id=user_org_id, year__in=years)
-    function_count = 0
-    # dual for loops, one for services offered, one for the years in existence
-    for i in services_offered:
-        filter = data_transit.filter(administration_of_mode=i['administration_of_mode'],
-                                     transit_mode_id=i['transit_mode_id'])
+    from .models import transit_data
+    services_offered = service_offered.objects.filter(organization_id__in=org_id).values('administration_of_mode','transit_mode_id').distinct()
+    transit_data = transit_data.objects.filter(organization_id__in=org_id, year__in=years).values('administration_of_mode', 'transit_mode', 'year', 'transit_metric').annotate(reported_value = Sum('reported_value'))
+    count = 0
+    # for loop of services offered builds out a dataframe for the table
+    for service in services_offered:
+        filter = transit_data.filter(administration_of_mode=service['administration_of_mode'],transit_mode_id=service['transit_mode_id'])
         df = read_frame(filter)
         if df.empty == True:
             continue
         else:
-            count = 0
-            for year in years:
-                testdf = df[df.year == year]
-                testdf = testdf[testdf.reported_value.notna()][['id', 'transit_metric', 'reported_value']]
-                testdf['year'] = year
-                if count == 0:
-                    finaldf = testdf
-                    count += 1
-                else:
-                    finaldf = pd.concat([testdf, finaldf], axis=0)
-                    # pivot method here turns transit metics into the index and years into columns
-            finaldf = finaldf.pivot(index='transit_metric', columns='year', values='reported_value').fillna(0)
-            order_list = ['Revenue Vehicle Hours', 'Total Vehicle Hours', 'Revenue Vehicle Miles',
-                          'Total Vehicle Miles', 'Passenger Trips',
-                          'Diesel Fuel Consumed (gallons)', 'Gasoline Fuel Consumed (gallons)',
-                          'Propane Fuel Consumed (gallons)', 'Electricity Consumed (kWh)',
-                          'Employees - FTEs', 'Operating Expenses', 'Farebox Revenues']
+            df = df[df.reported_value.notna()]
+                # pivot method here turns transit metics into the index and years into columns
+            df = df.pivot(index='transit_metric', columns='year', values='reported_value').fillna(0)
+            order_list = call_stylesheets(classification, 'data')
             # orders the index based on Summary styling
-            finaldf = finaldf.reindex(order_list).dropna()
-            finaldf = finaldf.reset_index()
+            df = df.reindex(order_list).dropna()
+            df = df.reset_index()
             # adds a percent change column
             try:
-                finaldf['Percentage Change'] = ((finaldf.iloc[:, 3] - finaldf.iloc[:, 2]) / finaldf.iloc[:, 2])* 100
+                df['Percentage Change'] = ((df.iloc[:, 3] - df.iloc[:, 2]) / df.iloc[:, 2])* 100
             except IndexError:
-                finaldf['Percentage Change'] = np.nan
-            finaldf['role'] = 'body'
-            transit_name = transit_mode.objects.filter(id=i['transit_mode_id']).values('name')[0]['name']
-            mode_name = '{} ({})'.format(transit_name, i['administration_of_mode'])
-            mode_list = [mode_name, '', '', '', '', 'heading']
-            columns_list = finaldf.columns.tolist()
-            mode_list_df = pd.DataFrame(dict(zip(columns_list, mode_list)), index = [0])
-            finaldf = pd.concat([mode_list_df, finaldf]).reset_index(drop=True)
-            if function_count == 0:
-                enddf = finaldf
-                function_count += 1
+                df['Percentage Change'] = np.nan
+            df['role'] = 'body'
+            if str(classification) == 'Ferry':
+                mode_name = 'Passenger Ferry Services'
             else:
-                enddf = pd.concat([enddf, finaldf], axis=0)
+                mode_name = '{} ({})'.format(transit_mode.objects.filter(id=service['transit_mode_id']).values('name')[0]['name'], service['administration_of_mode'])
+            mode_list = [mode_name, '', '', '', '', 'heading']
+            mode_list_df = pd.DataFrame(dict(zip(df.columns.tolist(), mode_list)), index=[0])
+            df = pd.concat([mode_list_df, df]).reset_index(drop=True)
+            if count == 0:
+                enddf = df
+                count += 1
+            else:
+                enddf = pd.concat([enddf, df], axis=0)
     enddf = enddf.fillna('-')
     enddf.columns = ['transit_metric', 'year1', 'year2', 'year3', 'percent_change', 'role']
     return enddf
@@ -494,11 +482,6 @@ def complete_data():
     latest_data = vanpool_report.objects.filter(vanpool_groups_in_operation__isnull=False).values('report_year','report_month').annotate(Count('id')).order_by('-id__count', '-report_year', '-report_month').first()
     return latest_data
 
-
-def calculate_percent_change(data1, data2):
-    percent = round((data1 - data2)/data2, 2)
-    percent = percent*100
-    return percent
 
 
 def filter_revenue_sheet_by_classification(classification):

@@ -26,12 +26,12 @@
 
 <table id="summary_report" class='table tdt-bootstrap4 dataTable dataTable_wrapper'>
     <thead class="table-secondary">
-    {% for year in rollup_heading %}
+    {% for year in finance_years %}
     <th  class="d-none d-md-table-cell" scope="col">{{ year }}</th>
     {% endfor %}
     </thead>
     <tbody>
-    {% for datum in rollup_data %}
+    {% for datum in financial_data %}
     <tr>
         {% if datum.role == 'heading' %}
         <td class = 'font-weight-bold font-italic'> {{ datum.revenue_source }}</td>

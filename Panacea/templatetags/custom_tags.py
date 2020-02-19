@@ -4,6 +4,10 @@ from Panacea.models import organization, transit_mode, summary_report_status, co
 
 register = template.Library()
 
+@register.filter
+def in_list(value, the_list):
+    value = str(value)
+    return value in the_list.split(',')
 
 @register.filter
 def in_category(things, category):
