@@ -604,6 +604,7 @@ class organization_information(forms.ModelForm):
                                                                         'style': 'pointer-events: none'}),
         }
 
+
 class cover_sheet_organization(forms.ModelForm):
     organization_logo_input = forms.FileField(required=False,
                                               widget=forms.FileInput(attrs={'class': 'my-custom-file-input',
@@ -637,6 +638,7 @@ class cover_sheet_organization(forms.ModelForm):
             print("validator")
             validate_image_file(image)
 
+
 class service_offered_form(forms.ModelForm):
 
     class Meta:
@@ -663,6 +665,7 @@ class cover_sheet_service(forms.ModelForm):
             'revenue_service_vehicles': forms.TextInput(attrs={'class': 'form-control'}),
             'tax_rate_description': forms.Textarea(attrs={'class': 'form-control'}),
         }
+
 
 class cover_sheet_wsdot_review(forms.ModelForm):
     organization_logo_input = forms.FileField(required=False,
@@ -705,6 +708,7 @@ class cover_sheet_wsdot_review(forms.ModelForm):
             print("validator")
             validate_image_file(image)
 
+
 class add_cover_sheet_review_note(forms.ModelForm):
     class Meta:
         model = cover_sheet_review_notes
@@ -712,6 +716,7 @@ class add_cover_sheet_review_note(forms.ModelForm):
         widgets = {
             'note': forms.Textarea(attrs={'class': 'form-control', 'rows':2}),
         }
+
 
 class FormsetCleaner(BaseFormSet):
     def __init__(self, *args, **kwargs):
@@ -819,6 +824,7 @@ class validation_error_form(forms.ModelForm):
             'transit_mode': forms.TextInput(attrs={'class': 'form-control', 'readonly': 'readonly'}),
             'id': forms.NumberInput(attrs={ 'class': 'form-control','readonly':'readonly'})
         }
+
 
 class email_contact_form(forms.Form):
     from_email = forms.EmailField(required=True, label="Sender Email")

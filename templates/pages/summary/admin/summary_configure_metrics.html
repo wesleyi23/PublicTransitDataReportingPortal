@@ -1,0 +1,187 @@
+{% extends 'index.html' %}
+{% load humanize %}
+{% load custom_tags %}
+{% load static %}
+{% load widget_tweaks %}
+
+{% block head_content %}
+
+{%  endblock %}
+<!-- Page Heading -->
+{% block content %}
+    <div class="container-fluid">
+        <div class="row">
+            <div class="card shadow mb-4 w-100">
+                <div class="card-header">
+                    <ul class="nav nav-tabs card-header-tabs">
+                        <li class="nav-item">
+                            <a class="nav-link {% if report_type == 'organization' %}active {% endif %}" href="{% url 'metric_configurations' 'organization' %}">Organization types</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if report_type == 'transit_data' %}active {% endif %}" href="{% url 'metric_configurations' 'transit_data' %}">Transit Metrics</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if report_type == 'revenue' %}active {% endif %}" href="{% url 'metric_configurations' 'revenue' %}">Revenue</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if report_type == 'expense' %}active {% endif %}" href="{% url 'metric_configurations' 'expense' %}">Expense</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if report_type == 'fund_balance' %}active {% endif %}" href="{% url 'metric_configurations' 'fund_balance' %}">Fund balance</a>
+                        </li>
+                    </ul>
+                </div>
+                <div class="card-body" style="">
+                    <h3>Configure metrics</h3>
+                    <div style="padding-left: 1rem">
+                        <p> Use this to configure metrics.
+                        </p>
+                        <div id="summary_configure_err"></div>
+                        <form id="summary_configure" action="{% url 'metric_configurations' report_type %}" method="post" data-err-field="my-errField">
+                            {% csrf_token %}
+                            {{form_set.management_form}}
+                            <div class = 'table-responsive'>
+                                <table class = "table table-bordered table-hover">
+                                    <thead>
+                                    <tr>
+                                        <th style="display: none;">id</th>
+                                        <th style="width:25%">Metric</th>
+                                        {%  if report_type == 'revenue' %}
+                                            <th>Funding type</th>
+                                            <th>Government type</th>
+                                        {% endif %}
+                                        <th>Agency classifications</th>
+                                        {% if report_type == 'revenue'%}
+                                            <th>Inactive flag</th>
+                                        {% endif %}
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    {%  for form in form_set %}
+                                        <tr class="fieldWrapper">
+                                            <td style="display: none;">{{ form.id }}</td>
+                                            <td>{{ form.name }}</td>
+                                            {%  if report_type == 'revenue' %}
+                                                <td>{{ form.funding_type }}</td>
+                                                <td>{{ form.government_type }}</td>
+                                            {% endif %}
+                                            {%  if form.summary_organization_classifications %}
+                                                <td>{{ form.summary_organization_classifications }}</td>
+                                            {% else %}
+                                                <td class="no-bullet"><fieldset>{{ form.agency_classification }}</fieldset> </td>
+                                            {% endif %}
+                                            {% if report_type == 'revenue'%}
+                                                <td>{{ form.inactive_flag }}</td>
+                                            {% endif %}
+                                        </tr>
+                                    {%  endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </form>
+                    </div>
+
+                    <h3>Add new service</h3>
+                    <div style="padding-left: 1rem">
+                        <p> Please add any new modes that you are operating here</p>
+                        {% if messages %}
+                            {% for message in messages %}
+                                <h4 class="{{ message.tags }}">{{ message }}</h4>
+                            {% endfor %}
+                        {% endif %}
+
+                        <form method="POST" class="">
+                            {% csrf_token %}
+                            <div class = 'table-responsive'>
+                                <table class = "table table-bordered table-hover">
+                                    <thead>
+                                    <tr>
+                                        <th style="width:25%">Mode</th>
+                                        <th>Administration of mode</th>
+                                        <th style="width:10%; text-align: center">Add</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+
+                                    <tr class="fieldWrapper">
+                                        <td>{{ form.transit_mode }}</td>
+                                        <td>{{ form.administration_of_mode}}</td>
+                                        <td style="text-align: center"><input type="submit" value="Add mode" class="btn btn-sm btn-primary"></td>
+                                    </tr>
+
+                                    </tbody>
+                                </table>
+                            </div>
+                        </form>
+
+
+                    </div>
+                    <div class="text-center">
+                        <a class="btn btn-lg btn-primary" href="{% url 'accept_modes' %}">Confirm service</a>
+                    </div>
+                </div>
+
+
+
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <div class="modal fade" id="deleteModal" tabindex="-1" role="dialog" aria-labelledby="deleteModal" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="deleteModal">Are you sure you wish to delete this mode?</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class = 'table-responsive'>
+                        <table class = "table table-bordered">
+                            <thead>
+                            <tr>
+                                <th>Mode</th>
+                                <th>Administration of mode</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr>
+                                <td><span id="delete-mode-detail"></span></td>
+                                <td><span id="delete-admin-mode-detail"></span></td>
+                            </tr>
+                            </tbody>
+
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                    <a id="final-delete" type="button" class="btn btn-danger" style="color: white">Delete mode</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+{%  endblock %}
+
+
+{% block page_scripts %}
+    <script>
+        $( ".delete-mode" ).click(function(e) {
+            e.preventDefault();
+            $("#delete-mode-detail").text($(this).attr('data-mode'));
+            $("#delete-admin-mode-detail").text($(this).attr('data-admin-mode'));
+            $('#final-delete').attr('href', "{% url 'delete_summary_mode_root' %}" + $(this).attr('data-mode') + "/" + $(this).attr('data-admin-mode'));
+            $('#deleteModal').modal('show')
+        });
+
+    </script>
+
+{% endblock %}
+
+

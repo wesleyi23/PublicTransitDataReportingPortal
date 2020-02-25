@@ -1,7 +1,6 @@
 const my_form = document.getElementById("summary_data_form");
 const old_values = formDataToObject(my_form);
 
-
 let error_dict = {};  //dictionary for storing errors that are being displayed
 
 //Error messages and error message generators

@@ -886,7 +886,7 @@ def yearchange(user_org_id, start_year, end_year, measure):
 
 # TODO make this real
 def get_current_summary_report_year():
-    return 2018
+    return 2019
 
 
 class Echo:

@@ -1,6 +1,6 @@
 from django import template
 from django.conf import settings
-from Panacea.models import organization, transit_mode, summary_report_status, cover_sheet
+from Panacea.models import organization, transit_mode, summary_report_status, cover_sheet, profile
 
 register = template.Library()
 
@@ -136,6 +136,20 @@ def has_group(user, group_name):
     if not settings.ENABLE_PERMISSIONS:
         return True
     return user.groups.filter(name=group_name).exists()
+
+
+@register.filter(name='has_vanpool')
+def has_vanpool_program(user):
+    user_id = user.id
+    user_org = profile.objects.get(custom_user_id=user_id).organization
+    return user_org.vanpool_program
+
+
+@register.filter(name='is_summary_reporter')
+def is_summary_reporter(user):
+    user_id = user.id
+    user_org = profile.objects.get(custom_user_id=user_id).organization
+    return user_org.summary_reporter
 
 
 @register.filter

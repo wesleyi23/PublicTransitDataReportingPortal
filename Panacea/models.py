@@ -342,12 +342,18 @@ class revenue_source(models.Model):
         ('Operating', 'Operating')
     )
 
+    TRUE_FALSE_CHOICES = (
+        (True, 'inactive'),
+        (False, 'active')
+    )
+
     name = models.CharField(max_length=120, null=True, blank=True)
     order_in_summary = models.IntegerField(null=True, blank=True)
     government_type = models.CharField(max_length=100, choices=LEVIATHANS, null=True, blank=True)
     funding_type = models.CharField(max_length=30, choices=FUNDING_KIND, null=True, blank=True)
     agency_classification = models.ManyToManyField(summary_organization_type, blank=True)
     heading = models.CharField(max_length = 200, null=True, blank = True)
+    inactive_flag = models.BooleanField(default=False, choices=TRUE_FALSE_CHOICES)
 
     def __str__(self):
         return self.name
@@ -368,7 +374,8 @@ class revenue(models.Model):
 
 class expense_source(models.Model):
     name = models.CharField(max_length=100)
-    heading = models.CharField(max_length = 200, null=True, blank = True)
+    heading = models.CharField(max_length=200, null=True, blank=True)
+    agency_classification = models.ManyToManyField(summary_organization_type, blank=True)
 
     def __str__(self):
         return self.name
@@ -453,6 +460,7 @@ class transit_data(models.Model):
 class fund_balance_type(models.Model):
     name = models.CharField(max_length=100)
     heading = models.CharField(max_length=50, default = 'Ending Balances, December 31')
+    agency_classification = models.ManyToManyField(summary_organization_type, blank=True)
 
     def __str__(self):
         return self.name
@@ -487,7 +495,7 @@ class cover_sheet(models.Model):
     governing_body = models.TextField(blank=True, null=True)
     tax_rate_description = models.CharField(max_length=250, blank=True, null=True)
     transit_development_plan_url = models.CharField(verbose_name="Transit development plan URL", max_length=250, blank=True, null=True)
-    intermodal_connections = models.TextField(blank=True, null=True)
+    intermodal_connections = models.TextField(verbose_name="Connections to other systems", blank=True, null=True)
     fares_description = models.TextField(blank=True, null=True)
     service_and_eligibility = models.TextField(verbose_name="Service and eligibility description", blank=True, null=True)
     current_operations = models.TextField(blank=True, null=True)
@@ -496,7 +504,7 @@ class cover_sheet(models.Model):
     monorail_ownership = models.CharField(max_length=250, blank=True, null=True)
     community_planning_region = models.CharField(max_length=50, blank=True, null=True)
     organization_logo = models.BinaryField(editable=True, blank=True, null=True)
-    published_version = models.BooleanField(blank=True, null=True, default=True)
+    published_version = models.BooleanField(blank=True, null=True, default=False)
     history = HistoricalRecords()
 
     class Meta:
@@ -505,8 +513,11 @@ class cover_sheet(models.Model):
         ]
 
     def is_identical_to_published_version(self):
-        db_record = cover_sheet.objects.get(id=self.id)
-        print(self.id)
+        try:
+            db_record = cover_sheet.objects.get(id=self.id)
+        except:
+            return False
+
         published_record = cover_sheet.history.filter(id=self.id, published_version=True).order_by('-history_date').first()
         if not published_record:
             if db_record.published_version:
@@ -631,6 +642,11 @@ class summary_organization_progress(models.Model):
     revenue = models.BooleanField(default=False)
     expenses = models.BooleanField(default=False)
     ending_balances = models.BooleanField(default=False)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['organization'], name='unique_status'),
+        ]
 
 
 class cover_sheet_review_notes(models.Model):

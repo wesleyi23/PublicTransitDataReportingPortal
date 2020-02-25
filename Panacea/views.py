@@ -8,6 +8,7 @@ from django.template import RequestContext
 from django_pandas.io import read_frame
 import pandas as pd
 
+from Panacea.builders import SummaryDataEntryBuilder, SummaryDataEntryTemplateData, ConfigurationBuilder
 from .validators import validation_test_for_transit_data
 
 from django.contrib import messages
@@ -114,10 +115,10 @@ def dashboard(request):
         user_org_id = profile.objects.get(custom_user_id=current_user_id).organization_id
         user_context = {'user_org': user_org_id}
 
-        if organization.objects.get(id=user_org_id).vanpool_program == False and request.user.groups.filter(name__in=['Vanpool reporter']).exists():
+        if not organization.objects.get(id=user_org_id).vanpool_program or not request.user.groups.filter(name__in=['Vanpool reporter']).exists():
             vp_program = False
             user_context.update({'vp_program': vp_program})
-        else:
+        elif organization.objects.get(id=user_org_id).vanpool_program == True and request.user.groups.filter(name__in=['Vanpool reporter']).exists():
             recent_vanpool_report = vanpool_report.objects. \
                 filter(organization_id=user_org_id, report_date__isnull=False). \
                 order_by('-report_year', '-report_month').first()
@@ -184,9 +185,9 @@ def dashboard(request):
                                  'last_report_year': recent_vanpool_report.report_year
                                  })
 
-        if not organization.objects.get(id=user_org_id).summary_reporter and not request.user.groups.filter(name__in=['Summary reporter']).exists():
+        if not organization.objects.get(id=user_org_id).summary_reporter or not request.user.groups.filter(name__in=['Summary reporter']).exists():
             user_context.update({'summary_reporter': False})
-        else:
+        elif organization.objects.get(id=user_org_id).summary_reporter and request.user.groups.filter(name__in=['Summary reporter']).exists():
             org_progress, created = summary_organization_progress.objects.get_or_create(organization_id=user_org_id)
 
             user_context.update({'summary_reporter': True,
@@ -648,7 +649,7 @@ def download_vanpool_data(request, org_id = None):
             writer.writerow(list(k.__dict__.keys())[1:])
             count +=1
         else:
-           writer.writerow(list(k.__dict__.values())[1:])
+            writer.writerow(list(k.__dict__.values())[1:])
     return response
 
 
@@ -1023,6 +1024,7 @@ def data_submitted(request):
     data_status = summary_report_status.objects.get(year=get_current_summary_report_year(), organization=find_user_organization(request.user.id)).data_report_status
     return render(request, 'pages/summary/data_submitted.html', {'data_status': data_status})
 
+
 @login_required(login_url='/Panacea/login')
 @group_required('Summary reporter', 'WSDOT staff')
 def summary_modes(request):
@@ -1109,406 +1111,6 @@ def review_data(request):
                                                               'org_name': org_name, 'error_count': error_count})
 
 
-class SummaryDataEntryConstructor:
-    '''This class constructs all of the forms needed to collect summary data'''
-
-    def __init__(self, report_type, target_organization, form_filter_1=None, form_filter_2=None):
-        self.REPORT_TYPES = ['transit_data', 'revenue', 'expense', 'fund_balance']
-
-        self.report_type = report_type  # reports can be about revenue, transit data, expenses, and ending fund balances
-        self.target_organization = target_organization  # the org submitting a report
-        self.year = get_current_summary_report_year()  # TODO this function needs to be updated
-        self.form_filter_1 = form_filter_1  # Forms can be filtered by the selectors at the top of the page for example reporting based on direct operated, fixed route transit
-        self.form_filter_2 = form_filter_2
-        # These control how the form moves to the next form
-        self.max_form_increment = 0 #if the max increment is meet it will move to the next report type, otherwise it will go to the next set of filters
-        self.current_increment = 0
-
-        self.set_default_form_filters()  # sets the starting filters for the form
-        self.set_max_form_increment()
-        self.nav_filter_count, self.nav_filters = self.get_header_navigation()
-        self.set_current_increment()
-
-        print(self.current_increment)
-
-
-    def set_default_form_filters(self):
-        if self.form_filter_1 is not None:
-            pass
-        else:
-            # TODO create ordering for metric types
-            if self.report_type == "revenue":
-                self.form_filter_1 = 'Local'
-                self.form_filter_2 = 'Operating'
-            elif self.report_type == "transit_data":
-                # TODO Make this into something that makes more sense
-                self.form_filter_1 = service_offered.objects.filter(organization=self.target_organization).order_by('transit_mode__name').values_list('transit_mode__name').first()[0]
-                self.form_filter_2 = service_offered.objects.filter(organization=self.target_organization).order_by('transit_mode__name').values_list('administration_of_mode').first()[0]
-                # self.form_filter_1 = self.get_model().objects.filter(organization=self.target_organization).order_by(
-                #     'transit_mode__name').values_list('transit_mode__name').first()[0]
-                # self.form_filter_2 = self.get_model().objects.filter(organization=self.target_organization).order_by(
-                #     'administration_of_mode').values_list('administration_of_mode').first()[0]
-            elif self.report_type in ["expense", "fund_balance"]:
-                self.form_filter_1 = None
-                self.form_filter_2 = None
-            else:
-                raise Http404("Report type does not exist. -1")
-
-    def set_max_form_increment(self):
-        '''returns the appropriate model for the given report type'''
-        if self.report_type == "revenue":
-            self.max_form_increment = 7
-        elif self.report_type == "transit_data":
-            self.max_form_increment = service_offered.objects.filter(organization=self.target_organization).count()
-        elif self.report_type == "expense":
-            self.max_form_increment = 1
-        elif self.report_type == "fund_balance":
-            self.max_form_increment = 1
-        else:
-            raise Http404("Report type does not exist. -2")
-
-    def set_current_increment(self):
-        '''returns the appropriate model for the given report type'''
-        if self.report_type == "revenue":
-            self.current_increment = self.nav_filters.index([self.form_filter_1, self.form_filter_2]) + 1
-        elif self.report_type == "transit_data":
-            self.current_increment = self.nav_filters.index([self.form_filter_1, self.form_filter_2]) + 1
-        elif self.report_type == "expense":
-            self.current_increment = 1
-        elif self.report_type == "fund_balance":
-            self.current_increment = 1
-        else:
-            raise Http404("Report type does not exist. -3")
-
-    def get_model(self):
-        '''returns the appropriate model for the given report type'''
-        if self.report_type == "revenue":
-            return revenue
-        elif self.report_type == "transit_data":
-            return transit_data
-        elif self.report_type == "expense":
-            return expense
-        elif self.report_type == "fund_balance":
-            return fund_balance
-        else:
-            raise Http404("Report type does not exist. -4")
-
-    def get_metric_model(self):
-        '''returns the appropriate metric model for the given report type'''
-        if self.report_type == "revenue":
-            return revenue_source
-        elif self.report_type == "transit_data":
-            return transit_metrics
-        elif self.report_type == "expense":
-            return expense_source
-        elif self.report_type == "fund_balance":
-            return fund_balance_type
-        else:
-            raise Http404("Report type does not exist. -5")
-
-    def get_metric_model_name(self):
-        '''Returns the metric model as a string.'''
-        if self.report_type == "revenue":
-            return 'revenue_source'
-        elif self.report_type == "transit_data":
-            return 'transit_metric'
-        elif self.report_type == "expense":
-            return 'expense_source'
-        elif self.report_type == "fund_balance":
-            return 'fund_balance_type'
-        else:
-            raise Http404("Report type does not exist. -6")
-
-    def get_metric_id_field_name(self):
-        '''Returns the name of the field name of the id field in the metric model as a string.'''
-        if self.report_type == "transit_data":
-            return 'transit_metric_id'
-        else:
-            metric_model = self.get_metric_model()
-            return metric_model.__name__ + '_id'
-
-    def get_all_metric_ids(self):
-        '''Returns a distinct list of all metric ids that are needed given the agency classification, if applicable.'''
-        classification = self.target_organization.summary_organization_classifications
-        if self.report_type in ['transit_data', 'revenue', ]:
-            metric_ids = list(
-                self.get_metric_model().objects.filter(agency_classification=classification).values_list('id',
-                                                                                                         flat=True).distinct())
-        elif self.report_type in ['fund_balance', 'expense', ]:
-            metric_ids = list(self.get_metric_model().objects.values_list('id', flat=True).distinct())
-        else:
-            raise Http404
-        return metric_ids
-
-    def get_create_metric_dictionary(self, metric):
-        '''Used to create a new empty instance of a report metric. So an empty form may be displayed'''
-        create_dictionary = {}
-        if self.report_type in ['transit_data', ]:
-            print(transit_mode.objects.get(name=self.form_filter_1))
-            create_dictionary = {'year': metric[1],
-                                 'organization': self.target_organization,
-                                 'transit_mode': transit_mode.objects.get(name=self.form_filter_1),
-                                 'administration_of_mode': self.form_filter_2,
-                                 self.get_metric_id_field_name(): metric[0],
-                                 'reported_value': None,
-                                 }
-        elif self.report_type in ['revenue', 'expense', 'fund_balance', ]:
-            create_dictionary = {'year': metric[1],
-                                 'organization': self.target_organization,
-                                 self.get_metric_id_field_name(): metric[0],
-                                 'reported_value': None,
-                                 }
-        else:
-            raise Http404
-        return create_dictionary
-
-    def get_or_create_all_form_metrics(self):
-        '''Gets all reported form metrics applicable to the form type, organization, and year.  If the metric has not been reported it creates it.'''
-        model = self.get_model()
-        if self.report_type == "transit_data":
-            report_model = model.objects.filter(transit_mode__name=self.form_filter_1,
-                                                administration_of_mode=self.form_filter_2)
-        else:
-            report_model = model.objects
-        field_id = self.get_metric_id_field_name()
-
-        current_report_metric_ids = list(report_model.filter(organization=self.target_organization,
-                                                             year__gte=self.year - 2).values_list(field_id,
-                                                                                                  'year').distinct())
-        all_report_metric_ids = self.get_all_metric_ids()
-        all_metric_ids_and_years = list(
-            itertools.product(all_report_metric_ids, [self.year, self.year - 1, self.year - 2]))
-        print(all_metric_ids_and_years)
-        if len(current_report_metric_ids) != len(all_metric_ids_and_years):
-
-            all_metric_ids_and_years = set(map(tuple, all_metric_ids_and_years))
-            current_report_metric_ids = set(map(tuple, current_report_metric_ids))
-            missing_metrics = list(all_metric_ids_and_years - current_report_metric_ids)
-            # missing_metrics = all_metric_ids_and_years.symmetric_difference(current_report_metric_ids)
-            # TODO there are some metrics that are currently filtered out that orgs previously reported on. How do we want to deal with these?
-            if len(missing_metrics) > 0:
-                with transaction.atomic():
-                    for m in missing_metrics:
-                        model.objects.create(**self.get_create_metric_dictionary(m))
-
-        form_metrics = model.objects.filter(organization=self.target_organization)
-        return form_metrics
-
-    def get_widgets(self):
-        '''Used to build widgets dynamically based on form type.'''
-
-        if self.report_type == 'transit_data':
-            widget_attrs = {'class': 'form-control'}
-        else:
-            widget_attrs = {'class': 'form-control grand-total-sum', 'onchange': 'findTotal_wrapper();'}
-
-        widgets = {'id': forms.NumberInput(),
-                   self.get_metric_model_name(): forms.Select(),
-                   'year': forms.NumberInput(),
-                   'reported_value': forms.TextInput(attrs=widget_attrs),
-                   'comments': forms.Textarea(attrs={'class': 'form-control', "rows": 3})
-                   }
-        return widgets
-
-    def create_model_formset_factory(self):
-        '''Creates a fromset factory based on the information contained in the class information'''
-        my_formset_factory = modelformset_factory(self.get_model(), form=ModelForm, formfield_callback=None,
-                                                  formset=BaseModelFormSet, extra=0, can_delete=False,
-                                                  can_order=False, max_num=None,
-                                                  fields=["id", self.get_metric_model_name(), "year", "reported_value",
-                                                          "comments"],
-                                                  exclude=None,
-                                                  widgets=self.get_widgets(),
-                                                  validate_max=False, localized_fields=None,
-                                                  labels=None, help_texts=None, error_messages=None,
-                                                  min_num=None, validate_min=False, field_classes=None)
-
-        return my_formset_factory
-
-    def get_formset_query_dict(self):
-        '''Builds a dynamic dictionary used for querying the aproriate metrics giving the filter criteria and organization classification'''
-        if self.report_type in ['transit_data', ]:
-
-            query_dict = {'transit_mode__name': self.form_filter_1,
-                          'administration_of_mode': self.form_filter_2,
-                          'transit_metric__agency_classification': self.target_organization.summary_organization_classifications
-                          }
-        elif self.report_type in ['revenue', ]:
-            query_dict = {'revenue_source__government_type': self.form_filter_1,
-                          'revenue_source__funding_type': self.form_filter_2}
-        elif self.report_type in ['expense', 'fund_balance', ]:
-            query_dict = {}
-        else:
-            raise Http404
-        return query_dict
-
-    def get_form_queryset(self):
-        form_querysets = self.get_or_create_all_form_metrics()
-        form_querysets = form_querysets.filter(**self.get_formset_query_dict())
-        return form_querysets
-
-
-    def get_formsets_labels_and_masking_class(self):
-        '''Builds formsets by year with labels and masking classes'''
-        my_formset_factory = self.create_model_formset_factory()
-        form_querysets = self.get_form_queryset()
-
-        formsets = {}
-        i = 0
-        for year_x in ['this_year', 'previous_year', 'two_years_ago']:
-            formsets[year_x] = my_formset_factory(
-                queryset=form_querysets.filter(year=self.year - i).order_by(self.get_metric_id_field_name()),
-                prefix=year_x)
-            i += 1
-        formset_labels = form_querysets.filter(year=self.year).order_by(self.get_metric_id_field_name()).values_list(
-            self.get_metric_model_name() + "__name", flat=True)
-        if self.report_type != "transit_data":
-            masking_class = ['Money'] * len(formset_labels)
-        else:
-            masking_class = form_querysets.filter(year=self.year).order_by(self.get_metric_id_field_name()).values_list(
-                self.get_metric_model_name() + "__form_masking_class", flat=True)
-
-        return formsets, formset_labels, masking_class
-
-    def get_other_measure_totals(self):
-        '''Gets totals from that need to be aggrigated on the page but are not presented due to the filters on the form.'''
-        if self.report_type == 'transit_data':
-            return None
-
-        total_not_this_form = {}
-        if self.get_formset_query_dict() == {}:
-            for year_x in ['this_year', 'previous_year', 'two_years_ago']:
-                total_not_this_form[year_x] = {'reported_value__sum': 0}
-        else:
-            report_model = self.get_model()
-            total_not_this_form_queryset = report_model.objects.filter(organization=self.target_organization).exclude(
-                **self.get_formset_query_dict())
-            i = 0
-            for year_x in ['this_year', 'previous_year', 'two_years_ago']:
-                total_not_this_form[year_x] = total_not_this_form_queryset.filter(year=self.year - i).aggregate(
-                    Sum('reported_value'))
-                if total_not_this_form[year_x]['reported_value__sum'] == None:
-                    total_not_this_form[year_x]['reported_value__sum'] = 0
-                i += 1
-
-        return total_not_this_form
-
-    def get_header_navigation(self):
-        '''gets the data needed to build header navigation for filters'''
-        if self.report_type in ['transit_data', ]:
-            filter_count = 2
-            my_services_offered = service_offered.objects.filter(organization=self.target_organization).order_by(
-                'transit_mode__name')
-            filters = []
-            for service in my_services_offered:
-                filters.append([service.transit_mode.name, service.administration_of_mode])
-        elif self.report_type in ['revenue', ]:
-            filter_count = 2
-            revenues = revenue_source.objects.filter(
-                agency_classification=self.target_organization.summary_organization_classifications).values(
-                'government_type', 'funding_type').distinct()
-
-            filters = []
-            for source in revenues:
-                filters.append([source['government_type'], source['funding_type']])
-
-            revenue_list_order_type = ['Operating', 'Capital']
-            revenue_list_order_gov = ['Local', 'State', 'Federal', 'Other']
-            filters.sort(key=lambda x: revenue_list_order_type.index(x[1]))
-            filters.sort(key=lambda x: revenue_list_order_gov.index(x[0]))
-
-
-        elif self.report_type in ['expense', 'fund_balance', ]:
-            filter_count = 0
-            if self.report_type == 'expense':
-                filters = 'Expenses'
-            elif self.report_type == 'fund_balance':
-                filters = "Ending fund balances"
-        else:
-            raise Http404
-
-        return filter_count, filters
-
-    def save_with_post_data(self, post_data):
-        my_formset_factory = self.create_model_formset_factory()
-        query_sets = self.get_form_queryset()
-        i = 0
-        for year_x in ['this_year', 'previous_year', 'two_years_ago']:
-            query = query_sets.filter(year=self.year - i).order_by(
-                self.get_metric_id_field_name())
-            formset = my_formset_factory(post_data, queryset=query_sets.filter(year=self.year - i).order_by(
-                self.get_metric_id_field_name()), prefix=year_x)
-            if formset.is_valid():
-                for form in formset:
-                    print('form_valid')
-                    if form.is_valid():
-                        form.save()
-            #         else:
-            #
-            #             print(form.errors)
-            # else:
-            #     print(formset.errors)
-
-            i += 1
-
-
-    def go_to_next_form(self):
-        self.current_increment = self.current_increment + 1
-        if self.current_increment > self.max_form_increment:
-            org_progress = summary_organization_progress.objects.get(organization=self.target_organization)
-            if self.report_type == 'fund_balance':
-                org_progress.ending_balances = True
-                org_progress.save()
-                if get_all_data_steps_completed(self.target_organization.id):
-                    return redirect('submit_data')
-                else:
-                    raise Http404("You are not ready to submit your data.  Please be sure you have reviewed each section.")
-            else:
-
-                if self.report_type == "revenue":
-                    org_progress.revenue = True
-                    org_progress.save()
-                elif self.report_type == "transit_data":
-                    org_progress.transit_data = True
-                    org_progress.save()
-                elif self.report_type == "expense":
-                    org_progress.expenses = True
-                    org_progress.save()
-                elif self.report_type == "fund_balance":
-                    raise Http404("Report type does not exist. -7a")
-                else:
-                    raise Http404("Report type does not exist. -7b")
-
-                new_report_type = self.REPORT_TYPES[self.REPORT_TYPES.index(self.report_type)+1]
-                print(new_report_type)
-                return redirect('summary_reporting_type', new_report_type)
-        else:
-            self.form_filter_1 = self.nav_filters[self.current_increment - 1][0]
-            self.form_filter_2 = self.nav_filters[self.current_increment - 1][1]
-            return redirect('summary_reporting_filters', self.report_type, self.form_filter_1, self.form_filter_2)
-
-
-
-class SummaryDataEntryTemplateData:
-    '''Simpler wrapper around the SummaryDataEntryConstructor class which just contains only items needed in the template'''
-
-    def __init__(self, constructor, report_type):
-        self.formsets, self.formset_labels, self.masking_class = constructor.get_formsets_labels_and_masking_class()
-        self.report_type = report_type
-        self.year = constructor.year
-        self.form_filter_1 = constructor.form_filter_1
-        self.form_filter_2 = constructor.form_filter_2
-        self.other_totals = constructor.get_other_measure_totals()
-        self.masking_types = []
-        self.nav_filter_count = constructor.nav_filter_count
-        self.nav_filters = constructor.nav_filters
-
-        if constructor.report_type == "transit_data":
-            self.show_totals = False
-        else:
-            self.show_totals = True
-
-
 @login_required(login_url='/Panacea/login')
 @group_required('Summary reporter', 'WSDOT staff')
 def summary_reporting(request, report_type=None, form_filter_1=None, form_filter_2=None):
@@ -1517,8 +1119,8 @@ def summary_reporting(request, report_type=None, form_filter_1=None, form_filter
     if report_type is None:
         report_type = "transit_data"
 
-    requested_form = SummaryDataEntryConstructor(report_type, user_org, form_filter_1=form_filter_1,
-                                                 form_filter_2=form_filter_2)
+    requested_form = SummaryDataEntryBuilder(report_type, user_org, form_filter_1=form_filter_1,
+                                             form_filter_2=form_filter_2)
     if request.method == 'POST':
         requested_form.save_with_post_data(request.POST)
         return requested_form.go_to_next_form()
@@ -1529,6 +1131,7 @@ def summary_reporting(request, report_type=None, form_filter_1=None, form_filter
 
     return render(request, 'pages/summary/summary_reporting.html', {'template_data': template_data,
                                                                     'ready_to_submit': ready_to_submit})
+
 
 @login_required(login_url='/Panacea/login')
 @group_required('Summary reporter', 'WSDOT staff')
@@ -1545,67 +1148,6 @@ def submit_data_submit(request):
     status.data_report_status = "With WSDOT"
     status.save()
     return redirect('dashboard')
-
-@login_required(login_url='/Panacea/login')
-def configure_agency_types(request, model=None):
-
-    if not model or model == "organization":
-        model = "organization"
-        my_model = organization
-        field_name = 'summary_organization_classifications'
-        other_field_list = []
-        one2one = True
-    elif model == "revenue_source":
-        my_model = revenue_source
-        field_name = 'agency_classification'
-        other_field_list = ['funding_type', 'government_type']
-        one2one = False
-    elif model == "transit_metric":
-        my_model = transit_metrics
-        field_name = 'agency_classification'
-        other_field_list = []
-        one2one = False
-    else:
-        raise Http404("Cant find model")
-
-    if one2one:
-        my_widget = {'name': forms.TextInput(attrs={'class': 'form-control AJAX_instant_submit',
-                                                    'data-form-name': "summary_configure_agency_types"}),
-                     field_name: forms.Select(attrs={'class': 'form-control AJAX_instant_submit',
-                                                     'data-form-name': "summary_configure_agency_types"})}
-    else:
-        my_widget = {'name': forms.TextInput(attrs={'class': 'form-control'}),
-                     field_name: forms.CheckboxSelectMultiple(
-                         attrs={'class': 'form-check-inline no-bullet AJAX_instant_submit',
-                                'data-form-name': "summary_configure_agency_types"})}
-
-    if len(other_field_list) > 0:
-        for i in other_field_list:
-            my_widget[i] = forms.Select(attrs={'class': 'form-control AJAX_instant_submit',
-                                               'data-form-name': "summary_configure_agency_types"})
-
-    formset_factory = modelformset_factory(my_model, form=ModelForm, formfield_callback=None,
-                                           formset=BaseModelFormSet, extra=0, can_delete=False,
-                                           can_order=False, max_num=None,
-                                           fields=['name', field_name] + other_field_list,
-                                           exclude=None,
-                                           widgets=my_widget,
-                                           validate_max=False, localized_fields=None,
-                                           labels=None, help_texts=None, error_messages=None,
-                                           min_num=None, validate_min=False, field_classes=None)
-
-    if request.method == 'POST':
-        formset = formset_factory(request.POST)
-        for form in formset:
-            if form.is_valid():
-                form.save()
-        return JsonResponse({'success': True})
-    else:
-        my_queryset = my_model.objects.all()
-        formset = formset_factory(queryset=my_queryset.select_related())
-        return render(request, 'pages/summary/configure_agency_types.html', {'formset': formset,
-
-                                                                             'model': model})
 
 
 @login_required(login_url='/Panacea/login')
@@ -1637,8 +1179,6 @@ def contact_us(request):
     return render(request, 'pages/ContactUs.html', {'form':form})
 
 
-
-
 @login_required(login_url='/Panacea/login')
 def view_annual_operating_information(request):
     current_year = get_current_summary_report_year()
@@ -1650,6 +1190,7 @@ def view_annual_operating_information(request):
     heading_list = ['Annual Operating Information'] + years +['One Year Change (%)']
     data = df.to_dict(orient = 'records')
     return render(request, 'pages/summary/view_agency_report.html', {'data':data, 'years': heading_list})
+
 
 @login_required(login_url='/Panacea/login')
 def view_financial_information(request):
@@ -1663,6 +1204,7 @@ def view_financial_information(request):
     financial_heading_years = ['Financial Information'] + years + ['One Year Change(%)']
     return render(request, 'pages/summary/view_financial_report.html', {'financial_data':financial_data, 'finance_years': financial_heading_years})
 
+
 @login_required(login_url='/Panacea/login')
 def view_rollup(request):
     current_year = get_current_summary_report_year()
@@ -1674,13 +1216,14 @@ def view_rollup(request):
     rollup_data = rollup_data.to_dict(orient = 'records')
     return render(request, 'pages/summary/view_agency_rollup.html', {'rollup_data': rollup_data, 'rollup_heading': rollup_heading})
 
+
 @login_required(login_url='/Panacea/login')
 def view_statewide_measures(request):
     years = [2013, 2014, 2015, 2016, 2017, 2018]
     statewide_measure_list = []
     list_of_headings = []
     statewide_measure_dictionary = {'Revenue Vehicle Hours by Service Mode': ("Revenue Vehicle Hours"), 'Revenue Vehicle Miles by Service Mode': ('Revenue Vehicle Miles'),
-    'Passenger Trips by Service Mode':('Passenger Trips'), 'Farebox Revenues by Service Mode': ('Farebox Revenues'), 'Operating Expenses by Service Mode': ('Operating Expenses')}
+                                    'Passenger Trips by Service Mode':('Passenger Trips'), 'Farebox Revenues by Service Mode': ('Farebox Revenues'), 'Operating Expenses by Service Mode': ('Operating Expenses')}
     for key, measure in statewide_measure_dictionary.items():
         df = generate_performance_measure_table(measure, years)
         heading_list = [key] + years + ['One Year Change (%)']
@@ -1688,15 +1231,16 @@ def view_statewide_measures(request):
         statewide_measure_list.append(df.to_dict(orient = 'records'))
     return render(request, 'pages/summary/view_statewide_measures.html', {'headings': list_of_headings, 'data': statewide_measure_list, 'titles': statewide_measure_dictionary.keys()})
 
+
 @login_required(login_url='/Panacea/login')
 def view_performance_measures(request):
     years = [2013, 2014, 2015, 2016, 2017, 2018]
     performance_measure_list = []
     list_of_headings = []
     performance_measure_dictionary = {
-    'Operating Costs per Passenger Trip': ('Operating Expenses', 'Passenger Trips'), 'Operating Cost per Revenue Vehicle Hour':('Operating Expenses', 'Revenue Vehicle Hours'),
-    'Passenger Trips per Revenue Vehicle Hour':('Passenger Trips', 'Revenue Vehicle Hours'), 'Passenger Trips per Revenue Vehicle Mile':('Passenger Trips', 'Revenue Vehicle Miles'),
-                                      'Revenue Vehicle Hours per Employee': ('Revenue Vehicle Hours', 'Employees - FTEs'), 'Farebox Recovery Ratio/Vanpool Revenue Recovery': ('Farebox Revenues', 'Operating Expenses')}
+        'Operating Costs per Passenger Trip': ('Operating Expenses', 'Passenger Trips'), 'Operating Cost per Revenue Vehicle Hour':('Operating Expenses', 'Revenue Vehicle Hours'),
+        'Passenger Trips per Revenue Vehicle Hour':('Passenger Trips', 'Revenue Vehicle Hours'), 'Passenger Trips per Revenue Vehicle Mile':('Passenger Trips', 'Revenue Vehicle Miles'),
+        'Revenue Vehicle Hours per Employee': ('Revenue Vehicle Hours', 'Employees - FTEs'), 'Farebox Recovery Ratio/Vanpool Revenue Recovery': ('Farebox Revenues', 'Operating Expenses')}
     for key, measure in performance_measure_dictionary.items():
         df = generate_performance_measure_table(measure, years)
         heading_list = [key] + years + ['One Year Change (%)']
@@ -1713,6 +1257,8 @@ def view_statewide_rollup(request):
     expense_df = create_statewide_expense_table(year)
     return render(request, 'pages/summary/view_statewide_rollup.html')
 
+
+@login_required(login_url='/Panacea/login')
 def view_statewide_operating(request):
     current_year = get_current_summary_report_year()
     years = [current_year-2, current_year-1, current_year]
@@ -1723,9 +1269,13 @@ def view_statewide_operating(request):
 
     return render(request)
 
+
+@login_required(login_url='/Panacea/login')
 def view_statewide_revenue(request):
     return render(request)
 
+
+@login_required(login_url='/Panacea/login')
 def view_statewide_investment_tables(request):
     return render(request)
 
@@ -1741,6 +1291,7 @@ def view_statewide_statistics(request):
         statewide_mode_statistics_list.append(df.to_dict(orient = 'records'))
         list_of_headings.append(heading)
     return render(request, 'pages/summary/view_statewide_statistics.html', {'headings': list_of_headings, 'data':statewide_mode_statistics_list})
+
 
 @login_required(login_url='/Panacea/login')
 @group_required('WSDOT staff')
@@ -1816,6 +1367,8 @@ def wsdot_review_cover_sheets(request, year=None, organization_id=None):
 
         print(organization_id)
 
+    org_cover_sheet, created = cover_sheet.objects.get_or_create(organization_id=organization_id)
+
     organization_status = get_object_or_404(summary_report_status, year=year, organization_id=organization_id)
     summary_report_status_id = organization_status.id
     organization_name = organization.objects.get(id=organization_id).name
@@ -1829,9 +1382,15 @@ def wsdot_review_cover_sheets(request, year=None, organization_id=None):
                                                                  organization__summary_reporter=True).order_by(
         'organization__name').filter(organization__name__lt=organization_name).last()
 
+    try:
+        base64_logo = base64.encodebytes(
+            org_cover_sheet.organization_logo).decode("utf-8")
+    except:
+        base64_logo = ""
+
     if cover_sheet_submitted:
         if request.POST:
-            cover_sheet_form = cover_sheet_wsdot_review(data=request.POST, instance=cover_sheet.objects.get(organization_id=organization_id), files=request.FILES)
+            cover_sheet_form = cover_sheet_wsdot_review(data=request.POST, instance=org_cover_sheet, files=request.FILES)
             if cover_sheet_form.is_valid():
                 instance = cover_sheet_form.save(commit=False)
                 filepath = request.FILES.get('organization_logo_input', False)
@@ -1846,10 +1405,7 @@ def wsdot_review_cover_sheets(request, year=None, organization_id=None):
             instance.save()
         else:
             cover_sheet_form = cover_sheet_wsdot_review(instance=cover_sheet.objects.get(organization_id=organization_id))
-        try:
-            base64_logo = base64.encodebytes(cover_sheet.objects.get(organization_id=organization_id).organization_logo).decode("utf-8")
-        except:
-            base64_logo = ""
+
 
         organization_notes = cover_sheet_review_notes.objects.filter(year=year,
                                                                      summary_report_status=summary_report_status.objects.get(organization_id=organization_id),
@@ -1871,6 +1427,7 @@ def wsdot_review_cover_sheets(request, year=None, organization_id=None):
         organization_notes = ""
         new_note_form = ""
         service_notes = ""
+        child_notes = ""
 
     return render(request, 'pages/summary/admin/wsdot_review_cover_sheet.html',
                   {'cover_sheet_id': organization_status.id,
@@ -1886,7 +1443,7 @@ def wsdot_review_cover_sheets(request, year=None, organization_id=None):
                    'service_notes': service_notes,
                    'child_notes': child_notes,
                    'new_note_form': new_note_form,
-                   'published_version': cover_sheet.objects.get(organization_id=organization_id).published_version,
+                   'published_version': org_cover_sheet.published_version,
                    'base64_logo': base64_logo})
 
 
@@ -2006,6 +1563,7 @@ def delete_cover_sheet_note(request, note_id):
 
     return HttpResponseRedirect(url)
 
+
 @login_required(login_url='/Panacea/login')
 @group_required('WSDOT staff')
 def approve_cover_sheet(request, summary_report_status_id):
@@ -2018,7 +1576,6 @@ def approve_cover_sheet(request, summary_report_status_id):
     return HttpResponseRedirect(url)
 
 
-
 @login_required(login_url='/Panacea/login')
 @group_required('WSDOT staff')
 def return_cover_sheet_to_user(request, summary_report_status_id):
@@ -2029,7 +1586,6 @@ def return_cover_sheet_to_user(request, summary_report_status_id):
     url = reverse('wsdot_review_cover_sheets_year_org', kwargs={'year': cover_sheet_status.year,
                                                                 'organization_id': cover_sheet_status.organization_id})
     return HttpResponseRedirect(url)
-
 
 
 @login_required(login_url='/Panacea/login')
@@ -2074,6 +1630,7 @@ def customer_review_data(request):
 def customer_review_instructions(request):
     return render(request, 'pages/summary/customer_review_instructions.html')
 
+
 @login_required(login_url='/Panacea/login')
 def accept_wsdot_edit(request, note_id):
 
@@ -2109,3 +1666,90 @@ def test_tools(request):
 
 
 
+
+
+@login_required(login_url='/Panacea/login')
+@group_required('WSDOT staff')
+def summary_metric_configurations(request, report_type=None):
+    if not report_type:
+        report_type = 'transit_data'
+
+    metric_configuration_factory = ConfigurationBuilder(report_type)
+    if request.POST:
+        configuration_form_factory = metric_configuration_factory.create_model_formset_factory()
+        form_set = configuration_form_factory(request.POST)
+        for form in form_set:
+            if form.is_valid():
+                if len(form.changed_data) > 0:
+                    form.save()
+            else:
+                print(form.errors)
+
+        return JsonResponse({'success': True})
+    else:
+        form_set = metric_configuration_factory.get_form_set()
+
+        return render(request, 'pages/summary/admin/summary_configure_metrics.html', {'form_set': form_set,
+                                                                                      'report_type': report_type})
+
+
+@login_required(login_url='/Panacea/login')
+def configure_agency_types(request, model=None):
+
+    if not model or model == "organization":
+        model = "organization"
+        my_model = organization
+        field_name = 'summary_organization_classifications'
+        other_field_list = []
+        one2one = True
+    elif model == "revenue_source":
+        my_model = revenue_source
+        field_name = 'agency_classification'
+        other_field_list = ['funding_type', 'government_type']
+        one2one = False
+    elif model == "transit_metric":
+        my_model = transit_metrics
+        field_name = 'agency_classification'
+        other_field_list = []
+        one2one = False
+    else:
+        raise Http404("Cant find model")
+
+    if one2one:
+        my_widget = {'name': forms.TextInput(attrs={'class': 'form-control AJAX_instant_submit',
+                                                    'data-form-name': "summary_configure_agency_types"}),
+                     field_name: forms.Select(attrs={'class': 'form-control AJAX_instant_submit',
+                                                     'data-form-name': "summary_configure_agency_types"})}
+    else:
+        my_widget = {'name': forms.TextInput(attrs={'class': 'form-control'}),
+                     field_name: forms.CheckboxSelectMultiple(
+                         attrs={'class': 'form-check-inline no-bullet AJAX_instant_submit',
+                                'data-form-name': "summary_configure_agency_types"})}
+
+    if len(other_field_list) > 0:
+        for i in other_field_list:
+            my_widget[i] = forms.Select(attrs={'class': 'form-control AJAX_instant_submit',
+                                               'data-form-name': "summary_configure_agency_types"})
+
+    formset_factory = modelformset_factory(my_model, form=ModelForm, formfield_callback=None,
+                                           formset=BaseModelFormSet, extra=0, can_delete=False,
+                                           can_order=False, max_num=None,
+                                           fields=['name', field_name] + other_field_list,
+                                           exclude=None,
+                                           widgets=my_widget,
+                                           validate_max=False, localized_fields=None,
+                                           labels=None, help_texts=None, error_messages=None,
+                                           min_num=None, validate_min=False, field_classes=None)
+
+    if request.method == 'POST':
+        formset = formset_factory(request.POST)
+        for form in formset:
+            if form.is_valid():
+                form.save()
+        return JsonResponse({'success': True})
+    else:
+        my_queryset = my_model.objects.all()
+        formset = formset_factory(queryset=my_queryset.select_related())
+        return render(request, 'pages/summary/configure_agency_types.html', {'formset': formset,
+
+                                                                             'model': model})
