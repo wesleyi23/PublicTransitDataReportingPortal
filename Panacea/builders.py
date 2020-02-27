@@ -31,6 +31,19 @@ class SummaryBuilder:
         else:
             raise Http404("Report type does not exist. -4")
 
+    def get_model_data(self):
+        '''returns the appropriate model for the given report type'''
+        if self.report_type == "revenue":
+            return revenue.objects.filter(revenue_source__inactive_flag=False)
+        elif self.report_type == "transit_data":
+            return transit_data.objects
+        elif self.report_type == "expense":
+            return expense.objects
+        elif self.report_type == "fund_balance":
+            return fund_balance.objects
+        else:
+            raise Http404("Report type does not exist. -4")
+
     def get_metric_model(self):
         '''returns the appropriate metric model for the given report type'''
         if self.report_type == "revenue":
@@ -41,6 +54,19 @@ class SummaryBuilder:
             return expense_source
         elif self.report_type == "fund_balance":
             return fund_balance_type
+        else:
+            raise Http404("Report type does not exist. -5")
+
+    def get_metric_model_data(self):
+        '''returns the appropriate metric model for the given report type'''
+        if self.report_type == "revenue":
+            return revenue_source.objects.filter(inactive_flag=False)
+        elif self.report_type == "transit_data":
+            return transit_metrics.objects
+        elif self.report_type == "expense":
+            return expense_source.objects
+        elif self.report_type == "fund_balance":
+            return fund_balance_type.objects
         else:
             raise Http404("Report type does not exist. -5")
 
@@ -143,10 +169,10 @@ class SummaryDataEntryBuilder(SummaryBuilder):
         classification = self.target_organization.summary_organization_classifications
         if self.report_type in ['transit_data', 'revenue', ]:
             metric_ids = list(
-                self.get_metric_model().objects.filter(agency_classification=classification).values_list('id',
-                                                                                                         flat=True).distinct())
+                self.get_metric_model_data().filter(agency_classification=classification).values_list('id',
+                                                                                                      flat=True).distinct())
         elif self.report_type in ['fund_balance', 'expense', ]:
-            metric_ids = list(self.get_metric_model().objects.values_list('id', flat=True).distinct())
+            metric_ids = list(self.get_metric_model_data().values_list('id', flat=True).distinct())
         else:
             raise Http404
         return metric_ids
@@ -175,12 +201,12 @@ class SummaryDataEntryBuilder(SummaryBuilder):
 
     def get_or_create_all_form_metrics(self):
         '''Gets all reported form metrics applicable to the form type, organization, and year.  If the metric has not been reported it creates it.'''
-        model = self.get_model()
+        model = self.get_model_data()
         if self.report_type == "transit_data":
-            report_model = model.objects.filter(transit_mode__name=self.form_filter_1,
-                                                administration_of_mode=self.form_filter_2)
+            report_model = model.filter(transit_mode__name=self.form_filter_1,
+                                        administration_of_mode=self.form_filter_2)
         else:
-            report_model = model.objects
+            report_model = model
         field_id = self.get_metric_id_field_name()
 
         current_report_metric_ids = list(report_model.filter(organization=self.target_organization,
@@ -200,9 +226,9 @@ class SummaryDataEntryBuilder(SummaryBuilder):
             if len(missing_metrics) > 0:
                 with transaction.atomic():
                     for m in missing_metrics:
-                        model.objects.create(**self.get_create_metric_dictionary(m))
+                        model.create(**self.get_create_metric_dictionary(m))
 
-        form_metrics = model.objects.filter(organization=self.target_organization)
+        form_metrics = model.filter(organization=self.target_organization)
         return form_metrics
 
     def get_widgets(self):
@@ -293,8 +319,8 @@ class SummaryDataEntryBuilder(SummaryBuilder):
             for year_x in ['this_year', 'previous_year', 'two_years_ago']:
                 total_not_this_form[year_x] = {'reported_value__sum': 0}
         else:
-            report_model = self.get_model()
-            total_not_this_form_queryset = report_model.objects.filter(organization=self.target_organization).exclude(
+            report_model_data = self.get_model_data()
+            total_not_this_form_queryset = report_model_data.filter(organization=self.target_organization).exclude(
                 **self.get_formset_query_dict())
             i = 0
             for year_x in ['this_year', 'previous_year', 'two_years_ago']:
@@ -427,11 +453,39 @@ class ConfigurationBuilder(SummaryBuilder):
         else:
             return super(ConfigurationBuilder, self).get_model()
 
+    def get_model_data(self):
+        if self.report_type == 'organization':
+            return organization.objects
+        elif self.report_type == "revenue":
+            return revenue.objects.filter()
+        elif self.report_type == "transit_data":
+            return transit_data.objects
+        elif self.report_type == "expense":
+            return expense.objects
+        elif self.report_type == "fund_balance":
+            return fund_balance.objects
+        else:
+            raise Http404("Report type does not exist. -4")
+
     def get_metric_model(self):
         if self.report_type == 'organization':
             return organization
         else:
             return super(ConfigurationBuilder, self).get_metric_model()
+
+    def get_metric_model_data(self):
+        if self.report_type == 'organization':
+            return organization.objects
+        elif self.report_type == "revenue":
+            return revenue_source.objects
+        elif self.report_type == "transit_data":
+            return transit_metrics.objects
+        elif self.report_type == "expense":
+            return expense_source.objects
+        elif self.report_type == "fund_balance":
+            return fund_balance_type.objects
+        else:
+            raise Http404("Report type does not exist. -5")
 
     def get_model_fields(self):
         '''returns the appropriate model for the given report type'''
@@ -459,6 +513,7 @@ class ConfigurationBuilder(SummaryBuilder):
         else:
             raise Http404("Report type does not exist. -4a")
 
+
     def get_data_relationship_one_2_one(self):
         if self.report_type in ['organization']:
             return True
@@ -483,7 +538,7 @@ class ConfigurationBuilder(SummaryBuilder):
         return my_formset_factory
 
     def get_query_set(self):
-        query_set = self.get_metric_model().objects.order_by('name').all()
+        query_set = self.get_metric_model_data().order_by('name').all()
         return query_set
 
     def get_widgets(self):
@@ -505,7 +560,7 @@ class ConfigurationBuilder(SummaryBuilder):
         if len(self.other_fields_list) > 0:
             for field in self.other_fields_list:
                 widgets[field] = forms.Select(attrs={'class': 'form-control AJAX_instant_submit',
-                                               'data-form-name': "summary_configure"})
+                                                     'data-form-name': "summary_configure"})
 
         return widgets
 
