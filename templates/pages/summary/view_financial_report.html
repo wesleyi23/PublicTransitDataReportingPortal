@@ -26,28 +26,31 @@
 
 <table id="summary_report" class='table tdt-bootstrap4 dataTable dataTable_wrapper'>
     <thead class="table-secondary">
-    {% for year in rollup_heading %}
+    {% for year in finance_years %}
     <th  class="d-none d-md-table-cell" scope="col">{{ year }}</th>
     {% endfor %}
     </thead>
     <tbody>
-    {% for datum in rollup_data %}
+    {% for datum in financial_data %}
     <tr>
         {% if datum.role == 'heading' %}
         <td class = 'font-weight-bold font-italic'> {{ datum.revenue_source }}</td>
               <td class="AutoNumeric-Float" >{{datum.year1|floatformat:"0"|intcomma}}</td>
                <td class="AutoNumeric-Int">{{datum.year2|floatformat:"0"|intcomma}}</td>
             <td class="AutoNumeric-Int">{{datum.year3|floatformat:"0"|intcomma}}</td>
+             <td class="AutoNumeric-Int font-weight-bold">{{ datum.percent_change|floatformat:2}}</td>
             {% elif datum.role == 'subtotal' %}
                  <td align="right" class = 'font-weight-bold' > {{ datum.revenue_source }}</td>
               <td class="AutoNumeric-Float font-weight-bold" >${{datum.year1|floatformat:"0"|intcomma}}</td>
                <td class="AutoNumeric-Int font-weight-bold">${{datum.year2|floatformat:"0"|intcomma}}</td>
             <td class="AutoNumeric-Int font-weight-bold">${{datum.year3|floatformat:"0"|intcomma}}</td>
+             <td class="AutoNumeric-Int font-weight-bold">{{ datum.percent_change|floatformat:2}}</td>
             {% elif datum.role == 'other_indent' %}
                       <td align="right"> {{ datum.revenue_source}}</td>
                <td class="AutoNumeric-Float" >${{datum.year1|floatformat:"0"|intcomma}}</td>
                <td class="AutoNumeric-Int">${{datum.year2|floatformat:"0"|intcomma}}</td>
             <td class="AutoNumeric-Int">${{datum.year3|floatformat:"0"|intcomma}}</td>
+             <td>{{ datum.percent_change|floatformat:2}}</td>
 
         {% else %}
           <td style="padding-left:20px"> {{ datum.revenue_source}}</td>
@@ -56,8 +59,9 @@
                <td class="AutoNumeric-Float" >${{datum.year1|floatformat:"0"|intcomma}}</td>
                <td class="AutoNumeric-Int">${{datum.year2|floatformat:"0"|intcomma}}</td>
             <td class="AutoNumeric-Int">${{datum.year3|floatformat:"0"|intcomma}}</td>
+             <td>{{ datum.percent_change|floatformat:2}}</td>
            {% endif %}
-        <td>{{ datum.percent_change|floatformat:2}}</td>
+
     </tr>
 
     {% endfor %}

@@ -57,8 +57,12 @@
         <td class="AutoNumeric-Int">{{datum.year3 |floatformat:"0" | intcomma}}</td>
 
         {% endif %}
+                {% if datum.percent_change == '-'%}
+                    <td>{{ datum.percent_change}}</td>
+            {% else %}
+            <td>{{ datum.percent_change|floatformat:2}}</td>
+    {%  endif %}
 
-        <td>{{ datum.percent_change|floatformat:2}}</td>
     </tr>
 
     {% endfor %}
