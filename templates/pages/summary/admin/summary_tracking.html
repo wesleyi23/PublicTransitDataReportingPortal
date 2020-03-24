@@ -5,7 +5,7 @@
 {% load widget_tweaks %}
 
 {% block head_content %}
-
+<link href="{% static 'vendor/datatables/dataTables.bootstrap4.css' %}" rel="stylesheet" type="text/css">
 
 {% endblock %}
 
@@ -37,13 +37,15 @@
                     <h1>{{ year }} - Summary reporter tracking</h1>
                     <div class="dataTable_wrapper">
                         <table id="summary_tracking_datatable" class="table table-hover tdt-bootstrap4 dataTable dataTable_wrapper">
-                            <thead class="table-secondary">
+                            <thead>
+                            <tr class="table-secondary">
                             <th width="5%" style="text-align: center">View</th>
                             <th>Organization</th>
                             <th>Cover sheet submitted</th>
                             <th>Cover sheet status</th>
                             <th>Data submitted</th>
                             <th>Data review status</th>
+                            </tr>
                             </thead>
                             <tbody>
                             {% for org in tracking_data %}

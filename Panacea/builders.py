@@ -395,7 +395,7 @@ class SummaryDataEntryBuilder(SummaryBuilder):
                 if get_all_data_steps_completed(self.target_organization.id):
                     return redirect('submit_data')
                 else:
-                    raise Http404("You are not ready to submit your data.  Please be sure you have reviewed each section.")
+                    return redirect('you_skipped_a_step')
             else:
 
                 if self.report_type == "revenue":

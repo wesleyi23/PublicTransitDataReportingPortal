@@ -35,14 +35,18 @@
                 </div>
                 <div class="card-body" style="">
                     <h1>{{ year }} {% get_org_name organization_id %}{% if published_version %}<span class="badge badge-success ml-3">No changes</span>{% else %}<span class="badge badge-warning ml-3">Changes</span>{% endif %}</h1>
-
+                    {% if needs_note %}
+                        <div class="alert alert-danger" role="alert">
+                                This has not be sent to the user, you must provide at least one note.
+                            </div>
+                    {% endif %}
                     {% if not cover_sheet_submitted %}
                         <div class="alert alert-warning" role="alert">
                             This organization has not submitted their coversheet for this year.
                         </div>
                     {% else %}
                         {% if cover_sheet_status == "With user" %}
-                            <div class="alert alert-danger" role="alert">
+                            <div class="alert alert-warning" role="alert">
                                 This coversheet is with our customer for their review.
                             </div>
                         {% elif cover_sheet_status == "Complete" %}

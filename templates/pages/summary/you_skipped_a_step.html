@@ -1,0 +1,22 @@
+{% extends 'index.html' %}
+{% load custom_tags %}
+{%  load humanize %}
+{% load static  %}
+
+
+{%  block content %}
+  <div class="container-fluid">
+        <div class="row">
+            <div class="card shadow mb-4 w-100">
+                <div class="card-header">
+                    It looks like you skipped a step.
+                </div>
+                <div class="card-body" style="">
+                    <div class="alert alert-danger">It looks like you may have skipped a step.  Please go back to where
+                        you left off and be sure you have completed each step.</div>
+                    <a class="btn btn-danger" href="{% url 'pick_up_where_you_left_off' %}">Go back to where you left off</a>
+                </div>
+            </div>
+        </div>
+  </div>
+{%  endblock %}

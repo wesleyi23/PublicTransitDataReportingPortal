@@ -295,7 +295,8 @@ class VanpoolMonthlyReport(forms.ModelForm):
                                 'average_round_trip_miles',
                                 'changeReason',
                                 'data_change_record',
-                                'acknowledge_validation_errors']
+                                'acknowledge_validation_errors',
+                                'frequency_of_claims']
 
         report_month = self.report_month
         report_year = self.report_year

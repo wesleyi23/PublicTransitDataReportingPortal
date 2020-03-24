@@ -1922,12 +1922,12 @@ pre code {
   border-color: #c0c1c8;
 }
 
-.table-hover .table-secondary:hover {
-  background-color: #cfcfd6;
-}
+/*.table-hover .table-secondary:hover {*/
+/*  background-color: #cfcfd6;*/
+/*}*/
 
-.table-hover .table-secondary:hover > td,
-.table-hover .table-secondary:hover > th {
+/*.table-hover .table-secondary:hover > th, */
+.table-hover .table-secondary:hover > td {
   background-color: #cfcfd6;
 }
 

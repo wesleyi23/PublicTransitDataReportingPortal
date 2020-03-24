@@ -468,7 +468,7 @@ def Vanpool_report(request, year=None, month=None):
     # Instance data to link form to data
     form_data = vanpool_report.objects.get(organization_id=user_organization_id, report_year=year, report_month=month)
 
-    # TODO convert to django message framework
+
     # Logic if form is a new report or is an existing report (Comments are needed before editing an existing reports)
     if form_data.report_date is None:
         new_report = True
@@ -486,8 +486,8 @@ def Vanpool_report(request, year=None, month=None):
 
         # TODO Fix this show it shows the form
         else:
-            form = VanpoolMonthlyReport(user_organization=user_organization, data=request.POST, instance=form_data,
-                                        record_id=form_data.id, report_month=month, report_year=year)
+            # form = VanpoolMonthlyReport(user_organization=user_organization, data=request.POST, instance=form_data,
+            #                             record_id=form_data.id, report_month=month, report_year=year)
             successful_submit = False
 
     # If not POST
@@ -828,7 +828,7 @@ def pick_up_where_you_left_off(request):
     if not org_progress.started:
         return redirect('summary_instructions')
     elif not org_progress.address_and_organization:
-        return redirect('cover_sheets_organization')
+        return redirect('organizational_information')
     elif not org_progress.organization_details:
         return redirect('cover_sheets_organization')
     elif not org_progress.service_cover_sheet:
@@ -981,7 +981,7 @@ def submit_cover_sheet_submit(request):
     user_org = find_user_organization(request.user.id)
     ready_to_submit = get_all_cover_sheet_steps_completed(user_org.id)
     if not ready_to_submit:
-        raise Http404("Your coversheet is not ready to be submitted. Please go through each tab and confirm your data has been updated.")
+        return redirect('you_skipped_a_step')
 
     report_status = summary_report_status.objects.get(year=get_current_summary_report_year(), organization=user_org)
     report_status.cover_sheet_submitted_for_review = True
@@ -1025,7 +1025,7 @@ def data_submitted(request):
 
 @login_required(login_url='/Panacea/login')
 @group_required('Summary reporter', 'WSDOT staff')
-def summary_modes(request):
+def summary_modes(request, error_no_modes=None):
     org = find_user_organization(request.user.id)
 
     # TODO add in date time of changes and user id to this dataset date time as native, foreign key for user
@@ -1048,7 +1048,8 @@ def summary_modes(request):
     return render(request, 'pages/summary/summary_modes.html', {'form': form,
                                                                 'modes': modes,
                                                                 'org': org,
-                                                                'ready_to_submit': ready_to_submit})
+                                                                'ready_to_submit': ready_to_submit,
+                                                                'error_no_modes': error_no_modes})
 
 
 @login_required(login_url='/Panacea/login')
@@ -1114,6 +1115,9 @@ def review_data(request):
 def summary_reporting(request, report_type=None, form_filter_1=None, form_filter_2=None):
     user_org = find_user_organization(request.user.id)
 
+    if service_offered.objects.filter(organization=user_org).count() == 0:
+        return summary_modes(request, True)
+
     if report_type is None:
         report_type = "transit_data"
 
@@ -1146,6 +1150,12 @@ def submit_data_submit(request):
     status.data_report_status = "With WSDOT"
     status.save()
     return redirect('dashboard')
+
+@login_required(login_url='/Panacea/login')
+@group_required('Summary reporter', 'WSDOT staff')
+def you_skipped_a_step(request):
+   return render(request, 'pages/summary/you_skipped_a_step.html', {})
+
 
 
 @login_required(login_url='/Panacea/login')
@@ -1355,7 +1365,7 @@ def summary_yearly_setup_instructions(request):
 
 @login_required(login_url='/Panacea/login')
 @group_required('WSDOT staff')
-def wsdot_review_cover_sheets(request, year=None, organization_id=None):
+def wsdot_review_cover_sheets(request, year=None, organization_id=None, needs_note=False):
     if year is None:
         year = summary_report_status.objects.aggregate(Max('year'))
         year = year['year__max']
@@ -1408,15 +1418,15 @@ def wsdot_review_cover_sheets(request, year=None, organization_id=None):
 
 
         organization_notes = cover_sheet_review_notes.objects.filter(year=year,
-                                                                     summary_report_status=summary_report_status.objects.get(organization_id=organization_id),
+                                                                     summary_report_status=summary_report_status.objects.get(organization_id=organization_id, year=year),
                                                                      note_area='Organization')
         service_notes = cover_sheet_review_notes.objects.filter(year=year,
                                                                 summary_report_status=summary_report_status.objects.get(
-                                                                    organization_id=organization_id),
+                                                                    organization_id=organization_id, year=year),
                                                                 note_area='Service')
         child_notes = cover_sheet_review_notes.objects.filter(year=year,
                                                               summary_report_status=summary_report_status.objects.get(
-                                                                  organization_id=organization_id),
+                                                                  organization_id=organization_id, year=year),
                                                               parent_note__isnull=False)
 
 
@@ -1444,7 +1454,8 @@ def wsdot_review_cover_sheets(request, year=None, organization_id=None):
                    'child_notes': child_notes,
                    'new_note_form': new_note_form,
                    'published_version': org_cover_sheet.published_version,
-                   'base64_logo': base64_logo})
+                   'base64_logo': base64_logo,
+                   'needs_note': needs_note})
 
 
 # TODO Come back through and change this to be object oriented code about a notes object.
@@ -1580,11 +1591,18 @@ def approve_cover_sheet(request, summary_report_status_id):
 @group_required('WSDOT staff')
 def return_cover_sheet_to_user(request, summary_report_status_id):
     cover_sheet_status = summary_report_status.objects.get(id=summary_report_status_id)
-    cover_sheet_status.cover_sheet_status = "With user"
-    cover_sheet_status.save()
+    notes_count = cover_sheet_review_notes.objects.filter(summary_report_status=cover_sheet_status).count()
 
-    url = reverse('wsdot_review_cover_sheets_year_org', kwargs={'year': cover_sheet_status.year,
-                                                                'organization_id': cover_sheet_status.organization_id})
+    if notes_count > 0:
+        url = reverse('wsdot_review_cover_sheets_year_org', kwargs={'year': cover_sheet_status.year,
+                                                                    'organization_id': cover_sheet_status.organization_id})
+        print('url > 0')
+        cover_sheet_status.cover_sheet_status = "With user"
+        cover_sheet_status.save()
+
+    else:
+        return wsdot_review_cover_sheets(request, cover_sheet_status.year, cover_sheet_status.organization_id, True)
+
     return HttpResponseRedirect(url)
 
 
@@ -1605,10 +1623,10 @@ def customer_review_cover_sheets(request):
     org_summary_report_status = summary_report_status.objects.get(year=year, organization_id=organization_id)
 
     notes = cover_sheet_review_notes.objects.filter(year=year,
-                                                    summary_report_status=summary_report_status.objects.get(organization_id=organization_id),
+                                                    summary_report_status=summary_report_status.objects.get(organization_id=organization_id, year=year),
                                                     parent_note__isnull=True).exclude(note_status="Closed")
     child_notes = cover_sheet_review_notes.objects.filter(year=year,
-                                                          summary_report_status=summary_report_status.objects.get(organization_id=organization_id),
+                                                          summary_report_status=summary_report_status.objects.get(organization_id=organization_id, year=year),
                                                           parent_note__isnull=False)
     new_note_form = add_cover_sheet_review_note()
 
@@ -1633,7 +1651,6 @@ def customer_review_instructions(request):
 
 @login_required(login_url='/Panacea/login')
 def accept_wsdot_edit(request, note_id):
-
     note = cover_sheet_review_notes.objects.get(id=note_id)
     note.note_status = "Closed"
     note.save()
@@ -1644,10 +1661,18 @@ def accept_wsdot_edit(request, note_id):
         report_status.cover_sheet_submitted_for_review = True
         report_status.save()
 
-
     url = reverse('customer_review_cover_sheets')
     return HttpResponseRedirect(url)
 
+
+@login_required(login_url='/Panacea/login')
+@group_required('Summary reporter', 'WSDOT staff')
+def send_coversheet_back_to_wsdot(request, year, organization_id):
+    org_summary_report_status = summary_report_status.objects.get(year=year, organization_id=organization_id)
+    org_summary_report_status.cover_sheet_status = "With WSDOT"
+    org_summary_report_status.save()
+
+    return customer_review_cover_sheets(request)
 
 @login_required(login_url='/Panacea/login')
 @group_required('WSDOT staff')

@@ -33,9 +33,9 @@
                             <a class="nav-link" href="{% url 'summary_reporting_type' 'fund_balance' %}">Ending balances</a>
                         </li>
                         {% if ready_to_submit %}
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'submit_data' %}">Submit data</a>
-                        </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'submit_data' %}">Submit data</a>
+                            </li>
                         {% endif %}
                         <li class="nav-item">
                             <a class="nav-link" href="{% url 'review_data' %}">Review</a>
@@ -48,6 +48,12 @@
                         <p> Please confirm that these are the modes that your transit operates.  If you have add any new service or a modes is missing please add it below.
                             To remove a mode press the delete button.
                         </p>
+                        {% if error_no_modes %}
+                            <div class="alert alert-danger">
+                                You must have at least one mode before entering data.  Please add a mode.
+                            </div>
+                        {% endif %}
+
                         <div class = 'table-responsive'>
                             <table class = "table table-bordered table-hover">
                                 <thead>
