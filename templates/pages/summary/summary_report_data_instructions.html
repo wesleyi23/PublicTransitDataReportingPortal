@@ -41,18 +41,34 @@
                             <a class="nav-link" href="{% url 'summary_reporting_type' 'fund_balance' %}">Ending balances</a>
                         </li>
                         {% if ready_to_submit %}
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'submit_data' %}">Submit data</a>
-                        </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'submit_data' %}">Submit data</a>
+                            </li>
                         {% endif %}
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'review_data' %}">Review</a>
-                        </li>
+                        {#                        <li class="nav-item">#}
+                        {#                            <a class="nav-link" href="{% url 'review_data' %}">Review</a>#}
+                        {#                        </li>#}
                     </ul>
                 </div>
                 <div class="card-body" style="">
                     <h1>Summary of public transportation reporting</h1>
-                    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+                    <div class="alert alert-info" role="alert"><b>Please take a moment to read the instructions.</b></div>
+                    <ul>
+                        <li>Now that you have submited your coversheet it is time to report your data.</li>
+                        <li>After you press the ‘let’s get started’ button below, you will be taken to the first page which
+                        will ask you confirm or update information about the types of services you operate.</li>
+                        <li>Once you are satisfied with the content press the 'confirm service' button, to be taken to the next screen.</li>
+                        <li>Here you will begin to enter you data.</li>
+                        <li>You will see the service you are entering data about will be listed in the heading in black text.</li>
+                        <li>You may get some validation errors when you enter your data.  If this happens please provide a comment to explain your data in more detail.</li>
+                        <li>After completing each page, press the submit button to be taken to either the next service you operate or the next section of reporting</li>
+                        <li>You will repeat this process until you have completed your report.</li>
+                        <li>You may go back to previous sections by navigating through the tabs, and clicking on the links for each service, revenue, or expense type.</li>
+                        <li>Once you are done reporting, be sure to submit your data.</li>
+                    </ul>
+                    <p><b>We are here to help!</b>  If at any point you get stuck or have difficulties please reach out to us and ask for help.</p>
+                    <p>Up to date contact information is available on the <a href="{% url 'Help' %}">help page.</a></p>
+
                     <div class="text-center">
                         <a class="btn btn-primary btn-lg" href="{% url 'summary_modes' %}">Let's get started</a>
                     </div>

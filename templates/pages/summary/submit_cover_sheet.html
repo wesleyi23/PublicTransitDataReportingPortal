@@ -47,7 +47,11 @@
                         <p class="pb-5 h4">
                             When you are ready you may submit your coversheet for review.
                         </p>
-                        <a href="{% url 'submit_cover_sheet_submit' %}" class="btn btn-primary btn-lg" role="button" aria-disabled="true">Submit your cover sheet</a>
+                        {% if tribe == False %}
+                            <a href="{% url 'submit_cover_sheet_submit' %}" class="btn btn-primary btn-lg" role="button" aria-disabled="true">Submit your cover sheet</a>
+                        {% else %}
+                            <input id="submit_btn" type="button" data-toggle="modal" data-target="#tribal_modal" data-backdrop="static" data-keyboard="false" value="Submit" class="btn btn-primary btn-lg mt-3" style="min-width: 12rem;">
+                        {% endif %}
                     </div>
                 </div>
 
@@ -55,7 +59,54 @@
         </div>
     </div>
 
-
+    <!-- Modal -->
+    <div class="modal fade" id="tribal_modal" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLongTitle">Modal title</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <form action=" {% url 'submit_cover_sheet'  %}" method="post">
+                    {% csrf_token  %}
+                    <div class="modal-body">
+                        <p>
+                            Thank you for taking the time to submit your coversheet. As a Tribal transportation provider
+                            your participation in the Washington Summary of Public Transportation report is voluntary.
+                            However by providing information it helps WSDOT advocate for increased funding for services like
+                            the ones you provide and helps paint a compete picture of transportation services available in our
+                            region.
+                        </p>
+                        <p>
+                        You have several options for reporting: You may just report a coversheet describing your basic
+                        service, you may allow us to publish your NTD data, or you may fill out a report just as other
+                        transit agencies do.
+                        </p>
+                        <table class="table">
+                            <tr>
+                                <td>{{ form.permission_to_publish_coversheet }}</td>
+                                <td>I would like WSDOT to publish our agency's coversheet:</td>
+                            </tr>
+                            <tr>
+                                <td>{{ form.permission_to_publish_ntd_data }}</td>
+                                <td>I would like WSDOT to publish our agency's NTD data:</td>
+                            </tr>
+                            <tr>
+                                <td>{{ form.permission_to_publish_reported_data }}</td>
+                                <td>I would like WSDOT to publish the data I am about to report for our agency:</td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                         <input type="submit" value="Submit coversheet"  class="btn btn-primary float-right">
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 
 
 

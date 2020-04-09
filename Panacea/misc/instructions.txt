@@ -1,0 +1,12 @@
+Instructions to generate the service provider metadata needed by SAW
+
+1.  Open the Django shell using: manage.py shell
+2.  Run the following command in the new terminal: from Panacea.views_SAML import _get_saml_client
+3.  This will print the pysaml2 configuration data in the terminal
+4.  In the folder containing these instructions is a config.py file.  Copy the configuration data and replace the
+    CONFIG variables assigned value with the new printed data.
+5.  I have placed a copy of the pysaml2 make_metadata.py script in the folder containing these instructions.  You will
+    use this script to generate the XML metadata required by SAW.
+6.  Change directory in your terminal(not Django shell) to this directory. Should be: cd .\panacea\misc
+7.  Run the make_metada.py script using this command: make_metadata.py Config.py > metadata.xml
+8.  The metadata.xml file in this folder will contain the XML metadata required by SAW.

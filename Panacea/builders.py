@@ -228,7 +228,7 @@ class SummaryDataEntryBuilder(SummaryBuilder):
                     for m in missing_metrics:
                         model.create(**self.get_create_metric_dictionary(m))
 
-        form_metrics = model.filter(organization=self.target_organization)
+        form_metrics = model.filter(organization=self.target_organization).order_by(self.get_metric_id_field_name() + '__name')
         return form_metrics
 
     def get_widgets(self):
@@ -296,15 +296,15 @@ class SummaryDataEntryBuilder(SummaryBuilder):
         i = 0
         for year_x in ['this_year', 'previous_year', 'two_years_ago']:
             formsets[year_x] = my_formset_factory(
-                queryset=form_querysets.filter(year=self.year - i).order_by(self.get_metric_id_field_name()),
+                queryset=form_querysets.filter(year=self.year - i),
                 prefix=year_x)
             i += 1
-        formset_labels = form_querysets.filter(year=self.year).order_by(self.get_metric_id_field_name()).values_list(
+        formset_labels = form_querysets.filter(year=self.year).values_list(
             self.get_metric_model_name() + "__name", flat=True)
         if self.report_type != "transit_data":
             masking_class = ['Money'] * len(formset_labels)
         else:
-            masking_class = form_querysets.filter(year=self.year).order_by(self.get_metric_id_field_name()).values_list(
+            masking_class = form_querysets.filter(year=self.year).values_list(
                 self.get_metric_model_name() + "__form_masking_class", flat=True)
 
         return formsets, formset_labels, masking_class
@@ -351,10 +351,12 @@ class SummaryDataEntryBuilder(SummaryBuilder):
             for source in revenues:
                 filters.append([source['government_type'], source['funding_type']])
 
-            revenue_list_order_type = ['Operating', 'Capital']
-            revenue_list_order_gov = ['Local', 'State', 'Federal', 'Other']
-            filters.sort(key=lambda x: revenue_list_order_type.index(x[1]))
-            filters.sort(key=lambda x: revenue_list_order_gov.index(x[0]))
+            print(filters)
+            if len(filters) > 1:
+                revenue_list_order_type = ['Operating', 'Capital', 'Other']
+                revenue_list_order_gov = ['Local', 'State', 'Federal', 'Other']
+                filters.sort(key=lambda x: revenue_list_order_type.index(x[1]))
+                filters.sort(key=lambda x: revenue_list_order_gov.index(x[0]))
 
 
         elif self.report_type in ['expense', 'fund_balance', ]:
@@ -439,6 +441,12 @@ class SummaryDataEntryTemplateData:
         else:
             self.show_totals = True
 
+        print(self.formset_labels)
+        if len(self.formset_labels) == 0:
+            self.no_reports = True
+        else:
+            self.no_reports = False
+
 
 class ConfigurationBuilder(SummaryBuilder):
 
@@ -513,7 +521,6 @@ class ConfigurationBuilder(SummaryBuilder):
         else:
             raise Http404("Report type does not exist. -4a")
 
-
     def get_data_relationship_one_2_one(self):
         if self.report_type in ['organization']:
             return True
@@ -521,7 +528,6 @@ class ConfigurationBuilder(SummaryBuilder):
             return False
         else:
             return Http404("Report type does not exist. -4b")
-
 
     def create_model_formset_factory(self):
         '''Creates a fromset factory based on the information contained in the class information'''

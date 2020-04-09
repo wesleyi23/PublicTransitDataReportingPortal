@@ -56,14 +56,6 @@ def create_statewide_expense_table(year):
     print(revenue_capital)
 
 
-
-
-
-
-
-
-
-
 def create_statewide_revenue_table(year):
     revenues = read_frame(revenue.objects.filter(organization__summary_organization_classifications_id=6, year=year,reported_value__isnull=False).values('organization__name',
     'revenue_source_id__government_type','revenue_source_id__funding_type').annotate(reported_value=Sum('reported_value')).exclude(revenue_source_id__in = [63,64]))
@@ -182,13 +174,9 @@ def generate_performance_measure_table(metric, years):
     return df
 
 
-
-
-
 def complete_data():
     latest_data = vanpool_report.objects.filter(vanpool_groups_in_operation__isnull=False).values('report_year','report_month').annotate(Count('id')).order_by('-id__count', '-report_year', '-report_month').first()
     return latest_data
-
 
 
 def filter_revenue_sheet_by_classification(classification):

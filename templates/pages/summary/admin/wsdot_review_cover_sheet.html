@@ -26,10 +26,10 @@
                             <a class="nav-link" href="{% url 'summary_tracking' %}">Tracking</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link active" href="{% url 'wsdot_review_cover_sheets' %}">Review cover sheets</a>
+                            <a class="nav-link active" href="{% url 'wsdot_review_cover_sheets_year_org' year organization_id %}">Review cover sheets</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{% url 'wsdot_review_data' %}">Review Data</a>
+                            <a class="nav-link" href="{% url 'wsdot_review_data_submittal_year_org' year organization_id %}">Review Data</a>
                         </li>
                     </ul>
                 </div>
@@ -326,8 +326,7 @@
                             <hr class="">
                             <div class="mt-5 text-center">
                                 <a class="btn btn-warning mr-5" style="min-width: 12rem" href="{%  url 'return_cover_sheet_to_user' summary_report_status_id %}" role="button">Send back to user</a>
-                                <a class="btn btn-success" style="min-width: 12rem" href="{%  url 'approve_cover_sheet' summary_report_status_id %}" role="button">Approve coversheet</a>
-
+                                <a class="btn btn-success" style="min-width: 12rem" href="{%  url 'approve_data_submittal' summary_report_status_id %}" role="button">Approve coversheet</a>
                             </div>
                         </form>
                     {% endif %}

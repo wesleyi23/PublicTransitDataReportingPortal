@@ -46,15 +46,18 @@
                                 <a class="nav-link" href="{% url 'submit_data' %}">Submit data</a>
                             </li>
                         {% endif %}
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'review_data' %}">Review</a>
-                        </li>
+{#                        <li class="nav-item">#}
+{#                            <a class="nav-link" href="{% url 'review_data' %}">Review</a>#}
+{#                        </li>#}
 
                     </ul>
                 </div>
 
                 <div class="card-body" style="">
 
+                    {% if template_data.no_reports %}
+                        <div class="alert alert-info">You do not need to report anything in this section please press the button below to advance to the next reporting section.</div>
+                    {% endif %}
                     {% if template_data.nav_filter_count == 2 %}
                         <ul class="nav justify-content-center pt-2" style="font-size: 1.25rem">
                             {% for nav_item in template_data.nav_filters %}
@@ -69,7 +72,7 @@
 
                     <form id="summary_data_form" method="POST" class="disabled-form">
                         {% csrf_token  %}
-
+                    {% if not template_data.no_reports %}
                         <table class="table table-striped table-responsive">
                             <thead>
                             <tr style="min-height: 3.5rem">
@@ -135,7 +138,7 @@
                             {% endif %}
                             </tbody>
                         </table>
-
+                    {% endif %}
                         {{ template_data.formsets.this_year.management_form }}
                         {{ template_data.formsets.previous_year.management_form }}
                         {{ template_data.formsets.two_years_ago.management_form }}
@@ -144,6 +147,7 @@
                             <button type="submit" id="true_submit" style="display: none;" />Submit</button>
                         </div>
                     </form>
+
                 </div>
             </div>
         </div>

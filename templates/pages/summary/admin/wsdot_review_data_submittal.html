@@ -1,0 +1,92 @@
+{% extends 'index.html' %}
+{% load humanize %}
+{% load custom_tags %}
+{% load static %}
+{% load widget_tweaks %}
+
+{% block head_content %}
+
+
+{% endblock %}
+
+{% block content %}
+
+    <div class="container-fluid">
+
+        <!-- Page Heading -->
+
+    </div>
+
+    <div class="container-fluid">
+        <div class="row">
+            <div class="card shadow mb-4 w-100">
+                <div class="card-header">
+                    <ul class="nav nav-tabs card-header-tabs">
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'summary_tracking' %}">Tracking</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'wsdot_review_cover_sheets_year_org' year organization_id %}">Review cover sheets</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link active" href="{% url 'wsdot_review_data_submittal_year_org' year organization_id %}">Review Data</a>
+                        </li>
+                    </ul>
+                </div>
+                <div class="card-body" style="">
+                    <h1>Review data - {{ year }} {% get_org_name organization_id %}</h1>
+
+                    {% if not data_submitted %}
+                        <div class="alert alert-warning" role="alert">
+                            This organization has not submitted their data report for this year.
+                        </div>
+                    {% else %}
+                        {% if data_submittal_status == "With user" %}
+                            <div class="alert alert-warning" role="alert">
+                                This data report is with our customer for their review.
+                            </div>
+                        {% elif data_submittal_status == "Complete" %}
+                            <div class="alert alert-success" role="alert">
+                                The review of this data report is complete.
+                            </div>
+                        {% endif %}
+
+                        Data report review functionality will be built in future versions.  For now you may either
+                        approve the data report or send it back to the customer for their review.  If you send it back
+                        to the customer for their review you will need to follow up with email and resolve issues outside
+                        of the system.
+
+                        <hr class="">
+                        <div class="mt-5 text-center">
+                            <a class="btn btn-warning mr-5" style="min-width: 12rem" href="{%  url 'return_data_submittal_to_user' summary_report_status_id %}" role="button">Send back to user</a>
+                            <a class="btn btn-success" style="min-width: 12rem" href="{%  url 'approve_data_submittal' summary_report_status_id %}" role="button">Approve coversheet</a>
+                        </div>
+
+                    {% endif %}
+                    <hr class="mt-5">
+
+                    <div class="row">
+                        <div class="col-6">
+                            {% if previous_organization.organization_id  %}
+                                <a class="btn btn-primary" style="float: left;min-width: 6rem" href="{%  url 'wsdot_review_data_submittal_year_org' year previous_organization.organization_id %}" role="button">Previous</a>
+                            {% endif %}
+                        </div>
+                        <div class="col-6" >
+                            {% if next_organization.organization_id %}
+                                <a class="btn btn-primary" style="float: right;min-width: 6rem" href="{%  url 'wsdot_review_data_submittal_year_org' year next_organization.organization_id %}" role="button">Next</a>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+{%  endblock %}
+
+{% block page_scripts %}
+
+
+{% endblock %}

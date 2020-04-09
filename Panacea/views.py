@@ -59,10 +59,11 @@ from .forms import CustomUserCreationForm, \
     cover_sheet_organization, \
     transit_data_form, \
     service_offered_form, validation_error_form, email_contact_form, change_user_org, \
-    cover_sheet_wsdot_review, add_cover_sheet_review_note
+    cover_sheet_wsdot_review, add_cover_sheet_review_note, tribal_permissions
 from .models import profile, vanpool_report, custom_user, vanpool_expansion_analysis, organization, cover_sheet, \
     revenue, transit_data, expense, expense_source, service_offered, revenue_source, \
-    transit_metrics, transit_mode, fund_balance, fund_balance_type, summary_organization_type, validation_errors,  summary_report_status, cover_sheet_review_notes, summary_organization_progress
+    transit_metrics, transit_mode, fund_balance, fund_balance_type, summary_organization_type, validation_errors, \
+    summary_report_status, cover_sheet_review_notes, summary_organization_progress, tribal_reporter_permissions
 from django.contrib.auth.models import Group
 from .utilities import calculate_latest_vanpool, find_maximum_vanpool, calculate_remaining_months, \
     calculate_if_goal_has_been_reached, \
@@ -972,7 +973,22 @@ def cover_sheet_service_view(request):
 @login_required(login_url='/Panacea/login')
 @group_required('Summary reporter', 'WSDOT staff')
 def submit_cover_sheet(request):
-    return render(request, 'pages/summary/submit_cover_sheet.html', {})
+    user_org = find_user_organization(request.user.id)
+    tribe = False
+    form = None
+    if user_org.summary_organization_classifications.name == "Tribe":
+        tribe_instance, created = tribal_reporter_permissions.objects.get_or_create(year=get_current_summary_report_year(),
+                                                                                    organization=user_org)
+        tribe = True
+        form = tribal_permissions(instance=tribe_instance)
+    if request.POST:
+        form = tribal_permissions(data=request.POST, instance=tribe_instance)
+        if form.is_valid():
+            form.save()
+            return submit_cover_sheet_submit(request)
+
+    return render(request, 'pages/summary/submit_cover_sheet.html', {'tribe': tribe,
+                                                                     'form': form})
 
 
 @login_required(login_url='/Panacea/login')
@@ -1154,7 +1170,7 @@ def submit_data_submit(request):
 @login_required(login_url='/Panacea/login')
 @group_required('Summary reporter', 'WSDOT staff')
 def you_skipped_a_step(request):
-   return render(request, 'pages/summary/you_skipped_a_step.html', {})
+    return render(request, 'pages/summary/you_skipped_a_step.html', {})
 
 
 
@@ -1234,7 +1250,7 @@ def view_statewide_measures(request):
     statewide_measure_list = []
     list_of_headings = []
     statewide_measure_dictionary = {'Revenue Vehicle Hours by Service Mode': ("Revenue Vehicle Hours"), 'Revenue Vehicle Miles by Service Mode': ('Revenue Vehicle Miles'),
-    'Passenger Trips by Service Mode':('Passenger Trips'), 'Farebox Revenues by Service Mode': ('Farebox Revenues'), 'Operating Expenses by Service Mode': ('Operating Expenses')}
+                                    'Passenger Trips by Service Mode':('Passenger Trips'), 'Farebox Revenues by Service Mode': ('Farebox Revenues'), 'Operating Expenses by Service Mode': ('Operating Expenses')}
     for key, measure in statewide_measure_dictionary.items():
         df = generate_performance_measure_table(measure, years)
         heading_list = [key] + years + ['One Year Change (%)']
@@ -1249,9 +1265,9 @@ def view_performance_measures(request):
     performance_measure_list = []
     list_of_headings = []
     performance_measure_dictionary = {
-    'Operating Costs per Passenger Trip': ('Operating Expenses', 'Passenger Trips'), 'Operating Cost per Revenue Vehicle Hour':('Operating Expenses', 'Revenue Vehicle Hours'),
-    'Passenger Trips per Revenue Vehicle Hour':('Passenger Trips', 'Revenue Vehicle Hours'), 'Passenger Trips per Revenue Vehicle Mile':('Passenger Trips', 'Revenue Vehicle Miles'),
-                                      'Revenue Vehicle Hours per Employee': ('Revenue Vehicle Hours', 'Employees - FTEs'), 'Farebox Recovery Ratio/Vanpool Revenue Recovery': ('Farebox Revenues', 'Operating Expenses')}
+        'Operating Costs per Passenger Trip': ('Operating Expenses', 'Passenger Trips'), 'Operating Cost per Revenue Vehicle Hour':('Operating Expenses', 'Revenue Vehicle Hours'),
+        'Passenger Trips per Revenue Vehicle Hour':('Passenger Trips', 'Revenue Vehicle Hours'), 'Passenger Trips per Revenue Vehicle Mile':('Passenger Trips', 'Revenue Vehicle Miles'),
+        'Revenue Vehicle Hours per Employee': ('Revenue Vehicle Hours', 'Employees - FTEs'), 'Farebox Recovery Ratio/Vanpool Revenue Recovery': ('Farebox Revenues', 'Operating Expenses')}
     for key, measure in performance_measure_dictionary.items():
         df = generate_performance_measure_table(measure, years)
         heading_list = [key] + years + ['One Year Change (%)']
@@ -1375,7 +1391,6 @@ def wsdot_review_cover_sheets(request, year=None, organization_id=None, needs_no
             'organization__name').first()
         organization_id = cover_sheet_organization.organization_id
 
-        print(organization_id)
 
     org_cover_sheet, created = cover_sheet.objects.get_or_create(organization_id=organization_id)
 
@@ -1607,16 +1622,6 @@ def return_cover_sheet_to_user(request, summary_report_status_id):
 
 
 @login_required(login_url='/Panacea/login')
-@group_required('WSDOT staff')
-def wsdot_review_data(request):
-    if request.POST:
-        pass
-    else:
-        pass
-    return render(request, 'pages/summary/admin/wsdot_review_data.html')
-
-
-@login_required(login_url='/Panacea/login')
 def customer_review_cover_sheets(request):
     year = get_current_summary_report_year()
     organization_id = find_user_organization_id(request.user.id)
@@ -1674,6 +1679,66 @@ def send_coversheet_back_to_wsdot(request, year, organization_id):
 
     return customer_review_cover_sheets(request)
 
+
+@login_required(login_url='/Panacea/login')
+@group_required('Summary reporter', 'WSDOT staff')
+def wsdot_review_data_submittal(request, year=None, organization_id=None):
+    if year is None:
+        year = summary_report_status.objects.aggregate(Max('year'))
+        year = year['year__max']
+    if organization_id is None:
+        summary_reporter_organization = summary_report_status.objects.filter(year=year,
+                                                                             organization__summary_reporter=True).order_by(
+            'organization__name').first()
+        organization_id = summary_reporter_organization.organization_id
+
+    organization_status = get_object_or_404(summary_report_status, year=year, organization_id=organization_id)
+    summary_report_status_id = organization_status.id
+    organization_name = organization.objects.get(id=organization_id).name
+
+    data_submitted = organization_status.data_report_submitted_for_review
+    data_submittal_status = organization_status.data_report_status
+
+    next_organization = summary_report_status.objects.filter(year=year, organization__summary_reporter=True).order_by(
+        'organization__name').filter(organization__name__gt=organization_name).first()
+    previous_organization = summary_report_status.objects.filter(year=year,
+                                                                 organization__summary_reporter=True).order_by(
+        'organization__name').filter(organization__name__lt=organization_name).last()
+
+    return render(request, 'pages/summary/admin/wsdot_review_data_submittal.html',
+                  {'year': year,
+                   'organization_id': organization_id,
+                   'data_submitted': data_submitted,
+                   'data_submittal_status': data_submittal_status,
+                   'summary_report_status_id': summary_report_status_id,
+                   'next_organization': next_organization,
+                   'previous_organization': previous_organization})
+
+
+@login_required(login_url='/Panacea/login')
+@group_required('WSDOT staff')
+def approve_data_submittal(request, summary_report_status_id):
+    data_report_status = summary_report_status.objects.get(id=summary_report_status_id)
+    data_report_status.data_report_status = "Complete"
+    data_report_status.save()
+    print(data_report_status)
+    url = reverse('wsdot_review_data_submittal_year_org', kwargs={'year': data_report_status.year,
+                                                                  'organization_id': data_report_status.organization_id})
+    return HttpResponseRedirect(url)
+
+
+@login_required(login_url='/Panacea/login')
+@group_required('WSDOT staff')
+def return_data_submittal_to_user(request, summary_report_status_id):
+    data_report_status = summary_report_status.objects.get(id=summary_report_status_id)
+    url = reverse('wsdot_review_data_submittal_year_org', kwargs={'year': data_report_status.year,
+                                                                  'organization_id': data_report_status.organization_id})
+    data_report_status.data_report_status = "With user"
+    data_report_status.save()
+    print(data_report_status.data_report_status)
+    return HttpResponseRedirect(url)
+
+
 @login_required(login_url='/Panacea/login')
 @group_required('WSDOT staff')
 def test_tools(request):
@@ -1687,9 +1752,6 @@ def test_tools(request):
     else:
         form = change_user_org()
     return render(request, 'pages/test_tools.html', {'form': form})
-
-
-
 
 
 

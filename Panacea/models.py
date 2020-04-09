@@ -53,7 +53,7 @@ class custom_user(AbstractUser):
     # User authentication from tut located here:https://wsvincent.com/django-custom-user-model-tutorial/
     username = None
     email = models.EmailField(_('email address'), unique=True)  # changes email to unique and blank to false
-    random_field = models.CharField(max_length=80, blank=True)
+    saw_id = models.CharField(max_length=80, blank=True)
 
     objects = CustomUserManager()
 
@@ -339,7 +339,8 @@ class revenue_source(models.Model):
 
     FUNDING_KIND = (
         ('Capital', 'Capital'),
-        ('Operating', 'Operating')
+        ('Operating', 'Operating'),
+        ('Other', 'Other')
     )
 
     TRUE_FALSE_CHOICES = (
@@ -684,6 +685,17 @@ class cover_sheet_review_notes(models.Model):
                 parent_note.save()
 
         super(cover_sheet_review_notes, self).save(*args, **kwargs)
+
+
+class tribal_reporter_permissions(models.Model):
+    year = models.IntegerField()
+    organization = models.ForeignKey(organization, on_delete=models.PROTECT)
+    permission_to_publish_coversheet = models.BooleanField(default=False)
+    permission_to_publish_ntd_data = models.BooleanField(default=False, verbose_name="Permission to publish NTD data")
+    permission_to_publish_reported_data = models.BooleanField(default=False)
+
+    class Meta:
+        unique_together = ('year', 'organization',)
 
 # class ending_balance_categories(models.Model):
 #     ending_balance_category = models.CharField(max_length=100, blank=False, null = False)

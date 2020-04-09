@@ -14,7 +14,7 @@ from .models import custom_user, \
     vanpool_expansion_analysis, \
     cover_sheet, \
     transit_data, expense, revenue, revenue_source, transit_mode, service_offered, transit_metrics, expense_source, \
-    fund_balance, fund_balance_type, validation_errors, cover_sheet_review_notes
+    fund_balance, fund_balance_type, validation_errors, cover_sheet_review_notes, tribal_reporter_permissions
 from django.utils.translation import gettext, gettext_lazy as _
 from phonenumber_field.formfields import PhoneNumberField
 from localflavor.us.forms import USStateSelect, USZipCodeField
@@ -668,6 +668,17 @@ class cover_sheet_service(forms.ModelForm):
         }
 
 
+class tribal_permissions(forms.ModelForm):
+    class Meta:
+        model = tribal_reporter_permissions
+        fields = ('permission_to_publish_coversheet', 'permission_to_publish_ntd_data', 'permission_to_publish_reported_data')
+        widgets = {'permission_to_publish_coversheet': forms.CheckboxInput(attrs={'class': 'form-check-inline'}),
+                   'permission_to_publish_ntd_data': forms.CheckboxInput(attrs={'class': 'form-check-inline'}),
+                   'permission_to_publish_reported_data': forms.CheckboxInput(attrs={'class': 'form-check-inline'}),
+                   }
+
+
+
 class cover_sheet_wsdot_review(forms.ModelForm):
     organization_logo_input = forms.FileField(required=False,
                                               widget=forms.FileInput(attrs={'class': 'my-custom-file-input',
@@ -883,3 +894,8 @@ class change_user_org(forms.ModelForm):
             'custom_user': forms.Select(),
             'organization': forms.Select(),
         }
+
+    def __init__(self, *args, **kwargs):
+        super(change_user_org, self).__init__(*args, **kwargs)
+        self.fields['organization'].queryset = self.fields['organization'].queryset.order_by('name')
+

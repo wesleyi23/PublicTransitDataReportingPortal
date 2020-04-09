@@ -162,11 +162,16 @@ function set_button_status(){
 }
 
 function fifteen_percent_needs_comment() {
+    let err_msg = err_msg_fifteen_percent_change;
+    if (this.value == ""){
+        remove_err_msg(this, err_msg)
+        return true
+    }
     let new_value = parseFloat(this.value.replace(/[$,]/g, ""));
     let previous_value = getPreviousElement(this.parentElement, 'summary-input').childNodes[0].value;
     previous_value = parseFloat(previous_value.replace(/[$,]/g, ""));
     let greater_than_15 = Math.abs((previous_value - new_value) / new_value) >= .15;
-    let err_msg = err_msg_fifteen_percent_change;
+
     if (greater_than_15) {
         if (!element_has_error(this, err_msg) && !element_has_comment(this)) {
             add_err_msg(this, err_msg)
@@ -289,7 +294,7 @@ function get_field_year_class(elem){
     }
 }
 
-// may need this at some point thought i did
+// may need this at some point - thought i did
 /*function element_error_count(elem) {
     return error_dict[elem.name].length
 }*/
