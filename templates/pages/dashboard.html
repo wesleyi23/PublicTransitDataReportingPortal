@@ -4,7 +4,7 @@
 
 {% block head_content %}
     {% if request.user|has_group:"Summary reporter" and user_org != 1 and summary_reporter != False %}
-        <link href="{% static 'css/progress_bar.css'%}" rel="stylesheet">
+{#        <link href="{% static 'css/progress_bar.css'%}" rel="stylesheet">#}
     {% endif %}
 {% endblock %}
 

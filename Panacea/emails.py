@@ -26,7 +26,7 @@ def active_permissions_request_notification():
     send_mail(
         subject='Active Permissions Request - Public Transportation Reporting Portal',
         message=msg_plain,
-        from_email= 'permissions@ptreportingportal.gov',
+        from_email='permissions@ptreportingportal.gov',
         recipient_list= recipient_list,
         html_message= msg_html, fail_silently=False)
 
