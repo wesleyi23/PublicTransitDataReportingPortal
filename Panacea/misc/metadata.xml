@@ -1,7 +1,32 @@
-<ns0:EntityDescriptor xmlns:ns0="urn:oasis:names:tc:SAML:2.0:metadata" entityID="https://vanpooldev.azurewebsites.net/sso/wsdot/">
-    <ns0:SPSSODescriptor AuthnRequestsSigned="false" WantAssertionsSigned="true" protocolSupportEnumeration="urn:oasis:names:tc:SAML:2.0:protocol">
-        <ns0:NameIDFormat>urn:oasis:names:tc:SAML:2.0:nameid-format:persistent</ns0:NameIDFormat>
-        <ns0:AssertionConsumerService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect" Location="https://vanpooldev.azurewebsites.net/sso/wsdot/acs/" index="1" />
-        <ns0:AssertionConsumerService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST" Location="https://vanpooldev.azurewebsites.net/sso/wsdot/acs/" index="2" />
-    </ns0:SPSSODescriptor>
-</ns0:EntityDescriptor>
+<ns0:EntityDescriptor xmlns:ns0="urn:oasis:names:tc:SAML:2.0:metadata" xmlns:ns1="http://www.w3.org/2000/09/xmldsig#" entityID="https://ptd_report.ngrok.io/sso/saw/"><ns0:SPSSODescriptor AuthnRequestsSigned="false" WantAssertionsSigned="true" protocolSupportEnumeration="urn:oasis:names:tc:SAML:2.0:protocol"><ns0:KeyDescriptor use="signing"><ns1:KeyInfo><ns1:X509Data><ns1:X509Certificate>MIIFtjCCA54CAQAwDQYJKoZIhvcNAQENBQAwgaAxCzAJBgNVBAYTAlVTMRMwEQYD
+VQQIDApXYXNoaW5ndG9uMRAwDgYDVQQHDAdPbHltcGlhMQ4wDAYDVQQKDAVXU0RP
+VDEmMCQGA1UECwwdUHVibGljIFRyYW5zcG9yYXRpb24gRGl2aXNpb24xDTALBgNV
+BAMMBHRlc3QxIzAhBgkqhkiG9w0BCQEWFHdlc2xleWlAd3Nkb3Qud2EuZ292MB4X
+DTIwMDQxNDE5MjYxN1oXDTMwMDQxMjE5MjYxN1owgaAxCzAJBgNVBAYTAlVTMRMw
+EQYDVQQIDApXYXNoaW5ndG9uMRAwDgYDVQQHDAdPbHltcGlhMQ4wDAYDVQQKDAVX
+U0RPVDEmMCQGA1UECwwdUHVibGljIFRyYW5zcG9yYXRpb24gRGl2aXNpb24xDTAL
+BgNVBAMMBHRlc3QxIzAhBgkqhkiG9w0BCQEWFHdlc2xleWlAd3Nkb3Qud2EuZ292
+MIICIjANBgkqhkiG9w0BAQEFAAOCAg8AMIICCgKCAgEAnGIHkRqT49xwRbyYGvng
+7nqJaNsBcg/mgQcZF1oZZsJJCk1MVUVl8ePa0sphD+oz9RR9tmrhxlliIznUXqMC
+RwvNOt7b+WOagkpy71uegsVNRL0SQpPckDrh9Gjjd/yBwR7NjhceyIA1aRQfutxz
+ThbpZsewvr+TzcTztbsbdI6lqEU7StVNbrzq/Ctn5/7gJO35GKzfFZKh4dTStpHJ
+U8+mi/6iAwC+IFp16t/7fCI0wzAoNFmMyiKEUnb9SV3yBSLpjYeApeALYZqfNv/2
+8pzEft8inCsWSfagMXoSAOjMJA/sjEN5gRByNLYXSpJBcWtoBs6yT2urLO6P3+hn
+AbysFj0AxYQFLxlpXddnV/McdR/4h0jWX0FpMHWUnp+ZJNZR4Z301s4bzZdwYaRg
+5VDVn8JrxhlYFtfFy9Z0dJk0kQaPkkJfQDhx8tQxVFz6cFj54RidB9ThqklvJJhG
+tKsi+HCdNjX4iwBMmWo0/9XVXHZDd0sLr/tUGu5DpIFHE86wqs4Lf46/EHgD2p32
+u97z3d7bGEC9HUlU5jF7BrwMR314jsm0gu5R5QDqe1KPiO+zN9z69C1bFRdqE7nZ
+y1V3CsMmUHg89nrjujgGw9TwFdiEwmrQQO1cDdhDFLytz9rrIsnCfOXnkwTa5wgp
+g1ejv3KJpDhZfz525LVR1ssCAwEAATANBgkqhkiG9w0BAQ0FAAOCAgEAE6ye/AX3
+9MgCbINeBz07P+kjOPQ0G1O1UQLHEXMizZsA07S0I8zzDfzvEuF7AQBcILTlkWjg
+Dnu74Mf1N4PBSf8djLuJW1v9QA17Y3TX8PKi8La8/KfNa26b1dm2MGsdPYZ6PrS4
+E2hYVnQEomCx9mybwkpeuiBsCG195EppcyX5RnksLfVfErZNh1jrYpR+9rO+ilZD
+/nnS9uc5mLgEVkvnLpCJmcg+xTw6Xciiv7hXL4UR17OaIW08vWD7bvHSltjToDeo
+GpO7aGRHx8OudTzgZaei/4OSRAemFMpdrIpga0RSIohqOS50TdbMaOi9LUzCoJ9Q
+UaHZyOW0O0iPneLYQFnrxHizIBwG2Q6Iw3ZPvLAznNQ49tqD2iCAqwWuILsKFHZd
+mqRKjNRkLgDlsr21fG/b6GEZYxISTNauPoljIYie/sJ9/0RwzfW/iR6mwqiLVVEO
+hfyBiMaAyqLVIazHQeifftkHnJe029vnG+Cx6cHdnbyNObwIy97AULj75qOSJkyk
+Wf1zYxanHBZOZ9qh3ZMUcVRGOw3W6QvSjELaoEwjKg2mc557/in3FSKN4TKgGt/H
+ChVZU4dnkZZhGdnsraIxwNVpFBNH+xlDdmJgdDj8mu4yfS5f5nNjBoAHvNjQXE3V
+uXWIupif4E2BLStAKh3FD/eQXq4lfvqQPBU=
+</ns1:X509Certificate></ns1:X509Data></ns1:KeyInfo></ns0:KeyDescriptor><ns0:NameIDFormat>urn:oasis:names:tc:SAML:2.0:nameid-format:persistent</ns0:NameIDFormat><ns0:AssertionConsumerService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST" Location="https://ptd_report.ngrok.io/sso/saw/acs/" index="1" /></ns0:SPSSODescriptor></ns0:EntityDescriptor>

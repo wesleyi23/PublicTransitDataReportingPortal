@@ -16,7 +16,7 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 
-from Panacea import views
+from Panacea import views, views_SAML_SAW
 from Panacea import views_SAML
 from django.conf.urls import url
 
@@ -137,8 +137,8 @@ urlpatterns = [
     path('login_denied/', views.login_denied, name='login_denied'),
     path('sso/wsdot/', views_SAML.signin, name="wsdot_sso"),
     path('sso/wsdot/reply/', views_SAML.wsdot, name="wsdot_sso_reply"),
-    path('sso/saw/', views_SAML.signin, name="saw_sso"),
-    path('sso/saw/acs/', views_SAML.saw, name="saw_sso_reply"),
+    path('sso/saw/', views_SAML_SAW.signin, name="saw_sso"),
+    path('sso/saw/acs/', views_SAML_SAW.acs, name="saw_sso_acs"),
     # path('summary/test', views.test, name='test'),
 
 ]

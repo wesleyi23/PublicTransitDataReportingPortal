@@ -187,12 +187,12 @@ CELERY_TASK_SERIALIZER = 'json'
 CELERY_BEAT_SCHEDULE = {'send_emails_now': {'task': 'Panacea.tasks.send_emails_now',
                                             'schedule': crontab(minute="*")}
 
-}
+                        }
 
 MEDIA_ROOT = '/var/media/'
 MEDIA_URL = '/media/'
 
-
+# SAML Settings for WSDOT employees - Azure
 SAML2_AUTH = {
     # Metadata is required, choose either remote url or local file path
     'METADATA_AUTO_CONF_URL': 'https://login.microsoftonline.com/6f10858a-931e-4554-89f7-a3694e8e0f1a/federationmetadata/2007-06/federationmetadata.xml?appid=666dd47c-2480-4ffa-b3ce-37f1cd37051c ',
@@ -219,6 +219,38 @@ SAML2_AUTH = {
     },
     'ASSERTION_URL': 'https://vanpooldev.azurewebsites.net/sso/wsdot/reply', # Custom URL to validate incoming SAML requests against
     'ENTITY_ID': 'https://vanpooldev.azurewebsites.net/sso/wsdot/', # Populates the Issuer element in authn request
+    'NAME_ID_FORMAT': 'urn:oasis:names:tc:SAML:2.0:nameid-format:persistent', # Sets the Format property of authn NameIDPolicy element
+    'USE_JWT': False, # Set this to True if you are running a Single Page Application (SPA) with Django Rest Framework (DRF), and are using JWT authentication to authorize client users
+    'FRONTEND_URL': '', # Redirect URL for the client if you are using JWT auth with DRF. See explanation below
+}
+
+# SAML Settings for external users - SAW
+SAML2_AUTH_SAW = {
+    # Metadata is required, choose either remote url or local file path
+    'METADATA_AUTO_CONF_URL': 'https://login.microsoftonline.com/6f10858a-931e-4554-89f7-a3694e8e0f1a/federationmetadata/2007-06/federationmetadata.xml?appid=666dd47c-2480-4ffa-b3ce-37f1cd37051c ',
+    # 'METADATA_LOCAL_FILE_PATH': '[The metadata configuration file path]',
+
+    # Optional settings below
+    'DEFAULT_NEXT_URL': '/logged_in',  # Custom target redirect URL after the user get logged in. Default to /admin if not set. This setting will be overwritten if you have parameter ?next= specificed in the login URL.
+    'CREATE_USER': 'FALSE', # Create a new Django user when a new user logs in. Defaults to True.
+    'NEW_USER_PROFILE': {
+        'USER_GROUPS': [],  # The default group name when a new user logs in
+        'ACTIVE_STATUS': True,  # The default active status for new users
+        'STAFF_STATUS': True,  # The staff status for new users
+        'SUPERUSER_STATUS': False,  # The superuser status for new users
+    },
+    'ATTRIBUTES_MAP': {  # Change Email/UserName/FirstName/LastName to corresponding SAML2 userprofile attributes.
+        'email': 'user.mail',
+        'username': 'user.userprincipalname',
+        'first_name': 'user.givenname',
+        'last_name': 'user.surname',
+    },
+    'TRIGGER': {
+        'CREATE_USER': 'path.to.your.new.user.hook.method',
+        'BEFORE_LOGIN': 'path.to.your.login.hook.method',
+    },
+    'ASSERTION_URL': 'https://ptd_report.ngrok.io/sso/saw/acs', # Custom URL to validate incoming SAML requests against
+    'ENTITY_ID': 'https://ptd_report.ngrok.io/sso/saw/', # Populates the Issuer element in authn request
     'NAME_ID_FORMAT': 'urn:oasis:names:tc:SAML:2.0:nameid-format:persistent', # Sets the Format property of authn NameIDPolicy element
     'USE_JWT': False, # Set this to True if you are running a Single Page Application (SPA) with Django Rest Framework (DRF), and are using JWT authentication to authorize client users
     'FRONTEND_URL': '', # Redirect URL for the client if you are using JWT auth with DRF. See explanation below
