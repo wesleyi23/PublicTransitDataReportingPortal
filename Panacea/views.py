@@ -37,7 +37,9 @@ from .utilities import monthdelta, get_wsdot_color, get_vanpool_summary_charts_a
 from django.http import Http404
 from .filters import VanpoolExpansionFilter, VanpoolReportFilter
 from django.conf import settings
-from .emails import send_user_registration_email, notify_user_that_permissions_have_been_requested, active_permissions_request_notification
+from .emails import send_user_registration_email, notify_user_that_permissions_have_been_requested, \
+    active_permissions_request_notification, cover_sheet_review_complete, cover_sheet_returned_to_user, \
+    to_wsdot_cover_sheet_submitted, to_wsdot_data_report_submitted, data_report_review_complete
 import base64
 from django import forms
 
@@ -1003,7 +1005,7 @@ def submit_cover_sheet_submit(request):
     report_status.cover_sheet_submitted_for_review = True
     report_status.cover_sheet_status = "With WSDOT"
     report_status.save()
-
+    to_wsdot_cover_sheet_submitted(user_org.id)
     return redirect('summary_report_data')
 
 
@@ -1165,6 +1167,7 @@ def submit_data_submit(request):
     status.data_report_submitted_for_review = True
     status.data_report_status = "With WSDOT"
     status.save()
+    to_wsdot_data_report_submitted(status.organization_id)
     return redirect('dashboard')
 
 @login_required(login_url='/Panacea/login')
@@ -1599,6 +1602,7 @@ def approve_cover_sheet(request, summary_report_status_id):
 
     url = reverse('wsdot_review_cover_sheets_year_org', kwargs={'year': cover_sheet_status.year,
                                                                 'organization_id': cover_sheet_status.organization_id})
+    cover_sheet_review_complete(summary_report_status.objects.get(id=summary_report_status_id).organization_id)
     return HttpResponseRedirect(url)
 
 
@@ -1617,7 +1621,7 @@ def return_cover_sheet_to_user(request, summary_report_status_id):
 
     else:
         return wsdot_review_cover_sheets(request, cover_sheet_status.year, cover_sheet_status.organization_id, True)
-
+    cover_sheet_returned_to_user(summary_report_status.objects.get(id=summary_report_status_id).organization_id)
     return HttpResponseRedirect(url)
 
 
@@ -1665,6 +1669,7 @@ def accept_wsdot_edit(request, note_id):
         report_status.cover_sheet_status = "With WSDOT"
         report_status.cover_sheet_submitted_for_review = True
         report_status.save()
+        to_wsdot_cover_sheet_submitted(report_status.organization_id)
 
     url = reverse('customer_review_cover_sheets')
     return HttpResponseRedirect(url)
@@ -1676,7 +1681,7 @@ def send_coversheet_back_to_wsdot(request, year, organization_id):
     org_summary_report_status = summary_report_status.objects.get(year=year, organization_id=organization_id)
     org_summary_report_status.cover_sheet_status = "With WSDOT"
     org_summary_report_status.save()
-
+    to_wsdot_cover_sheet_submitted(organization_id)
     return customer_review_cover_sheets(request)
 
 
@@ -1724,6 +1729,7 @@ def approve_data_submittal(request, summary_report_status_id):
     print(data_report_status)
     url = reverse('wsdot_review_data_submittal_year_org', kwargs={'year': data_report_status.year,
                                                                   'organization_id': data_report_status.organization_id})
+    data_report_review_complete(data_report_status.organization_id)
     return HttpResponseRedirect(url)
 
 
