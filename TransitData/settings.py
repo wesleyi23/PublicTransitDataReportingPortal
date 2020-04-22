@@ -249,8 +249,8 @@ SAML2_AUTH_SAW = {
         'CREATE_USER': 'path.to.your.new.user.hook.method',
         'BEFORE_LOGIN': 'path.to.your.login.hook.method',
     },
-    'ASSERTION_URL': 'https://ptd_report.ngrok.io/sso/saw/acs', # Custom URL to validate incoming SAML requests against
-    'ENTITY_ID': 'https://ptd_report.ngrok.io/sso/saw/', # Populates the Issuer element in authn request
+    'ASSERTION_URL': 'https://ptdreport.ngrok.io/sso/saw/acs', # Custom URL to validate incoming SAML requests against
+    'ENTITY_ID': 'https://ptdreport.ngrok.io/sso/saw/', # Populates the Issuer element in authn request
     'NAME_ID_FORMAT': 'urn:oasis:names:tc:SAML:2.0:nameid-format:persistent', # Sets the Format property of authn NameIDPolicy element
     'USE_JWT': False, # Set this to True if you are running a Single Page Application (SPA) with Django Rest Framework (DRF), and are using JWT authentication to authorize client users
     'FRONTEND_URL': '', # Redirect URL for the client if you are using JWT auth with DRF. See explanation below

@@ -84,6 +84,14 @@
                                 <div class="text-center">
                                     <a class="small" href="{% url 'register' %}">Create an Account!</a>
                                 </div>
+                                <hr>
+                                <div class="pb-1" style="display: flex">
+                                    <a href="#" class="mx-auto btn btn-primary btn-user" style="flex: 1">WSDOT user login</a>
+                                </div>
+                                <div style="display: flex">
+                                    <a href="#"  class="mx-auto btn btn-primary btn-user" style="flex: 1">External user login</a>
+                                </div>
+
                             </div>
                         </div>
                     </div>
@@ -98,10 +106,10 @@
 
 <!-- Bootstrap core JavaScript-->
 
-// First try loading jQuery from Google's CDN
+{#// First try loading jQuery from Google's CDN#}
 <script src="//ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
 
-// Fall back to a local copy of jQuery if the CDN fails
+{#// Fall back to a local copy of jQuery if the CDN fails#}
 <script>
     window.jQuery || document.write('<script src="{% static 'vendor/jquery/jquery.min.js' %}"><\/script>');
 </script>
