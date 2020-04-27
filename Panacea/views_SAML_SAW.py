@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding:utf-8 -*-
-
+import base64
 
 from saml2 import (
     BINDING_HTTP_POST,
@@ -47,7 +47,7 @@ def _default_next_url():
     if 'DEFAULT_NEXT_URL' in settings.SAML2_AUTH_SAW:
         return settings.SAML2_AUTH_SAW['DEFAULT_NEXT_URL']
     # Lazily evaluate this in case we don't have admin loaded.
-    return get_reverse('your_logged_in')
+    return get_reverse('dashboard')
 
 
 def get_current_domain(r):
@@ -107,7 +107,7 @@ def _get_saml_client(domain):
                 },
                 'allow_unsolicited': True,
                 'authn_requests_signed': False,
-                'logout_requests_signed': True,
+                'logout_requests_signed': False,
                 'want_assertions_signed': True,
                 'want_response_signed': False,
             },
@@ -143,10 +143,11 @@ def denied(r):
     return render(r, 'login_denied.html')
 
 
-def _create_new_user(username, email, firstname, lastname):
-    user = User.objects.create_user(username, email)
-    user.first_name = firstname
-    user.last_name = lastname
+def _create_new_user(username, email, guid, full_name): #, firstname, lastname):
+    user = User.objects.create_user(email, email)
+    user.saw_id = guid
+    user.first_name = full_name.split()[0]
+    user.last_name = full_name.split()[1]
     groups = [Group.objects.get(name=x) for x in settings.SAML2_AUTH_SAW.get('NEW_USER_PROFILE', {}).get('USER_GROUPS', [])]
     if parse_version(get_version()) >= parse_version('2.0'):
         user.groups.set(groups)
@@ -159,92 +160,18 @@ def _create_new_user(username, email, firstname, lastname):
     return user
 
 
-@csrf_exempt
-def wsdot(r):
-    saml_client = _get_saml_client(get_current_domain(r))
-    resp = r.POST.get('SAMLResponse', None)
-    print(resp)
-    next_url = r.session.get('login_next_url', _default_next_url())
-
-    if not resp:
-        print("no response")
-        return HttpResponseRedirect(get_reverse([denied, 'login_denied']))
-
-    authn_response = saml_client.parse_authn_request_response(
-        resp, entity.BINDING_HTTP_POST)
-
-    print(authn_response)
-    if authn_response is None:
-        return HttpResponseRedirect(get_reverse([denied, 'login_denied']))
-
-    user_identity = authn_response.get_identity()
-    if user_identity is None:
-        return HttpResponseRedirect(get_reverse([denied, 'login_denied']))
-
-    user_email = user_identity[settings.SAML2_AUTH_SAW.get('ATTRIBUTES_MAP', {}).get('email', 'Email')][0]
-    user_name = user_identity[settings.SAML2_AUTH_SAW.get('ATTRIBUTES_MAP', {}).get('username', 'UserName')][0]
-    user_first_name = user_identity[settings.SAML2_AUTH_SAW.get('ATTRIBUTES_MAP', {}).get('first_name', 'FirstName')][0]
-    user_last_name = user_identity[settings.SAML2_AUTH_SAW.get('ATTRIBUTES_MAP', {}).get('last_name', 'LastName')][0]
-
-    target_user = None
-    is_new_user = False
-
-    try:
-        #TODO change to custom user get by email
-        target_user = User.objects.get(email=user_email)
-        if settings.SAML2_AUTH_SAW.get('TRIGGER', {}).get('BEFORE_LOGIN', None):
-            import_string(settings.SAML2_AUTH_SAW['TRIGGER']['BEFORE_LOGIN'])(user_identity)
-    except User.DoesNotExist:
-        new_user_should_be_created = settings.SAML2_AUTH_SAW.get('CREATE_USER', True)
-        if new_user_should_be_created:
-            target_user = _create_new_user(user_name, user_email, user_first_name, user_last_name)
-            if settings.SAML2_AUTH_SAW.get('TRIGGER', {}).get('CREATE_USER', None):
-                import_string(settings.SAML2_AUTH_SAW['TRIGGER']['CREATE_USER'])(user_identity)
-            is_new_user = True
-        else:
-            return HttpResponseRedirect(get_reverse([denied, 'login_denied']))
-
-    r.session.flush()
-
-    if target_user.is_active:
-        target_user.backend = 'django.contrib.auth.backends.ModelBackend'
-        login(r, target_user)
-    else:
-        return HttpResponseRedirect(get_reverse([denied, 'login_denied']))
-
-    if settings.SAML2_AUTH_SAW.get('USE_JWT') is True:
-        # We use JWT auth send token to frontend
-        jwt_token = jwt_encode(target_user)
-        query = '?uid={}&token={}'.format(target_user.id, jwt_token)
-
-        frontend_url = settings.SAML2_AUTH_SAW.get(
-            'FRONTEND_URL', next_url)
-
-        return HttpResponseRedirect(frontend_url+query)
-
-    if is_new_user:
-        try:
-            return render(r, 'django_saml2_auth/welcome.html', {'user': r.user})
-        except TemplateDoesNotExist:
-            return HttpResponseRedirect(next_url)
-    else:
-        return HttpResponseRedirect(next_url)
-
-
 #TODO edit to make it so it works for saw
 @csrf_exempt
 def acs(r):
     saml_client = _get_saml_client(get_current_domain(r))
     resp = r.POST.get('SAMLResponse', None)
-    print(resp)
+
     next_url = r.session.get('login_next_url', _default_next_url())
 
     if not resp:
         print("no response")
         return HttpResponseRedirect(get_reverse([denied, 'login_denied']))
-
-    authn_response = saml_client.parse_authn_request_response(
-        resp, entity.BINDING_HTTP_POST)
+    authn_response = saml_client.parse_authn_request_response(resp, entity.BINDING_HTTP_POST)
 
     print(authn_response)
     if authn_response is None:
@@ -254,28 +181,33 @@ def acs(r):
     if user_identity is None:
         return HttpResponseRedirect(get_reverse([denied, 'login_denied']))
 
+    user_guid = user_identity[settings.SAML2_AUTH_SAW.get('ATTRIBUTES_MAP', {}).get('saw_id', 'guid')][0]
     user_email = user_identity[settings.SAML2_AUTH_SAW.get('ATTRIBUTES_MAP', {}).get('email', 'Email')][0]
     user_name = user_identity[settings.SAML2_AUTH_SAW.get('ATTRIBUTES_MAP', {}).get('username', 'UserName')][0]
-    user_first_name = user_identity[settings.SAML2_AUTH_SAW.get('ATTRIBUTES_MAP', {}).get('first_name', 'FirstName')][0]
-    user_last_name = user_identity[settings.SAML2_AUTH_SAW.get('ATTRIBUTES_MAP', {}).get('last_name', 'LastName')][0]
+    full_name = user_identity[settings.SAML2_AUTH_SAW.get('ATTRIBUTES_MAP', {}).get('full_name', 'name')][0]
+    # user_last_name = user_identity[settings.SAML2_AUTH_SAW.get('ATTRIBUTES_MAP', {}).get('last_name', 'LastName')][0]
 
     target_user = None
     is_new_user = False
 
     try:
-        #TODO change to custom user get by email
-        target_user = User.objects.get(email=user_email)
+        target_user = User.objects.get(saw_id=user_guid)
         if settings.SAML2_AUTH_SAW.get('TRIGGER', {}).get('BEFORE_LOGIN', None):
             import_string(settings.SAML2_AUTH_SAW['TRIGGER']['BEFORE_LOGIN'])(user_identity)
     except User.DoesNotExist:
         new_user_should_be_created = settings.SAML2_AUTH_SAW.get('CREATE_USER', True)
-        if new_user_should_be_created:
-            target_user = _create_new_user(user_name, user_email, user_first_name, user_last_name)
-            if settings.SAML2_AUTH_SAW.get('TRIGGER', {}).get('CREATE_USER', None):
-                import_string(settings.SAML2_AUTH_SAW['TRIGGER']['CREATE_USER'])(user_identity)
-            is_new_user = True
-        else:
-            return HttpResponseRedirect(get_reverse([denied, 'login_denied']))
+        try:
+            target_user = User.objects.get(email=user_email)
+            target_user.saw_id = user_guid
+            target_user.save()
+        except User.DoesNotExist:
+            if new_user_should_be_created:
+                target_user = _create_new_user(user_name, user_email, user_guid, full_name) # TODO, user_first_name, user_last_name)
+                if settings.SAML2_AUTH_SAW.get('TRIGGER', {}).get('CREATE_USER', None):
+                        import_string(settings.SAML2_AUTH_SAW['TRIGGER']['CREATE_USER'])(user_identity)
+                is_new_user = True
+            else:
+                return HttpResponseRedirect(get_reverse([denied, 'login_denied']))
 
     r.session.flush()
 

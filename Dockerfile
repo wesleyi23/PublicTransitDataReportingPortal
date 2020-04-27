@@ -5,12 +5,13 @@
 #
 # 1. From windows command line change directory to directory with this file
 # 2. Run docker build: docker build -t  wsdotdev.azurecr.io/ptd_report:latest .
-# 3. Run docker image: docker run -p 8000:8000 [image id]
+# 3. Run docker image: docker run -p 8000:8000 [image id]  Image id comand: docker image ls
 #
 # PUSH to Auzure CR
 #
-# 1. Log into Azure container registry: az acr login --name wsdotdev
-# 2. Push image: docker push wsdotdev.azurecr.io/ptd_report:latest
+# 1. Log in to azure: az login
+# 2. Log into Azure container registry: az acr login --name wsdotdev
+# 3. Push image: docker push wsdotdev.azurecr.io/ptd_report:latest
 #
 # Run Image on Azure
 #
@@ -19,7 +20,7 @@
 ###########
 
 # pull official base image
-FROM python:3.7.0-alpine as builder
+FROM alpine:3.11 as builder
 
 # set work directory
 WORKDIR /usr/src/PublicTransitDataReportingPortal
@@ -30,14 +31,14 @@ ENV PYTHONUNBUFFERED 1
 
 # install psycopg2 dependencies
 RUN apk update
-RUN apk add gcc python-dev musl-dev
+RUN apk add gcc python-dev musl-dev g++ unixodbc-dev python3-dev
 
 #RUN apk add gcc python3-dev musl-dev
 
 # lint
-RUN pip install --upgrade pip
-RUN pip install cython
-RUN pip install --upgrade cython
+RUN pip3 install --upgrade pip
+RUN pip3 install cython
+RUN pip3 install --upgrade cython
 
 # RUN pip install flake8
 COPY . /usr/src/PublicTransitDataReportingPortal/
@@ -45,7 +46,8 @@ COPY . /usr/src/PublicTransitDataReportingPortal/
 
 # install dependencies
 COPY ./requirements.txt .
-RUN pip wheel --no-cache-dir --no-deps --wheel-dir /usr/src/PublicTransitDataReportingPortal/wheels -r requirements.txt
+RUN pip3 install wheel
+RUN pip3 wheel --no-cache-dir --no-deps --wheel-dir /usr/src/PublicTransitDataReportingPortal/wheels -r requirements.txt
 
 
 #########
@@ -53,7 +55,7 @@ RUN pip wheel --no-cache-dir --no-deps --wheel-dir /usr/src/PublicTransitDataRep
 #########
 
 # pull official base image
-FROM python:3.7.0-alpine
+FROM alpine:3.11
 
 # create directory for the PublicTransitDataReportingPortal user
 RUN mkdir -p /home/PublicTransitDataReportingPortal
@@ -68,21 +70,28 @@ RUN mkdir $APP_HOME
 RUN mkdir $APP_HOME/staticfiles
 WORKDIR $APP_HOME
 
+
+
 # install dependencies
 RUN apk update && apk add libpq
 RUN apk add openssl-dev
-RUN apk add gcc python-dev musl-dev libffi-dev xmlsec
-RUN pip install --no-cache-dir -U pip
-RUN pip install cryptography==2.8
+RUN apk add gcc python-dev musl-dev libffi-dev xmlsec g++ py-pip unixodbc-dev gnupg curl python3-dev
+RUN pip3 install --no-cache-dir -U pip
+RUN pip3 install cryptography==2.8
 #RUN pip install django_saml2_auth
 #RUN apk del openssl-dev
 
+RUN curl -O https://download.microsoft.com/download/e/4/e/e4e67866-dffd-428c-aac7-8d28ddafb39b/msodbcsql17_17.5.2.2-1_amd64.apk
+#RUN curl -O https://download.microsoft.com/download/e/4/e/e4e67866-dffd-428c-aac7-8d28ddafb39b/mssql-tools_17.5.2.2-1_amd64.apk
+
+RUN apk add --allow-untrusted msodbcsql17_17.5.2.2-1_amd64.apk
+#RUN apk add --allow-untrusted mssql-tools_17.5.2.2-1_amd64.apk
 
 COPY --from=builder /usr/src/PublicTransitDataReportingPortal/wheels /wheels
 COPY --from=builder /usr/src/PublicTransitDataReportingPortal/requirements.txt .
-RUN pip install --upgrade pip
-RUN pip install --no-cache /wheels/*
-RUN pip install django-rest-auth
+#RUN pip3 install --upgrade pip
+RUN pip3 install --no-cache /wheels/*
+RUN pip3 install django-rest-auth
 
 
 # copy entrypoint-prod.sh

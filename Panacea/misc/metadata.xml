@@ -1,4 +1,4 @@
-<ns0:EntityDescriptor xmlns:ns0="urn:oasis:names:tc:SAML:2.0:metadata" xmlns:ns1="http://www.w3.org/2000/09/xmldsig#" entityID="https://ptd_report.ngrok.io/sso/saw/"><ns0:SPSSODescriptor AuthnRequestsSigned="false" WantAssertionsSigned="true" protocolSupportEnumeration="urn:oasis:names:tc:SAML:2.0:protocol"><ns0:KeyDescriptor use="signing"><ns1:KeyInfo><ns1:X509Data><ns1:X509Certificate>MIIFtjCCA54CAQAwDQYJKoZIhvcNAQENBQAwgaAxCzAJBgNVBAYTAlVTMRMwEQYD
+<ns0:EntityDescriptor xmlns:ns0="urn:oasis:names:tc:SAML:2.0:metadata" xmlns:ns1="http://www.w3.org/2000/09/xmldsig#" entityID="https://vanpooldev.azurewebsites.net/sso/saw/"><ns0:SPSSODescriptor AuthnRequestsSigned="false" WantAssertionsSigned="true" protocolSupportEnumeration="urn:oasis:names:tc:SAML:2.0:protocol"><ns0:KeyDescriptor use="signing"><ns1:KeyInfo><ns1:X509Data><ns1:X509Certificate>MIIFtjCCA54CAQAwDQYJKoZIhvcNAQENBQAwgaAxCzAJBgNVBAYTAlVTMRMwEQYD
 VQQIDApXYXNoaW5ndG9uMRAwDgYDVQQHDAdPbHltcGlhMQ4wDAYDVQQKDAVXU0RP
 VDEmMCQGA1UECwwdUHVibGljIFRyYW5zcG9yYXRpb24gRGl2aXNpb24xDTALBgNV
 BAMMBHRlc3QxIzAhBgkqhkiG9w0BCQEWFHdlc2xleWlAd3Nkb3Qud2EuZ292MB4X
@@ -29,4 +29,4 @@ hfyBiMaAyqLVIazHQeifftkHnJe029vnG+Cx6cHdnbyNObwIy97AULj75qOSJkyk
 Wf1zYxanHBZOZ9qh3ZMUcVRGOw3W6QvSjELaoEwjKg2mc557/in3FSKN4TKgGt/H
 ChVZU4dnkZZhGdnsraIxwNVpFBNH+xlDdmJgdDj8mu4yfS5f5nNjBoAHvNjQXE3V
 uXWIupif4E2BLStAKh3FD/eQXq4lfvqQPBU=
-</ns1:X509Certificate></ns1:X509Data></ns1:KeyInfo></ns0:KeyDescriptor><ns0:NameIDFormat>urn:oasis:names:tc:SAML:2.0:nameid-format:persistent</ns0:NameIDFormat><ns0:AssertionConsumerService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST" Location="https://ptd_report.ngrok.io/sso/saw/acs/" index="1" /></ns0:SPSSODescriptor></ns0:EntityDescriptor>
+</ns1:X509Certificate></ns1:X509Data></ns1:KeyInfo></ns0:KeyDescriptor><ns0:NameIDFormat>urn:oasis:names:tc:SAML:2.0:nameid-format:persistent</ns0:NameIDFormat><ns0:AssertionConsumerService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST" Location="https://vanpooldev.azurewebsites.net/sso/saw/acs/" index="1" /></ns0:SPSSODescriptor></ns0:EntityDescriptor>
