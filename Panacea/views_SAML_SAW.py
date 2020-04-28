@@ -112,8 +112,8 @@ def _get_saml_client(domain):
                 'want_response_signed': False,
             },
         },
-        "key_file": "./mykey.pem",
-        "cert_file": "./mycert.pem",
+        "key_file": "/usr/bin/mykey.pem",
+        "cert_file": "/usr/bin/mycert.pem",
     }
 
     if 'ENTITY_ID' in settings.SAML2_AUTH_SAW:

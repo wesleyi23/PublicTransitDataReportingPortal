@@ -213,23 +213,23 @@ SAML2_AUTH = {
     # 'METADATA_LOCAL_FILE_PATH': '[The metadata configuration file path]',
 
     # Optional settings below
-    'DEFAULT_NEXT_URL': '/logged_in',  # Custom target redirect URL after the user get logged in. Default to /admin if not set. This setting will be overwritten if you have parameter ?next= specificed in the login URL.
+    'DEFAULT_NEXT_URL': '/dashboard',  # Custom target redirect URL after the user get logged in. Default to /admin if not set. This setting will be overwritten if you have parameter ?next= specificed in the login URL.
     'CREATE_USER': 'FALSE', # Create a new Django user when a new user logs in. Defaults to True.
     'NEW_USER_PROFILE': {
         'USER_GROUPS': [],  # The default group name when a new user logs in
         'ACTIVE_STATUS': True,  # The default active status for new users
-        'STAFF_STATUS': True,  # The staff status for new users
+        'STAFF_STATUS': False,  # The staff status for new users
         'SUPERUSER_STATUS': False,  # The superuser status for new users
     },
     'ATTRIBUTES_MAP': {  # Change Email/UserName/FirstName/LastName to corresponding SAML2 userprofile attributes.
-        'email': 'user.mail',
-        'username': 'user.userprincipalname',
-        'first_name': 'user.givenname',
-        'last_name': 'user.surname',
+        'email': 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress',
+        'username': 'http://schemas.microsoft.com/identity/claims/displayname',
+        'first_name': 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname',
+        'last_name': 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/surname',
     },
     'TRIGGER': {
-        'CREATE_USER': 'path.to.your.new.user.hook.method',
-        'BEFORE_LOGIN': 'path.to.your.login.hook.method',
+        # 'CREATE_USER': 'path.to.your.new.user.hook.method',
+        # 'BEFORE_LOGIN': 'path.to.your.login.hook.method',
     },
     'ASSERTION_URL': 'https://vanpooldev.azurewebsites.net/sso/wsdot/reply', # Custom URL to validate incoming SAML requests against
     'ENTITY_ID': 'https://vanpooldev.azurewebsites.net/sso/wsdot/', # Populates the Issuer element in authn request
@@ -242,7 +242,7 @@ SAML2_AUTH = {
 SAML2_AUTH_SAW = {
     # Metadata is required, choose either remote url or local file path
     # 'METADATA_AUTO_CONF_URL': 'https://login.microsoftonline.com/6f10858a-931e-4554-89f7-a3694e8e0f1a/federationmetadata/2007-06/federationmetadata.xml?appid=666dd47c-2480-4ffa-b3ce-37f1cd37051c ',
-    'METADATA_LOCAL_FILE_PATH': './sawidp_WaTech_metadata_TEST.xml',
+    'METADATA_LOCAL_FILE_PATH': '/usr/bin/sawidp_WaTech_metadata_TEST.xml',
 
     # Optional settings below
     'DEFAULT_NEXT_URL': '/dashboard',  # Custom target redirect URL after the user get logged in. Default to /admin if not set. This setting will be overwritten if you have parameter ?next= specificed in the login URL.
@@ -250,7 +250,7 @@ SAML2_AUTH_SAW = {
     'NEW_USER_PROFILE': {
         'USER_GROUPS': [],  # The default group name when a new user logs in
         'ACTIVE_STATUS': True,  # The default active status for new users
-        'STAFF_STATUS': True,  # The staff status for new users
+        'STAFF_STATUS': False,  # The staff status for new users
         'SUPERUSER_STATUS': False,  # The superuser status for new users
     },
     'ATTRIBUTES_MAP': {  # Change Email/UserName/FirstName/LastName to corresponding SAML2 userprofile attributes.
