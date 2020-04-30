@@ -141,16 +141,17 @@ class SummaryDataEntryBuilder(SummaryBuilder):
 
     def set_max_form_increment(self):
         '''returns the appropriate model for the given report type'''
-        if self.report_type == "revenue":
-            self.max_form_increment = 7
-        elif self.report_type == "transit_data":
-            self.max_form_increment = service_offered.objects.filter(organization=self.target_organization).count()
-        elif self.report_type == "expense":
-            self.max_form_increment = 1
-        elif self.report_type == "fund_balance":
-            self.max_form_increment = 1
-        else:
-            raise Http404("Report type does not exist. -2")
+        # if self.report_type == "revenue":
+        #     self.max_form_increment = 7
+        # elif self.report_type == "transit_data":
+        #     self.max_form_increment = service_offered.objects.filter(organization=self.target_organization).count()
+        # elif self.report_type == "expense":
+        #     self.max_form_increment = 1
+        # elif self.report_type == "fund_balance":
+        #     self.max_form_increment = 1
+        # else:
+        #     raise Http404("Report type does not exist. -2")
+        return len(self.nav_filters)
 
     def set_current_increment(self):
         '''returns the appropriate model for the given report type'''
@@ -522,7 +523,6 @@ class ConfigurationBuilder(SummaryBuilder):
         else:
             raise Http404("Report type does not exist. -4a")
 
-
     def get_data_relationship_one_2_one(self):
         if self.report_type in ['organization']:
             return True
@@ -530,7 +530,6 @@ class ConfigurationBuilder(SummaryBuilder):
             return False
         else:
             return Http404("Report type does not exist. -4b")
-
 
     def create_model_formset_factory(self):
         '''Creates a fromset factory based on the information contained in the class information'''
@@ -579,10 +578,6 @@ class ConfigurationBuilder(SummaryBuilder):
         return my_formset
 
 
-
-
-
-
 # what i need is a set of dictionaries/querysets in the correct order
 # I need the following special capabilities:
 # 1) create special rows/tables based on the type of data that is being queried
@@ -591,14 +586,6 @@ class ConfigurationBuilder(SummaryBuilder):
 # 4) follow a particular order of display that can change based on report type, separate for ferry/transit/tribe and cp
 # 5) have to be able to join created fields to queried field
 # 6)
-
-
-
-
-
-
-
-
 
 
 class SummaryBuilder:
@@ -852,6 +839,7 @@ class SummaryReport:
 
     def add_table(self, summary_table):
         self.summary_tables.update(summary_table)
+
 
 class SummaryTable:
 

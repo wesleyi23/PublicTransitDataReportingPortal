@@ -26,7 +26,7 @@
                             <a class="nav-link" href="{% url 'summary_instructions' %}">Instructions</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link active" href="{% url 'organizational_information' %}">Address & organization type</a>
+                            <a class="nav-link active" href="{% url 'organizational_information' %}">Address & organization</a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" href="{% url 'cover_sheets_organization' %}">Your organization</a>
@@ -85,8 +85,7 @@
                                     <td><a href="#" class="edit_profile_field" data-field_name="{{ form.zip_code.name }}">(Edit)</a></td>
                                     <td>{{ form.zip_code.errors }}</td>
                                 </tr>
-
-                                <tr class="fieldWrapper">
+                                <tr class="fieldWrapper" style="{% if not request.user|has_group:"WSDOT staff" %}display:none{% endif %}">
                                     <td>{{ form.summary_organization_classifications.label_tag }}</td>
                                     <td style="white-space: nowrap; width: 1%">{{ form.summary_organization_classifications }}</td>
                                     <td><a href="#" class="edit_profile_field" data-field_name="{{ form.summary_organization_classifications.name }}">(Edit)</a></td>

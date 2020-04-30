@@ -28,9 +28,9 @@
                         <li class="nav-item">
                             <a class="nav-link active" href="{% url 'customer_review_cover_sheets' %}">Review cover sheets</a>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'customer_review_data' %}">Review Data</a>
-                        </li>
+{#                        <li class="nav-item">#}
+{#                            <a class="nav-link" href="{% url 'customer_review_data' %}">Review Data</a>#}
+{#                        </li>#}
                     </ul>
                 </div>
                 <div class="card-body" style="">
@@ -38,7 +38,7 @@
 
                     {% if not org_summary_report_status.cover_sheet_submitted_for_review %}
                         <div class="alert alert-danger" role="alert">
-                            Your organization has not submitted a coversheet for this year.  To submit it please go here: [link to be added]
+                            Your organization has not submitted a coversheet for this year. To submit it please go <a href="{% url 'summary_instructions' %}">here</a>.
                         </div>
                     {% else %}
                         {% if org_summary_report_status.cover_sheet_status == "With WSDOT" %}
