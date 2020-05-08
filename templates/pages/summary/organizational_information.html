@@ -43,7 +43,7 @@
                 </div>
                 <div class="card-body" style="">
                     <h4>Please confirm the following details about your organization:</h4>
-                    <form action=" {% url 'OrganizationProfile' redirect_to='organizational_information' %}" method="post">
+                    <form action=" {% url 'OrganizationProfile' redirect_to='organizational_information' %}" method="post" onkeydown="return event.key != 'Enter';">
                         {% csrf_token  %}
                         {#                        {{ form }}#}
                         <div class="table-responsive" style="padding-top: 1.5rem">

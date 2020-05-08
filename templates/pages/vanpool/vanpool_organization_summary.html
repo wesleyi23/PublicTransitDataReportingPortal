@@ -142,7 +142,7 @@
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
-                <form action="{% url 'vanpool_organization_summary' %}" method="post">
+                <form action="{% url 'vanpool_organization_summary' %}" method="post" onkeydown="return event.key != 'Enter';">
                     {% csrf_token %}
                     <div class="modal-body">
                         {{ settings_form.as_p }}

@@ -79,7 +79,7 @@
                 </div>
                 <div class="card-body">
                     <div class="form-group">
-                        <form action = "{% url 'Vanpool_report' %}{{ year }}/{{ month }}/" method="post" id="post-form" style="opacity: 0" class="form-fade-out">
+                        <form action = "{% url 'Vanpool_report' %}{{ year }}/{{ month }}/" method="post" id="post-form" style="opacity: 0" class="form-fade-out" onkeydown="return event.key != 'Enter';">
                             {% csrf_token %}
 
                             {%  if form.non_field_errors %}

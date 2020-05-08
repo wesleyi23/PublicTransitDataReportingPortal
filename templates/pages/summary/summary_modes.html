@@ -88,7 +88,7 @@
                             {% endfor %}
                         {% endif %}
 
-                        <form method="POST" class="">
+                        <form method="POST" class="" onkeydown="return event.key != 'Enter';">
                             {% csrf_token %}
                             <div class = 'table-responsive'>
                                 <table class = "table table-bordered table-hover">

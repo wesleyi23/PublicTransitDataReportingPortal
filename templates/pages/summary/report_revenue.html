@@ -64,7 +64,7 @@
 
                 <div class="card-body" style="">
                     <h3>{{ government_type }} - {{ funding_type }}</h3>
-                    <form method="POST" class="disabled-form">
+                    <form method="POST" class="disabled-form" onkeydown="return event.key != 'Enter';">
                         {% csrf_token  %}
 
                         <table class="table table-striped table-responsive">

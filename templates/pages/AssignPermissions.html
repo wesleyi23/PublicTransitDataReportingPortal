@@ -32,7 +32,7 @@
                 </div>
                 <div class="card-body">
                     <div id="Admin_assignPermissions_all_err"></div>
-                    <form id="Admin_assignPermissions_all" action="{% url 'Admin_assignPermissions' 'active' %}" method="post" data-err-field="my-errField">
+                    <form id="Admin_assignPermissions_all" action="{% url 'Admin_assignPermissions' 'active' %}" method="post" data-err-field="my-errField" onkeydown="return event.key != 'Enter';">
                         {% csrf_token %}
                         {{Admin_assignPermissions_all.management_form}}
                         <div class=""></div>

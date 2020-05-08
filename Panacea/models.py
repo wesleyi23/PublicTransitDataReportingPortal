@@ -353,9 +353,11 @@ class revenue_source(models.Model):
     funding_type = models.CharField(max_length=30, choices=FUNDING_KIND, null=True, blank=True)
     agency_classification = models.ManyToManyField(summary_organization_type, blank=True)
     inactive_flag = models.BooleanField(default=False, choices=TRUE_FALSE_CHOICES)
+    help_text = models.TextField(blank=True, null=True)
 
     def __str__(self):
         return self.name
+
 
 class revenue(models.Model):
     organization = models.ForeignKey(organization, on_delete=models.PROTECT, related_name='+')
@@ -372,14 +374,14 @@ class revenue(models.Model):
         unique_together=('organization', 'year', 'revenue_source', )
 
 
-
-
 class expense_source(models.Model):
     name = models.CharField(max_length=100)
     agency_classification = models.ManyToManyField(summary_organization_type, blank=True)
+    help_text = models.TextField(blank=True, null=True)
 
     def __str__(self):
         return self.name
+
 
 class expense(models.Model):
 
@@ -397,7 +399,6 @@ class expense(models.Model):
         unique_together = ('organization', 'year', 'expense_source', )
 
 
-
 class transit_metrics(models.Model):
     FORM_MASKING_CLASSES = (
         ("Int", "Int"),
@@ -409,6 +410,7 @@ class transit_metrics(models.Model):
     agency_classification = models.ManyToManyField(summary_organization_type, blank=True)
     order_in_summary = models.IntegerField(null=True, blank=True)
     form_masking_class = models.CharField(max_length=25, choices=FORM_MASKING_CLASSES, null=True, blank=True)
+    help_text = models.TextField(blank=True, null=True)
 
     def __str__(self):
         return self.name
@@ -420,6 +422,7 @@ class transit_mode(models.Model):
 
     def __str__(self):
         return self.name
+
 
 class transit_data(models.Model):
 
@@ -448,6 +451,7 @@ class transit_data(models.Model):
 class fund_balance_type(models.Model):
     name = models.CharField(max_length=100)
     agency_classification = models.ManyToManyField(summary_organization_type, blank=True)
+    help_text = models.TextField(blank=True, null=True)
 
     def __str__(self):
         return self.name
@@ -472,14 +476,14 @@ class cover_sheet(models.Model):
     organization = models.OneToOneField(organization, on_delete=models.PROTECT, blank=True, null=True)
     executive_officer_first_name = models.CharField(max_length=50, blank=True, null=True)
     executive_officer_last_name = models.CharField(max_length=50, blank=True, null=True)
-    executive_officer_title = models.CharField(max_length=50, blank=True, null=True)
+    executive_officer_title = models.TextField(max_length=200, blank=True, null=True)
     service_website_url = models.URLField(verbose_name="Service website URL", max_length=255, blank=True, null=True)
     service_area_description = models.CharField(max_length=500, blank=True, null=True)
     congressional_districts = models.CharField(max_length=100, blank=True, null=True)
     legislative_districts = models.CharField(max_length=100, blank=True, null=True)
     type_of_government = models.CharField(max_length=100, blank=True, null=True)
     governing_body = models.TextField(blank=True, null=True)
-    tax_rate_description = models.CharField(max_length=250, blank=True, null=True)
+    tax_rate_description = models.TextField(blank=True, null=True)
     transit_development_plan_url = models.CharField(verbose_name="Transit development plan URL", max_length=250, blank=True, null=True)
     intermodal_connections = models.TextField(verbose_name="Connections to other systems", blank=True, null=True)
     fares_description = models.TextField(blank=True, null=True)
@@ -529,10 +533,10 @@ class service_offered(models.Model):
         ('Direct Operated', 'Direct Operated'),
         ('Purchased', 'Purchased')
     )
-    transit_mode = models.ForeignKey(transit_mode, on_delete=models.PROTECT, related_name ='+', blank=True)
+    transit_mode = models.ForeignKey(transit_mode, on_delete=models.PROTECT, related_name ='+', blank=False)
     administration_of_mode = models.CharField(max_length=80, choices=DO_OR_PT, blank=False)
-    organization = models.ForeignKey(organization, on_delete=models.PROTECT, blank=True, null=False)
-    service_mode_discontinued = models.BooleanField(default=False, blank=False, null = False)
+    organization = models.ForeignKey(organization, on_delete=models.PROTECT, blank=False, null=False)
+    service_mode_discontinued = models.BooleanField(default=False, blank=False, null=False)
 
     class Meta:
         unique_together = ('organization', 'transit_mode', 'administration_of_mode')

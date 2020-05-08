@@ -46,7 +46,7 @@
                             <div style="float: left">
                                 <h5>Please confirm or edit the following information:</h5>
 
-                                <form action = "{% url 'ProfileSetup_Review' %}" method="post" class="post-form" name="ProfileSetup_Review">
+                                <form action = "{% url 'ProfileSetup_Review' %}" method="post" class="post-form" name="ProfileSetup_Review" onkeydown="return event.key != 'Enter';">
                                     {% csrf_token %}
                                     {{ custom_user_ChangeForm.as_p }}
                                     <div id="ProfileSetup_Review_err"></div>
@@ -69,7 +69,7 @@
                             <div style="float: left">
                                 <h5>What's your phone number and where do you work?</h5>
 
-                                <form action = "{% url 'ProfileSetup_PhoneAndOrg' %}" method="post" class="post-form" name="ProfileSetup_PhoneAndOrg" data-errField="telephone_number">
+                                <form action = "{% url 'ProfileSetup_PhoneAndOrg' %}" method="post" class="post-form" name="ProfileSetup_PhoneAndOrg" data-errField="telephone_number" onkeydown="return event.key != 'Enter';">
                                     {% csrf_token %}
                                     {{ ProfileSetup_PhoneAndOrg.as_p }}
                                     <div id="ProfileSetup_PhoneAndOrg_err"></div>
@@ -92,7 +92,7 @@
                             <div style="float: left">
                                 <h5>What data will you be reporting?</h5>
 
-                                <form action = "{% url 'ProfileSetup_ReportSelection' %}" method="post" class="post-form" name="ReportSelection" data-errField="reports_on">
+                                <form action = "{% url 'ProfileSetup_ReportSelection' %}" method="post" class="post-form" name="ReportSelection" data-errField="reports_on" onkeydown="return event.key != 'Enter';">
                                     {% csrf_token %}
                                     {{ ProfileSetup_ReportSelection.as_p }}
                                     <div id="ReportSelection_err"></div>

@@ -116,7 +116,7 @@
                 <div class="modal-header">
                     <h5 class="modal-title" id="exampleModalLongTitle">Add a note</h5>
                 </div>
-                <form id="note_form" action="{% url 'base_wsdot_note_url' year org_summary_report_status.id %}" method="post">
+                <form id="note_form" action="{% url 'base_wsdot_note_url' year org_summary_report_status.id %}" method="post" onkeydown="return event.key != 'Enter';">
                     {% csrf_token  %}
                     <div class="modal-body">
                         {{  new_note_form }}

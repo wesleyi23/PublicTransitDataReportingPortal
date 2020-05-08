@@ -11,7 +11,7 @@
 </head>
 <body>
     {% block content %}
-                                <form action = "{% url 'ProfileSetup_PhoneAndOrg' %}" method="post" id="post-form">
+                                <form action = "{% url 'ProfileSetup_PhoneAndOrg' %}" method="post" id="post-form" onkeydown="return event.key != 'Enter';">
                                     {% csrf_token %}
                                     {{ form.as_p }}
                                     <div id="errormessage"></div>

@@ -54,7 +54,7 @@
                                 The review of this coversheet is complete.
                             </div>
                         {% endif %}
-                        <form action={% url 'wsdot_review_cover_sheets_year_org' year organization_id %} method="post" enctype="multipart/form-data">
+                        <form action={% url 'wsdot_review_cover_sheets_year_org' year organization_id %} method="post" enctype="multipart/form-data" onkeydown="return event.key != 'Enter';">
                             {% csrf_token  %}
                             <div class="row">
                                 <div class="col-6">
@@ -361,7 +361,7 @@
                 <div class="modal-header">
                     <h5 class="modal-title" id="exampleModalLongTitle">Add a note</h5>
                 </div>
-                <form id="note_form" action="{% url 'base_wsdot_note_url' year summary_report_status_id %}" method="post">
+                <form id="note_form" action="{% url 'base_wsdot_note_url' year summary_report_status_id %}" method="post" onkeydown="return event.key != 'Enter';">
                     {% csrf_token  %}
                     <div class="modal-body">
                         {{  new_note_form }}

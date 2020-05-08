@@ -20,7 +20,7 @@
             </div>
             <div class="row">
                 <div class="table-responsive">
-                    <form action="/UserProfile/" method="post">
+                    <form action="/UserProfile/" method="post" onkeydown="return event.key != 'Enter';">
                         {% csrf_token  %}
                         <table style="border-collapse: separate; border-spacing: .5rem">
                             <tr class="fieldWrapper">

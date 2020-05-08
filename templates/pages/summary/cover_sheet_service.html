@@ -42,7 +42,7 @@
                     </ul>
                 </div>
                 <div class="card-body" style="">
-                    <form action="{% url 'cover_sheets_service' %}" method="post">
+                    <form action="{% url 'cover_sheets_service' %}" method="post" onkeydown="return event.key != 'Enter';">
                         {% csrf_token  %}
                         <h3>Please update any information that has changed:</h3>
                         <div class="container-fluid w-100">

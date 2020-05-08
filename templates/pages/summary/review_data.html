@@ -47,7 +47,7 @@
                 </div>
             <div class="card-body" style="">
                     <h4>Please resolve the following {{ error_count }} error(s) to complete your Summary Report for {{ org_name }}:</h4>
-             <form method="POST" action = "" >
+             <form method="POST" action = "" onkeydown="return event.key != 'Enter';">
 
                         {% csrf_token  %}
              <div class="table-responsive" style="padding-top: 1.5rem">

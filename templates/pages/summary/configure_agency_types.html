@@ -30,7 +30,7 @@
                 <div class="card-body">
                     <h3>Summary reporting admin</h3>
                     <div id="summary_configure_agency_types-err"></div>
-                    <form id="summary_configure_agency_types" action="{% url 'summary_configure_agency_types'%}{{ model }}" method="post" data-err-field="my-errField">
+                    <form id="summary_configure_agency_types" action="{% url 'summary_configure_agency_types'%}{{ model }}" method="post" data-err-field="my-errField" onkeydown="return event.key != 'Enter';">
                         {% csrf_token %}
                         {{ formset.management_form }}
 

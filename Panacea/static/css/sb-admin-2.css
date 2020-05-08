@@ -193,6 +193,38 @@ div.dataTables_info {
   padding-right: 1.5rem;
 }
 
+.save_tooltip_validation {
+  position: relative;
+  display: inline-block;
+}
+
+.save_tooltip_validation .save_tooltip_validation_text {
+  visibility: hidden;
+  width: 160px;
+  background-color: black;
+  color: #fff;
+  text-align: center;
+  border-radius: 6px;
+  padding: 5px 0;
+  opacity: .65;
+
+  /* Position the tooltip */
+  position: absolute;
+  z-index: 1;
+  bottom: 100%;
+  left: 50%;
+  margin-left: -80px;
+}
+
+.save_tooltip_validation:hover .save_tooltip_validation_text.show_tooltip {
+  visibility: visible;
+}
+
+input::-ms-clear {
+  width : 0;
+  height: 0;
+}
+
 /*! END ADDITIONS
  */
 

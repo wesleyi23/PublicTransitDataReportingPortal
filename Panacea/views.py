@@ -1156,6 +1156,19 @@ def summary_reporting(request, report_type=None, form_filter_1=None, form_filter
 
 @login_required(login_url='/Panacea/login')
 @group_required('Summary reporter', 'WSDOT staff')
+def summary_reporting_save_only(request, report_type=None, form_filter_1=None, form_filter_2=None):
+    if not request.method == 'POST':
+        raise Http404
+    else:
+        user_org = find_user_organization(request.user.id)
+        requested_form = SummaryDataEntryBuilder(report_type, user_org, form_filter_1=form_filter_1,
+                                                 form_filter_2=form_filter_2)
+        requested_form.save_with_post_data(request.POST)
+        return requested_form.go_to_next_form(save_only=True)
+
+
+@login_required(login_url='/Panacea/login')
+@group_required('Summary reporter', 'WSDOT staff')
 def submit_data(request):
     ready_to_submit = get_all_data_steps_completed(find_user_organization_id(request.user.id))
     return render(request, 'pages/summary/submit_data.html', {'ready_to_submit': ready_to_submit})
@@ -1772,12 +1785,18 @@ def test_tools(request):
 
 @login_required(login_url='/Panacea/login')
 @group_required('WSDOT staff')
-def summary_metric_configurations(request, report_type=None):
+def summary_metric_configurations(request, report_type=None, help_text=None):
+    if help_text is not None:
+        help_text = 'help_text'
+    else:
+        help_text = None
+
     if not report_type:
         report_type = 'transit_data'
 
-    metric_configuration_factory = ConfigurationBuilder(report_type)
+    metric_configuration_factory = ConfigurationBuilder(report_type, help_text)
     if request.POST:
+        print('POST')
         configuration_form_factory = metric_configuration_factory.create_model_formset_factory()
         form_set = configuration_form_factory(request.POST)
         for form in form_set:
@@ -1792,7 +1811,8 @@ def summary_metric_configurations(request, report_type=None):
         form_set = metric_configuration_factory.get_form_set()
 
         return render(request, 'pages/summary/admin/summary_configure_metrics.html', {'form_set': form_set,
-                                                                                      'report_type': report_type})
+                                                                                      'report_type': report_type,
+                                                                                      'help_text': help_text})
 
 
 @login_required(login_url='/Panacea/login')

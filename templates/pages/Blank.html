@@ -6,7 +6,7 @@
         <!-- Page Heading -->
         <h1 class="h3 mb-2 text-gray-800">Blank</h1>
 
-        <form method="POST" class="post-form">{% csrf_token %}
+        <form method="POST" class="post-form" onkeydown="return event.key != 'Enter';">{% csrf_token %}
 
             {% csrf_token  %}
 

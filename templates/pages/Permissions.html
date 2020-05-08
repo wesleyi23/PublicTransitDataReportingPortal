@@ -57,7 +57,7 @@
                             </div>
                             <div>
                                 <h5>Which permissions would you like to request:</h5>
-                                <form action="{% url 'Permissions' %}" method="post">
+                                <form action="{% url 'Permissions' %}" method="post" onkeydown="return event.key != 'Enter';">
                                     {% csrf_token  %}
                                     {{ form.groups }}
                                     {{ form.non_field_errors }}

@@ -46,7 +46,7 @@
                     </ul>
                 </div>
                 <div class="card-body" style="">
-                    <form method="post" class="disabled-form">
+                    <form method="post" class="disabled-form" onkeydown="return event.key != 'Enter';">
                         {% csrf_token  %}
 
                         <table class="table table-striped table-responsive">

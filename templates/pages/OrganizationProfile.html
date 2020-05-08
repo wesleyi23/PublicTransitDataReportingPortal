@@ -27,7 +27,7 @@
                     </div>
                     <div class="col">
                         {#                    <div style="float: left">#}
-                        <form action="/OrganizationProfile/" method="post">
+                        <form action="/OrganizationProfile/" method="post" onkeydown="return event.key != 'Enter';">
                             {% csrf_token  %}
                             {#                        {{ form }}#}
                             <div class="table-responsive">

@@ -151,7 +151,7 @@ class SummaryDataEntryBuilder(SummaryBuilder):
         #     self.max_form_increment = 1
         # else:
         #     raise Http404("Report type does not exist. -2")
-        return len(self.nav_filters)
+        self.max_form_increment = len(self.nav_filters)
 
     def set_current_increment(self):
         '''returns the appropriate model for the given report type'''
@@ -237,9 +237,9 @@ class SummaryDataEntryBuilder(SummaryBuilder):
         '''Used to build widgets dynamically based on form type.'''
 
         if self.report_type == 'transit_data':
-            widget_attrs = {'class': 'form-control validate-field'}
+            widget_attrs = {'class': 'form-control validate-field', 'autocomplete': "off"}
         else:
-            widget_attrs = {'class': 'form-control grand-total-sum validate-field', 'onchange': 'findTotal_wrapper();'}
+            widget_attrs = {'class': 'form-control grand-total-sum validate-field', 'onchange': 'findTotal_wrapper();', 'autocomplete': "off"}
 
         widgets = {'id': forms.NumberInput(),
                    self.get_metric_model_name(): forms.Select(),
@@ -289,7 +289,7 @@ class SummaryDataEntryBuilder(SummaryBuilder):
         form_querysets = form_querysets.filter(**self.get_formset_query_dict())
         return form_querysets
 
-    def get_formsets_labels_and_masking_class(self):
+    def get_formsets_labels_masking_class_and_help_text(self):
         '''Builds formsets by year with labels and masking classes'''
         my_formset_factory = self.create_model_formset_factory()
         form_querysets = self.get_form_queryset()
@@ -303,13 +303,15 @@ class SummaryDataEntryBuilder(SummaryBuilder):
             i += 1
         formset_labels = form_querysets.filter(year=self.year).values_list(
             self.get_metric_model_name() + "__name", flat=True)
+        help_text = form_querysets.filter(year=self.year).values_list(
+            self.get_metric_model_name() + "__help_text", flat=True)
         if self.report_type != "transit_data":
             masking_class = ['Money'] * len(formset_labels)
         else:
             masking_class = form_querysets.filter(year=self.year).values_list(
                 self.get_metric_model_name() + "__form_masking_class", flat=True)
 
-        return formsets, formset_labels, masking_class
+        return formsets, formset_labels, masking_class, help_text
 
     def get_other_measure_totals(self):
         '''Gets totals from that need to be aggrigated on the page but are not presented due to the filters on the form.'''
@@ -389,7 +391,10 @@ class SummaryDataEntryBuilder(SummaryBuilder):
 
             i += 1
 
-    def go_to_next_form(self):
+    def go_to_next_form(self, save_only=False):
+        if save_only:
+            return redirect('summary_reporting_filters', self.report_type, self.form_filter_1, self.form_filter_2)
+
         self.current_increment = self.current_increment + 1
         if self.current_increment > self.max_form_increment:
             org_progress = summary_organization_progress.objects.get(organization=self.target_organization)
@@ -428,7 +433,7 @@ class SummaryDataEntryTemplateData:
     '''Simple class that uses the SummaryDataEntryBuilder to create data needed in the template'''
 
     def __init__(self, data_entry_factory, report_type):
-        self.formsets, self.formset_labels, self.masking_class = data_entry_factory.get_formsets_labels_and_masking_class()
+        self.formsets, self.formset_labels, self.masking_class, self.help_text = data_entry_factory.get_formsets_labels_masking_class_and_help_text()
         self.report_type = report_type
         self.year = data_entry_factory.year
         self.form_filter_1 = data_entry_factory.form_filter_1
@@ -452,10 +457,16 @@ class SummaryDataEntryTemplateData:
 
 class ConfigurationBuilder(SummaryBuilder):
 
-    def __init__(self, report_type):
+    def __init__(self, report_type, help_text=None):
         super().__init__(report_type)
         self.REPORT_TYPES = ['organization', 'transit_data', 'revenue', 'expense', 'fund_balance']
-        self.primary_field_name, self.other_fields_list = self.get_model_fields()
+        self.help_text = help_text
+
+        if self.help_text is None:
+            self.primary_field_name, self.other_fields_list = self.get_model_fields()
+        else:
+            self.primary_field_name = "help_text"
+            self.other_fields_list = []
 
     def get_model(self):
         if self.report_type == 'organization':
@@ -551,11 +562,19 @@ class ConfigurationBuilder(SummaryBuilder):
 
     def get_widgets(self):
         '''widgets'''
+        if self.help_text is not None:
+            widgets = {'id': forms.NumberInput(),
+                       'name': forms.TextInput(attrs={'class': 'form-control AJAX_instant_submit',
+                                                      'data-form-name': "summary_configure"}),
+                       self.primary_field_name: forms.Textarea(attrs={'class': 'form-control AJAX_instant_submit',
+                                                                      'data-form-name': "summary_configure",
+                                                                      'rows': 2})}
+            return widgets
 
         if self.get_data_relationship_one_2_one():
             widgets = {'id': forms.NumberInput(),
                        'name': forms.TextInput(attrs={'class': 'form-control AJAX_instant_submit',
-                                                      'data-form-name': "summary_configures"}),
+                                                      'data-form-name': "summary_configure"}),
                        self.primary_field_name: forms.Select(attrs={'class': 'form-control AJAX_instant_submit',
                                                                     'data-form-name': "summary_configure"})}
 
@@ -624,7 +643,7 @@ class SummaryBuilder:
         elif self.report_type == "fund_balance":
             return fund_balance.objects
         else:
-           raise Http404("Report type does not exist. -4")
+            raise Http404("Report type does not exist. -4")
 
     def get_metric_model(self):
         '''returns the appropriate metric model for the given report type'''
@@ -727,7 +746,7 @@ class ReportAgencyDataTableBuilder(SummaryBuilder):
 
     def get_vanpool_revenue(self):
         return transit_data.objects.filter(organization_id =self.target_organization, year__in=self.years,transit_metric__name='Farebox Revenues',
-                                          transit_mode_id =3).values('reported_value').order_by('year')
+                                           transit_mode_id =3).values('reported_value').order_by('year')
 
     def get_farebox_revenue(self):
         return transit_data.objects.filter(organization_id=self.target_organization, year__in=self.years,transit_metric__name='Farebox Revenues', transit_mode_id__in=[1,2,4,5,6,7,8,9,10,11], reported_value__isnull=False).values('year').annotate(reported_value = Sum('reported_value')).order_by('year')

@@ -55,7 +55,7 @@
 
             <h6 class="font-weight-bold text-primary">Report Details {{ org.name }}</h6>
             <div class="form-group">
-                <form action = "{% url 'Vanpool_expansion_modify' %}/{{id}}" method="post" id="post-form" style="opacity: 0" class="form-fade-out">
+                <form action = "{% url 'Vanpool_expansion_modify' %}/{{id}}" method="post" id="post-form" style="opacity: 0" class="form-fade-out" onkeydown="return event.key != 'Enter';">
                     {% csrf_token %}
                     {{ form.non_field_errors }}
                     {{ form.source.errors }}

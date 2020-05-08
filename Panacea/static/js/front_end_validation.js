@@ -1,6 +1,23 @@
 const my_form = document.getElementById("summary_data_form");
 const old_values = formDataToObject(my_form);
 
+// Check that people do want to leave
+$(document).ready(function() {
+    let formmodified = 0;
+    $('form *').change(function(){
+        formmodified=1;
+    });
+    window.onbeforeunload = confirmExit;
+    function confirmExit() {
+        if (formmodified == 1) {
+            return "You are about to leave this page with out saving.  Are you sure you wish to do this";
+        }
+    }
+    $("button[type='submit']").click(function() {
+        formmodified = 0;
+    });
+});
+
 let error_dict = {};  //dictionary for storing errors that are being displayed
 
 //Error messages and error message generators
@@ -158,7 +175,13 @@ function total_greater_than(){
 
 function set_button_status(){
     // disables the submit button if there are any errors in the error dictionary
-    document.getElementById("submit_btn").disabled = Object.keys(error_dict).length > 0;
+    if(Object.keys(error_dict).length > 0){
+        $('input[type=button]').attr('disabled', true);
+        $('.save_tooltip_validation_text').addClass('show_tooltip');
+    } else {
+        $('input[type=button]').attr('disabled', false);
+        $('.save_tooltip_validation_text').removeClass('show_tooltip');
+    }
 }
 
 function fifteen_percent_needs_comment() {

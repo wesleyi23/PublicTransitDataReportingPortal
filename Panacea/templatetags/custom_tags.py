@@ -1,6 +1,7 @@
 from django import template
 from django.conf import settings
 from Panacea.models import organization, transit_mode, summary_report_status, cover_sheet, profile
+from django.utils.safestring import mark_safe
 
 register = template.Library()
 
@@ -180,6 +181,16 @@ def capfirst_remove_(string):
 @register.simple_tag
 def get_form_labels(i, labels):
     return labels[i]
+
+@register.simple_tag
+def get_form_help_text(i, help_label, help_text):
+
+    if help_text[i] is not None:
+        output = '<sup><i class="fas fa-question-circle help-popover" data-toggle="popover" title="{}:"data-content="{}"></i></sup>'.format(help_label[i], help_text[i])
+    else:
+        output = ''
+
+    return mark_safe(output)
 
 @register.simple_tag
 def get_masking_class(i, masking_class):

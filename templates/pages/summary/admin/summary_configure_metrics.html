@@ -36,8 +36,13 @@
                     <div style="padding-left: 1rem">
                         <p> Use this to configure metrics.
                         </p>
+                            {% if not help_text %}
+                                <a class="float-right btn btn-primary mb-1" href="{% url 'metric_configurations' report_type 'help_text' %}">Edit help text</a>
+                            {% else %}
+                                <a class="float-right btn btn-primary mb-1" href="{% url 'metric_configurations' report_type %}">Edit metrics</a>
+                            {% endif %}
                         <div id="summary_configure_err"></div>
-                        <form id="summary_configure" action="{% url 'metric_configurations' report_type %}" method="post" data-err-field="my-errField">
+                        <form id="summary_configure" action="{% url 'metric_configurations' report_type help_text %}" method="post" data-err-field="my-errField" onkeydown="return event.key != 'Enter';">
                             {% csrf_token %}
                             {{form_set.management_form}}
                             <div class = 'table-responsive'>
@@ -46,21 +51,27 @@
                                     <tr>
                                         <th style="display: none;">id</th>
                                         <th style="width:25%">Metric</th>
-                                        {%  if report_type == 'revenue' %}
-                                            <th>Funding type</th>
-                                            <th>Government type</th>
-                                        {% endif %}
-                                        <th>Agency classifications</th>
-                                        {% if report_type == 'revenue'%}
-                                            <th>Inactive flag</th>
+                                        {% if not help_text %}
+                                            {%  if report_type == 'revenue' %}
+                                                <th>Funding type</th>
+                                                <th>Government type</th>
+                                            {% endif %}
+                                            <th>Agency classifications</th>
+                                            {% if report_type == 'revenue'%}
+                                                <th>Inactive flag</th>
+                                            {% endif %}
+                                        {% else %}
+                                            <th style="width:25%">Help text</th>
                                         {% endif %}
                                     </tr>
                                     </thead>
                                     <tbody>
                                     {%  for form in form_set %}
+
                                         <tr class="fieldWrapper">
                                             <td style="display: none;">{{ form.id }}</td>
                                             <td>{{ form.name }}</td>
+                                        {% if not help_text %}
                                             {%  if report_type == 'revenue' %}
                                                 <td>{{ form.funding_type }}</td>
                                                 <td>{{ form.government_type }}</td>
@@ -74,6 +85,9 @@
                                                 <td>{{ form.inactive_flag }}</td>
                                             {% endif %}
                                         </tr>
+                                        {% else %}
+                                            <td>{{ form.help_text }}</td>
+                                        {% endif %}
                                     {%  endfor %}
                                     </tbody>
                                 </table>
@@ -88,9 +102,9 @@
                             {% for message in messages %}
                                 <h4 class="{{ message.tags }}">{{ message }}</h4>
                             {% endfor %}
-                        {% endif %}
+                        {% endif %}`
 
-                        <form method="POST" class="">
+                        <form method="POST" class="" onkeydown="return event.key != 'Enter';">
                             {% csrf_token %}
                             <div class = 'table-responsive'>
                                 <table class = "table table-bordered table-hover">

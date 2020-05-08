@@ -678,7 +678,6 @@ class tribal_permissions(forms.ModelForm):
                    }
 
 
-
 class cover_sheet_wsdot_review(forms.ModelForm):
     organization_logo_input = forms.FileField(required=False,
                                               widget=forms.FileInput(attrs={'class': 'my-custom-file-input',
@@ -819,7 +818,7 @@ class transit_data_form(forms.ModelForm):
         model = transit_data
         fields = ['id', 'transit_metric', 'year', 'reported_value', 'comments']
         widgets = {
-            'reported_value': forms.TextInput(attrs={'class': 'form-control'}),
+            'reported_value': forms.TextInput(attrs={'class': 'form-control', 'autocomplete': "off"}),
             'comments': forms.Textarea(attrs={'class': 'form-control', "rows": 3}),
         }
 
