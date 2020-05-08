@@ -106,7 +106,7 @@ urlpatterns = [
     path('summary/admin/tracking/new/<int:year>', views.create_new_tracking_year, name="create_new_tracking_year"),
     path('summary/admin/summary_tracking', views.summary_tracking, name="summary_tracking"),
     path('summary/admin/summary_tracking/<int:year>', views.summary_tracking, name="summary_tracking_year"),
-    path('summary/admin/yearly_setup_instructions>', views.summary_yearly_setup_instructions, name="yearly_setup_instructions"),
+    path('summary/admin/yearly_setup_instructions', views.summary_yearly_setup_instructions, name="yearly_setup_instructions"),
     path('summary/admin/yearly_setup', views.summary_yearly_setup, name="yearly_setup"),
     path('summary/admin/metric_configurations', views.summary_metric_configurations, name="metric_configurations"),
     path('summary/admin/metric_configurations/<report_type>', views.summary_metric_configurations, name="metric_configurations"),
@@ -142,7 +142,6 @@ urlpatterns = [
     path('sso/saw/', views_SAML_SAW.signin, name="saw_sso"),
     path('sso/saw/acs/', views_SAML_SAW.acs, name="saw_sso_acs"),
     # path('summary/test', views.test, name='test'),
-
 ]
 
 handler404 = views.handler404
