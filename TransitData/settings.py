@@ -11,10 +11,21 @@ https://docs.djangoproject.com/en/2.1/ref/settings/
 """
 
 import os
-import keys_and_passwords
+
 from celery.schedules import crontab
 
 dev_mode = False
+
+if dev_mode:
+    import keys_and_passwords
+    db_USER = keys_and_passwords.db_USER
+    db_PASSWORD = keys_and_passwords.db_PASSWORD
+    SENDGRID_API_KEY = keys_and_passwords.SENDGRID_API_KEY
+
+else:
+    db_USER = os.environ.get("db_USER")
+    db_PASSWORD = os.environ.get("db_PASSWORD")
+    SENDGRID_API_KEY = os.environ.get('SENDGRID_API_KEY')
 
 if not dev_mode:
     os.environ.setdefault('FORKED_BY_MULTIPROCESSING', '1')
@@ -81,10 +92,7 @@ MIDDLEWARE = [
 ]
 
 
-if dev_mode:
-    SENDGRID_API_KEY = keys_and_passwords.SENDGRID_API_KEY
-else:
-    SENDGRID_API_KEY = os.environ.get('SENDGRID_API_KEY')
+
 
 EMAIL_BACKEND = 'sgbackend.SendGridBackend'
 EMAIL_PORT = 587
@@ -133,8 +141,8 @@ DATABASES = {
         'ENGINE': 'sql_server.pyodbc',
         'NAME': 'PublicTransportationDataReportingPortal',
         'HOST': 'hqcw2sql01.database.windows.net',
-        'USER': keys_and_passwords.db_USER,
-        'PASSWORD': keys_and_passwords.db_PASSWORD,
+        'USER': db_USER,
+        'PASSWORD': db_PASSWORD,
         'PORT': '',
         'OPTIONS': {
             'driver': 'ODBC Driver 17 for SQL Server',
