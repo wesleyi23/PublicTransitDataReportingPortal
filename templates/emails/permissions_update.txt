@@ -1,9 +1,9 @@
-Hello,
-Your account at WA Transit Data has the following permissions:
-{% for permission in permissions %}
-    -{{permission}}
-{% endfor %}
+Hello {{full_name}},
+
+Your active permissions request has been approved and you now have the following permissions:
+
+{{groups}}
+
 Please be in touch if you have any questions
 
-Thanks for completing your profile!
 -WSDOT | Public Transportation Division | Data Team

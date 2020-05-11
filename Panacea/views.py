@@ -40,7 +40,8 @@ from .filters import VanpoolExpansionFilter, VanpoolReportFilter
 from django.conf import settings
 from .emails import send_user_registration_email, notify_user_that_permissions_have_been_requested, \
     active_permissions_request_notification, cover_sheet_review_complete, cover_sheet_returned_to_user, \
-    to_wsdot_cover_sheet_submitted, to_wsdot_data_report_submitted, data_report_review_complete, contact_us_email
+    to_wsdot_cover_sheet_submitted, to_wsdot_data_report_submitted, data_report_review_complete, contact_us_email, \
+    notify_user_that_permissions_have_been_updated
 import base64
 from django import forms
 
@@ -394,9 +395,11 @@ def Admin_assignPermissions(request, active=None):
                 if len(form.changed_data) > 0:
                     data = form.cleaned_data
                     email = data['email']
+                    groups = ' & '.join(str(s[1]) for s in form.cleaned_data['groups'].values_list())
                     this_user_id = custom_user.objects.get(email=email).id
                     my_profile = profile.objects.get(custom_user_id=this_user_id)
                     my_profile.profile_complete = True
+                    notify_user_that_permissions_have_been_updated(request.user.get_full_name(), email, groups)
                     my_profile.active_permissions_request = False
                     my_profile.save()
                     # print(email)
@@ -1786,7 +1789,7 @@ def test_tools(request):
 @login_required(login_url='/Panacea/login')
 @group_required('WSDOT staff')
 def summary_metric_configurations(request, report_type=None, help_text=None):
-    if help_text is not None:
+    if help_text is not None and help_text != 'None':
         help_text = 'help_text'
     else:
         help_text = None

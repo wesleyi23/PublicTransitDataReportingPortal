@@ -36,11 +36,11 @@
                     <div style="padding-left: 1rem">
                         <p> Use this to configure metrics.
                         </p>
-                            {% if not help_text %}
-                                <a class="float-right btn btn-primary mb-1" href="{% url 'metric_configurations' report_type 'help_text' %}">Edit help text</a>
-                            {% else %}
-                                <a class="float-right btn btn-primary mb-1" href="{% url 'metric_configurations' report_type %}">Edit metrics</a>
-                            {% endif %}
+                        {% if not help_text %}
+                            <a class="float-right btn btn-primary mb-1" href="{% url 'metric_configurations' report_type 'help_text' %}">Edit help text</a>
+                        {% else %}
+                            <a class="float-right btn btn-primary mb-1" href="{% url 'metric_configurations' report_type %}">Edit metrics</a>
+                        {% endif %}
                         <div id="summary_configure_err"></div>
                         <form id="summary_configure" action="{% url 'metric_configurations' report_type help_text %}" method="post" data-err-field="my-errField" onkeydown="return event.key != 'Enter';">
                             {% csrf_token %}
@@ -71,23 +71,23 @@
                                         <tr class="fieldWrapper">
                                             <td style="display: none;">{{ form.id }}</td>
                                             <td>{{ form.name }}</td>
-                                        {% if not help_text %}
-                                            {%  if report_type == 'revenue' %}
-                                                <td>{{ form.funding_type }}</td>
-                                                <td>{{ form.government_type }}</td>
-                                            {% endif %}
-                                            {%  if form.summary_organization_classifications %}
-                                                <td>{{ form.summary_organization_classifications }}</td>
+                                            {% if not help_text %}
+                                                {%  if report_type == 'revenue' %}
+                                                    <td>{{ form.funding_type }}</td>
+                                                    <td>{{ form.government_type }}</td>
+                                                {% endif %}
+                                                {%  if form.summary_organization_classifications %}
+                                                    <td>{{ form.summary_organization_classifications }}</td>
+                                                {% else %}
+                                                    <td class="no-bullet"><fieldset>{{ form.agency_classification }}</fieldset> </td>
+                                                {% endif %}
+                                                {% if report_type == 'revenue'%}
+                                                    <td>{{ form.inactive_flag }}</td>
+                                                {% endif %}
+                                                </tr>
                                             {% else %}
-                                                <td class="no-bullet"><fieldset>{{ form.agency_classification }}</fieldset> </td>
+                                                <td>{{ form.help_text }}</td>
                                             {% endif %}
-                                            {% if report_type == 'revenue'%}
-                                                <td>{{ form.inactive_flag }}</td>
-                                            {% endif %}
-                                        </tr>
-                                        {% else %}
-                                            <td>{{ form.help_text }}</td>
-                                        {% endif %}
                                     {%  endfor %}
                                     </tbody>
                                 </table>
@@ -95,49 +95,49 @@
                         </form>
                     </div>
 
-                    <h3>Add new service</h3>
-                    <div style="padding-left: 1rem">
-                        <p> Please add any new modes that you are operating here</p>
-                        {% if messages %}
-                            {% for message in messages %}
-                                <h4 class="{{ message.tags }}">{{ message }}</h4>
-                            {% endfor %}
-                        {% endif %}`
+                    {#                    <h3>Add new service</h3>#}
+                    {#                    <div style="padding-left: 1rem">#}
+                    {#                        <p> Please add any new modes that you are operating here</p>#}
+                    {#                        {% if messages %}#}
+                    {#                            {% for message in messages %}#}
+                    {#                                <h4 class="{{ message.tags }}">{{ message }}</h4>#}
+                    {#                            {% endfor %}#}
+                    {#                        {% endif %}`#}
+                    {##}
+                    {#                        <form method="POST" class="" onkeydown="return event.key != 'Enter';">#}
+                    {#                            {% csrf_token %}#}
+                    {#                            <div class = 'table-responsive'>#}
+                    {#                                <table class = "table table-bordered table-hover">#}
+                    {#                                    <thead>#}
+                    {#                                    <tr>#}
+                    {#                                        <th style="width:25%">Mode</th>#}
+                    {#                                        <th>Administration of mode</th>#}
+                    {#                                        <th style="width:10%; text-align: center">Add</th>#}
+                    {#                                    </tr>#}
+                    {#                                    </thead>#}
+                    {#                                    <tbody>#}
+                    {##}
+                    {#                                    <tr class="fieldWrapper">#}
+                    {#                                        <td>{{ form.transit_mode }}</td>#}
+                    {#                                        <td>{{ form.administration_of_mode}}</td>#}
+                    {#                                        <td style="text-align: center"><input type="submit" value="Add mode" class="btn btn-sm btn-primary"></td>#}
+                    {#                                    </tr>#}
+                    {##}
+                    {#                                    </tbody>#}
+                    {#                                </table>#}
+                    {#                            </div>#}
+                    {#                        </form>#}
 
-                        <form method="POST" class="" onkeydown="return event.key != 'Enter';">
-                            {% csrf_token %}
-                            <div class = 'table-responsive'>
-                                <table class = "table table-bordered table-hover">
-                                    <thead>
-                                    <tr>
-                                        <th style="width:25%">Mode</th>
-                                        <th>Administration of mode</th>
-                                        <th style="width:10%; text-align: center">Add</th>
-                                    </tr>
-                                    </thead>
-                                    <tbody>
 
-                                    <tr class="fieldWrapper">
-                                        <td>{{ form.transit_mode }}</td>
-                                        <td>{{ form.administration_of_mode}}</td>
-                                        <td style="text-align: center"><input type="submit" value="Add mode" class="btn btn-sm btn-primary"></td>
-                                    </tr>
-
-                                    </tbody>
-                                </table>
-                            </div>
-                        </form>
+                    {#                    </div>#}
+                    {#                    <div class="text-center">#}
+                    {#                        <a class="btn btn-lg btn-primary" href="{% url 'accept_modes' %}">Confirm service</a>#}
+                    {#                    </div>#}
+                    {#                </div>#}
 
 
-                    </div>
-                    <div class="text-center">
-                        <a class="btn btn-lg btn-primary" href="{% url 'accept_modes' %}">Confirm service</a>
-                    </div>
+
                 </div>
-
-
-
-
             </div>
 
         </div>

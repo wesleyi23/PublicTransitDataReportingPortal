@@ -24,7 +24,7 @@ def active_permissions_request_notification(dev_mode=settings.dev_mode):
     send_mail(
         subject='Active Permissions Request - Public Transportation Reporting Portal',
         message=msg_plain,
-        from_email='permissions@ptreportingportal.gov',
+        from_email=settings.DEFAULT_FROM_EMAIL,
         recipient_list= recipient_list,
         html_message= msg_html, fail_silently=False)
 
@@ -46,6 +46,21 @@ def notify_user_that_permissions_have_been_requested(full_name, groups, email, d
         recipient_list=recipient_list,
         html_message=msg_html,
     )
+
+
+def notify_user_that_permissions_have_been_updated(full_name, email, groups, dev_mode = settings.dev_mode):
+    if dev_mode == True:
+        recipient_list = [email,]
+    else:
+        recipient_list = [email,]
+
+    msg_html = render_to_string("emails/permissions_update.html", {'full_name': full_name, 'groups': groups})
+    msg_plain = render_to_string('emails/permissions_update.txt', {'full_name': full_name, 'groups': groups})
+    send_mail( subject='Updated Permissions - Public Transportation Reporting Portal',
+               message=msg_plain,
+               from_email = settings.DEFAULT_FROM_EMAIL,
+               recipient_list=recipient_list,
+               html_message=msg_html)
 
 
 def cover_sheet_returned_to_user(org_id, dev_mode=settings.dev_mode):

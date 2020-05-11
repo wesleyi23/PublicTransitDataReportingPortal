@@ -1,13 +1,13 @@
 <!DOCTYPE html>
-<br>
+<html lang="en">
+<body>
+Hello {{ full_name }},
 
-Hello, <br />
+<p>Your active permissions request has been approved and you now have the following permissions: </p>
 
-Your account at WA Transit Data has the following permissions:
-{% for permission in permissions %}
-<li> {{permission}} </li>
+{{ groups }}
 
-{%  endfor %}
-<br />
-Please be in touch if you have any questions <br />
+<p>Please be in touch if you have any questions </p>
 -WSDOT | Public Transportation Division | Data Team
+</body>
+</html>
