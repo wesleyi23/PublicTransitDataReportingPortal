@@ -45,7 +45,7 @@
                 <div class="card-body" style="">
                     <h3>Confirm current services</h3>
                     <div style="padding-left: 1rem">
-                        <p> Please confirm that these are the modes that your transit operates.  If you have add any new service or a modes is missing please add it below.
+                        <p> Please confirm that these are the modes that your transit operates.
                             To remove a mode press the delete button.
                         </p>
                         {% if error_no_modes %}
@@ -81,7 +81,7 @@
                     </div>
                     <h3>Add new service</h3>
                     <div style="padding-left: 1rem">
-                        <p> Please add any new modes that you are operating here</p>
+                        <p> Please add any new modes of service here</p>
                         {% if messages %}
                             {% for message in messages %}
                                 <h4 class="{{ message.tags }}">{{ message }}</h4>
@@ -117,15 +117,10 @@
                     <div class="text-center">
                         <a class="btn btn-lg btn-primary" href="{% url 'accept_modes' %}">Confirm service</a>
                     </div>
+                <p class = "text-center pt-5">Before adding or deleting a mode, please consider checking in with WSDOT first, as mode type often has important funding implications.</p>
                 </div>
-
-
-
-
             </div>
-
         </div>
-
     </div>
 
 

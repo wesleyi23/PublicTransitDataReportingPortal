@@ -7,7 +7,7 @@
 
     <p> If you are having any issues with the site or with inputting data or if you need to report anything broken, please fill out this contact form and
     we will respond as soon as possible: </p>
-  <form method="post" aria-label="Email Contact Form" title = "Email Contact Form" type = "text" onkeydown="return event.key != 'Enter';">
+  <form method="post" id = 'email_form' aria-label="Email Contact Form" title = "Email Contact Form" type = "text">
   {% csrf_token %}
 
      <table style = "padding: 80px">
@@ -31,7 +31,28 @@
 
      </table>
 <p></p>
-<input type="submit" value="Submit" aria-label="Submit" class="btn btn-primary" style="width:100px; display:inline-block;margin-left: 40px;">
+<input type="submit" value="Submit" id="submit_btn" data-toggle="modal" data-target="#email_modal" data-backdrop="static" data-keyboard="false" aria-label="Submit" class="btn btn-primary" style="width:100px; display:inline-block;margin-left: 40px;">
 </form>
+
+  <!-- Modal -->
+    <div class="modal" id="email_modal" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+
+     <div class="modal-body">
+    <p>
+    Thank you for contacting us. We will be in touch shortly.
+    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+{%  endblock %}
+
+{% block page_scripts %}
+<script>
+
+</script>
 
 {%  endblock %}

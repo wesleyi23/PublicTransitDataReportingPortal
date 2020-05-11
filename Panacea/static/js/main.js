@@ -56,9 +56,6 @@ $(document).ready(function ($) {
     $(".AJAX_instant_submit").change( function(e) {
         e.stopImmediatePropagation();
         var FormName = $(this).data('form-name');
-        console.log(FormName);
-        console.log($("#" + FormName).attr('method'));
-        console.log($("#" + FormName).attr('action'));
         var errField = $("#" + FormName).data('err-field');
         $.ajax({ data: $("#" + FormName).serialize(),
             dataType: 'json',

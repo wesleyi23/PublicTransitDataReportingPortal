@@ -197,7 +197,7 @@
         {% endif %}
         <!-- Heading -->
         <li class="nav-item">
-            <a class="nav-link" href="/Help">
+            <a class="nav-link" href="{% url 'Help' %}">
                 {#                <i class="fas fa-fw fa-question-circle"></i>#}
                 <span>Help</span></a>
         </li>
@@ -249,7 +249,7 @@
                                 <i class="fas fa-building fa-sm fa-fw mr-2 text-gray-400"></i>
                                 Organization
                             </a>
-                            <a class="dropdown-item" href="#">
+                            <a class="dropdown-item" href="{% url 'Help' %}">
                                 <i class="fas fa-question-circle fa-sm fa-fw mr-2 text-gray-400"></i>
                                 Help
                             </a>

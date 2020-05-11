@@ -151,7 +151,11 @@ class SummaryDataEntryBuilder(SummaryBuilder):
         #     self.max_form_increment = 1
         # else:
         #     raise Http404("Report type does not exist. -2")
-        self.max_form_increment = len(self.nav_filters)
+
+        if isinstance(self.nav_filters, list):
+            self.max_form_increment = len(self.nav_filters)
+        else:
+            self.max_form_increment = 1
 
     def set_current_increment(self):
         '''returns the appropriate model for the given report type'''

@@ -40,7 +40,7 @@ from .filters import VanpoolExpansionFilter, VanpoolReportFilter
 from django.conf import settings
 from .emails import send_user_registration_email, notify_user_that_permissions_have_been_requested, \
     active_permissions_request_notification, cover_sheet_review_complete, cover_sheet_returned_to_user, \
-    to_wsdot_cover_sheet_submitted, to_wsdot_data_report_submitted, data_report_review_complete
+    to_wsdot_cover_sheet_submitted, to_wsdot_data_report_submitted, data_report_review_complete, contact_us_email
 import base64
 from django import forms
 
@@ -1001,13 +1001,14 @@ def submit_cover_sheet_submit(request):
     ready_to_submit = get_all_cover_sheet_steps_completed(user_org.id)
     if not ready_to_submit:
         return redirect('you_skipped_a_step')
-
+    else:
+        successful_submit = True
     report_status = summary_report_status.objects.get(year=get_current_summary_report_year(), organization=user_org)
     report_status.cover_sheet_submitted_for_review = True
     report_status.cover_sheet_status = "With WSDOT"
     report_status.save()
     to_wsdot_cover_sheet_submitted(user_org.id)
-    return redirect('summary_report_data')
+    return render(request, 'pages/summary/submit_cover_sheet.html', {'successful_submit': successful_submit})
 
 
 @login_required(login_url='/Panacea/login')
@@ -1209,8 +1210,7 @@ def contact_us(request):
             from_email = form.cleaned_data['from_email']
             message = form.cleaned_data['message']
             try:
-                print('something')
-                send_mail(subject, message, from_email, [settings.DEFAULT_FROM_EMAIL,], fail_silently=False)
+                contact_us_email(subject, message, from_email)
             except BadHeaderError:
                 return HttpResponse('Invalid header found')
             return redirect('dashboard')
@@ -1796,7 +1796,6 @@ def summary_metric_configurations(request, report_type=None, help_text=None):
 
     metric_configuration_factory = ConfigurationBuilder(report_type, help_text)
     if request.POST:
-        print('POST')
         configuration_form_factory = metric_configuration_factory.create_model_formset_factory()
         form_set = configuration_form_factory(request.POST)
         for form in form_set:

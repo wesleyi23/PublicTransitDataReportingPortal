@@ -185,7 +185,7 @@ def get_form_labels(i, labels):
 @register.simple_tag
 def get_form_help_text(i, help_label, help_text):
 
-    if help_text[i] is not None:
+    if help_text[i] is not None and help_text[i] != '':
         output = '<sup><i class="fas fa-question-circle help-popover" data-toggle="popover" title="{}:"data-content="{}"></i></sup>'.format(help_label[i], help_text[i])
     else:
         output = ''

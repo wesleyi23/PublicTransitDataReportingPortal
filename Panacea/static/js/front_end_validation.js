@@ -22,7 +22,7 @@ let error_dict = {};  //dictionary for storing errors that are being displayed
 
 //Error messages and error message generators
 const err_msg_previous_report_needs_comment = "Please provide a brief comment regarding the reason for this historical update.";
-const err_msg_fifteen_percent_change = "There is a greater than 15% change from last year, please provide a comment explaining this change.";
+const err_msg_fifteen_percent_change = "There is a 15 % or  greater change from last year, please provide a comment explaining this change.";
 function greater_than_error_msg(lesser_label, greater_label){
     return (greater_label + " must be greater than " + lesser_label + ".")
 }

@@ -147,6 +147,11 @@ def to_wsdot_data_report_submitted(org_id, dev_mode=settings.dev_mode):
     )
 
 
+
+def contact_us_email(subject, message, recipient_email):
+    send_mail(subject= subject, message= message, html_message=message, from_email = recipient_email, recipient_list= [settings.DEFAULT_FROM_EMAIL,], fail_silently=False)
+
+
 # Helper functions
 def get_organization_summary_email_address(organization_id):
     user_emails = profile.objects.filter(organization_id=organization_id,

@@ -64,7 +64,7 @@
         <div class="modal-dialog modal-dialog-centered" role="document">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="exampleModalLongTitle">Modal title</h5>
+                    <h5 class="modal-title" id="exampleModalLongTitle">Tribal Permissions</h5>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>
@@ -73,46 +73,73 @@
                     {% csrf_token  %}
                     <div class="modal-body">
                         <p>
-                            Thank you for taking the time to submit your coversheet. As a Tribal transportation provider
-                            your participation in the Washington Summary of Public Transportation report is voluntary.
-                            However by providing information it helps WSDOT advocate for increased funding for services like
-                            the ones you provide and helps paint a compete picture of transportation services available in our
-                            region.
+                            Thank you for taking the time to submit your coversheet. As a tribal transportation provider
+                            your participation in the Summary of Public Transportation report is voluntary. Your participation helps
+                            paint a compete picture of transportation services available in our region and we are grateful for it.
                         </p>
                         <p>
-                        You have several options for reporting: You may just report a coversheet describing your basic
-                        service, you may allow us to publish your NTD data, or you may fill out a report just as other
-                        transit agencies do.
+                            You have two options for reporting: you may allow us to publish your submitted coversheet and your National Transit Database data or you may allows us to publish your coversheet
+                            and self-reported data report.
                         </p>
                         <table class="table">
-                            <tr>
-                                <td>{{ form.permission_to_publish_coversheet }}</td>
-                                <td>I would like WSDOT to publish our agency's coversheet:</td>
-                            </tr>
+                            {#                            <tr>#}
+                            {#                                <td>{{ form.permission_to_publish_coversheet }}</td>#}
+                            {#                                <td>I would like WSDOT to publish our agency's coversheet:</td>#}
+                            {#                            </tr>#}
                             <tr>
                                 <td>{{ form.permission_to_publish_ntd_data }}</td>
-                                <td>I would like WSDOT to publish our agency's NTD data:</td>
+                                <td>I would like WSDOT to publish our agency's coversheet and NTD data:</td>
                             </tr>
                             <tr>
                                 <td>{{ form.permission_to_publish_reported_data }}</td>
-                                <td>I would like WSDOT to publish the data I am about to report for our agency:</td>
+                                <td>I would like WSDOT to publish the coversheet and the data I am about to report for our agency:</td>
                             </tr>
                         </table>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-                         <input type="submit" value="Submit coversheet"  class="btn btn-primary float-right">
+                        <input type="submit" value="Submit coversheet"  class="btn btn-primary float-right">
                     </div>
                 </form>
             </div>
         </div>
     </div>
 
+    <!-- Secondary Modal -->
+    <div class="modal fade" id="success_modal" tabindex="-1" role="dialog" aria-labelledby="success_modal" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="success_modal" aria-label="successsful submission">Success</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p>
+                        Success! Your coversheet has been submitted and WSDOT will review it.
+                    </p>
+                    <p>
+                        You will now be taken to the part of the reporting portal where you will submit your data.
+                    </p>
+                </div>
+                <div class="modal-footer">
+                    <a class="btn btn-primary" href="/summary/report_data/instructions" role="button" aria-label="continue">Continue</a>
+                </div>
+            </div>
+        </div>
+    </div>
 
 
 {%  endblock %}
 
 {% block page_scripts %}
-
+    {% if successful_submit == True %}
+        <script>
+            $(document).ready(function(){
+                $("#success_modal").modal('show');
+            });
+        </script>
+    {% endif %}
 
 {% endblock %}

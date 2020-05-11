@@ -14,7 +14,7 @@ import os
 
 from celery.schedules import crontab
 
-dev_mode = False
+dev_mode = True
 
 if dev_mode:
     import keys_and_passwords
@@ -47,8 +47,8 @@ else:
 if dev_mode:
     DEBUG = True
 else:
-    DEBUG = int(os.environ.get("DEBUG", default=0))
-    # DEBUG = True
+    #DEBUG = int(os.environ.get("DEBUG", default=0))
+    DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 
@@ -191,6 +191,7 @@ if dev_mode:
 else:
     STATIC_URL = "/static/"
     STATIC_ROOT = os.path.join(BASE_DIR, "static")
+    STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 
 # User authentication from tut located here:https://wsvincent.com/django-custom-user-model-tutorial/
