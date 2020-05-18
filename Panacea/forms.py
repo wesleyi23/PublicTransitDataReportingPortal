@@ -1,3 +1,4 @@
+from ckeditor.widgets import CKEditorWidget
 from django import forms
 from django.forms import BaseModelFormSet, BaseModelForm, ModelForm
 from django.forms.formsets import BaseFormSet
@@ -664,9 +665,9 @@ class cover_sheet_service(forms.ModelForm):
                   ]
         widgets = {
             'service_area_description': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
-            'intermodal_connections': forms.Textarea(attrs={'class': 'form-control'}),
-            'fares_description': forms.Textarea(attrs={'class': 'form-control'}),
-            'service_and_eligibility': forms.Textarea(attrs={'class': 'form-control'}),
+            'intermodal_connections': CKEditorWidget(),
+            'fares_description': CKEditorWidget(),
+            'service_and_eligibility': CKEditorWidget(),
             'days_of_service': forms.TextInput(attrs={'class': 'form-control'}),
             'current_operations': forms.Textarea(attrs={'class': 'form-control'}),
             'revenue_service_vehicles': forms.TextInput(attrs={'class': 'form-control'}),

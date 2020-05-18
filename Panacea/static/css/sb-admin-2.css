@@ -225,6 +225,10 @@ input::-ms-clear {
   height: 0;
 }
 
+.django-ckeditor-widget{
+  display: inline !important;
+}
+
 /*! END ADDITIONS
  */
 

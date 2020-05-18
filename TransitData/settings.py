@@ -281,6 +281,16 @@ SAML2_AUTH_SAW = {
 
 CKEDITOR_CONFIGS = {
     'default': {
-        'toolbar': None,
-    },
+        'toolbar': 'Basic',
+        'toolbar_Basic': [
+            ['Bold', 'Italic', 'Underline'],
+            ['NumberedList', 'BulletedList',],
+            ['Link',],
+        ],
+        'height': 100,
+        'width': '100%',
+        'removePlugins': 'elementspath',
+        'linkShowAdvancedTab': False,
+        'linkShowTargetTab': False,
+    }
 }
