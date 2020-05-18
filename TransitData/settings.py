@@ -76,9 +76,8 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework.authtoken',
     'rest_auth',
-
+    'ckeditor',
 ]
-
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
@@ -278,4 +277,10 @@ SAML2_AUTH_SAW = {
     'NAME_ID_FORMAT': 'urn:oasis:names:tc:SAML:2.0:nameid-format:persistent', # Sets the Format property of authn NameIDPolicy element
     'USE_JWT': False, # Set this to True if you are running a Single Page Application (SPA) with Django Rest Framework (DRF), and are using JWT authentication to authorize client users
     'FRONTEND_URL': '', # Redirect URL for the client if you are using JWT auth with DRF. See explanation below
+}
+
+CKEDITOR_CONFIGS = {
+    'default': {
+        'toolbar': None,
+    },
 }

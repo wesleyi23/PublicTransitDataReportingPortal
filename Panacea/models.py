@@ -378,6 +378,7 @@ class expense_source(models.Model):
     name = models.CharField(max_length=100)
     agency_classification = models.ManyToManyField(summary_organization_type, blank=True)
     help_text = models.TextField(blank=True, null=True)
+    order_in_summary = models.IntegerField(blank=True, null=True)
 
     def __str__(self):
         return self.name
@@ -496,6 +497,8 @@ class cover_sheet(models.Model):
     organization_logo = models.BinaryField(editable=True, blank=True, null=True)
     #organization_logo = models.TextField(blank=True, null=True)
     published_version = models.BooleanField(blank=True, null=True, default=False)
+    tax_rate_valid = models.BooleanField(verbose_name="Tax rate information is correct", default=True)
+    tax_rate_comment = models.TextField(verbose_name="If tax rate is invalid please provide more information", blank=True, null=True)
     history = HistoricalRecords()
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -654,7 +657,16 @@ class tax_rates(models.Model):
     year_established = models.IntegerField(blank=True, null=True)
     tax_rate = models.DecimalField(decimal_places=1, max_digits=5, blank=True, null=True)
     last_tax_rate_increase = models.CharField(max_length=30, blank=True, null=True)
-    organization = models.ForeignKey(organization, on_delete=models.PROTECT)
+    organization = models.OneToOneField(organization, on_delete=models.PROTECT)
+    tax_rate_note = models.TextField(blank=True, null=True, default="N/A")
+
+    @property
+    def tax_rate_description(self):
+        """Returns the description of tax rate used in the cover sheet."""
+        if self.tax_rate_note:
+            return self.tax_rate_note
+
+        return "{}% sales tax. Last updated: {}".format(self.tax_rate, self.last_tax_rate_increase)
 
 
 class intercity_bus_lines(models.Model):

@@ -65,9 +65,11 @@
                         <li>You may go back to previous sections by navigating through the tabs, and clicking on the links for each service, revenue, or expense type.</li>
                         <li>Once you've finished, be sure to submit your data.</li>
                     </ul>
+                    <p><b>Download data</b> - Some organizations find it easier to review and gather all data in an excel file and then enter it into the application. You may download you data
+                    by clicking the download data button below. The file is organized in the same order as the reporting forms.  It may take a few moments to download. </p>
                     <p><b>We are here to help!</b>  If at any point you get stuck or have difficulties please reach out to us and ask for <a href="{% url 'Help' %}"> help </a>.</p>
-
                     <div class="text-center">
+                        <a class="btn btn-outline-secondary btn-lg" href="{% url 'download_excel_report' %}">Download data</a>
                         <a class="btn btn-primary btn-lg" href="{% url 'summary_modes' %}">Let's get started</a>
                     </div>
                 </div>

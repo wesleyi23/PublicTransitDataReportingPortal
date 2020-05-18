@@ -55,11 +55,11 @@
                     <div class="text-center mt-5">
                         <p class="pb-2 h2"><b>You have completed your data entry!  You just need to submit your data and you will be done.</b></p>
                         <p class="h4">
-                            You may go back and review what you have entered using the tabs above.</p>
+                            You may go back and review what you have entered using the tabs above or by downloading the data using the button below.</p>
                         <p class="pb-5 h4">
                             When you are ready please submit your data for review.
                         </p>
-
+                        <a class="btn btn-outline-secondary btn-lg" href="{% url 'download_excel_report' %}">Download data</a>
                         <a href="{% url 'submit_data_submit' %}" class="btn btn-primary btn-lg" role="button" aria-disabled="true">Submit your data</a>
                     </div>
                 </div>

@@ -28,10 +28,10 @@
                         <li class="nav-item">
                             <a class="nav-link" href="{% url 'cover_sheets_service' %}">Your service</a>
                         </li>
-                       {% if ready_to_submit %}
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'submit_cover_sheet' %}">Submit cover sheet</a>
-                        </li>
+                        {% if ready_to_submit %}
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'submit_cover_sheet' %}">Submit cover sheet</a>
+                            </li>
                         {% endif %}
                     </ul>
                 </div>
@@ -97,10 +97,43 @@
                                         <sup>
                                             <i class="fas fa-question-circle help-popover"
                                                data-toggle="popover" title="Governing body:"
-                                               data-content="Responsible decisionmaking body ar your organization"></i>
+                                               data-content="Responsible decision making body ar your organization"></i>
                                         </sup>
                                         <p>{{ form.governing_body}}</p>
                                         {{ form.governing_body.errors}}
+
+                                        {% if tax_description %}
+                                            {{ form.tax_rate_valid.label_tag }}
+                                            <sup>
+                                                <i class="fas fa-question-circle help-popover"
+                                                   data-toggle="popover" title="Tax rate information is correct:"
+                                                   data-content="Uncheck this box if your tax information is incorrect"></i>
+                                            </sup>
+                                            <table class="table thead-light table-bordered">
+                                                <thead>
+                                                <th>Tax Description</th>
+                                                <th>Correct?</th>
+                                                </thead>
+                                                <tbody>
+                                                <tr>
+                                                    <td>{{ tax_description }}</td>
+                                                    <td>{{ form.tax_rate_valid}}</td>
+                                                </tr>
+                                                </tbody>
+                                            </table>
+                                            {{ form.tax_rate_valid.errors}}
+
+                                            <div id="tax_comment_container" style="display: none;">
+                                                {{ form.tax_rate_comment.label_tag }}
+                                                <sup>
+                                                    <i class="fas fa-question-circle help-popover"
+                                                       data-toggle="popover" title="Tax rate comment:"
+                                                       data-content="Please explain how your tax information is incorrect"></i>
+                                                </sup>
+                                                <p>{{ form.tax_rate_comment}}</p>
+                                                {{ form.tax_rate_comment.errors}}
+                                            </div>
+                                        {% endif %}
                                     </div>
                                 </div>
                                 <div class="col" style="padding-left:1.5rem">
@@ -185,4 +218,22 @@
             });
         });
     </script>
+
+    <script>
+
+        $('#id_tax_rate_valid').change(function(){
+            console.log('run')
+            let tax_is_valid = $('#id_tax_rate_valid').prop("checked");
+            console.log(tax_is_valid);
+            if(tax_is_valid === false){
+                $('#tax_comment_container').show();
+                $('#id_tax_rate_comment').prop("required", true);
+            } else {
+                $('#tax_comment_container').hide();
+                $('#id_tax_rate_comment').prop("required", false);
+            }
+        });
+
+    </script>
+
 {% endblock %}

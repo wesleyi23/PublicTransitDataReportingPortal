@@ -4,8 +4,9 @@ import datetime
 import itertools
 import json
 # import pandas as pd
+from openpyxl.writer.excel import save_virtual_workbook
 
-from Panacea.builders import SummaryDataEntryBuilder, SummaryDataEntryTemplateData, ConfigurationBuilder
+from Panacea.builders import SummaryDataEntryBuilder, SummaryDataEntryTemplateData, ConfigurationBuilder, ExportReport
 from .validators import validation_test_for_transit_data
 
 from django.contrib import messages
@@ -67,7 +68,8 @@ from .forms import CustomUserCreationForm, \
 from .models import profile, vanpool_report, custom_user, vanpool_expansion_analysis, organization, cover_sheet, \
     revenue, transit_data, expense, expense_source, service_offered, revenue_source, \
     transit_metrics, transit_mode, fund_balance, fund_balance_type, summary_organization_type, validation_errors, \
-    summary_report_status, cover_sheet_review_notes, summary_organization_progress, tribal_reporter_permissions
+    summary_report_status, cover_sheet_review_notes, summary_organization_progress, tribal_reporter_permissions, \
+    tax_rates
 from django.contrib.auth.models import Group
 from .utilities import calculate_latest_vanpool, find_maximum_vanpool, calculate_remaining_months, \
     calculate_if_goal_has_been_reached, \
@@ -904,6 +906,13 @@ def cover_sheet_organization_view(request):
     form = cover_sheet_organization(instance=cover_sheet_instance)
     notes = cover_sheet_review_notes.objects.filter(year=get_current_summary_report_year(), summary_report_status__organization=org, note_area="Organization")
     new_note_form = add_cover_sheet_review_note()
+    if org.summary_organization_classifications.name == "Transit":
+        print("transit")
+        tax_rate, created = tax_rates.objects.get_or_create(organization=org)
+        tax_description = tax_rate.tax_rate_description
+    else:
+        print("not transit")
+        tax_description = None
     try:
         base64_logo = base64.encodebytes(cover_sheet_instance.organization_logo).decode("utf-8")
     except:
@@ -939,7 +948,8 @@ def cover_sheet_organization_view(request):
                                                                            'year': get_current_summary_report_year(),
                                                                            'notes': notes,
                                                                            'new_note_form': new_note_form,
-                                                                           'ready_to_submit': ready_to_submit})
+                                                                           'ready_to_submit': ready_to_submit,
+                                                                           'tax_description': tax_description})
 
 
 @login_required(login_url='/Panacea/login')
@@ -947,7 +957,7 @@ def cover_sheet_organization_view(request):
 def cover_sheet_service_view(request):
     user_profile_data = profile.objects.get(custom_user=request.user.id)
     org = user_profile_data.organization
-    service_type = org.summary_organization_classifications
+    service_type = org.summary_organization_classifications.name
 
     cover_sheet_instance, created = cover_sheet.objects.get_or_create(organization=org)
 
@@ -1187,6 +1197,7 @@ def submit_data_submit(request):
     status.save()
     to_wsdot_data_report_submitted(status.organization_id)
     return redirect('dashboard')
+
 
 @login_required(login_url='/Panacea/login')
 @group_required('Summary reporter', 'WSDOT staff')
@@ -1877,3 +1888,12 @@ def configure_agency_types(request, model=None):
         return render(request, 'pages/summary/configure_agency_types.html', {'formset': formset,
 
                                                                              'model': model})
+
+
+@login_required(login_url='/Panacea/login')
+def download_excel_report(request):
+    org = find_user_organization(request.user.id)
+    report = ExportReport(org).generate_report()
+    response = HttpResponse(content=save_virtual_workbook(report), content_type='application/ms-excel')
+    response['Content-Disposition'] = 'attachment; filename=Summary_of_public_transportation_data_export.xlsx'
+    return response

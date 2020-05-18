@@ -49,3 +49,6 @@ urllib3==1.23
 pyodbc==4.0.30
 django-mssql-backend==2.8.0
 django-pyodbc==1.1.3
+openpyxl
+WeasyPrint
+django-ckeditor

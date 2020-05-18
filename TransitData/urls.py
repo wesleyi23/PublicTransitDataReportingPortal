@@ -77,6 +77,7 @@ urlpatterns = [
     path('summary/submit_cover_sheet/', views.submit_cover_sheet, name="submit_cover_sheet"),
     path('summary/submit_cover_sheet/submit', views.submit_cover_sheet_submit, name="submit_cover_sheet_submit"),
     path('summary/ntd_upload/', views.ntd_upload, name="ntd_upload"),
+    path('summary/download_excel_report', views.download_excel_report, name="download_excel_report"),
     path('summary/cover_sheets/organization', views.cover_sheet_organization_view, name="cover_sheets_organization"),
     path('summary/cover_sheets/service', views.cover_sheet_service_view, name="cover_sheets_service"),
     path('summary/report_data/instructions', views.summary_report_data, name='summary_report_data'),

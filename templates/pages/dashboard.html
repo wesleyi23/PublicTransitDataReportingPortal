@@ -168,9 +168,9 @@
                     {% endif %}
                     {% if summary_report_status.data_report_submitted_for_review and summary_report_status.data_report_status == "With user" %}
                         <div class="alert alert-warning" role="alert">
-                            WSDOT has completed its review of your data and has a few questions:
+                            WSDOT has completed its review of your data and will we working with you one on one to resolve any issues:
                             <br>
-                            <a href="#" role="button" class="mt-2 btn btn-warning">Data report review</a>
+                            <a href="{% url 'summary_report_data' %}" role="button" class="mt-2 btn btn-warning">Data report</a>
                         </div>
                     {% endif %}
                     {% if summary_organization_progress.started %}

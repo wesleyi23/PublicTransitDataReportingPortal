@@ -48,6 +48,14 @@
                         <div class="container-fluid w-100">
                             <div class="row w-100">
                                 <div class="col" style="padding-right: 1.5rem">
+                                    {{ form.service_area_description.label_tag }}
+                                    <sup>
+                                        <i class="fas fa-question-circle help-popover"
+                                           data-toggle="popover" title="Service area description:"
+                                           data-content="Please provide a brief description of the area you serve."></i>
+                                    </sup>
+                                    <p>{{ form.service_area_description}}</p>
+
                                     {{ form.intermodal_connections.label_tag }}
                                     <sup>
                                         <i class="fas fa-question-circle help-popover"
@@ -91,20 +99,20 @@
                                         <sup>
                                             <i class="fas fa-question-circle help-popover"
                                                data-toggle="popover" title="Days of service:"
-                                               data-content="Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur."></i>
+                                               data-content="Please provide a description of the days of the week when you offer service."></i>
                                         </sup>
                                         <p>{{ form.days_of_service }}</p>
                                     {% endif %}
 
-                                    {% if service_type == "Transit" or service_type == "Tribe" %}
-                                        {{ form.tax_rate_description.label_tag }}
-                                        <sup>
-                                            <i class="fas fa-question-circle help-popover"
-                                               data-toggle="popover" title="Tax rate description:"
-                                               data-content="For transit agencies, provide the type and total tax rate for transit services approved by voters in your service area (e.g., 0.6 percent total sales and use tax). Additionally, include a brief history of tax rate increases for transit services approved by voters in your service area (e.g., 0.3 approved in 1981, and an additional 0.3 percent approved in 2002)."></i>
-                                        </sup>
-                                        <p>{{ form.tax_rate_description}}</p>
-                                    {% endif %}
+{#                                    {% if service_type == "Transit" or service_type == "Tribe" %}#}
+{#                                        {{ form.tax_rate_description.label_tag }}#}
+{#                                        <sup>#}
+{#                                            <i class="fas fa-question-circle help-popover"#}
+{#                                               data-toggle="popover" title="Tax rate description:"#}
+{#                                               data-content="For transit agencies, provide the type and total tax rate for transit services approved by voters in your service area (e.g., 0.6 percent total sales and use tax). Additionally, include a brief history of tax rate increases for transit services approved by voters in your service area (e.g., 0.3 approved in 1981, and an additional 0.3 percent approved in 2002)."></i>#}
+{#                                        </sup>#}
+{#                                        <p>{{ form.tax_rate_description}}</p>#}
+{#                                    {% endif %}#}
 
                                     {% for error in form.non_field_errors %}
                                         <div class="alert alert-danger">

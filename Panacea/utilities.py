@@ -629,8 +629,10 @@ def get_all_data_steps_completed(organization_id):
     return result
 
 def get_data_submitted(organization_id):
-    return summary_report_status.objects.get(year=get_current_summary_report_year(),
-                                             organization_id=organization_id).data_report_submitted_for_review
+    status = summary_report_status.objects.get(year=get_current_summary_report_year(),
+                                      organization_id=organization_id).data_report_status
+
+    return status == "With WSDOT"
 
 @transaction.atomic
 def reset_summary_reporter_tracking(year):

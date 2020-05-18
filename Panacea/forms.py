@@ -613,9 +613,17 @@ class cover_sheet_organization(forms.ModelForm):
 
     class Meta:
         model = cover_sheet
-        fields = ['executive_officer_first_name', 'executive_officer_last_name', 'executive_officer_title', 'service_website_url',
-                  'service_area_description', 'congressional_districts', 'legislative_districts', 'type_of_government',
-                  'governing_body']
+        fields = ['executive_officer_first_name',
+                  'executive_officer_last_name',
+                  'executive_officer_title',
+                  'service_website_url',
+                  'service_area_description',
+                  'congressional_districts',
+                  'legislative_districts',
+                  'type_of_government',
+                  'governing_body',
+                  'tax_rate_valid',
+                  'tax_rate_comment']
         widgets = {
             'executive_officer_first_name': forms.TextInput(attrs={'class': 'form-control'}),
             'executive_officer_last_name': forms.TextInput(attrs={'class': 'form-control'}),
@@ -627,6 +635,8 @@ class cover_sheet_organization(forms.ModelForm):
             'legislative_districts': forms.TextInput(attrs={'class': 'form-control'}),
             'type_of_government': forms.TextInput(attrs={'class': 'form-control'}),
             'governing_body': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
+            'tax_rate_valid': forms.CheckboxInput(attrs={'class': 'form-control'}),
+            'tax_rate_comment': forms.Textarea(attrs={'class': 'form-control', 'rows': 2})
         }
 
     def clean_organization_logo_input(self):
@@ -640,31 +650,39 @@ class cover_sheet_organization(forms.ModelForm):
             validate_image_file(image)
 
 
-class service_offered_form(forms.ModelForm):
-
-    class Meta:
-        model = service_offered
-        fields = ['administration_of_mode', 'transit_mode']
-        widgets = {
-            'transit_mode': forms.Select(choices=transit_mode.objects.all(), attrs={'class': 'form-control'}),
-            'administration_of_mode': forms.Select(choices=service_offered.DO_OR_PT, attrs={'class': 'form-control'})
-        }
-
-
 class cover_sheet_service(forms.ModelForm):
     class Meta:
         model = cover_sheet
-        fields = ['intermodal_connections', 'fares_description', 'service_and_eligibility',
-                  'days_of_service', 'current_operations', 'revenue_service_vehicles',
-                  'tax_rate_description']
+        fields = ['service_area_description',
+                  'intermodal_connections',
+                  'fares_description',
+                  'service_and_eligibility',
+                  'days_of_service',
+                  'current_operations',
+                  'revenue_service_vehicles',
+                  # 'tax_rate_description'
+                  ]
         widgets = {
+            'service_area_description': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
             'intermodal_connections': forms.Textarea(attrs={'class': 'form-control'}),
             'fares_description': forms.Textarea(attrs={'class': 'form-control'}),
             'service_and_eligibility': forms.Textarea(attrs={'class': 'form-control'}),
             'days_of_service': forms.TextInput(attrs={'class': 'form-control'}),
             'current_operations': forms.Textarea(attrs={'class': 'form-control'}),
             'revenue_service_vehicles': forms.TextInput(attrs={'class': 'form-control'}),
-            'tax_rate_description': forms.Textarea(attrs={'class': 'form-control'}),
+            # 'tax_rate_description': forms.Textarea(attrs={'class': 'form-control'}),
+        }
+
+
+class service_offered_form(forms.ModelForm):
+
+    class Meta:
+        model = service_offered
+        fields = ['administration_of_mode',
+                  'transit_mode']
+        widgets = {
+            'transit_mode': forms.Select(choices=transit_mode.objects.all(), attrs={'class': 'form-control'}),
+            'administration_of_mode': forms.Select(choices=service_offered.DO_OR_PT, attrs={'class': 'form-control'})
         }
 
 

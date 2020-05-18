@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Coversheet Report</title>
+    <style>
+        /* Organization Name */
+        h1 {
+
+        }
+
+        /* Coversheet header */
+        h2 {
+
+        }
+        .column {
+            float: left;
+            width: 50%;
+        }
+        /* Clear floats after the columns */
+        .row:after {
+            content: "";
+            display: table;
+            clear: both;
+        }
+        ul {
+            margin: 0;
+            column-fill: auto;
+            column-count: 2;
+            -moz-column-fill: auto;
+            -moz-column-count: 2;
+            height: calc(100vh - 100px);
+        }
+    </style>
+</head>
+<body>
+<h1>test</h1>
+<div class="row">
+    <div class="contact_info"></div>
+    <div class="logo_container"></div>
+</div>
+
+<div class="row">
+    <ul class="column">
+        <li>
+            <h2>Service area</h2>
+            <p></p>
+        </li>
+        </li>
+        <li>
+            <h2>Congressional district</h2>
+            <p></p>
+        </li>
+        <li>
+            <h2>Legislative district</h2>
+            <p></p>
+        </li>
+        {% if agency_type == "Transit" or agency_type == "Tribe" %}
+            <li>
+                <h2>Type of government</h2>
+                <p></p>
+            </li>
+        {% endif %}
+        <li>
+            <h2>Governing body</h2>
+            <p></p>
+        </li>
+        {% if agency_type == "Community provider" %}
+            <li>
+                <h2>Governing body</h2>
+                <p></p>
+            </li>
+            <li>
+                <h2>Types of service and eligibility</h2>
+                <p></p>
+            </li>
+            <li>
+                <h2>Revenue service vehicles</h2>
+                <p></p>
+            </li>
+            <li>
+                <h2>Days of services</h2>
+                <p></p>
+            </li>
+        {% else %}
+            <li>
+                <h2>Tax authorized</h2>
+                <p></p>
+            </li>
+        {% endif %}
+    </ul>
+    <div class="column">
+        <li>
+            <h2>Connections to other systems</h2>
+            <p></p>
+        </li>
+        <li><h2>Fares</h2>
+            <p></p>
+        </li>
+    </div>
+</div>
+</body>
+</html>
+
