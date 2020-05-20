@@ -17,6 +17,12 @@ from celery.schedules import crontab
 dev_mode = True
 
 if dev_mode:
+    DEBUG = True
+else:
+    #DEBUG = int(os.environ.get("DEBUG", default=0))
+    DEBUG = True
+
+if dev_mode:
     import keys_and_passwords
     db_USER = keys_and_passwords.db_USER
     db_PASSWORD = keys_and_passwords.db_PASSWORD
@@ -43,12 +49,6 @@ else:
     SECRET_KEY = os.environ.get("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-
-if dev_mode:
-    DEBUG = True
-else:
-    #DEBUG = int(os.environ.get("DEBUG", default=0))
-    DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 

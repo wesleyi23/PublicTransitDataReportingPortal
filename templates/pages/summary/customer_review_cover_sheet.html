@@ -28,9 +28,9 @@
                         <li class="nav-item">
                             <a class="nav-link active" href="{% url 'customer_review_cover_sheets' %}">Review cover sheets</a>
                         </li>
-{#                        <li class="nav-item">#}
-{#                            <a class="nav-link" href="{% url 'customer_review_data' %}">Review Data</a>#}
-{#                        </li>#}
+                        {#                        <li class="nav-item">#}
+                        {#                            <a class="nav-link" href="{% url 'customer_review_data' %}">Review Data</a>#}
+                        {#                        </li>#}
                     </ul>
                 </div>
                 <div class="card-body" style="">
@@ -68,6 +68,7 @@
                                         <td>{% cover_sheet_note_current_value note %}</td>
                                         <td> <button type="button" class="btn btn-secondary mb-1" style="min-width: 12rem" onclick="generate_modal('{{ note.id }}')">Reply with note</button>
                                             <a href="{% url 'accept_wsdot_edit' note.id %}" type="button" class="btn btn-primary" style="min-width: 12rem">Accept edits</a></td>
+
                                     </tr>
                                     {% for child_note in child_notes %}
                                         {% if child_note.parent_note == note.id %}

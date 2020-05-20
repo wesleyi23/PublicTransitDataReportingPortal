@@ -204,7 +204,6 @@
                 html:true
             })
         })
-
     </script>
 
     <script>
@@ -220,11 +219,17 @@
     </script>
 
     <script>
+        $( document ).ready(function() {
+            let tax_is_valid = $('#id_tax_rate_valid').prop("checked");
+            if(tax_is_valid === false){
+                $('#tax_comment_container').show();
+                $('#id_tax_rate_comment').prop("required", true);
+            }
+        });
 
         $('#id_tax_rate_valid').change(function(){
             console.log('run')
             let tax_is_valid = $('#id_tax_rate_valid').prop("checked");
-            console.log(tax_is_valid);
             if(tax_is_valid === false){
                 $('#tax_comment_container').show();
                 $('#id_tax_rate_comment').prop("required", true);
@@ -233,7 +238,6 @@
                 $('#id_tax_rate_comment').prop("required", false);
             }
         });
-
     </script>
 
 {% endblock %}

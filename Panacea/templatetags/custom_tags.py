@@ -215,7 +215,7 @@ def cover_sheet_note_previous_value(note):
         last_cover_sheet = cover_sheet.history.filter(organization_id=current_summary_report_status.organization_id). \
             exclude(history_user__profile__organization_id=1).order_by('-history_date').first().__dict__[note_field]
 
-    return last_cover_sheet
+    return mark_safe(last_cover_sheet)
 
 @register.simple_tag(name='cover_sheet_note_current_value')
 def cover_sheet_note_current_value(note):
@@ -233,7 +233,7 @@ def cover_sheet_note_current_value(note):
     else:
         current_cover_sheet = cover_sheet.objects.get(organization_id=current_summary_report_status.organization_id).__dict__[note_field]
 
-    return current_cover_sheet
+    return mark_safe(current_cover_sheet)
 
 
 @register.simple_tag(name='get_cover_sheet_field_name_verbose')

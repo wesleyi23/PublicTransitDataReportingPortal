@@ -398,7 +398,6 @@ class SummaryDataEntryBuilder(SummaryBuilderReportType):
     def go_to_next_form(self, save_only=False):
         if save_only:
             return redirect('summary_reporting_filters', self.report_type, self.form_filter_1, self.form_filter_2)
-
         next_increment = self.current_increment + 1
         if next_increment > self.max_form_increment:
             org_progress = summary_organization_progress.objects.get(organization=self.target_organization)
@@ -427,8 +426,8 @@ class SummaryDataEntryBuilder(SummaryBuilderReportType):
                 new_report_type = self.REPORT_TYPES[self.REPORT_TYPES.index(self.report_type) + 1]
                 return redirect('summary_reporting_type', new_report_type)
         else:
-            self.form_filter_1 = self.nav_filters[self.current_increment - 1][0]
-            self.form_filter_2 = self.nav_filters[self.current_increment - 1][1]
+            self.form_filter_1 = self.nav_filters[self.current_increment][0]
+            self.form_filter_2 = self.nav_filters[self.current_increment][1]
             return redirect('summary_reporting_filters', self.report_type, self.form_filter_1, self.form_filter_2)
 
     def get_next_builder(self):

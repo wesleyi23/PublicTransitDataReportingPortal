@@ -4,6 +4,11 @@
     <meta charset="UTF-8">
     <title>Coversheet Report</title>
     <style>
+        #print_page{
+            height: 10in;
+            width: 7.5in;
+        }
+
         /* Organization Name */
         h1 {
 
@@ -29,75 +34,81 @@
             column-count: 2;
             -moz-column-fill: auto;
             -moz-column-count: 2;
-            height: calc(100vh - 100px);
+
         }
     </style>
 </head>
 <body>
-{% static 'i' %}
-<h1>test</h1>
-<div class="row">
-    <div class="contact_info"></div>
-    <div class="logo_container"></div>
-</div>
+<div id="print_page">
+    <h1>{{ organization.name }}</h1>
+    <div class="row">
+        <div class="contact_info"></div>
+        {{ cover_sheet.executive_officer_first_name }} {{ cover_sheet.executive_officer_last_name }} <br>
+        {{ cover_sheet.executive_officer_title }} <br>
+        {{ organization.address_line_1 }}<br>
+        {% if organization.address_line_2 %}{{ organization.address_line_2 }}<br>{% endif %}
+        {{ organization.city }}, {{ organization.state }} {{ organization.zip_code }}
+        <div class="logo_container"></div>
+    </div>
 
-<div class="row">
-    <ul class="column">
-        <li>
-            <h2>Service area</h2>
-            <p></p>
-        </li>
-        </li>
-        <li>
-            <h2>Congressional district</h2>
-            <p></p>
-        </li>
-        <li>
-            <h2>Legislative district</h2>
-            <p></p>
-        </li>
-        {% if agency_type == "Transit" or agency_type == "Tribe" %}
+    <div class="row" style="height: 6.5in">
+        <ul class="column">
             <li>
-                <h2>Type of government</h2>
-                <p></p>
+                <h2>Service area</h2>
+                <p>{{ cover_sheet.service_area_description }}</p>
             </li>
-        {% endif %}
-        <li>
-            <h2>Governing body</h2>
-            <p></p>
-        </li>
-        {% if agency_type == "Community provider" %}
+            <li>
+                <h2>Congressional district</h2>
+                <p>{{ cover_sheet.congressional_districts }}</p>
+            </li>
+            <li>
+                <h2>Legislative district</h2>
+                <p>{{ cover_sheet.legislative_districts }}</p>
+            </li>
+            {% if agency_type == "Transit" or agency_type == "Tribe" %}
+                <li>
+                    <h2>Type of government</h2>
+                    <p>{{ cover_sheet.type_of_government }}</p>
+                </li>
+            {% endif %}
             <li>
                 <h2>Governing body</h2>
-                <p></p>
+                {{ cover_sheet.governing_body }}
             </li>
+            {% if agency_type == "Community provider" or agency_type == "Medicaid broker" %}
+                <li>
+                    <h2>Types of service and eligibility</h2>
+                    <p>{{ cover_sheet.service_and_eligibility }}</p>
+                </li>
+                <li>
+                    <h2>Revenue service vehicles</h2>
+                    <p>{{ cover_sheet.revenue_service_vehicles }}</p>
+                </li>
+                <li>
+                    <h2>Days of services</h2>
+                    <p>{{ cover_sheet.days_of_service }}</p>
+                </li>
+            {% else %}
+                <p>
+                    <h2>Tax authorized</h2>
+                    <p>{{ tax_description }}</p>
+                </li>
+            {% endif %}
+            {% if agency_type == "Ferry" %}
+                <li>
+                    <h2>Background and current operations</h2>
+                    <p>{{ cover_sheet.curret_opperation }}</p>
+                </li>
+            {% endif %}
+
             <li>
-                <h2>Types of service and eligibility</h2>
-                <p></p>
+                <h2>Connections to other systems</h2>
+                <p>{{ cover_sheet.intermodal_connections }}</p>
             </li>
-            <li>
-                <h2>Revenue service vehicles</h2>
-                <p></p>
+            <li><h2>Fares</h2>
+                <p>{{ cover_sheet.fares_description }}</p>
             </li>
-            <li>
-                <h2>Days of services</h2>
-                <p></p>
-            </li>
-        {% else %}
-            <li>
-                <h2>Tax authorized</h2>
-                <p></p>
-            </li>
-        {% endif %}
-    </ul>
-    <div class="column">
-        <li>
-            <h2>Connections to other systems</h2>
-            <p></p>
-        </li>
-        <li><h2>Fares</h2>
-            <p></p>
-        </li>
+        </ul>
     </div>
 </div>
 </body>

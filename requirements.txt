@@ -52,3 +52,4 @@ django-pyodbc==1.1.3
 openpyxl
 WeasyPrint
 django-ckeditor
+Pillow

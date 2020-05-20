@@ -379,6 +379,7 @@ class expense_source(models.Model):
     agency_classification = models.ManyToManyField(summary_organization_type, blank=True)
     help_text = models.TextField(blank=True, null=True)
     order_in_summary = models.IntegerField(blank=True, null=True)
+    heading = models.CharField(max_length=200, blank = True, null = True)
 
     def __str__(self):
         return self.name

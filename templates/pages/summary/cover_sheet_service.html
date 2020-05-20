@@ -85,6 +85,16 @@
                                         <p>{{ form.service_and_eligibility }}</p>
                                     {% endif %}
 
+                                    {% if service_type == "Ferry" %}
+                                        <lable for="id_service_and_eligibility">Background and current operations:</lable>
+                                        <sup>
+                                            <i class="fas fa-question-circle help-popover"
+                                               data-toggle="popover" title="Background and current operations:"
+                                               data-content="Provide a short summary of your background and operations."></i>
+                                        </sup>
+                                        <p>{{ form.current_operations }}</p>
+                                    {% endif %}
+
                                     {% if service_type == "Community provider"  %}
                                         {{ form.revenue_service_vehicles.label_tag }}
                                         <sup>
@@ -105,15 +115,15 @@
                                         <p>{{ form.days_of_service }}</p>
                                     {% endif %}
 
-{#                                    {% if service_type == "Transit" or service_type == "Tribe" %}#}
-{#                                        {{ form.tax_rate_description.label_tag }}#}
-{#                                        <sup>#}
-{#                                            <i class="fas fa-question-circle help-popover"#}
-{#                                               data-toggle="popover" title="Tax rate description:"#}
-{#                                               data-content="For transit agencies, provide the type and total tax rate for transit services approved by voters in your service area (e.g., 0.6 percent total sales and use tax). Additionally, include a brief history of tax rate increases for transit services approved by voters in your service area (e.g., 0.3 approved in 1981, and an additional 0.3 percent approved in 2002)."></i>#}
-{#                                        </sup>#}
-{#                                        <p>{{ form.tax_rate_description}}</p>#}
-{#                                    {% endif %}#}
+                                    {#                                    {% if service_type == "Transit" or service_type == "Tribe" %}#}
+                                    {#                                        {{ form.tax_rate_description.label_tag }}#}
+                                    {#                                        <sup>#}
+                                    {#                                            <i class="fas fa-question-circle help-popover"#}
+                                    {#                                               data-toggle="popover" title="Tax rate description:"#}
+                                    {#                                               data-content="For transit agencies, provide the type and total tax rate for transit services approved by voters in your service area (e.g., 0.6 percent total sales and use tax). Additionally, include a brief history of tax rate increases for transit services approved by voters in your service area (e.g., 0.3 approved in 1981, and an additional 0.3 percent approved in 2002)."></i>#}
+                                    {#                                        </sup>#}
+                                    {#                                        <p>{{ form.tax_rate_description}}</p>#}
+                                    {#                                    {% endif %}#}
 
                                     {% for error in form.non_field_errors %}
                                         <div class="alert alert-danger">
@@ -148,7 +158,6 @@
                 html:true
             })
         })
-
     </script>
 
 {% endblock %}

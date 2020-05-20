@@ -618,7 +618,6 @@ class cover_sheet_organization(forms.ModelForm):
                   'executive_officer_last_name',
                   'executive_officer_title',
                   'service_website_url',
-                  'service_area_description',
                   'congressional_districts',
                   'legislative_districts',
                   'type_of_government',
@@ -669,8 +668,8 @@ class cover_sheet_service(forms.ModelForm):
             'fares_description': CKEditorWidget(),
             'service_and_eligibility': CKEditorWidget(),
             'days_of_service': forms.TextInput(attrs={'class': 'form-control'}),
-            'current_operations': forms.Textarea(attrs={'class': 'form-control'}),
-            'revenue_service_vehicles': forms.TextInput(attrs={'class': 'form-control'}),
+            'current_operations': CKEditorWidget(),
+            'revenue_service_vehicles': CKEditorWidget(),
             # 'tax_rate_description': forms.Textarea(attrs={'class': 'form-control'}),
         }
 
