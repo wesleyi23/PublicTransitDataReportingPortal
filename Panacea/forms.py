@@ -663,11 +663,11 @@ class cover_sheet_service(forms.ModelForm):
                   # 'tax_rate_description'
                   ]
         widgets = {
-            'service_area_description': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
+            'service_area_description': CKEditorWidget(),
             'intermodal_connections': CKEditorWidget(),
             'fares_description': CKEditorWidget(),
             'service_and_eligibility': CKEditorWidget(),
-            'days_of_service': forms.TextInput(attrs={'class': 'form-control'}),
+            'days_of_service': CKEditorWidget(),
             'current_operations': CKEditorWidget(),
             'revenue_service_vehicles': CKEditorWidget(),
             # 'tax_rate_description': forms.Textarea(attrs={'class': 'form-control'}),

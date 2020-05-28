@@ -4,55 +4,99 @@
     <meta charset="UTF-8">
     <title>Coversheet Report</title>
     <style>
+        body{
+            font-family: Calibri;
+            font-size: 11pt;
+            width: 100%;
+        }
+        @page {
+            size: Letter; /* Change from the default size of A4 */
+            margin-left: .4in; /* Set margin on each page */
+            margin-right: .5in;
+            margin-top: .5in;
+            margin-bottom: .5in;
+        }
         #print_page{
-            height: 10in;
-            width: 7.5in;
+        {#height: 10in;#}
+        {#    width: 7in;#}
+            position: relative;
         }
 
         /* Organization Name */
         h1 {
-
+            font-family: Calibri;
+            font-size: 20pt;
+            font-style: italic;
+            font-weight: bold;
+            color: #007b5f;
+            margin-top: 0;
         }
 
         /* Coversheet header */
         h2 {
+            font-family: Calibri;
+            font-size: 14pt;
+            font-weight: bold;
+            margin-top: 0;
+            color: #007b5f;
+        }
 
+        .org_info{
+            width: inherit;
         }
-        .column {
-            float: left;
-            width: 50%;
+
+        .logo{
+            float: right;
+            max-width: 2.5in;
+            max-height: 1.55in;
         }
-        /* Clear floats after the columns */
-        .row:after {
-            content: "";
-            display: table;
-            clear: both;
-        }
-        ul {
+        .report_content {
             margin: 0;
             column-fill: auto;
             column-count: 2;
             -moz-column-fill: auto;
             -moz-column-count: 2;
-
+            list-style-type:none;
+            padding-left: 0;
+        }
+        li p{
+            padding-left: 5px;
+        }
+        li{
+            -webkit-column-break-inside: avoid;
+            /* Chrome, Safari, Opera */
+            page-break-inside: avoid;
+            /* Firefox */
+            break-inside: avoid;
+            /* IE 10+ */
         }
     </style>
 </head>
 <body>
 <div id="print_page">
-    <h1>{{ organization.name }}</h1>
-    <div class="row">
-        <div class="contact_info"></div>
-        {{ cover_sheet.executive_officer_first_name }} {{ cover_sheet.executive_officer_last_name }} <br>
-        {{ cover_sheet.executive_officer_title }} <br>
-        {{ organization.address_line_1 }}<br>
-        {% if organization.address_line_2 %}{{ organization.address_line_2 }}<br>{% endif %}
-        {{ organization.city }}, {{ organization.state }} {{ organization.zip_code }}
-        <div class="logo_container"></div>
+    <div class="org_info">
+        <table width="100%">
+            <tr>
+                <td style="vertical-align: top; min-width: 5.1in; white-space: nowrap;">
+                    <h1>{{ organization.name }}</h1>
+                    <div class="contact_info">
+                        {% if cover_sheet.executive_officer_first_name %}{{ cover_sheet.executive_officer_first_name }} {{ cover_sheet.executive_officer_last_name }} <br>{% endif %}
+                        {% if cover_sheet.executive_officer_title %}{{ cover_sheet.executive_officer_title }}  <br>{% endif %}
+                        {{ organization.address_line_1 }}<br>
+                        {% if organization.address_line_2 %}{{ organization.address_line_2 }}<br>{% endif %}
+                        {{ organization.city }}, {{ organization.state }} {{ organization.zip_code }} <br>
+                        <a href="{{ cover_sheet.service_website_url }}">{{ cover_sheet.service_website_url }}</a>
+                    </div>
+                </td>
+                <td style="text-align: right; vertical-align: top; min-width: 2.5in">
+                    <img class="logo" src="data:image/jpeg;base64, {{ base64_logo }}" alt="organization logo" />
+                </td>
+            </tr>
+        </table>
     </div>
-
+    <br>
     <div class="row" style="height: 6.5in">
-        <ul class="column">
+        <ul class="report_content">
             <li>
                 <h2>Service area</h2>
                 <p>{{ cover_sheet.service_area_description }}</p>
@@ -65,31 +109,50 @@
                 <h2>Legislative district</h2>
                 <p>{{ cover_sheet.legislative_districts }}</p>
             </li>
-            {% if agency_type == "Transit" or agency_type == "Tribe" %}
+            {% if agency_type == "Community provider" or agency_type == "Medicaid broker"%}
+                <li>
+                    <h2>Planning region</h2>
+                    <p>{{ cover_sheet.community_planning_region }}</p>
+                </li>
+            {% endif %}
+            {% if agency_type == "Monorail" %}
+                <li>
+                    <h2>Ownership</h2>
+                    <p>{{ cover_sheet.monorail_ownership }}</p>
+                </li>
+            {% endif %}
+            {% if agency_type == "Transit" or agency_type == "Tribe" or agency_type == "Ferry" %}
                 <li>
                     <h2>Type of government</h2>
                     <p>{{ cover_sheet.type_of_government }}</p>
                 </li>
             {% endif %}
-            <li>
-                <h2>Governing body</h2>
-                {{ cover_sheet.governing_body }}
-            </li>
-            {% if agency_type == "Community provider" or agency_type == "Medicaid broker" %}
+            {% if not agency_type == "Monorail" %}
+                <li>
+                    <h2>Governing body</h2>
+                    <p>{{ cover_sheet.governing_body }}</p>
+                </li>
+            {% endif %}
+            {% if agency_type == "Community provider" %}
                 <li>
                     <h2>Types of service and eligibility</h2>
-                    <p>{{ cover_sheet.service_and_eligibility }}</p>
+                    <p>{{ cover_sheet.service_and_eligibility | safe}}</p>
+                </li>
+                <li>
+                    <h2>Current operations</h2>
+                    <p>{{ cover_sheet.curret_opperation | safe}}</p>
                 </li>
                 <li>
                     <h2>Revenue service vehicles</h2>
-                    <p>{{ cover_sheet.revenue_service_vehicles }}</p>
+                    <p>{{ cover_sheet.revenue_service_vehicles | safe}}</p>
                 </li>
+            {% elif agency_type == "Medicaid broker"%}
                 <li>
-                    <h2>Days of services</h2>
-                    <p>{{ cover_sheet.days_of_service }}</p>
+                    <h2>Current operations</h2>
+                    <p>{{ cover_sheet.curret_opperation | safe}}</p>
                 </li>
-            {% else %}
-                <p>
+            {% elif not agency_type == "Monorail" %}
+                <li>
                     <h2>Tax authorized</h2>
                     <p>{{ tax_description }}</p>
                 </li>
@@ -97,17 +160,25 @@
             {% if agency_type == "Ferry" %}
                 <li>
                     <h2>Background and current operations</h2>
-                    <p>{{ cover_sheet.curret_opperation }}</p>
+                    <p>{{ cover_sheet.curret_opperation | safe}}</p>
                 </li>
             {% endif %}
-
             <li>
                 <h2>Connections to other systems</h2>
-                <p>{{ cover_sheet.intermodal_connections }}</p>
+                <p>{{ cover_sheet.intermodal_connections | safe}}</p>
             </li>
-            <li><h2>Fares</h2>
-                <p>{{ cover_sheet.fares_description }}</p>
-            </li>
+            {% if agency_type == "Community provider" %}
+                <li>
+                    <h2>Days of services</h2>
+                    <p>{{ cover_sheet.days_of_service | safe}}</p>
+                </li>
+            {% endif %}
+            {% if not agency_type == "Medicaid broker" %}
+                <li>
+                    <h2>Fares</h2>
+                    <p>{{ cover_sheet.fares_description | safe}}</p>
+                </li>
+            {% endif %}
         </ul>
     </div>
 </div>

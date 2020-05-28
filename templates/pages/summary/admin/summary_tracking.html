@@ -50,7 +50,7 @@
                             <tbody>
                             {% for org in tracking_data %}
                                 <tr>
-                                    <td style="text-align: center"><a href="{%  url 'wsdot_review_cover_sheets_year_org' year org.organization_id %}"><i class="fas fa-file pr-4"></i></a></i><i class="fas fa-table"></i></td>
+                                    <td style="text-align: center"><a href="{%  url 'wsdot_review_cover_sheets_year_org' year org.organization_id %}"><i class="fas fa-file pr-4"></i></a></i><a href="{%  url 'wsdot_review_data_submittal_year_org' year org.organization_id %}"><i class="fas fa-table"></i></a></td>
                                     <td>{% get_org_name  org.organization_id %}</td>
                                     <td>{{ org.cover_sheet_submitted_for_review }}</td>
                                     <td>{{ org.cover_sheet_status }}</td>

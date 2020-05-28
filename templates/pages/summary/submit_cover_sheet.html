@@ -47,6 +47,7 @@
                         <p class="pb-5 h4">
                             When you are ready you may submit your coversheet for review.
                         </p>
+                            <a href="{% url 'coversheet_pdf' 'pdf'%}" class="btn btn-outline-secondary btn-lg" role="button" aria-disabled="true">View cover sheet PDF</a>
                         {% if tribe == False %}
                             <a href="{% url 'submit_cover_sheet_submit' %}" class="btn btn-primary btn-lg" role="button" aria-disabled="true">Submit your cover sheet</a>
                         {% else %}

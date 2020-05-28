@@ -316,12 +316,16 @@ def OrganizationProfile(request, redirect_to=None):
     org = user_profile_data.organization
     org_name = org.name
     form = organization_profile(instance=org)
+
     if request.POST:
+        print(org.summary_organization_classifications)
         form = organization_profile(data=request.POST.copy(), instance=org)
+        if not 'state' in form.data:
+            form.data['state'] = user_profile_data.organization.state
+        if not 'summary_organization_classifications' in form.data:
+            form.data['summary_organization_classifications'] = org.summary_organization_classifications
         if form.is_valid():
             # TODO figure out why is this here
-            if not 'state' in form.data:
-                form.data['state'] = user_profile_data.organization.state
             form.save()
             if redirect_to:
                 print(redirect_to)
@@ -343,6 +347,7 @@ def OrganizationProfile(request, redirect_to=None):
             # form.data['state'] = org.state
             form.data['zip_code'] = org.zip_code
             form.data['vanshare_program'] = org.vanshare_program
+            form.data['summary_organization_classifications'] = org.summary_organization_classifications
 
     return render(request, 'pages/OrganizationProfile.html', {'org_name': org_name, 'form': form})
 

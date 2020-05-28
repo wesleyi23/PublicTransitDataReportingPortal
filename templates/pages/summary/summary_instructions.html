@@ -58,7 +58,8 @@
                     <p><b>We are here to help!</b>  If at any point you get stuck or have difficulties please reach out to us for <a href="{% url 'Help' %}"> help </a>.</p>
 
                     <div class="text-center">
-                        <a class="btn btn-primary btn-lg" href="{% url 'organizational_information' %}">Let's get started</a>
+                        <a href="{% url 'coversheet_pdf' 'pdf'%}" class="btn btn-outline-secondary btn-lg" role="button" aria-disabled="true">View cover sheet PDF</a>
+                        <a href="{% url 'organizational_information' %}" class="btn btn-primary btn-lg" >Let's get started</a>
                     </div>
                 </div>
             </div>
