@@ -316,9 +316,7 @@ def OrganizationProfile(request, redirect_to=None):
     org = user_profile_data.organization
     org_name = org.name
     form = organization_profile(instance=org)
-
     if request.POST:
-        print(org.summary_organization_classifications)
         form = organization_profile(data=request.POST.copy(), instance=org)
         if not 'state' in form.data:
             form.data['state'] = user_profile_data.organization.state
@@ -965,7 +963,6 @@ def cover_sheet_service_view(request):
     service_type = org.summary_organization_classifications.name
 
     cover_sheet_instance, created = cover_sheet.objects.get_or_create(organization=org)
-
     form = cover_sheet_service(instance=cover_sheet_instance)
     ready_to_submit = get_all_cover_sheet_steps_completed(org.id)
 
@@ -1426,6 +1423,7 @@ def summary_yearly_setup_instructions(request):
 @login_required(login_url='/Panacea/login')
 @group_required('WSDOT staff')
 def wsdot_review_cover_sheets(request, year=None, organization_id=None, needs_note=False):
+    #TODO add classification type to this/test alternatives
     if year is None:
         year = summary_report_status.objects.aggregate(Max('year'))
         year = year['year__max']
@@ -1434,7 +1432,7 @@ def wsdot_review_cover_sheets(request, year=None, organization_id=None, needs_no
                                                                         organization__summary_reporter=True).order_by(
             'organization__name').first()
         organization_id = cover_sheet_organization.organization_id
-
+    service_type = organization.objects.get(id = organization_id).summary_organization_classifications.name
 
     org_cover_sheet, created = cover_sheet.objects.get_or_create(organization_id=organization_id)
 
@@ -1514,7 +1512,8 @@ def wsdot_review_cover_sheets(request, year=None, organization_id=None, needs_no
                    'new_note_form': new_note_form,
                    'published_version': org_cover_sheet.published_version,
                    'base64_logo': base64_logo,
-                   'needs_note': needs_note})
+                   'needs_note': needs_note,
+                   'service_type': service_type})
 
 
 # TODO Come back through and change this to be object oriented code about a notes object.
@@ -1527,10 +1526,6 @@ def base_note(request):
 @login_required(login_url='/Panacea/login')
 @group_required('WSDOT staff')
 def add_cover_sheet_note_wsdot(request, year, summary_report_status_id, note_area, note_field):
-
-    print(note_area)
-    print(cover_sheet_review_notes.NOTE_AREAS)
-
     if request.POST:
         form = add_cover_sheet_review_note(request.POST)
         instance = form.save(commit=False)

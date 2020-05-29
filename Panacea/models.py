@@ -494,7 +494,7 @@ class cover_sheet(models.Model):
     revenue_service_vehicles = models.TextField(verbose_name="Revenue service vehicles", blank=True, null=True)
     days_of_service = models.CharField(verbose_name="Days of service", max_length=250, blank=True, null=True)
     monorail_ownership = models.CharField(max_length=250, blank=True, null=True)
-    community_planning_region = models.CharField(max_length=50, blank=True, null=True)
+    community_planning_region = models.CharField(verbose_name= 'Planning Regions',max_length=1000, blank=True, null=True)
     organization_logo = models.BinaryField(editable=True, blank=True, null=True)
     #organization_logo = models.TextField(blank=True, null=True)
     published_version = models.BooleanField(blank=True, null=True, default=False)

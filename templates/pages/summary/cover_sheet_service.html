@@ -57,6 +57,28 @@
                                     </sup>
                                     <p>{{ form.service_area_description}}</p>
 
+                                     {%  if service_type == 'Medicaid broker' or service_type == 'Community provider' or service_type == 'Intercity bus' %}
+                                         {{ form.community_planning_region.label_tag}}
+                                        <sup>
+                                            <i class="fas fa-question-circle help-popover"
+                                               data-toggle="popover" title="Planning Regions:"
+                                               data-content="The Regional Transportation Planning Organization/Metropolitan Planning Organization areas in which your agency operates transportation"></i>
+                                        </sup>
+                                          <p>  {{ form.community_planning_region }}</p>
+                                    {% endif %}
+
+                                    {%  if service_type == 'Monorail' %}
+                                        {{ form.monorail_ownership.label_tag }}
+                                        <sup>
+                                        <i class="fas fa-question-circle help-popover"
+                                           data-toggle="popover" title="Monorail Ownership:"
+                                           data-content="Ownership structure of the Seattle Center Monorail."></i>
+                                    </sup>
+                                    <p>{{ form.monorail_ownership}}</p>
+
+                                    {% endif %}
+
+
                                     {{ form.intermodal_connections.label_tag }}
                                     <sup>
                                         <i class="fas fa-question-circle help-popover"
@@ -65,17 +87,33 @@
                                     </sup>
                                     <p>{{ form.intermodal_connections}}</p>
 
+
+                                    {% if service_type != "Medicaid broker" %}
                                     {{ form.fares_description.label_tag }}
                                     <sup>
                                         <i class="fas fa-question-circle help-popover"
                                            data-toggle="popover" title="Fares Description:"
                                            data-content="Provide a basic list of your fares (e.g., adult, youth, senior, paratransit, monthly pass) and the website URL for more detailed fare information. If you do not collect fares, write “Fare-free.”"></i>
                                     </sup>
+
                                     <p>{{ form.fares_description}}</p>
+
+                                {% endif %}
+
+                                    {% if service_type == "Community provider" or service_type == 'Intercity bus' %}
+                                        {{ form.days_of_service.label_tag }}
+                                        <sup>
+                                            <i class="fas fa-question-circle help-popover"
+                                               data-toggle="popover" title="Days of service:"
+                                               data-content="Please provide a description of the days of the week when you offer service."></i>
+                                        </sup>
+                                        <p>{{ form.days_of_service }}</p>
+                                    {% endif %}
+
 
                                 </div>
                                 <div class="col" style="padding-right: 1.5rem">
-                                    {% if service_type == "Medicaid broker" or service_type == "Community provider" %}
+                                    {% if service_type == "Community provider" %}
                                         {{ form.service_and_eligibility.label_tag }}
                                         <sup>
                                             <i class="fas fa-question-circle help-popover"
@@ -83,10 +121,12 @@
                                                data-content="Provide a basic list of your public transportation services (e.g., demand response, paratransit, veteran transportation). For each service you provide, list the groups eligible for that service (e.g., individuals with special needs, seniors, people with disabilities, general public). "></i>
                                         </sup>
                                         <p>{{ form.service_and_eligibility }}</p>
+
+
                                     {% endif %}
 
-                                    {% if service_type == "Ferry" %}
-                                        <lable for="id_service_and_eligibility">Background and current operations:</lable>
+                                    {% if service_type == "Ferry" or service_type == "Community provider" or service_type == "Medicaid broker" or service_type == 'Intercity bus'%}
+                                        <label for="id_service_and_eligibility">Background and current operations:</label>
                                         <sup>
                                             <i class="fas fa-question-circle help-popover"
                                                data-toggle="popover" title="Background and current operations:"
@@ -95,7 +135,7 @@
                                         <p>{{ form.current_operations }}</p>
                                     {% endif %}
 
-                                    {% if service_type == "Community provider"  %}
+                                    {% if service_type == "Community provider" or service_type == 'Intercity bus'  %}
                                         {{ form.revenue_service_vehicles.label_tag }}
                                         <sup>
                                             <i class="fas fa-question-circle help-popover"
@@ -105,15 +145,7 @@
                                         <p>{{ form.revenue_service_vehicles }}</p>
                                     {% endif %}
 
-                                    {% if service_type == "Medicaid broker" or service_type == "Community provider" %}
-                                        {{ form.days_of_service.label_tag }}
-                                        <sup>
-                                            <i class="fas fa-question-circle help-popover"
-                                               data-toggle="popover" title="Days of service:"
-                                               data-content="Please provide a description of the days of the week when you offer service."></i>
-                                        </sup>
-                                        <p>{{ form.days_of_service }}</p>
-                                    {% endif %}
+
 
                                     {#                                    {% if service_type == "Transit" or service_type == "Tribe" %}#}
                                     {#                                        {{ form.tax_rate_description.label_tag }}#}
@@ -132,7 +164,7 @@
                                     {% endfor %}
 
                                 </div>
-                                <input id="update_coversheet_service" type="submit" value="Update or confirm" class="btn btn-primary float-left" style="position: absolute; bottom: 1rem; right: 1.25rem">
+                                <input id="update_coversheet_service" type="submit" value="Update or confirm" class="btn btn-primary float-left" style="position: absolute; bottom: .25rem; right: 1.25rem">
                             </div>
                         </div>
                     </form>

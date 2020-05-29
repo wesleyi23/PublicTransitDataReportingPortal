@@ -623,7 +623,8 @@ class cover_sheet_organization(forms.ModelForm):
                   'type_of_government',
                   'governing_body',
                   'tax_rate_valid',
-                  'tax_rate_comment']
+                  'tax_rate_comment'
+                  ]
         widgets = {
             'executive_officer_first_name': forms.TextInput(attrs={'class': 'form-control'}),
             'executive_officer_last_name': forms.TextInput(attrs={'class': 'form-control'}),
@@ -660,7 +661,8 @@ class cover_sheet_service(forms.ModelForm):
                   'days_of_service',
                   'current_operations',
                   'revenue_service_vehicles',
-                  # 'tax_rate_description'
+                  'community_planning_region',
+                  'monorail_ownership'
                   ]
         widgets = {
             'service_area_description': CKEditorWidget(),
@@ -670,7 +672,8 @@ class cover_sheet_service(forms.ModelForm):
             'days_of_service': CKEditorWidget(),
             'current_operations': CKEditorWidget(),
             'revenue_service_vehicles': CKEditorWidget(),
-            # 'tax_rate_description': forms.Textarea(attrs={'class': 'form-control'}),
+            'community_planning_region': CKEditorWidget(),
+            'monorail_ownership': CKEditorWidget()
         }
 
 
@@ -703,7 +706,7 @@ class cover_sheet_wsdot_review(forms.ModelForm):
 
     class Meta:
         model = cover_sheet
-        exclude = ['id', 'organization', 'transit_development_plan_url', 'monorail_ownership', 'community_planning_region',]
+        exclude = ['id', 'organization', 'transit_development_plan_url',]
 
         widgets = {
             'executive_officer_first_name': forms.TextInput(attrs={'class': 'form-control'}),
@@ -711,20 +714,22 @@ class cover_sheet_wsdot_review(forms.ModelForm):
             'executive_officer_title': forms.TextInput(attrs={'class': 'form-control'}),
             'service_website_url': forms.URLInput(attrs={'class': 'form-control',
                                                          'label': 'Service website URL'}),
-            'service_area_description': forms.TextInput(attrs={'class': 'form-control'}),
+            'service_area_description': CKEditorWidget(),
             'congressional_districts': forms.TextInput(attrs={'class': 'form-control'}),
             'legislative_districts': forms.TextInput(attrs={'class': 'form-control'}),
             'type_of_government': forms.TextInput(attrs={'class': 'form-control'}),
             'governing_body': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
             'transit_mode': forms.Select(choices=transit_mode.objects.all(), attrs={'class': 'form-control'}),
             'administration_of_mode': forms.Select(choices=service_offered.DO_OR_PT, attrs={'class': 'form-control'}),
-            'intermodal_connections': forms.Textarea(attrs={'class': 'form-control'}),
-            'fares_description': forms.Textarea(attrs={'class': 'form-control'}),
-            'service_and_eligibility': forms.Textarea(attrs={'class': 'form-control'}),
-            'days_of_service': forms.TextInput(attrs={'class': 'form-control'}),
-            'current_operations': forms.Textarea(attrs={'class': 'form-control'}),
-            'revenue_service_vehicles': forms.TextInput(attrs={'class': 'form-control'}),
-            'tax_rate_description': forms.Textarea(attrs={'class': 'form-control'}),
+            'intermodal_connections': CKEditorWidget(),
+            'fares_description': CKEditorWidget(),
+            'service_and_eligibility': CKEditorWidget(),
+            'days_of_service': CKEditorWidget(),
+            'current_operations': CKEditorWidget(),
+            'revenue_service_vehicles': CKEditorWidget(),
+            # 'tax_rate_description': forms.Textarea(attrs={'class': 'form-control'}),
+            'community_planning_region': CKEditorWidget(),
+            'monorail_ownership': CKEditorWidget()
         }
 
     def clean_organization_logo_input(self):

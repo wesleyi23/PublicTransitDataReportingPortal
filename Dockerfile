@@ -4,14 +4,14 @@
 # Build Docker image
 #
 # 1. From windows command line change directory to directory with this file
-# 2. Run docker build: docker build -t  wsdotdev.azurecr.io/ptd_report:latest .
+# 2. Run docker build: docker build -t  wsdotdev.azurecr.io/ptd_report:latest . OR  docker build -t wsdotprod.azurecr.io/ptd_report:latest .
 # 3. Run docker image: docker run -p 8000:8000 [image id]  Image id comand: docker image ls
 #
 # PUSH to Auzure CR
 #
 # 1. Log in to azure: az login
-# 2. Log into Azure container registry: az acr login --name wsdotdev
-# 3. Push image: docker push wsdotdev.azurecr.io/ptd_report:latest
+# 2. Log into Azure container registry: az acr login --name wsdotdev  OR  az acr login --name wsdotprod
+# 3. Push image: docker push wsdotdev.azurecr.io/ptd_report:latest OR docker push wsdotprod.azurecr.io/ptd_report:latest
 #
 # Run Image on Azure
 #
@@ -82,6 +82,9 @@ RUN pip3 install --no-cache-dir -U pip
 RUN pip3 install cryptography==2.8 wheel
 #RUN pip install django_saml2_auth
 #RUN apk del openssl-dev
+RUN apk --no-cache add msttcorefonts-installer fontconfig && \
+    update-ms-fonts && \
+    fc-cache -f
 
 RUN curl -O https://download.microsoft.com/download/e/4/e/e4e67866-dffd-428c-aac7-8d28ddafb39b/msodbcsql17_17.5.2.2-1_amd64.apk
 #RUN curl -O https://download.microsoft.com/download/e/4/e/e4e67866-dffd-428c-aac7-8d28ddafb39b/mssql-tools_17.5.2.2-1_amd64.apk
