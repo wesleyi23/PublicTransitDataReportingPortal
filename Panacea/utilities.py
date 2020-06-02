@@ -208,7 +208,7 @@ def find_user_organization_id(id):
     return org
 
 def find_user_organization(id):
-    user_profile_data = profile.objects.get(custom_user=id)
+    user_profile_data = profile.objects.get(custom_user_id=id)
     org = user_profile_data.organization
     return org
 

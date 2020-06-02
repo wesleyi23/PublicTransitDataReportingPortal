@@ -20,7 +20,7 @@
 ###########
 
 # pull official base image
-FROM alpine:3.11 as builder
+FROM alpine:3.10 as builder
 
 # set work directory
 WORKDIR /usr/src/PublicTransitDataReportingPortal
@@ -32,7 +32,7 @@ ENV PYTHONUNBUFFERED 1
 # install psycopg2 dependencies
 RUN echo 'http://dl-cdn.alpinelinux.org/alpine/v3.10/main' >> /etc/apk/repositories
 RUN apk update
-RUN apk add gcc musl-dev g++ unixodbc-dev python3-dev=3.7.5-r1 jpeg-dev zlib-dev libffi-dev cairo-dev pango-dev gdk-pixbuf-dev
+RUN apk add gcc musl-dev g++ unixodbc-dev python3-dev jpeg-dev zlib-dev libffi-dev cairo-dev pango-dev gdk-pixbuf-dev
 
 #RUN apk add gcc python3-dev musl-dev
 
@@ -56,7 +56,7 @@ RUN pip3 wheel --no-cache-dir --no-deps --wheel-dir /usr/src/PublicTransitDataRe
 #########
 
 # pull official base image
-FROM alpine:3.11
+FROM alpine:3.10
 
 # create directory for the PublicTransitDataReportingPortal user
 RUN mkdir -p /home/PublicTransitDataReportingPortal
@@ -77,7 +77,8 @@ WORKDIR $APP_HOME
 RUN apk update && apk add libpq
 RUN echo 'http://dl-cdn.alpinelinux.org/alpine/v3.10/main' >> /etc/apk/repositories
 RUN apk add openssl-dev zlib-dev jpeg-dev
-RUN apk add gcc musl-dev libffi-dev xmlsec g++ py-pip unixodbc-dev gnupg curl python3-dev=3.7.5-r1 jpeg-dev zlib-dev libffi-dev cairo-dev pango-dev gdk-pixbuf-dev
+RUN apk add gcc musl-dev libffi-dev xmlsec g++ py-pip unixodbc-dev gnupg curl python3-dev jpeg-dev zlib-dev libffi-dev cairo-dev pango-dev gdk-pixbuf-dev
+RUN pip3 install --upgrade pip
 RUN pip3 install --no-cache-dir -U pip
 RUN pip3 install cryptography==2.8 wheel
 #RUN pip install django_saml2_auth
@@ -104,6 +105,7 @@ COPY ./entrypoint.prod.sh $APP_HOME
 COPY ./mycert.pem /usr/bin
 COPY ./mykey.pem /usr/bin
 COPY ./sawidp_WaTech_metadata_TEST.xml /usr/bin
+COPY ./sawidp_WaTech_metadata_PROD.xml /usr/bin
 
 # copy project
 COPY . $APP_HOME

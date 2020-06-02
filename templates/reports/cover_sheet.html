@@ -4,10 +4,9 @@
     <meta charset="UTF-8">
     <title>Coversheet Report</title>
     <style>
-        body{
-            font-family: Calibri;
-            font-size: 11pt;
-            width: 100%;
+        @font-face {
+            font-family: myLato;
+            src: url(http://fonts.googleapis.com/css?family=Lato&subset=latin,latin-ext);
         }
         @page {
             size: Letter; /* Change from the default size of A4 */
@@ -15,6 +14,11 @@
             margin-right: .5in;
             margin-top: .5in;
             margin-bottom: .5in;
+        }
+        body{
+            font-family: myLato;
+            font-size: 11pt;
+            width: 100%;
         }
         #print_page{
         {#height: 10in;#}
@@ -24,7 +28,7 @@
 
         /* Organization Name */
         h1 {
-            font-family: Calibri;
+            font-family: myLato;
             font-size: 20pt;
             font-style: italic;
             font-weight: bold;
@@ -34,7 +38,7 @@
 
         /* Coversheet header */
         h2 {
-            font-family: Calibri;
+            font-family: myLato;
             font-size: 14pt;
             font-weight: bold;
             margin-top: 0;
@@ -99,7 +103,7 @@
         <ul class="report_content">
             <li>
                 <h2>Service area</h2>
-                <p>{{ cover_sheet.service_area_description }}</p>
+                <p>{{ cover_sheet.service_area_description | safe}}</p>
             </li>
             <li>
                 <h2>Congressional district</h2>
@@ -118,19 +122,19 @@
             {% if agency_type == "Monorail" %}
                 <li>
                     <h2>Ownership</h2>
-                    <p>{{ cover_sheet.monorail_ownership }}</p>
+                    <p>{{ cover_sheet.monorail_ownership | safe}}</p>
                 </li>
             {% endif %}
             {% if agency_type == "Transit" or agency_type == "Tribe" or agency_type == "Ferry" %}
                 <li>
                     <h2>Type of government</h2>
-                    <p>{{ cover_sheet.type_of_government }}</p>
+                    <p>{{ cover_sheet.type_of_government | safe}}</p>
                 </li>
             {% endif %}
-            {% if not agency_type == "Monorail" %}
+            {% if not agency_type == "Monorail" and not agency_type == "Intercity bus" %}
                 <li>
                     <h2>Governing body</h2>
-                    <p>{{ cover_sheet.governing_body }}</p>
+                    <p>{{ cover_sheet.governing_body | safe}}</p>
                 </li>
             {% endif %}
             {% if agency_type == "Community provider" %}
@@ -151,10 +155,32 @@
                     <h2>Current operations</h2>
                     <p>{{ cover_sheet.curret_opperation | safe}}</p>
                 </li>
-            {% elif not agency_type == "Monorail" %}
+            {% elif not agency_type == "Monorail" and not agency_type == "Intercity bus" %}
                 <li>
                     <h2>Tax authorized</h2>
                     <p>{{ tax_description }}</p>
+                </li>
+            {% endif %}
+            {% if agency_type == "Intercity bus" %}
+                <li>
+                    <h2>Planning regions</h2>
+                    <p>{{ cover_sheet.community_planning_region | safe}}</p>
+                </li>
+                <li>
+                    <h2>Type of agency</h2>
+                    <p>{{ cover_sheet.type_of_government | safe}}</p>
+                </li>
+                <li>
+                    <h2>Days of services</h2>
+                    <p>{{ cover_sheet.days_of_service | safe}}</p>
+                </li>
+                <li>
+                    <h2>Current operations</h2>
+                    <p>{{ cover_sheet.curret_opperation | safe}}</p>
+                </li>
+                <li>
+                    <h2>Revenue service vehicles</h2>
+                    <p>{{ cover_sheet.revenue_service_vehicles | safe}}</p>
                 </li>
             {% endif %}
             {% if agency_type == "Ferry" %}

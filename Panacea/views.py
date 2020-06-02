@@ -377,7 +377,7 @@ def Permissions(request):
 
 
 @login_required(login_url='/Panacea/login')
-# @group_required('WSDOT staff')
+@group_required('WSDOT staff')
 def Admin_assignPermissions(request, active=None):
     if not active:
         active = 'active'

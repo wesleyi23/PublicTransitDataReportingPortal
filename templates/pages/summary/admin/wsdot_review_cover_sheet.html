@@ -37,8 +37,8 @@
                     <h1>{{ year }} {% get_org_name organization_id %}{% if published_version %}<span class="badge badge-success ml-3">No changes</span>{% else %}<span class="badge badge-warning ml-3">Changes</span>{% endif %}</h1>
                     {% if needs_note %}
                         <div class="alert alert-danger" role="alert">
-                                This has not be sent to the user, you must provide at least one note.
-                            </div>
+                            This has not be sent to the user, you must provide at least one note.
+                        </div>
                     {% endif %}
                     {% if not cover_sheet_submitted %}
                         <div class="alert alert-warning" role="alert">
@@ -56,6 +56,7 @@
                         {% endif %}
                         <form action={% url 'wsdot_review_cover_sheets_year_org' year organization_id %} method="post" enctype="multipart/form-data">
                             {% csrf_token  %}
+                            {{ cover_sheet_form.media }}
                             <div class="row">
                                 <div class="col-6">
                                     <div class="row">
@@ -185,6 +186,34 @@
                                             <a href="#" onclick="generate_modal('Organization', '{{ cover_sheet_form.governing_body.name }}')"><i class="fas fa-sticky-note text-primary"></i></a>
                                         </div>
                                     </div>
+                                    <div class="row">
+                                        <div class="col-11">
+                                            {{ cover_sheet_form.tax_rate_valid.label_tag }}
+                                            <sup>
+                                                <i class="fas fa-question-circle help-popover"
+                                                   data-toggle="popover" title="Tax rate valid:"
+                                                   data-content="A check box indicating if the tax rate information is correct"></i>
+                                            </sup>
+                                            <p>{{ cover_sheet_form.tax_rate_valid }}</p>
+                                        </div>
+                                        <div class="col-1 text-right">
+                                            <a href="#" onclick="generate_modal('Organization', '{{ cover_sheet_form.tax_rate_valid.name }}')"><i class="fas fa-sticky-note text-primary"></i></a>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-11">
+                                            {{ cover_sheet_form.tax_rate_comment.label_tag }}
+                                            <sup>
+                                                <i class="fas fa-question-circle help-popover"
+                                                   data-toggle="popover" title="tax_rate_comment:"
+                                                   data-content="A required comment if the tax rate is invalid"></i>
+                                            </sup>
+                                            <p>{{ cover_sheet_form.tax_rate_comment }}</p>
+                                        </div>
+                                        <div class="col-1 text-right">
+                                            <a href="#" onclick="generate_modal('Organization', '{{ cover_sheet_form.tax_rate_comment.name }}')"><i class="fas fa-sticky-note text-primary"></i></a>
+                                        </div>
+                                    </div>
                                 </div>
                                 <div class="col-6">
 
@@ -269,127 +298,128 @@
                                         </div>
                                     </div>
 
-                                          <div class="row">
+                                    <div class="row">
                                         <div class="col-11">
-                                         {{ cover_sheet_form.service_area_description.label_tag }}
-                                             <sup>
-                                        <i class="fas fa-question-circle help-popover"
-                                           data-toggle="popover" title="Service area description:"
-                                           data-content="Please provide a brief description of the area you serve."></i>
-                                    </sup>
-                                    <p>{{ cover_sheet_form.service_area_description}}</p>
+                                            {{ cover_sheet_form.service_area_description.label_tag }}
+                                            <sup>
+                                                <i class="fas fa-question-circle help-popover"
+                                                   data-toggle="popover" title="Service area description:"
+                                                   data-content="Please provide a brief description of the area you serve."></i>
+                                            </sup>
+                                            <p>{{ cover_sheet_form.service_area_description}}</p>
                                         </div>
-                                              <div class="col-1 text-right">
+                                        <div class="col-1 text-right">
                                             <a href="#" onclick="generate_modal('Service', '{{ cover_sheet_form.service_area_description.name }}')"><i class="fas fa-sticky-note text-primary"></i></a>
                                         </div>
+                                    </div>
+                                    {%  if service_type == 'Medicaid broker' or service_type == 'Community provider' or service_type == 'Intercity bus' %}
 
+                                        <div class="row">
+                                            <div class="col-11">
+                                                {{ cover_sheet_form.community_planning_region.label_tag }}
+                                                <sup>
+                                                    <i class="fas fa-question-circle help-popover"
+                                                       data-toggle="popover" title="Planning Regions:"
+                                                       data-content="The Regional Transportation Planning Organization/Metropolitan Planning Organization areas in which your agency operates transportation"></i>
+                                                </sup>
+                                                <p>{{ cover_sheet_form.community_planning_region}}</p>
+                                            </div>
+                                            <div class="col-1 text-right">
+                                                <a href="#" onclick="generate_modal('Service', '{{ cover_sheet_form.community_planning_region.name }}')"><i class="fas fa-sticky-note text-primary"></i></a>
+                                            </div>
 
                                         </div>
-                                     {%  if service_type == 'Medicaid broker' or service_type == 'Community provider' or service_type == 'Intercity bus' %}
-
-                                   <div class="row">
-                                        <div class="col-11">
-                                            {{ cover_sheet_form.community_planning_region.label_tag }}
-                                              <sup>
-                                            <i class="fas fa-question-circle help-popover"
-                                               data-toggle="popover" title="Planning Regions:"
-                                               data-content="The Regional Transportation Planning Organization/Metropolitan Planning Organization areas in which your agency operates transportation"></i>
-                                        </sup>
-                                            <p>{{ cover_sheet_form.community_planning_region}}</p>
+                                    {% endif %}
+                                    {%  if service_type == 'Monorail' %}
+                                        <div class="row">
+                                            <div class="col-11">
+                                                {{ cover_sheet_form.monorail_ownership.label_tag }}
+                                                <sup>
+                                                    <i class="fas fa-question-circle help-popover"
+                                                       data-toggle="popover" title="Monorail Ownership:"
+                                                       data-content="Ownership structure of the Seattle Center Monorail."></i>
+                                                </sup>
+                                                <p>{{ cover_sheet_form.monorail_ownership}}</p>
+                                            </div>
+                                            <div class="col-1 text-right">
+                                                <a href="#" onclick="generate_modal('Service', '{{ cover_sheet_form.monorail_ownership.name }}')"><i class="fas fa-sticky-note text-primary"></i></a>
+                                            </div>
                                         </div>
-                                             <div class="col-1 text-right">
-                                            <a href="#" onclick="generate_modal('Service', '{{ cover_sheet_form.community_planning_region.name }}')"><i class="fas fa-sticky-note text-primary"></i></a>
-                                        </div>
-
-                                   </div>
-                                        {% endif %}
-                                 {%  if service_type == 'Monorail' %}
-                                     <div class="row">
-                                        <div class="col-11">
-                                        {{ cover_sheet_form.monorail_ownership.label_tag }}
-                                        <sup>
-                                        <i class="fas fa-question-circle help-popover"
-                                           data-toggle="popover" title="Monorail Ownership:"
-                                           data-content="Ownership structure of the Seattle Center Monorail."></i>
-                                    </sup>
-                                    <p>{{ cover_sheet_form.monorail_ownership}}</p>
-                                        </div>
-                                    <div class="col-1 text-right">
-                                            <a href="#" onclick="generate_modal('Service', '{{ cover_sheet_form.monorail_ownership.name }}')"><i class="fas fa-sticky-note text-primary"></i></a>
-                                        </div>
-                                     </div>
 
                                     {% endif %}
 
-                                {% if service_type == "Community provider" or service_type == 'Intercity bus' %}
-                                       <div class="row">
-                                        <div class="col-11">
-                                        {{ cover_sheet_form.days_of_service.label_tag }}
-                                        <sup>
-                                            <i class="fas fa-question-circle help-popover"
-                                               data-toggle="popover" title="Days of service:"
-                                               data-content="Please provide a description of the days of the week when you offer service."></i>
-                                        </sup>
-                                        <p>{{ cover_sheet_form.days_of_service }}</p>
+                                    {% if service_type == "Community provider" or service_type == 'Intercity bus' %}
+                                        <div class="row">
+                                            <div class="col-11">
+                                                {{ cover_sheet_form.days_of_service.label_tag }}
+                                                <sup>
+                                                    <i class="fas fa-question-circle help-popover"
+                                                       data-toggle="popover" title="Days of service:"
+                                                       data-content="Please provide a description of the days of the week when you offer service."></i>
+                                                </sup>
+                                                <p>{{ cover_sheet_form.days_of_service }}</p>
+                                            </div>
+                                            <div class="col-1 text-right">
+                                                <a href="#" onclick="generate_modal('Service', '{{ cover_sheet_form.days_of_service.name }}')"><i class="fas fa-sticky-note text-primary"></i></a>
+                                            </div>
                                         </div>
-                                       <div class="col-1 text-right">
-                                            <a href="#" onclick="generate_modal('Service', '{{ cover_sheet_form.days_of_service.name }}')"><i class="fas fa-sticky-note text-primary"></i></a>
-                                        </div>
-                                       </div>
                                     {% endif %}
 
-                                 {% if service_type == "Community provider" %}
-                                         <div class="row">
-                                        <div class="col-11">
-                                        {{ cover_sheet_form.service_and_eligibility.label_tag }}
-                                        <sup>
-                                            <i class="fas fa-question-circle help-popover"
-                                               data-toggle="popover" title="Service and eligibility:"
-                                               data-content="Provide a basic list of your public transportation services (e.g., demand response, paratransit, veteran transportation). For each service you provide, list the groups eligible for that service (e.g., individuals with special needs, seniors, people with disabilities, general public). "></i>
-                                        </sup>
-                                        <p>{{ cover_sheet_form.service_and_eligibility }}</p>
+                                    {% if service_type == "Community provider" %}
+                                        <div class="row">
+                                            <div class="col-11">
+                                                {{ cover_sheet_form.service_and_eligibility.label_tag }}
+                                                <sup>
+                                                    <i class="fas fa-question-circle help-popover"
+                                                       data-toggle="popover" title="Service and eligibility:"
+                                                       data-content="Provide a basic list of your public transportation services (e.g., demand response, paratransit, veteran transportation). For each service you provide, list the groups eligible for that service (e.g., individuals with special needs, seniors, people with disabilities, general public). "></i>
+                                                </sup>
+                                                <p>{{ cover_sheet_form.service_and_eligibility }}</p>
+                                            </div>
+                                            <div class="col-1 text-right">
+                                                <a href="#" onclick="generate_modal('Service', '{{ cover_sheet_form.service_and_eligibility.name }}')"><i class="fas fa-sticky-note text-primary"></i></a>
+                                            </div>
                                         </div>
-                                        <div class="col-1 text-right">
-                                            <a href="#" onclick="generate_modal('Service', '{{ cover_sheet_form.service_and_eligibility.name }}')"><i class="fas fa-sticky-note text-primary"></i></a>
-                                        </div>
-                                       </div>
                                     {% endif %}
 
-                                {% if service_type == "Ferry" or service_type == "Community provider" or service_type == "Medicaid broker" or service_type == 'Intercity bus'%}
-                                         <div class="row">
-                                        <div class="col-11">
-                                        <label for="id_service_and_eligibility">Background and current operations:</label>
-                                        <sup>
-                                            <i class="fas fa-question-circle help-popover"
-                                               data-toggle="popover" title="Background and current operations:"
-                                               data-content="Provide a short summary of your background and operations."></i>
-                                        </sup>
-                                        <p>{{ cover_sheet_form.current_operations }}</p>
+                                    {% if service_type == "Ferry" or service_type == "Community provider" or service_type == "Medicaid broker" or service_type == 'Intercity bus'%}
+                                        <div class="row">
+                                            <div class="col-11">
+                                                <label for="id_service_and_eligibility">Background and current operations:</label>
+                                                <sup>
+                                                    <i class="fas fa-question-circle help-popover"
+                                                       data-toggle="popover" title="Background and current operations:"
+                                                       data-content="Provide a short summary of your background and operations."></i>
+                                                </sup>
+                                                <p>{{ cover_sheet_form.current_operations }}</p>
+                                            </div>
+                                            <div class="col-1 text-right">
+                                                <a href="#" onclick="generate_modal('Service', '{{ cover_sheet_form.current_operations.name }}')"><i class="fas fa-sticky-note text-primary"></i></a>
+                                            </div>
                                         </div>
-                                        <div class="col-1 text-right">
-                                            <a href="#" onclick="generate_modal('Service', '{{ cover_sheet_form.current_operations.name }}')"><i class="fas fa-sticky-note text-primary"></i></a>
-                                        </div>
-                                       </div>
                                     {% endif %}
 
-                                {% if service_type == "Community provider" or service_type == 'Intercity bus'  %}
-                                         <div class="row">
-                                        <div class="col-11">
-                                        {{ cover_sheet_form.revenue_service_vehicles.label_tag }}
-                                        <sup>
-                                            <i class="fas fa-question-circle help-popover"
-                                               data-toggle="popover" title="Revenue service vehicles:"
-                                               data-content="Provide a list of your revenue service vehicles, their seating capacity and ADA-accessibility  (e.g., Four, 16-passenger ADA-accessible cutaways; four, 6-passenger minivans (three are ADAaccessible); and two, 4-passenger ADA-accessible specialty vehicles)."></i>
-                                        </sup>
-                                        <p>{{ cover_sheet_form.revenue_service_vehicles }}</p>
+                                    {% if service_type == "Community provider" or service_type == 'Intercity bus'  %}
+                                        <div class="row">
+                                            <div class="col-11">
+                                                {{ cover_sheet_form.revenue_service_vehicles.label_tag }}
+                                                <sup>
+                                                    <i class="fas fa-question-circle help-popover"
+                                                       data-toggle="popover" title="Revenue service vehicles:"
+                                                       data-content="Provide a list of your revenue service vehicles, their seating capacity and ADA-accessibility  (e.g., Four, 16-passenger ADA-accessible cutaways; four, 6-passenger minivans (three are ADAaccessible); and two, 4-passenger ADA-accessible specialty vehicles)."></i>
+                                                </sup>
+                                                <p>{{ cover_sheet_form.revenue_service_vehicles }}</p>
+                                            </div>
+                                            <div class="col-1 text-right">
+                                                <a href="#" onclick="generate_modal('Service', '{{ cover_sheet_form.revenue_service_vehicles.name }}')"><i class="fas fa-sticky-note text-primary"></i></a>
+                                            </div>
                                         </div>
-                                         <div class="col-1 text-right">
-                                            <a href="#" onclick="generate_modal('Service', '{{ cover_sheet_form.revenue_service_vehicles.name }}')"><i class="fas fa-sticky-note text-primary"></i></a>
-                                        </div>
-                                       </div>
                                     {% endif %}
 
                                 </div>
+                                {% if service_type == "Transit" or service_type == 'Tribe'  %}
+
+                                {% endif %}
                                 <div class="col-6">
                                     {%  for note in service_notes %}
                                         {% if not note.parent_note %}

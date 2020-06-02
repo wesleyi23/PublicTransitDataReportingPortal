@@ -727,6 +727,8 @@ class cover_sheet_wsdot_review(forms.ModelForm):
             'days_of_service': CKEditorWidget(),
             'current_operations': CKEditorWidget(),
             'revenue_service_vehicles': CKEditorWidget(),
+            'tax_rate_valid': forms.CheckboxInput(attrs={'class': 'form-control'}),
+            'tax_rate_comment': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
             # 'tax_rate_description': forms.Textarea(attrs={'class': 'form-control'}),
             'community_planning_region': CKEditorWidget(),
             'monorail_ownership': CKEditorWidget()

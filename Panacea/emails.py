@@ -13,8 +13,8 @@ def send_user_registration_email(user_id):
     send_mail('Welcome to WSDOT\'s Public Transit Data Reporting Portal', msg_plain, settings.DEFAULT_FROM_EMAIL, [emailAddress[0]], html_message=msg_html,)
 
 
-def active_permissions_request_notification(dev_mode=settings.dev_mode):
-    if dev_mode == True:
+def active_permissions_request_notification(SEND_EMAILS=settings.SEND_EMAILS):
+    if SEND_EMAILS:
         recipient_list = [settings.DEFAULT_FROM_EMAIL, 'schumen@wsdot.wa.gov', 'wesleyi@wsdot.wa.gov']
     else:
         recipient_list = [settings.DEFAULT_FROM_EMAIL, 'schumen@wsdot.wa.gov', 'wesleyi@wsdot.wa.gov']
@@ -29,8 +29,8 @@ def active_permissions_request_notification(dev_mode=settings.dev_mode):
         html_message= msg_html, fail_silently=False)
 
 
-def notify_user_that_permissions_have_been_requested(full_name, groups, email, dev_mode=settings.dev_mode):
-    if dev_mode == True:
+def notify_user_that_permissions_have_been_requested(full_name, groups, email, SEND_EMAILS=settings.SEND_EMAILS):
+    if SEND_EMAILS :
         recipient_list = [settings.DEFAULT_FROM_EMAIL, 'schumen@wsdot.wa.gov', 'wesleyi@wsdot.wa.gov' ]
     else:
         recipient_list = [email, ]
@@ -48,8 +48,8 @@ def notify_user_that_permissions_have_been_requested(full_name, groups, email, d
     )
 
 
-def notify_user_that_permissions_have_been_updated(full_name, email, groups, dev_mode = settings.dev_mode):
-    if dev_mode == True:
+def notify_user_that_permissions_have_been_updated(full_name, email, groups, mode = settings.mode):
+    if SEND_EMAILS :
         recipient_list = [email,]
     else:
         recipient_list = [email,]
@@ -63,8 +63,8 @@ def notify_user_that_permissions_have_been_updated(full_name, email, groups, dev
                html_message=msg_html)
 
 
-def cover_sheet_returned_to_user(org_id, dev_mode=settings.dev_mode):
-    if dev_mode == True:
+def cover_sheet_returned_to_user(org_id, SEND_EMAILS=settings.SEND_EMAILS):
+    if SEND_EMAILS :
         recipient_list = [settings.DEFAULT_FROM_EMAIL, 'schumen@wsdot.wa.gov', 'wesleyi@wsdot.wa.gov' ]
     else:
         recipient_list = get_organization_summary_email_address(org_id)
@@ -82,8 +82,8 @@ def cover_sheet_returned_to_user(org_id, dev_mode=settings.dev_mode):
     )
 
 
-def cover_sheet_review_complete(org_id, dev_mode=settings.dev_mode):
-    if dev_mode == True:
+def cover_sheet_review_complete(org_id, SEND_EMAILS=settings.SEND_EMAILS):
+    if SEND_EMAILS :
         recipient_list = [settings.DEFAULT_FROM_EMAIL, 'schumen@wsdot.wa.gov', 'wesleyi@wsdot.wa.gov' ]
     else:
         recipient_list = get_organization_summary_email_address(org_id)
@@ -101,8 +101,8 @@ def cover_sheet_review_complete(org_id, dev_mode=settings.dev_mode):
     )
 
 
-def data_report_review_complete(org_id, dev_mode=settings.dev_mode):
-    if dev_mode == True:
+def data_report_review_complete(org_id, SEND_EMAILS=settings.SEND_EMAILS):
+    if SEND_EMAILS :
         recipient_list = [settings.DEFAULT_FROM_EMAIL, 'schumen@wsdot.wa.gov', 'wesleyi@wsdot.wa.gov' ]
     else:
         recipient_list = get_organization_summary_email_address(org_id)
@@ -120,8 +120,8 @@ def data_report_review_complete(org_id, dev_mode=settings.dev_mode):
     )
 
 
-def to_wsdot_cover_sheet_submitted(org_id, dev_mode=settings.dev_mode):
-    if dev_mode == True:
+def to_wsdot_cover_sheet_submitted(org_id, SEND_EMAILS=settings.SEND_EMAILS):
+    if SEND_EMAILS :
         recipient_list = [settings.DEFAULT_FROM_EMAIL, 'schumen@wsdot.wa.gov', 'wesleyi@wsdot.wa.gov']
     else:
         recipient_list = get_wsdot_coversheet_reviewer_email()
@@ -141,8 +141,8 @@ def to_wsdot_cover_sheet_submitted(org_id, dev_mode=settings.dev_mode):
     )
 
 
-def to_wsdot_data_report_submitted(org_id, dev_mode=settings.dev_mode):
-    if dev_mode == True:
+def to_wsdot_data_report_submitted(org_id, SEND_EMAILS=settings.SEND_EMAILS):
+    if SEND_EMAILS :
         recipient_list = [settings.DEFAULT_FROM_EMAIL, 'schumen@wsdot.wa.gov', 'wesleyi@wsdot.wa.gov' ]
     else:
         recipient_list = get_wsdot_data_report_reviewer_email()

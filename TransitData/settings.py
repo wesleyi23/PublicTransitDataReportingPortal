@@ -14,43 +14,64 @@ import os
 
 from celery.schedules import crontab
 
-dev_mode = True
+mode = "test"  #could be prod, dev, test
 
-if dev_mode:
+if mode == "prod":
     DEBUG = True
-else:
-    #DEBUG = int(os.environ.get("DEBUG", default=0))
+    ALLOWED_HOSTS = ['publictransportationportal.azurewebsites.net']
+    db_USER = os.environ.get("db_USER")
+    db_PASSWORD = os.environ.get("db_PASSWORD")
+    SENDGRID_API_KEY = os.environ.get('SENDGRID_API_KEY')
+    os.environ.setdefault('FORKED_BY_MULTIPROCESSING', '1')
+    #SAML Config
+    ASSERTION_URL = "https://publictransportationportal.azurewebsites.net"
+    ENTITY_ID = "https://publictransportationportal.azurewebsites.net"
+    METADATA_LOCAL_FILE_PATH = '/usr/bin/sawidp_WaTech_metadata_PROD.xml'
+    SECRET_KEY = os.environ.get("SECRET_KEY")
+    SEND_EMAILS = True
+elif mode == "test":
     DEBUG = True
-
-if dev_mode:
+    ALLOWED_HOSTS = ['*']
+    db_USER = os.environ.get("db_USER")
+    db_PASSWORD = os.environ.get("db_PASSWORD")
+    SENDGRID_API_KEY = os.environ.get('SENDGRID_API_KEY')
+    os.environ.setdefault('FORKED_BY_MULTIPROCESSING', '1')
+    ASSERTION_URL = "https://vanpooldev.azurewebsites.net"
+    ENTITY_ID = "https://vanpooldev.azurewebsites.net"
+    METADATA_LOCAL_FILE_PATH = '/usr/bin/sawidp_WaTech_metadata_TEST.xml'
+    SECRET_KEY = os.environ.get("SECRET_KEY")
+    SEND_EMAILS = False
+elif mode == "dev":
+    DEBUG = True
+    ALLOWED_HOSTS = ['*']
     import keys_and_passwords
     db_USER = keys_and_passwords.db_USER
     db_PASSWORD = keys_and_passwords.db_PASSWORD
     SENDGRID_API_KEY = keys_and_passwords.SENDGRID_API_KEY
-
+    ASSERTION_URL = "https://vanpooldev.azurewebsites.net"
+    ENTITY_ID = "https://vanpooldev.azurewebsites.net"
+    METADATA_LOCAL_FILE_PATH = '/usr/bin/sawidp_WaTech_metadata_TEST.xml'
+    SECRET_KEY = 'x%b_yxu0_1k3i9t$e&yr0h)edaj0u07hp+dg(&yy^m28x2zkmo'
+    SEND_EMAILS = False
 else:
-    db_USER = os.environ.get("db_USER")
-    db_PASSWORD = os.environ.get("db_PASSWORD")
-    SENDGRID_API_KEY = os.environ.get('SENDGRID_API_KEY')
+    raise NotImplementedError()
 
-if not dev_mode:
-    os.environ.setdefault('FORKED_BY_MULTIPROCESSING', '1')
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+# if mode:
+#     STATIC_URL = '/static/'
+#     STATIC_ROOT = os.path.join(BASE_DIR, "static")
+#     STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+# else:
+STATIC_URL = "/static/"
+STATIC_ROOT = os.path.join(BASE_DIR, "static")
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/2.1/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
-if dev_mode:
-    SECRET_KEY = 'x%b_yxu0_1k3i9t$e&yr0h)edaj0u07hp+dg(&yy^m28x2zkmo'
-else:
-    SECRET_KEY = os.environ.get("SECRET_KEY")
-
-# SECURITY WARNING: don't run with debug turned on in production!
-
-ALLOWED_HOSTS = ['*']
 
 # Application definition
 
@@ -89,9 +110,6 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'simple_history.middleware.HistoryRequestMiddleware',
 ]
-
-
-
 
 EMAIL_BACKEND = 'sgbackend.SendGridBackend'
 EMAIL_PORT = 587
@@ -183,14 +201,7 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.1/howto/static-files/
 
-if dev_mode:
-    STATIC_URL = '/static/'
-    STATIC_ROOT = os.path.join(BASE_DIR, "static")
-    STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
-else:
-    STATIC_URL = "/static/"
-    STATIC_ROOT = os.path.join(BASE_DIR, "static")
-    STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
 
 
 # User authentication from tut located here:https://wsvincent.com/django-custom-user-model-tutorial/
@@ -240,8 +251,8 @@ SAML2_AUTH = {
         # 'CREATE_USER': 'path.to.your.new.user.hook.method',
         # 'BEFORE_LOGIN': 'path.to.your.login.hook.method',
     },
-    'ASSERTION_URL': 'https://vanpooldev.azurewebsites.net/sso/wsdot/reply', # Custom URL to validate incoming SAML requests against
-    'ENTITY_ID': 'https://vanpooldev.azurewebsites.net/sso/wsdot/', # Populates the Issuer element in authn request
+    'ASSERTION_URL': ASSERTION_URL + '/sso/wsdot/reply', # Custom URL to validate incoming SAML requests against
+    'ENTITY_ID': ENTITY_ID + '/sso/wsdot/', # Populates the Issuer element in authn request
     'NAME_ID_FORMAT': 'urn:oasis:names:tc:SAML:2.0:nameid-format:persistent', # Sets the Format property of authn NameIDPolicy element
     'USE_JWT': False, # Set this to True if you are running a Single Page Application (SPA) with Django Rest Framework (DRF), and are using JWT authentication to authorize client users
     'FRONTEND_URL': '', # Redirect URL for the client if you are using JWT auth with DRF. See explanation below
@@ -251,7 +262,7 @@ SAML2_AUTH = {
 SAML2_AUTH_SAW = {
     # Metadata is required, choose either remote url or local file path
     # 'METADATA_AUTO_CONF_URL': 'https://login.microsoftonline.com/6f10858a-931e-4554-89f7-a3694e8e0f1a/federationmetadata/2007-06/federationmetadata.xml?appid=666dd47c-2480-4ffa-b3ce-37f1cd37051c ',
-    'METADATA_LOCAL_FILE_PATH': '/usr/bin/sawidp_WaTech_metadata_TEST.xml',
+    'METADATA_LOCAL_FILE_PATH': METADATA_LOCAL_FILE_PATH,
 
     # Optional settings below
     'DEFAULT_NEXT_URL': '/dashboard',  # Custom target redirect URL after the user get logged in. Default to /admin if not set. This setting will be overwritten if you have parameter ?next= specificed in the login URL.
@@ -272,8 +283,8 @@ SAML2_AUTH_SAW = {
         # 'CREATE_USER': 'path.to.your.new.user.hook.method',
         # 'BEFORE_LOGIN': 'path.to.your.login.hook.method',
     },
-    'ASSERTION_URL': 'https://vanpooldev.azurewebsites.net/sso/saw/acs', # Custom URL to validate incoming SAML requests against
-    'ENTITY_ID': 'https://vanpooldev.azurewebsites.net/sso/saw/', # Populates the Issuer element in authn request
+    'ASSERTION_URL': 'https://publictransportationportal.azurewebsites.net/sso/saw/acs', # Custom URL to validate incoming SAML requests against
+    'ENTITY_ID': 'https://publictransportationportal.azurewebsites.net/sso/saw/', # Populates the Issuer element in authn request
     'NAME_ID_FORMAT': 'urn:oasis:names:tc:SAML:2.0:nameid-format:persistent', # Sets the Format property of authn NameIDPolicy element
     'USE_JWT': False, # Set this to True if you are running a Single Page Application (SPA) with Django Rest Framework (DRF), and are using JWT authentication to authorize client users
     'FRONTEND_URL': '', # Redirect URL for the client if you are using JWT auth with DRF. See explanation below
