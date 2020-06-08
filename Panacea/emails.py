@@ -48,7 +48,7 @@ def notify_user_that_permissions_have_been_requested(full_name, groups, email, S
     )
 
 
-def notify_user_that_permissions_have_been_updated(full_name, email, groups, mode = settings.mode):
+def notify_user_that_permissions_have_been_updated(full_name, email, groups, SEND_EMAILS=settings.SEND_EMAILS):
     if SEND_EMAILS :
         recipient_list = [email,]
     else:

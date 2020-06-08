@@ -66,7 +66,7 @@
                                         <td>{% get_cover_sheet_field_name_verbose note.note_field %}</td>
                                         <td>{% cover_sheet_note_previous_value note %}</td>
                                         <td>{% cover_sheet_note_current_value note %}</td>
-                                        <td> <button type="button" class="btn btn-secondary mb-1" style="min-width: 12rem" onclick="generate_modal('{{ note.id }}')">Reply with note</button>
+                                        <td> <button type="button" class="btn btn-secondary" style="min-width: 12rem" onclick="generate_modal('{{ note.id }}')">Reply with note</button>
                                             <a href="{% url 'accept_wsdot_edit' note.id %}" type="button" class="btn btn-primary" style="min-width: 12rem">Accept edits</a></td>
 
                                     </tr>

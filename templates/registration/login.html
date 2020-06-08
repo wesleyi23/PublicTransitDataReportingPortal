@@ -1,5 +1,6 @@
 {% load static %}
 {% load widget_tweaks %}
+{% load custom_tags %}
 
 
 <!DOCTYPE html>
@@ -36,15 +37,15 @@
 
         <div class="col-xl-10 col-lg-12 col-md-9">
 
-            <div class="card o-hidden border-0 shadow-lg my-5">
+            <div class="card o-hidden border-0 shadow-lg my-5" >
                 <div class="card-body p-0">
                     <!-- Nested Row within Card Body -->
                     <div class="row">
-                        <div class="col-lg-6 d-none d-lg-block bg-login-image"></div>
+                        <div class="col-lg-6 d-none d-lg-block bg-login-image" style="min-height: 66vh"></div>
                         <div class="col-lg-6">
                             <div class="p-5">
                                 <div>
-                                    <img class="mx-auto d-block mb-5" src="{% static 'img/WSDOT_logo_Green.png' %}">
+                                    <img class="mx-auto d-block mb-5" src="{% static 'img/WSDOT_logo_Green.png' %}" >
                                 </div>
                                 <div class="text-center">
                                     <h1 class="h4 text-gray-900 mb-4">Washington Public Transportation Data Reporting Portal</h1>
@@ -52,7 +53,9 @@
                                 <div class="text-center">
                                     <h1 class="h3 text-gray-900 mb-4">Welcome Back!</h1>
                                 </div>
-                                {#### FORM#}
+{#                                ### login in FORM #}
+                            {% is_prod_mode as mode %}
+                            {% if not mode %}
                                 {% block content %}
                                     <form method="post" class="user">
                                         {% csrf_token %}
@@ -72,24 +75,22 @@
                                         </div>
                                     </form>
                                     <br />
-
                                 {% endblock %}
-
-
-                                {#### FORM#}
                                 <hr>
+
                                 <div class="text-center">
                                     <a class="small" href="{% url 'password_reset' %}">Forgot Password?</a>
                                 </div>
                                 <div class="text-center">
                                     <a class="small" href="{% url 'register' %}">Create an Account!</a>
                                 </div>
+                            {% endif %}
                                 <hr>
                                 <div class="pb-1" style="display: flex">
                                     <a href="{% url 'wsdot_sso' %}" class="mx-auto btn btn-primary btn-user" style="flex: 1">WSDOT user login</a>
                                 </div>
                                 <div style="display: flex">
-                                    <a href="https://test-secureaccess.wa.gov/FIM2/sps/sawidp/saml20/logininitial?RequestBinding=HTTPPost&NameIdFormat=Email&PartnerId=https://vanpooldev.azurewebsites.net/sso/saw/"  class="mx-auto btn btn-primary btn-user" style="flex: 1">External user login</a>
+                                    <a href="https://secureaccess.wa.gov/FIM2/sps/sawidp/saml20/logininitial?RequestBinding=HTTPPost&NameIdFormat=Email&PartnerId=https://publictransportationportal.azurewebsites.net/sso/saw/"  class="mx-auto btn btn-primary btn-user" style="flex: 1">External user login</a>
                                 </div>
 
                             </div>

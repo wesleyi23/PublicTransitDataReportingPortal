@@ -14,10 +14,10 @@ import os
 
 from celery.schedules import crontab
 
-mode = "test"  #could be prod, dev, test
+MODE = "dev"  #could be prod, dev, test
 
-if mode == "prod":
-    DEBUG = True
+if MODE == "prod":
+    DEBUG = False
     ALLOWED_HOSTS = ['publictransportationportal.azurewebsites.net']
     db_USER = os.environ.get("db_USER")
     db_PASSWORD = os.environ.get("db_PASSWORD")
@@ -29,7 +29,7 @@ if mode == "prod":
     METADATA_LOCAL_FILE_PATH = '/usr/bin/sawidp_WaTech_metadata_PROD.xml'
     SECRET_KEY = os.environ.get("SECRET_KEY")
     SEND_EMAILS = True
-elif mode == "test":
+elif MODE == "test":
     DEBUG = True
     ALLOWED_HOSTS = ['*']
     db_USER = os.environ.get("db_USER")
@@ -41,7 +41,7 @@ elif mode == "test":
     METADATA_LOCAL_FILE_PATH = '/usr/bin/sawidp_WaTech_metadata_TEST.xml'
     SECRET_KEY = os.environ.get("SECRET_KEY")
     SEND_EMAILS = False
-elif mode == "dev":
+elif MODE == "dev":
     DEBUG = True
     ALLOWED_HOSTS = ['*']
     import keys_and_passwords
@@ -283,8 +283,8 @@ SAML2_AUTH_SAW = {
         # 'CREATE_USER': 'path.to.your.new.user.hook.method',
         # 'BEFORE_LOGIN': 'path.to.your.login.hook.method',
     },
-    'ASSERTION_URL': 'https://publictransportationportal.azurewebsites.net/sso/saw/acs', # Custom URL to validate incoming SAML requests against
-    'ENTITY_ID': 'https://publictransportationportal.azurewebsites.net/sso/saw/', # Populates the Issuer element in authn request
+    'ASSERTION_URL': ASSERTION_URL + '/sso/saw/acs', # Custom URL to validate incoming SAML requests against
+    'ENTITY_ID': ENTITY_ID + '/sso/saw/', # Populates the Issuer element in authn request
     'NAME_ID_FORMAT': 'urn:oasis:names:tc:SAML:2.0:nameid-format:persistent', # Sets the Format property of authn NameIDPolicy element
     'USE_JWT': False, # Set this to True if you are running a Single Page Application (SPA) with Django Rest Framework (DRF), and are using JWT authentication to authorize client users
     'FRONTEND_URL': '', # Redirect URL for the client if you are using JWT auth with DRF. See explanation below

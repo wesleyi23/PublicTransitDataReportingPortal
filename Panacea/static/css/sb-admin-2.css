@@ -226,7 +226,7 @@ input::-ms-clear {
 }
 
 .django-ckeditor-widget{
-  display: inline !important;
+  display: block !important;
 }
 
 /*! END ADDITIONS

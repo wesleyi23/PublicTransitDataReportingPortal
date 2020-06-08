@@ -160,7 +160,6 @@ def _create_new_user(username, email, guid, full_name): #, firstname, lastname):
     return user
 
 
-#TODO edit to make it so it works for saw
 @csrf_exempt
 def acs(r):
     saml_client = _get_saml_client(get_current_domain(r))

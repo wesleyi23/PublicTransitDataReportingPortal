@@ -244,3 +244,12 @@ def get_cover_sheet_field_name_verbose(field_name):
         return "executive officer name"
 
     return cover_sheet._meta.get_field(field_name).verbose_name
+
+
+@register.simple_tag(name='is_prod_mode')
+def is_prod_mode():
+    if settings.MODE == "prod":
+        return True
+    else:
+        return False
+
