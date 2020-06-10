@@ -1043,12 +1043,17 @@ def ntd_upload(request):
 @group_required('Summary reporter', 'WSDOT staff')
 def summary_report_data(request):
     user_org = find_user_organization(request.user.id)
+    service_type = user_org.summary_organization_classifications.name
+    tribal_data_permission = False
+    if service_type == 'Tribe':
+        tribal_data, created = tribal_reporter_permissions.objects.get_or_create(organization_id=user_org.id, year=get_current_summary_report_year())
+        tribal_data_permission = tribal_data.permission_to_publish_reported_data
     if get_data_submitted(user_org.id):
         return redirect('data_submitted')
 
     ready_to_submit = get_all_data_steps_completed(user_org.id)
 
-    return render(request, 'pages/summary/summary_report_data_instructions.html', {'ready_to_submit': ready_to_submit})
+    return render(request, 'pages/summary/summary_report_data_instructions.html', {'ready_to_submit': ready_to_submit, 'service_type':service_type,'tribal_data_permission':tribal_data_permission})
 
 
 @login_required(login_url='/Panacea/login')
