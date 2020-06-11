@@ -404,7 +404,7 @@ def Admin_assignPermissions(request, active=None):
                     this_user_id = custom_user.objects.get(email=email).id
                     my_profile = profile.objects.get(custom_user_id=this_user_id)
                     my_profile.profile_complete = True
-                    notify_user_that_permissions_have_been_updated(request.user.get_full_name(), email, groups)
+                    notify_user_that_permissions_have_been_updated(custom_user.objects.get(id=this_user_id).get_full_name(), email, groups)
                     my_profile.active_permissions_request = False
                     my_profile.save()
                     # print(email)
