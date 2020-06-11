@@ -116,7 +116,7 @@
             {% if agency_type == "Community provider" or agency_type == "Medicaid broker"%}
                 <li>
                     <h2>Planning region</h2>
-                    <p>{{ cover_sheet.community_planning_region }}</p>
+                    <p>{{ cover_sheet.community_planning_region | safe }}</p>
                 </li>
             {% endif %}
             {% if agency_type == "Monorail" %}
@@ -144,7 +144,7 @@
                 </li>
                 <li>
                     <h2>Current operations</h2>
-                    <p>{{ cover_sheet.curret_opperation | safe}}</p>
+                    <p>{{ cover_sheet.current_operations | safe}}</p>
                 </li>
                 <li>
                     <h2>Revenue service vehicles</h2>
@@ -153,7 +153,7 @@
             {% elif agency_type == "Medicaid broker"%}
                 <li>
                     <h2>Current operations</h2>
-                    <p>{{ cover_sheet.curret_opperation | safe}}</p>
+                    <p>{{ cover_sheet.current_operations | safe}}</p>
                 </li>
             {% elif not agency_type == "Monorail" and not agency_type == "Intercity bus" %}
                 <li>
@@ -176,7 +176,7 @@
                 </li>
                 <li>
                     <h2>Current operations</h2>
-                    <p>{{ cover_sheet.curret_opperation | safe}}</p>
+                    <p>{{ cover_sheet.current_operations | safe}}</p>
                 </li>
                 <li>
                     <h2>Revenue service vehicles</h2>
@@ -186,7 +186,7 @@
             {% if agency_type == "Ferry" %}
                 <li>
                     <h2>Background and current operations</h2>
-                    <p>{{ cover_sheet.curret_opperation | safe}}</p>
+                    <p>{{ cover_sheet.current_operations | safe}}</p>
                 </li>
             {% endif %}
             <li>
