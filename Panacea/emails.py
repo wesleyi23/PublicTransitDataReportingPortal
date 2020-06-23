@@ -14,7 +14,7 @@ def send_user_registration_email(user_id):
 
 
 def active_permissions_request_notification(SEND_EMAILS=settings.SEND_EMAILS):
-    if SEND_EMAILS:
+    if SEND_EMAILS == False:
         recipient_list = [settings.DEFAULT_FROM_EMAIL, 'schumen@wsdot.wa.gov', 'wesleyi@wsdot.wa.gov']
     else:
         recipient_list = [settings.DEFAULT_FROM_EMAIL, 'schumen@wsdot.wa.gov', 'wesleyi@wsdot.wa.gov']
@@ -30,7 +30,7 @@ def active_permissions_request_notification(SEND_EMAILS=settings.SEND_EMAILS):
 
 
 def notify_user_that_permissions_have_been_requested(full_name, groups, email, SEND_EMAILS=settings.SEND_EMAILS):
-    if SEND_EMAILS :
+    if SEND_EMAILS == False:
         recipient_list = [settings.DEFAULT_FROM_EMAIL, 'schumen@wsdot.wa.gov', 'wesleyi@wsdot.wa.gov' ]
     else:
         recipient_list = [email, ]
@@ -49,7 +49,7 @@ def notify_user_that_permissions_have_been_requested(full_name, groups, email, S
 
 
 def notify_user_that_permissions_have_been_updated(full_name, email, groups, SEND_EMAILS=settings.SEND_EMAILS):
-    if SEND_EMAILS :
+    if SEND_EMAILS == False :
         recipient_list = [email,]
     else:
         recipient_list = [email,]
@@ -64,8 +64,8 @@ def notify_user_that_permissions_have_been_updated(full_name, email, groups, SEN
 
 
 def cover_sheet_returned_to_user(org_id, SEND_EMAILS=settings.SEND_EMAILS):
-    if SEND_EMAILS :
-        recipient_list = [settings.DEFAULT_FROM_EMAIL, 'schumen@wsdot.wa.gov', 'wesleyi@wsdot.wa.gov' ]
+    if SEND_EMAILS == False:
+        recipient_list = [settings.DEFAULT_FROM_EMAIL,'schumen@wsdot.wa.gov','wesleyi@wsdot.wa.gov' ]
     else:
         recipient_list = get_organization_summary_email_address(org_id)
 
@@ -83,7 +83,7 @@ def cover_sheet_returned_to_user(org_id, SEND_EMAILS=settings.SEND_EMAILS):
 
 
 def cover_sheet_review_complete(org_id, SEND_EMAILS=settings.SEND_EMAILS):
-    if SEND_EMAILS :
+    if SEND_EMAILS == False :
         recipient_list = [settings.DEFAULT_FROM_EMAIL, 'schumen@wsdot.wa.gov', 'wesleyi@wsdot.wa.gov' ]
     else:
         recipient_list = get_organization_summary_email_address(org_id)
@@ -102,7 +102,7 @@ def cover_sheet_review_complete(org_id, SEND_EMAILS=settings.SEND_EMAILS):
 
 
 def data_report_review_complete(org_id, SEND_EMAILS=settings.SEND_EMAILS):
-    if SEND_EMAILS :
+    if SEND_EMAILS == False:
         recipient_list = [settings.DEFAULT_FROM_EMAIL, 'schumen@wsdot.wa.gov', 'wesleyi@wsdot.wa.gov' ]
     else:
         recipient_list = get_organization_summary_email_address(org_id)
@@ -121,7 +121,7 @@ def data_report_review_complete(org_id, SEND_EMAILS=settings.SEND_EMAILS):
 
 
 def to_wsdot_cover_sheet_submitted(org_id, SEND_EMAILS=settings.SEND_EMAILS):
-    if SEND_EMAILS :
+    if SEND_EMAILS == False :
         recipient_list = [settings.DEFAULT_FROM_EMAIL, 'schumen@wsdot.wa.gov', 'wesleyi@wsdot.wa.gov']
     else:
         recipient_list = get_wsdot_coversheet_reviewer_email()
@@ -142,7 +142,7 @@ def to_wsdot_cover_sheet_submitted(org_id, SEND_EMAILS=settings.SEND_EMAILS):
 
 
 def to_wsdot_data_report_submitted(org_id, SEND_EMAILS=settings.SEND_EMAILS):
-    if SEND_EMAILS :
+    if SEND_EMAILS == False :
         recipient_list = [settings.DEFAULT_FROM_EMAIL, 'schumen@wsdot.wa.gov', 'wesleyi@wsdot.wa.gov' ]
     else:
         recipient_list = get_wsdot_data_report_reviewer_email()

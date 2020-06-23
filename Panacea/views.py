@@ -106,6 +106,8 @@ def index(request):
 
 @login_required(login_url='/Panacea/login')
 def dashboard(request):
+    if settings.SEND_EMAILS:
+        print('this is a print statement')
     current_user_profile = profile.objects.get(custom_user=request.user)
 
     if not current_user_profile.profile_submitted:

@@ -52,7 +52,7 @@ elif MODE == "dev":
     ENTITY_ID = "https://vanpooldev.azurewebsites.net"
     METADATA_LOCAL_FILE_PATH = '/usr/bin/sawidp_WaTech_metadata_TEST.xml'
     SECRET_KEY = 'x%b_yxu0_1k3i9t$e&yr0h)edaj0u07hp+dg(&yy^m28x2zkmo'
-    SEND_EMAILS = False
+    SEND_EMAILS = False # change this back to False
 else:
     raise NotImplementedError()
 
