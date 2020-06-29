@@ -29,6 +29,19 @@ if MODE == "prod":
     METADATA_LOCAL_FILE_PATH = '/usr/bin/sawidp_WaTech_metadata_PROD.xml'
     SECRET_KEY = os.environ.get("SECRET_KEY")
     SEND_EMAILS = True
+    DATABASES = {
+        'default': {
+            'ENGINE': 'sql_server.pyodbc',
+            'NAME': 'PublicTransportationDataReportingPortal',
+            'HOST': 'hqcw2sql01.database.windows.net',
+            'USER': db_USER,
+            'PASSWORD': db_PASSWORD,
+            'PORT': '',
+            'OPTIONS': {
+                'driver': 'ODBC Driver 17 for SQL Server',
+            },
+        }
+    }
 elif MODE == "test":
     DEBUG = True
     ALLOWED_HOSTS = ['*']
@@ -39,20 +52,39 @@ elif MODE == "test":
     ASSERTION_URL = "https://vanpooldev.azurewebsites.net"
     ENTITY_ID = "https://vanpooldev.azurewebsites.net"
     METADATA_LOCAL_FILE_PATH = '/usr/bin/sawidp_WaTech_metadata_TEST.xml'
-    SECRET_KEY = os.environ.get("SECRET_KEY")
     SEND_EMAILS = False
+    DATABASES = {
+        'default': {
+            'ENGINE': 'sql_server.pyodbc',
+            'NAME': 'PublicTransportationDataReportingPortal',
+            'HOST': 'hqcw2sql01.database.windows.net',
+            'USER': db_USER,
+            'PASSWORD': db_PASSWORD,
+            'PORT': '',
+            'OPTIONS': {
+                'driver': 'ODBC Driver 17 for SQL Server',
+            },
+        }
+    }
+
 elif MODE == "dev":
     DEBUG = True
+    BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     ALLOWED_HOSTS = ['*']
     import keys_and_passwords
-    db_USER = keys_and_passwords.db_USER
-    db_PASSWORD = keys_and_passwords.db_PASSWORD
     SENDGRID_API_KEY = keys_and_passwords.SENDGRID_API_KEY
     ASSERTION_URL = "https://vanpooldev.azurewebsites.net"
     ENTITY_ID = "https://vanpooldev.azurewebsites.net"
     METADATA_LOCAL_FILE_PATH = '/usr/bin/sawidp_WaTech_metadata_TEST.xml'
     SECRET_KEY = 'x%b_yxu0_1k3i9t$e&yr0h)edaj0u07hp+dg(&yy^m28x2zkmo'
     SEND_EMAILS = False # change this back to False
+    DATABASES = {
+            'default':{
+                'ENGINE':'django.db.backends.sqlite3',
+                'NAME': os.path.join(BASE_DIR, 'db.PanaceaDB'),
+
+    }
+}
 else:
     raise NotImplementedError()
 
@@ -153,19 +185,7 @@ SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 #     }
 # }
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'sql_server.pyodbc',
-        'NAME': 'PublicTransportationDataReportingPortal',
-        'HOST': 'hqcw2sql01.database.windows.net',
-        'USER': db_USER,
-        'PASSWORD': db_PASSWORD,
-        'PORT': '',
-        'OPTIONS': {
-            'driver': 'ODBC Driver 17 for SQL Server',
-        },
-    }
-}
+
 
 # Password validation
 # https://docs.djangoproject.com/en/2.1/ref/settings/#auth-password-validators
