@@ -14,7 +14,7 @@ import os
 
 from celery.schedules import crontab
 
-MODE = "prod"  #could be prod, dev, test
+MODE = "test"  #could be prod, dev, test
 
 if MODE == "prod":
     DEBUG = False
@@ -52,6 +52,7 @@ elif MODE == "test":
     ASSERTION_URL = "https://vanpooldev.azurewebsites.net"
     ENTITY_ID = "https://vanpooldev.azurewebsites.net"
     METADATA_LOCAL_FILE_PATH = '/usr/bin/sawidp_WaTech_metadata_TEST.xml'
+    SECRET_KEY = 'x%b_yxu0_1k3i9t$e&yr0h)edaj0u07hp+dg(&yy^m28x2zkmo'
     SEND_EMAILS = False
     DATABASES = {
         'default': {
