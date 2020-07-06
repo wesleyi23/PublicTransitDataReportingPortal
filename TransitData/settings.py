@@ -14,7 +14,7 @@ import os
 
 from celery.schedules import crontab
 
-MODE = "prod"  #could be prod, dev, test
+MODE = "dev"  #could be prod, dev, test
 
 if MODE == "prod":
     DEBUG = False
@@ -73,6 +73,8 @@ elif MODE == "dev":
     BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     ALLOWED_HOSTS = ['*']
     import keys_and_passwords
+    db_USER = keys_and_passwords.db_USER
+    db_PASSWORD = keys_and_passwords.db_PASSWORD
     SENDGRID_API_KEY = keys_and_passwords.SENDGRID_API_KEY
     ASSERTION_URL = "https://vanpooldev.azurewebsites.net"
     ENTITY_ID = "https://vanpooldev.azurewebsites.net"
@@ -80,12 +82,18 @@ elif MODE == "dev":
     SECRET_KEY = 'x%b_yxu0_1k3i9t$e&yr0h)edaj0u07hp+dg(&yy^m28x2zkmo'
     SEND_EMAILS = False # change this back to False
     DATABASES = {
-            'default':{
-                'ENGINE':'django.db.backends.sqlite3',
-                'NAME': os.path.join(BASE_DIR, 'db.PanaceaDB'),
-
+        'default': {
+            'ENGINE': 'sql_server.pyodbc',
+            'NAME': 'PublicTransportationDataReportingPortal',
+            'HOST': 'hqcw2sql01.database.windows.net',
+            'USER': db_USER,
+            'PASSWORD': db_PASSWORD,
+            'PORT': '',
+            'OPTIONS': {
+                'driver': 'ODBC Driver 17 for SQL Server',
+            },
+        }
     }
-}
 else:
     raise NotImplementedError()
 

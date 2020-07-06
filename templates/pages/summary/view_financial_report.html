@@ -34,26 +34,26 @@
     {% for datum in financial_data %}
     <tr>
         {% if datum.role == 'heading' %}
-        <td class = 'font-weight-bold font-italic'> {{ datum.revenue_source }}</td>
+        <td class = 'font-weight-bold font-italic'> {{ datum.source }}</td>
               <td class="AutoNumeric-Float" >{{datum.year1|floatformat:"0"|intcomma}}</td>
                <td class="AutoNumeric-Int">{{datum.year2|floatformat:"0"|intcomma}}</td>
             <td class="AutoNumeric-Int">{{datum.year3|floatformat:"0"|intcomma}}</td>
              <td class="AutoNumeric-Int font-weight-bold">{{ datum.percent_change|floatformat:2}}</td>
             {% elif datum.role == 'subtotal' %}
-                 <td align="right" class = 'font-weight-bold' > {{ datum.revenue_source }}</td>
+                 <td align="right" class = 'font-weight-bold' > {{ datum.source }}</td>
               <td class="AutoNumeric-Float font-weight-bold" >${{datum.year1|floatformat:"0"|intcomma}}</td>
                <td class="AutoNumeric-Int font-weight-bold">${{datum.year2|floatformat:"0"|intcomma}}</td>
             <td class="AutoNumeric-Int font-weight-bold">${{datum.year3|floatformat:"0"|intcomma}}</td>
              <td class="AutoNumeric-Int font-weight-bold">{{ datum.percent_change|floatformat:2}}</td>
             {% elif datum.role == 'other_indent' %}
-                      <td align="right"> {{ datum.revenue_source}}</td>
+                      <td align="right"> {{ datum.source}}</td>
                <td class="AutoNumeric-Float" >${{datum.year1|floatformat:"0"|intcomma}}</td>
                <td class="AutoNumeric-Int">${{datum.year2|floatformat:"0"|intcomma}}</td>
             <td class="AutoNumeric-Int">${{datum.year3|floatformat:"0"|intcomma}}</td>
              <td>{{ datum.percent_change|floatformat:2}}</td>
 
         {% else %}
-          <td style="padding-left:20px"> {{ datum.revenue_source}}</td>
+          <td style="padding-left:20px"> {{ datum.source}}</td>
 
 
                <td class="AutoNumeric-Float" >${{datum.year1|floatformat:"0"|intcomma}}</td>

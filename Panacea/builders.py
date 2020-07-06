@@ -727,298 +727,364 @@ class ExportReport_Data():
 # 6)
 
 #
-# class SummaryBuilder:
-#
-#     def __init__(self, report_type):
-#         self.REPORT_TYPES = ['transit_data', 'revenue', 'expense', 'fund_balance']
-#         self.report_type = report_type
-#
-#     def get_current_report_year(self):
-#         current_year = get_current_summary_report_year()
-#         years = [current_year-2, current_year-1, current_year]
-#         return years
-#
-#
-#     def get_model(self):
-#         '''returns the appropriate model for the given report type'''
-#         if self.report_type == "revenue":
-#             return revenue
-#         elif self.report_type == "transit_data":
-#             return transit_data
-#         elif self.report_type == "expense":
-#             return expense
-#         elif self.report_type == "fund_balance":
-#             return fund_balance
-#         else:
-#             raise Http404("Report type does not exist. -4")
-#
-#     def get_model_data(self):
-#         '''returns the appropriate model for the given report type'''
-#         if self.report_type == "revenue":
-#             return revenue.objects.filter(revenue_source__inactive_flag=False)
-#         elif self.report_type == "transit_data":
-#             return transit_data.objects
-#         elif self.report_type == "expense":
-#             return expense.objects
-#         elif self.report_type == "fund_balance":
-#             return fund_balance.objects
-#         else:
-#             raise Http404("Report type does not exist. -4")
-#
-#     def get_metric_model(self):
-#         '''returns the appropriate metric model for the given report type'''
-#         if self.report_type == "revenue":
-#             return revenue_source
-#         elif self.report_type == "transit_data":
-#             return transit_metrics
-#         elif self.report_type == "expense":
-#             return expense_source
-#         elif self.report_type == "fund_balance":
-#             return fund_balance_type
-#         else:
-#             raise Http404("Report type does not exist. -5")
-#
-#     def get_metric_model_data(self):
-#         '''returns the appropriate metric model for the given report type'''
-#         if self.report_type == "revenue":
-#             return revenue_source.objects.filter(inactive_flag=False)
-#         elif self.report_type == "transit_data":
-#             return transit_metrics.objects
-#         elif self.report_type == "expense":
-#             return expense_source.objects
-#         elif self.report_type == "fund_balance":
-#             return fund_balance_type.objects
-#         else:
-#             raise Http404("Report type does not exist. -5")
-#
-#     def get_metric_model_name(self):
-#         '''Returns the metric model as a string.'''
-#         if self.report_type == "revenue":
-#             return 'revenue_source'
-#         elif self.report_type == "transit_data":
-#             return 'transit_metric'
-#         elif self.report_type == "expense":
-#             return 'expense_source'
-#         elif self.report_type == "fund_balance":
-#             return 'fund_balance_type'
-#         else:
-#             raise Http404("Report type does not exist. -6")
-#
-#     def get_metric_id_field_name(self):
-#         '''Returns the name of the field name of the id field in the metric model as a string.'''
-#         if self.report_type == "transit_data":
-#             return 'transit_metric_id'
-#         else:
-#             metric_model = self.get_metric_model()
-#             return metric_model.__name__ + '_id'
-#
-#
-# class ReportAgencyDataTableBuilder(SummaryBuilder):
-#     def __init__(self, report_type, target_organization):
-#         super().__init__(report_type)
-#         self.REPORT_TYPES = ['transit_data', 'revenue', 'expense', 'fund_balance']
-#         self.years = self.get_current_report_year()
-#         self.report_type = report_type
-#         self.target_organization = target_organization
-#         self.services_offered = self.get_all_services_offered()
-#         self.summary_report = SummaryReport()
-#         self.data = self.get_model_data_for_agency()
-#         self.heading_list = []
-#         self.agency_classification = self.get_agency_classification()
-#         self.metrics = self.get_metrics_for_agency_classification()
-#         self.current_report_year = max(self.years)
-#         self.last_report_year = self.current_report_year-1
-#         self.revenue_type_list = [('Local', 'Operating'), ('State', 'Operating'), ('Federal', 'Operating'), ('Other', 'Operating'),('Federal', 'Capital'), ('State', 'Capital'), ('Local', 'Capital')]
-#         self.vanpooling_revenue = self.get_vanpool_revenue()
-#         self.farebox_revenue = self.get_farebox_revenue()
-#
-#
-#     def get_metrics_for_agency_classification(self):
-#         return self.get_metric_model().objects.filter(agency_classification = self.agency_classification).order_by('order_in_summary')
-#
-#
-#     def get_model_data_for_agency(self):
-#         return self.get_model_data().filter(organization_id = self.target_organization, year__in = self.years)
-#         #filtered by get_metrics_for_agency_classification() and filters(may need to build dictionary or move the query dict up a class higher)
-#
-#     def get_metric_model_fields(self):
-#         return self.get_metric_model_data().all()
-#
-#     def get_agency_classification(self):
-#         return organization.objects.get(id = self.target_organization).summary_organization_classifications_id
-#
-#
-#     def revenue_totals_and_exceptions(self, revenue):
-#         if revenue == 'Farebox Revenues':
-#             revenue_data = self.farebox_revenue
-#             return revenue_data
-#         elif revenue == 'Vanpooling Revenue':
-#             revenue_data = self.vanpooling_revenue
-#             return revenue_data
-#         elif revenue == 'Other Operating Subtotal':
-#             return self.data.filter(revenue_source__government_type = 'Other', revenue_source__funding_type = 'Operating').values('year').annotate(reported_value = Sum('reported_value')).order_by('year')
-#         elif revenue == 'Total (Excludes Capital Revenue)':
-#             return self.data.filter(revenue_source__funding_type='Operating').values('year').annotate(reported_value = Sum('reported_value')).order_by('year')
-#         elif revenue == 'Total State Capital':
-#             return self.data.filter(revenue_source__government_type='State',revenue_source__funding_type='Capital').values('year').annotate(reported_value=Sum('reported_value')).order_by('year')
-#         elif revenue == 'Total Federal Capital':
-#             return self.data.filter(organization_id=self.target_organization, year__in=self.years,revenue_source__government_type='Federal',revenue_source__funding_type='Capital').values('year').annotate(reported_value=Sum('reported_value')).order_by('year')
-#
-#     def get_vanpool_revenue(self):
-#         return transit_data.objects.filter(organization_id =self.target_organization, year__in=self.years,transit_metric__name='Farebox Revenues',
-#                                            transit_mode_id =3).values('reported_value').order_by('year')
-#
-#     def get_farebox_revenue(self):
-#         return transit_data.objects.filter(organization_id=self.target_organization, year__in=self.years,transit_metric__name='Farebox Revenues', transit_mode_id__in=[1,2,4,5,6,7,8,9,10,11], reported_value__isnull=False).values('year').annotate(reported_value = Sum('reported_value')).order_by('year')
-#
-#     def get_all_services_offered(self):
-#         '''gets the data needed to build header navigation for filters'''
-#         if self.report_type in ['transit_data', ]:
-#             services_offered = service_offered.objects.filter(organization_id =self.target_organization, service_mode_discontinued=False).order_by('transit_mode_id')
-#             return services_offered
-#         elif self.report_type in ['expense', 'fund_balance', 'revenue']:
-#             pass
-#         else:
-#             raise Http404
-#
-#
-#
-#     def get_table_types_by_organization(self):
-#         if self.report_type == 'transit_data':
-#             operating_report = SummaryTable()
-#             for service in self.services_offered:
-#                 heading = [('transit_metric', '{} ({})'.format(service.transit_mode.name, service.administration_of_mode)), ('year1', ''), ('year2', ''), ('year3', ''), ('percent_change', ''), ('role', 'heading')]
-#                 heading = dict(heading)
-#                 operating_report.add_row_component(heading)
-#                 for metric in list(self.metrics):
-#                     op_data = self.data.filter(administration_of_mode = service.administration_of_mode, transit_mode_id = service.transit_mode_id, transit_metric__name = metric).values('reported_value').order_by('year')
-#                     if not op_data:
-#                         continue
-#                     op_data_list = []
-#                     check_list = []
-#                     count = 1
-#                     op_data = list(op_data)
-#                     for k in op_data:
-#                         if k['reported_value'] == None:
-#                             k['reported_value'] = 0
-#                         op_data_list.append(('year{}'.format(count),k['reported_value']))
-#                         check_list.append(k['reported_value'])
-#                         count+=1
-#                     if list(set(check_list)) == [0]:
-#                         continue
-#                     try:
-#                         percent_change = ((op_data_list[-1][1] - op_data_list[-2][1])/op_data_list[-2][1])*100
-#                     except ZeroDivisionError:
-#                         if op_data_list[-1][1] == op_data_list[-2][1] == 0:
-#                             percent_change = 0.00
-#                         else:
-#                             percent_change = 100.00
-#                     op_data = [('transit_metric', str(metric))] + op_data_list + [('percent_change',percent_change), ('role', 'body')]
-#                     op_data = dict(op_data)
-#                     operating_report.add_row_component(op_data)
-#             return operating_report
-#         elif self.report_type == 'revenue':
-#             revenue_report = SummaryTable()
-#             for revenue_type in self.revenue_type_list:
-#                 revenue_source_list = self.metrics.filter(government_type=revenue_type[0], funding_type=revenue_type[1]).values_list('name', flat = True)
-#                 revenue_source_list = list(revenue_source_list)
-#                 print(revenue_source_list)
-#                 blank_heading_list = [('year1', ''), ('year2', ''), ('year3', ''), ('percent_change', ''), ('role', 'heading')]
-#                 if revenue_type == ('Local', 'Operating'):
-#                     heading = [('revenue_source', 'Operating Related Revenues')]
-#                     heading = heading + blank_heading_list
-#                     heading = dict(heading)
-#                     revenue_report.add_row_component(heading)
-#                 elif revenue_type == ('Federal', 'Capital'):
-#                     heading = [('revenue_source', 'Federal capital grant revenues')]
-#                     heading = heading + blank_heading_list
-#                     heading = dict(heading)
-#                     revenue_report.add_row_component(heading)
-#                 elif revenue_type == ('State', 'Capital'):
-#                     heading = [('revenue_source', 'State capital grant revenue')]
-#                     heading = heading + blank_heading_list
-#                     heading = dict(heading)
-#                     revenue_report.add_row_component(heading)
-#                 for revenue in revenue_source_list:
-#                     if revenue in ['Farebox Revenues', 'Vanpooling Revenue', 'Other Operating Subtotal', 'Total (Excludes Capital Revenue)', 'Total Federal Capital', 'Total State Capital']:
-#                         revenue_data = self.revenue_totals_and_exceptions(revenue)
-#                     else:
-#                         revenue_data = self.data.filter(revenue_source__name=revenue).values('reported_value').order_by('year')
-#                     if not revenue_data:
-#                         continue
-#                     revenue_data_list = []
-#                     check_list = []
-#                     count = 1
-#                     revenue_data = list(revenue_data)
-#                     for k in revenue_data:
-#                         check_list.append(k['reported_value'])
-#                         if k['reported_value'] == None:
-#                             k['reported_value'] = 0
-#                         revenue_data_list.append(('year{}'.format(count), k['reported_value']))
-#                         count += 1
-#                     if list(set(check_list)) == [None]:
-#                         continue
-#                     try:
-#                         percent_change = ((revenue_data_list[-1][1] - revenue_data_list[-2][1])/revenue_data_list[-2][1])*100
-#                     except ZeroDivisionError:
-#                         percent_change = 100.00
-#                     if revenue in ['Other Operating Subtotal', 'Total (Excludes Capital Revenue)', 'Total Federal Capital', 'Total State Capital']:
-#                         revenue_data = [('revenue_source', revenue)] + revenue_data_list + [('percent_change',percent_change), ('role', 'subtotal')]
-#                     else:
-#                         revenue_data = [('revenue_source', revenue)] + revenue_data_list + [('percent_change', percent_change), ('role', 'body')]
-#                     revenue_data = dict(revenue_data)
-#                     revenue_report.add_row_component(revenue_data)
-#             return revenue_report
-#
-#
-#
-# class SummaryReport:
-#     def __init__(self):
-#         self.summary_tables = {}
-#
-#     def add_table(self, summary_table):
-#         self.summary_tables.update(summary_table)
-#
-#
-# class SummaryTable:
-#
-#     def __init__(self):
-#         self.table_components = []
-#
-#     def add_row_component(self, table_component):
-#         self.table_components.append(table_component)
-#
-#
-# class SummaryTableComponent:
-#
-#     def __init__(self,  data):
-#         self.data = data
-#
-#
-#
-#
-# class SummaryDataReportBuilder(ReportAgencyDataTableBuilder):
-#
-#     def __init__(self):
-#         self.summary_report = SummaryReport()
-#         self.data = self.get_model_data_for_agency()
-#
-#
-#     def get_table_types_by_organization(self):
-#         if self.target_organization[0].summary_organization_classifications == "Transit":
-#             operating_report = SummaryTable()
-#             for service in self.services_offered:
-#                 op_data = self.data.filter(administration_of_mode = service.administration_of_mode, transit_mode_id = service.transit_mode_id).order_by('transit_metrics.order_in_summary')
-#                 # gonna need to add a heading in here
-#                 print(op_data)
-#                 operating_report.add_table_component(op_data)
-#
-#             SummaryReport.add_table(operating_report)
-#
-#
-#
-#         else:
-#             pass
+class SummaryBuilder:
+
+    def __init__(self, report_type):
+        self.REPORT_TYPES = ['transit_data', 'revenue', 'expense', 'fund_balance']
+        self.report_type = report_type
+
+    def get_current_report_year(self):
+        current_year = get_current_summary_report_year()
+        years = [current_year-2, current_year-1, current_year]
+        return years
+
+
+    def get_model(self):
+        '''returns the appropriate model for the given report type'''
+        if self.report_type == "revenue":
+            return revenue
+        elif self.report_type == "transit_data":
+            return transit_data
+        elif self.report_type == "expense":
+            return expense
+        elif self.report_type == "fund_balance":
+            return fund_balance
+        else:
+            raise Http404("Report type does not exist. -4")
+
+    def get_model_data(self):
+        '''returns the appropriate model for the given report type'''
+        if self.report_type == "revenue":
+            return revenue.objects.filter(revenue_source__inactive_flag=False)
+        elif self.report_type == "transit_data":
+            return transit_data.objects
+        elif self.report_type == "expense":
+            return expense.objects
+        elif self.report_type == "fund_balance":
+            return fund_balance.objects
+        else:
+            raise Http404("Report type does not exist. -4")
+
+    def get_metric_model(self):
+        '''returns the appropriate metric model for the given report type'''
+        if self.report_type == "revenue":
+            return revenue_source
+        elif self.report_type == "transit_data":
+            return transit_metrics
+        elif self.report_type == "expense":
+            return expense_source
+        elif self.report_type == "fund_balance":
+            return fund_balance_type
+        else:
+            raise Http404("Report type does not exist. -5")
+
+    def get_metric_model_data(self):
+        '''returns the appropriate metric model for the given report type'''
+        if self.report_type == "revenue":
+            return revenue_source.objects.filter(inactive_flag=False)
+        elif self.report_type == "transit_data":
+            return transit_metrics.objects
+        elif self.report_type == "expense":
+            return expense_source.objects
+        elif self.report_type == "fund_balance":
+            return fund_balance_type.objects
+        else:
+            raise Http404("Report type does not exist. -5")
+
+    def get_metric_model_name(self):
+        '''Returns the metric model as a string.'''
+        if self.report_type == "revenue":
+            return 'revenue_source'
+        elif self.report_type == "transit_data":
+            return 'transit_metric'
+        elif self.report_type == "expense":
+            return 'expense_source'
+        elif self.report_type == "fund_balance":
+            return 'fund_balance_type'
+        else:
+            raise Http404("Report type does not exist. -6")
+
+    def get_metric_id_field_name(self):
+        '''Returns the name of the field name of the id field in the metric model as a string.'''
+        if self.report_type == "transit_data":
+            return 'transit_metric_id'
+        else:
+            metric_model = self.get_metric_model()
+            return metric_model.__name__ + '_id'
+
+
+class ReportAgencyDataTableBuilder(SummaryBuilder):
+    def __init__(self, report_type, target_organization):
+        super().__init__(report_type)
+        self.REPORT_TYPES = ['transit_data', 'revenue', 'expense', 'fund_balance']
+        self.years = self.get_current_report_year()
+        self.report_type = report_type
+        self.target_organization = target_organization
+        self.services_offered = self.get_all_services_offered()
+        self.summary_report = SummaryReport()
+        self.data = self.get_model_data_for_agency()
+        self.heading_list = []
+        self.agency_classification = self.get_agency_classification()
+        self.metrics = self.get_metrics_for_agency_classification()
+        self.current_report_year = max(self.years)
+        self.last_report_year = self.current_report_year-1
+        self.revenue_type_list = [('Local', 'Operating'), ('State', 'Operating'), ('Federal', 'Operating'), ('Other', 'Operating'),('Federal', 'Capital'), ('State', 'Capital'), ('Local', 'Capital')]
+        self.vanpooling_revenue = self.get_vanpool_revenue()
+        self.farebox_revenue = self.get_farebox_revenue()
+        self.filtered_metrics = self.filter_out_unused_metrics()
+        self.filtered_heading_list = self.create_headings()
+
+
+    def get_metrics_for_agency_classification(self):
+        if self.report_type in ['transit_data', 'revenue']:
+            return self.get_metric_model().objects.filter(agency_classification = self.agency_classification).order_by('order_in_summary')
+        else:
+            return self.get_metric_model().objects.all()
+
+
+    def get_model_data_for_agency(self):
+        return self.get_model_data().filter(organization_id = self.target_organization, year__in = self.years)
+        #filtered by get_metrics_for_agency_classification() and filters(may need to build dictionary or move the query dict up a class higher)
+
+    def get_metric_model_fields(self):
+        return self.get_metric_model_data().all()
+
+    def get_agency_classification(self):
+        return organization.objects.get(id = self.target_organization).summary_organization_classifications_id
+
+
+    def create_headings(self):
+        if self.report_type == 'revenue':
+            filtered_revenue_type = self.get_metric_model().objects.filter(id__in = self.filtered_metrics).values_list('government_type', 'funding_type').distinct()
+            filtered_heading_list = [x for x in self.revenue_type_list if x in filtered_revenue_type]
+            return filtered_heading_list
+        elif self.report_type == 'expense':
+            filtered_heading_list = list(self.get_metric_model().objects.filter(id__in = self.filtered_metrics).values_list('heading').distinct())
+            filtered_heading_list = [heading[0] for heading in filtered_heading_list]
+            return filtered_heading_list
+        elif self.report_type == 'fund_balance':
+            filtered_heading_list = ['Ending Balances, December 31']
+            return filtered_heading_list
+
+
+
+    def filter_out_unused_metrics(self):
+            metric_to_eliminate = []
+            for metric in list(self.metrics):
+                print(metric)
+                check_list = []
+                if self.report_type == 'revenue':
+                    filtered_data = self.data.filter(revenue_source__name = metric, year__in = self.years)
+                elif self.report_type == 'expense':
+                    filtered_data = self.data.filter(expense_source__name=metric, year__in=self.years)
+                elif self.report_type == 'fund_balance':
+                    filtered_data = self.data.filter(fund_balance_type__name = metric, year__in = self.years)
+                else:
+                    filtered_metrics = None
+                    return filtered_metrics
+                [check_list.append(datum.reported_value) for datum in filtered_data]
+                print(check_list)
+                if list(set(check_list)) == [None]:
+                    metric_to_eliminate.append(metric.id)
+                    if self.report_type == 'fund_balance':
+                        metric_to_eliminate = [metric for metric in metric_to_eliminate if metric is not 15]
+            filtered_metrics = self.metrics.exclude(id__in = metric_to_eliminate)
+            return filtered_metrics
+
+
+    def revenue_totals_and_exceptions(self, metric):
+        if metric == 'Farebox Revenues':
+            data_row = self.farebox_revenue
+            return data_row
+        elif metric == 'Vanpooling Revenue':
+            data_row = self.vanpooling_revenue
+            return data_row
+        elif metric == 'Other Operating Subtotal':
+            return self.data.filter(revenue_source__government_type = 'Other', revenue_source__funding_type = 'Operating').values('year').annotate(reported_value = Sum('reported_value')).order_by('year')
+        elif metric == 'Total (Excludes Capital Revenue)':
+            return self.data.filter(revenue_source__funding_type='Operating').values('year').annotate(reported_value = Sum('reported_value')).order_by('year')
+        elif metric == 'Total State Capital':
+            return self.data.filter(revenue_source__government_type='State',revenue_source__funding_type='Capital').values('year').annotate(reported_value=Sum('reported_value')).order_by('year')
+        elif metric == 'Total Federal Capital':
+            return self.data.filter(organization_id=self.target_organization, year__in=self.years,revenue_source__government_type='Federal',revenue_source__funding_type='Capital').values('year').annotate(reported_value=Sum('reported_value')).order_by('year')
+        elif metric == 'Total Local Capital':
+            return self.data.filter(organization_id = self.target_organization, year__in = self.years, expense_source_id__in = [1,6]).values('year').annotate(reported_value=Sum('reported_value')).order_by('year')
+        elif metric == 'Total Debt Service':
+            return self.data.filter(organization_id=self.target_organization, year__in=self.years,expense_source_id__in=[4,5]).values('year').annotate(reported_value=Sum('reported_value')).order_by('year')
+        elif metric == 'Total':
+            return self.data.filter(organization_id = self.target_organization, year__in = self.years).values('year').annotate(reported_value=Sum('reported_value')).order_by('year')
+
+    def get_vanpool_revenue(self):
+        return transit_data.objects.filter(organization_id =self.target_organization, year__in=self.years,transit_metric__name='Farebox Revenues',
+                                           transit_mode_id =3).values('reported_value').order_by('year')
+
+    def get_farebox_revenue(self):
+        return transit_data.objects.filter(organization_id=self.target_organization, year__in=self.years,transit_metric__name='Farebox Revenues', transit_mode_id__in=[1,2,4,5,6,7,8,9,10,11], reported_value__isnull=False).values('year').annotate(reported_value = Sum('reported_value')).order_by('year')
+
+    def get_all_services_offered(self):
+        '''gets the data needed to build header navigation for filters'''
+        if self.report_type in ['transit_data', ]:
+            services_offered = service_offered.objects.filter(organization_id =self.target_organization, service_mode_discontinued=False).order_by('transit_mode_id')
+            return services_offered
+        elif self.report_type in ['expense', 'fund_balance', 'revenue']:
+            pass
+        else:
+            raise Http404
+
+
+    def get_table_types_by_organization(self):
+        if self.report_type == 'transit_data':
+            operating_report = SummaryTable()
+            for service in self.services_offered:
+                heading = [('transit_metric', '{} ({})'.format(service.transit_mode.name, service.administration_of_mode)), ('year1', ''), ('year2', ''), ('year3', ''), ('percent_change', ''), ('role', 'heading')]
+                heading = dict(heading)
+                operating_report.add_row_component(heading)
+                for metric in list(self.metrics):
+                    op_data = self.data.filter(administration_of_mode = service.administration_of_mode, transit_mode_id = service.transit_mode_id, transit_metric__name = metric).values('reported_value').order_by('year')
+                    if not op_data:
+                        continue
+                    op_data_list = []
+                    check_list = []
+                    count = 1
+                    op_data = list(op_data)
+                    for k in op_data:
+                        if k['reported_value'] == None:
+                            k['reported_value'] = 0
+                        op_data_list.append(('year{}'.format(count),k['reported_value']))
+                        check_list.append(k['reported_value'])
+                        count+=1
+                    if list(set(check_list)) == [0]:
+                        continue
+                    try:
+                        percent_change = ((op_data_list[-1][1] - op_data_list[-2][1])/op_data_list[-2][1])*100
+                    except ZeroDivisionError:
+                        if op_data_list[-1][1] == op_data_list[-2][1] == 0:
+                            percent_change = 0.00
+                        else:
+                            percent_change = 100.00
+                    op_data = [('transit_metric', str(metric))] + op_data_list + [('percent_change',percent_change), ('role', 'body')]
+                    op_data = dict(op_data)
+                    operating_report.add_row_component(op_data)
+            return operating_report
+        elif self.report_type in ['revenue', 'expense', 'fund_balance']:
+            summary_report = SummaryTable()
+            if self.filtered_heading_list == None:
+                return None
+            op_count = 1
+            for heading in self.filtered_heading_list:
+                if self.report_type == 'revenue':
+                    metric_list = self.filtered_metrics.filter(government_type=heading[0], funding_type=heading[1]).values_list('name', flat = True)
+                elif self.report_type == 'expense':
+                    metric_list = self.filtered_metrics.filter(heading = heading).values_list('name', flat = True)
+                elif self.report_type == 'fund_balance':
+                    metric_list = self.filtered_metrics.values_list('name', flat=True)
+                metric_list = list(metric_list)
+                if heading == 'Local Capital Expenditures':
+                    metric_list = metric_list + ['Total Local Capital']
+                if heading == 'Debt Service':
+                    metric_list = metric_list + ['Total Debt Service']
+                if len(metric_list) == 0:
+                    continue
+                blank_heading_list = [('year1', ''), ('year2', ''), ('year3', ''), ('percent_change', ''), ('role', 'heading')]
+                if heading[1] == 'Operating':
+                    heading_row = [('source', 'Operating Related Revenues')]
+                    heading_row = heading_row + blank_heading_list
+                    heading_row = dict(heading_row)
+                    if op_count < 2:
+                        summary_report.add_row_component(heading_row)
+                    op_count +=1
+                else:
+                    if heading == ('Federal', 'Capital'):
+                        heading_row = [('source', 'Federal capital grant revenues')]
+                    elif heading == ('State', 'Capital'):
+                        heading_row = [('source', 'State capital grant revenue')]
+                    else:
+                        heading_row = [('source', heading)]
+                    heading_row = heading_row + blank_heading_list
+                    heading_row = dict(heading_row)
+                    summary_report.add_row_component(heading_row)
+                for metric in metric_list:
+                    if metric in ['Farebox Revenues', 'Vanpooling Revenue', 'Other Operating Subtotal', 'Total (Excludes Capital Revenue)', 'Total Federal Capital', 'Total State Capital', 'Total Local Capital', 'Total Debt Service', 'Total']:
+                        data_row = self.revenue_totals_and_exceptions(metric)
+                    else:
+                        if self.report_type == 'revenue':
+                            data_row = self.data.filter(revenue_source__name=metric).values('reported_value').order_by('year')
+                        elif self.report_type == 'expense':
+                            data_row = self.data.filter(expense_source__name = metric).values('reported_value').order_by('year')
+                        elif self.report_type == 'fund_balance':
+                            data_row = self.data.filter(fund_balance_type__name = metric).values('reported_value').order_by('year')
+                    if not data_row:
+                        continue
+                    data_row_list = []
+                    count = 1
+                    data_row = list(data_row)
+                    for value in data_row:
+                        if value['reported_value'] == None:
+                            value['reported_value'] = 0
+                        data_row_list.append(('year{}'.format(count), value['reported_value']))
+                        count += 1
+                    try:
+                        percent_change = ((data_row_list[-1][1] - data_row_list[-2][1])/data_row_list[-2][1])*100
+                    except ZeroDivisionError:
+                        percent_change = 100.00
+                    if metric in ['Other Operating Subtotal', 'Total (Excludes Capital Revenue)', 'Total Federal Capital', 'Total State Capital', 'Total Local Capital', 'Total Debt Service', 'Total']:
+                        prepped_data = [('source', metric)] + data_row_list + [('percent_change',percent_change), ('role', 'subtotal')]
+                    elif metric in ['Other-Advertising', 'Other-Interest', 'Other-Gain (Loss) on Sale of Assets', 'Other-MISC']:
+                        prepped_data = [('source', metric)] + data_row_list + [('percent_change', percent_change),('role', 'other_indent')]
+                    else:
+                        prepped_data = [('source', metric)] + data_row_list + [('percent_change', percent_change), ('role', 'body')]
+                    prepped_data = dict(prepped_data)
+                    summary_report.add_row_component(prepped_data)
+            return summary_report
+
+
+
+class SummaryReport:
+    def __init__(self):
+        self.summary_tables = {}
+
+    def add_table(self, summary_table):
+        self.summary_tables.update(summary_table)
+
+
+class SummaryTable:
+
+    def __init__(self):
+        self.table_components = []
+
+    def add_row_component(self, table_component):
+        self.table_components.append(table_component)
+
+
+class SummaryTableComponent:
+
+    def __init__(self,  data):
+        self.data = data
+
+
+
+
+class SummaryDataReportBuilder(ReportAgencyDataTableBuilder):
+
+    def __init__(self):
+        self.summary_report = SummaryReport()
+        self.data = self.get_model_data_for_agency()
+
+
+    def get_table_types_by_organization(self):
+        if self.target_organization[0].summary_organization_classifications == "Transit":
+            operating_report = SummaryTable()
+            for service in self.services_offered:
+                op_data = self.data.filter(administration_of_mode = service.administration_of_mode, transit_mode_id = service.transit_mode_id).order_by('transit_metrics.order_in_summary')
+                # gonna need to add a heading in here
+                operating_report.add_table_component(op_data)
+
+            SummaryReport.add_table(operating_report)
+
+
+
+        else:
+            pass
 #
 #
 # #    def build

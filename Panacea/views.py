@@ -6,7 +6,7 @@ import json
 # import pandas as pd
 from openpyxl.writer.excel import save_virtual_workbook
 
-from Panacea.builders import SummaryDataEntryBuilder, SummaryDataEntryTemplateData, ConfigurationBuilder, ExportReport
+from Panacea.builders import SummaryDataEntryBuilder, SummaryDataEntryTemplateData, ConfigurationBuilder, ExportReport, ReportAgencyDataTableBuilder
 from .validators import validation_test_for_transit_data
 
 from django.contrib import messages
@@ -1245,33 +1245,39 @@ def contact_us(request):
 
 @login_required(login_url='/Panacea/login')
 def view_annual_operating_information(request):
-    pass
-    # current_year = get_current_summary_report_year()
-    # years = [current_year-2, current_year-1, current_year]
-    # current_user_id = request.user.id
-    # user_org_id = profile.objects.get(custom_user_id=current_user_id).organization_id
-    # org_classification = organization.objects.get(id = user_org_id).summary_organization_classifications
-    # df = build_operations_data_table(years, [user_org_id], org_classification)
-    # heading_list = ['Annual Operating Information'] + years +['One Year Change (%)']
-    # data = df.to_dict(orient = 'records')
-    # return render(request, 'pages/summary/view_agency_report.html', {'data':data, 'years': heading_list})
+    current_year = get_current_summary_report_year()
+    years = [current_year-2, current_year-1, current_year]
+    current_user_id = request.user.id
+    user_org_id = profile.objects.get(custom_user_id=current_user_id).organization_id
+    org_classification = organization.objects.get(id = user_org_id).summary_organization_classifications
+    #df = build_operations_data_table(years, [user_org_id], org_classification)
+    #heading_list = ['Annual Operating Information'] + years +['One Year Change (%)']
+    #data = df.to_dict(orient = 'records')
+    report = ReportAgencyDataTableBuilder('transit_data', user_org_id)
+    operating_report = report.get_table_types_by_organization()
+    heading = ['Annual Operating Information'] + years + ['One Year Change (%)']
+    return render(request, 'pages/summary/view_agency_report.html', {'data':operating_report.table_components, 'heading': heading})
 
 
 @login_required(login_url='/Panacea/login')
 def view_financial_information(request):
-    pass
-    # current_year = get_current_summary_report_year()
-    # years = [current_year - 2, current_year - 1, current_year]
-    # current_user_id = request.user.id
-    # user_org_id = profile.objects.get(custom_user_id=current_user_id).organization_id
-    # org_classification = organization.objects.get(id=user_org_id).summary_organization_classifications
-    # if str(org_classification) == 'Community provider':
-    #     revenuedf = build_community_provider_revenue_table(years, [user_org_id])
-    # else:
-    #     revenuedf = build_revenue_table(years, [user_org_id], org_classification)
-    # financial_data = revenuedf.to_dict(orient = 'records')
-    # financial_heading_years = ['Financial Information'] + years + ['One Year Change(%)']
-    # return render(request, 'pages/summary/view_financial_report.html', {'financial_data':financial_data, 'finance_years': financial_heading_years})
+    current_year = get_current_summary_report_year()
+    years = [current_year - 2, current_year - 1, current_year]
+    current_user_id = request.user.id
+    user_org_id = profile.objects.get(custom_user_id=current_user_id).organization_id
+    report = ReportAgencyDataTableBuilder('revenue', user_org_id)
+    revenue_report = report.get_table_types_by_organization()
+    report = ReportAgencyDataTableBuilder('expense', user_org_id)
+    expense_report = report.get_table_types_by_organization()
+    report = ReportAgencyDataTableBuilder('fund_balance', user_org_id)
+    fund_balance_report =report.get_table_types_by_organization()
+    financial_heading_years = ['Financial Information'] + years + ['One Year Change(%)']
+    reports = [revenue_report, expense_report, fund_balance_report]
+    reports = [report for report in reports if report is not None]
+    finance_report = []
+    for i in reports:
+        finance_report += i.table_components
+    return render(request, 'pages/summary/view_financial_report.html', {'financial_data': finance_report, 'finance_years': financial_heading_years })
 
 
 @login_required(login_url='/Panacea/login')
