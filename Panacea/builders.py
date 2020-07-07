@@ -931,40 +931,84 @@ class ReportAgencyDataTableBuilder(SummaryBuilder):
         else:
             raise Http404
 
+    def filter_metrics_by_service(self):
+        filtered_transit_metric_dictionary = {}
+        for service in self.services_offered:
+            metric_to_eliminate = []
+            for metric in self.metrics:
+                check_list = []
+                filtered_data = self.data.filter(administration_of_mode = service.administration_of_mode, transit_mode_id = service.transit_mode_id, transit_metric__name = metric)
+                [check_list.append(datum.reported_value) for datum in filtered_data]
+                if list(set(check_list)) == [None]:
+                    metric_to_eliminate.append(metric.id)
+            filtered_metrics = self.metrics.exclude(id__in=metric_to_eliminate)
+            filtered_transit_metric_dictionary[service] = filtered_metrics
+        return filtered_transit_metric_dictionary
 
+    def generate_percent_change(self, data_list):
+        '''function for adding percent change to summary tables'''
+        try:
+            percent_change = ((data_list[-1][1] - data_list[-2][1]) / data_list[-2][1]) * 100
+        except ZeroDivisionError:
+            if data_list[-1][1] == data_list[-2][1] == 0:
+                percent_change = '-'
+            else:
+                percent_change = 100.00
+        return percent_change
+
+    def add_labels_to_data(self, data):
+        count = 1
+        data_list = []
+        data = list(data)
+        for datum in data:
+            if datum['reported_value'] == None:
+                datum['reported_value'] = 0
+            data_list.append(('year{}'.format(count), datum['reported_value']))
+            count +=1
+        return data_list
+
+
+
+
+
+    def create_total_funds_by_source(self):
+        data_report = SummaryTable()
+
+
+    def create_revenues(self):
+        revenue_types = [['Local', 'Other'], ['State'], ['Federal']]
+        for revenue_type in revenue_types:
+            revenue_row = revenue.objects.filter(organization_id=self.target_organization, year__in=self.years, revenue_source__government_type__in=revenue_type, revenue_source__funding_type='Operating', reported_value__isnull=False).values('year').annotate(reported_value = Sum('reported_value')).order_by('year')
+            if not revenue_row:
+                continue
+            for row in list(revenue_row):
+                pass
+            # fix this up with functions
+
+
+
+    def create_investments(self):
+        pass
+
+
+    #TODO break this into two functions
     def get_table_types_by_organization(self):
         if self.report_type == 'transit_data':
             operating_report = SummaryTable()
-            for service in self.services_offered:
+            service_dictionary = self.filter_metrics_by_service()
+            for service in service_dictionary.keys():
                 heading = [('transit_metric', '{} ({})'.format(service.transit_mode.name, service.administration_of_mode)), ('year1', ''), ('year2', ''), ('year3', ''), ('percent_change', ''), ('role', 'heading')]
                 heading = dict(heading)
                 operating_report.add_row_component(heading)
-                for metric in list(self.metrics):
-                    op_data = self.data.filter(administration_of_mode = service.administration_of_mode, transit_mode_id = service.transit_mode_id, transit_metric__name = metric).values('reported_value').order_by('year')
-                    if not op_data:
+                for metric in service_dictionary[service]:
+                    data_row = self.data.filter(administration_of_mode = service.administration_of_mode, transit_mode_id = service.transit_mode_id, transit_metric__name = metric).values('reported_value').order_by('year')
+                    if not data_row:
                         continue
-                    op_data_list = []
-                    check_list = []
-                    count = 1
-                    op_data = list(op_data)
-                    for k in op_data:
-                        if k['reported_value'] == None:
-                            k['reported_value'] = 0
-                        op_data_list.append(('year{}'.format(count),k['reported_value']))
-                        check_list.append(k['reported_value'])
-                        count+=1
-                    if list(set(check_list)) == [0]:
-                        continue
-                    try:
-                        percent_change = ((op_data_list[-1][1] - op_data_list[-2][1])/op_data_list[-2][1])*100
-                    except ZeroDivisionError:
-                        if op_data_list[-1][1] == op_data_list[-2][1] == 0:
-                            percent_change = 0.00
-                        else:
-                            percent_change = 100.00
-                    op_data = [('transit_metric', str(metric))] + op_data_list + [('percent_change',percent_change), ('role', 'body')]
-                    op_data = dict(op_data)
-                    operating_report.add_row_component(op_data)
+                    data_list = self.add_labels_to_data(data_row)
+                    percent_change = self.generate_percent_change(data_list)
+                    data_list = [('transit_metric', str(metric))] + data_list + [('percent_change',percent_change), ('role', 'body')]
+                    data_dic = dict(data_list)
+                    operating_report.add_row_component(data_dic)
             return operating_report
         elif self.report_type in ['revenue', 'expense', 'fund_balance']:
             summary_report = SummaryTable()
@@ -1015,26 +1059,16 @@ class ReportAgencyDataTableBuilder(SummaryBuilder):
                             data_row = self.data.filter(fund_balance_type__name = metric).values('reported_value').order_by('year')
                     if not data_row:
                         continue
-                    data_row_list = []
-                    count = 1
-                    data_row = list(data_row)
-                    for value in data_row:
-                        if value['reported_value'] == None:
-                            value['reported_value'] = 0
-                        data_row_list.append(('year{}'.format(count), value['reported_value']))
-                        count += 1
-                    try:
-                        percent_change = ((data_row_list[-1][1] - data_row_list[-2][1])/data_row_list[-2][1])*100
-                    except ZeroDivisionError:
-                        percent_change = 100.00
+                    data_list = self.add_labels_to_data(data_row)
+                    percent_change = self.generate_percent_change(data_list)
                     if metric in ['Other Operating Subtotal', 'Total (Excludes Capital Revenue)', 'Total Federal Capital', 'Total State Capital', 'Total Local Capital', 'Total Debt Service', 'Total']:
-                        prepped_data = [('source', metric)] + data_row_list + [('percent_change',percent_change), ('role', 'subtotal')]
+                        data_list = [('source', metric)] + data_list + [('percent_change',percent_change), ('role', 'subtotal')]
                     elif metric in ['Other-Advertising', 'Other-Interest', 'Other-Gain (Loss) on Sale of Assets', 'Other-MISC']:
-                        prepped_data = [('source', metric)] + data_row_list + [('percent_change', percent_change),('role', 'other_indent')]
+                        data_list = [('source', metric)] + data_list + [('percent_change', percent_change),('role', 'other_indent')]
                     else:
-                        prepped_data = [('source', metric)] + data_row_list + [('percent_change', percent_change), ('role', 'body')]
-                    prepped_data = dict(prepped_data)
-                    summary_report.add_row_component(prepped_data)
+                        data_list = [('source', metric)] + data_list + [('percent_change', percent_change), ('role', 'body')]
+                    data_dic = dict(data_list)
+                    summary_report.add_row_component(data_dic)
             return summary_report
 
 
