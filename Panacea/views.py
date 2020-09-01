@@ -1,12 +1,13 @@
 import base64
 import csv
 import datetime
+import openpyxl
 import itertools
 import json
 # import pandas as pd
 from openpyxl.writer.excel import save_virtual_workbook
 
-from Panacea.builders import SummaryDataEntryBuilder, SummaryDataEntryTemplateData, ConfigurationBuilder, ExportReport, ReportAgencyDataTableBuilder
+from Panacea.builders import SummaryDataEntryBuilder, SummaryDataEntryTemplateData, ConfigurationBuilder, ExportReport, ReportAgencyDataTableBuilder, StatewideSixYearReportBuilder
 from .validators import validation_test_for_transit_data
 
 from django.contrib import messages
@@ -30,12 +31,6 @@ from dateutil.relativedelta import relativedelta
 import datetime
 from django.urls import reverse
 from Panacea.decorators import group_required
-from .utilities import monthdelta, get_wsdot_color, get_vanpool_summary_charts_and_table, percent_change_calculation, \
-    find_vanpool_organizations, get_current_summary_report_year, filter_revenue_sheet_by_classification, \
-    find_user_organization_id, complete_data, green_house_gas_per_sov_mile, green_house_gas_per_vanpool_mile
-
-#    generate_performance_measure_table, generate_mode_by_agency_tables, create_statewide_revenue_table, \
-#    create_statewide_expense_table, create_all_summary_report_statuses
 from django.http import Http404
 from .filters import VanpoolExpansionFilter, VanpoolReportFilter
 from django.conf import settings
@@ -75,13 +70,11 @@ from .utilities import calculate_latest_vanpool, find_maximum_vanpool, calculate
     calculate_if_goal_has_been_reached, \
     find_user_organization_id, find_user_organization, get_all_cover_sheet_steps_completed, \
     get_cover_sheet_submitted, get_all_data_steps_completed, get_data_submitted, reset_summary_reporter_tracking, \
-    reset_all_orgs_summary_progress
+    reset_all_orgs_summary_progress, clean_revenue_data_fron_ntd, clean_transit_data_from_ntd
 from .utilities import monthdelta, get_wsdot_color, get_vanpool_summary_charts_and_table, percent_change_calculation, \
     find_vanpool_organizations, get_current_summary_report_year, filter_revenue_sheet_by_classification, \
     complete_data, green_house_gas_per_sov_mile, green_house_gas_per_vanpool_mile
-#from .tables import build_operations_data_table, build_investment_table, build_revenue_table, build_total_funds_by_source, build_community_provider_revenue_table
 from .validators import validation_test_for_transit_data
-#from .statewide_tables import create_statewide_revenue_table, create_statewide_expense_table, generate_mode_by_agency_tables, generate_performance_measure_table
 
 
 # region shared_views
@@ -1035,10 +1028,31 @@ def cover_sheet_submitted(request):
     return render(request, 'pages/summary/cover_sheet_submitted.html', {'cover_sheet_status': cover_sheet_status})
 
 
+
 @login_required(login_url='/Panacea/login')
 @group_required('Summary reporter', 'WSDOT staff')
 def ntd_upload(request):
-    return render(request, 'pages/summary/ntd_upload.html', {})
+    if request.POST:
+        custom_user_id = request.POST.get('custom_user')
+        my_instance = profile.objects.get(custom_user_id=custom_user_id)
+        form = change_user_org(request.POST, instance=my_instance)
+        print(form.is_valid())
+        if form.is_valid():
+            form.save()
+        user_org = find_user_organization(custom_user_id)
+        print(user_org)
+        current_report_year = get_current_summary_report_year()
+        excel_file = request.FILES["excel_file"]
+        wb = openpyxl.load_workbook(excel_file)
+        transit_data = clean_transit_data_from_ntd(wb, current_report_year, user_org, request.user.id)
+        revenue_data = clean_revenue_data_fron_ntd(wb, current_report_year, user_org, request.user.id)
+    else:
+        form = change_user_org()
+        print('here')
+        transit_data = []
+        revenue_data = []
+    return render(request, 'pages/summary/ntd_upload.html',
+                  {'transit_data': transit_data, 'revenue_data': revenue_data, 'form': form})
 
 
 @login_required(login_url='/Panacea/login')
@@ -1245,18 +1259,31 @@ def contact_us(request):
 
 @login_required(login_url='/Panacea/login')
 def view_annual_operating_information(request):
+    # 2019 SW FIN SUMM both with and w/out sound
+    import pandas as pd
     current_year = get_current_summary_report_year()
     years = [current_year-2, current_year-1, current_year]
     current_user_id = request.user.id
     user_org_id = profile.objects.get(custom_user_id=current_user_id).organization_id
-    org_classification = organization.objects.get(id = user_org_id).summary_organization_classifications
-    #df = build_operations_data_table(years, [user_org_id], org_classification)
-    #heading_list = ['Annual Operating Information'] + years +['One Year Change (%)']
-    #data = df.to_dict(orient = 'records')
-    report = ReportAgencyDataTableBuilder('transit_data', user_org_id)
-    operating_report = report.get_table_types_by_organization()
-    heading = ['Annual Operating Information'] + years + ['One Year Change (%)']
-    return render(request, 'pages/summary/view_agency_report.html', {'data':operating_report.table_components, 'heading': heading})
+    org_classification = 6
+    #report = ReportAgencyDataTableBuilder('transit_data', user_org_id)
+    #operating_report = report.get_table_types_by_organization()
+    #heading = ['Annual Operating Information'] + years + ['One Year Change (%)']
+    user_org_id = list(organization.objects.filter(summary_organization_classifications_id = 6).values_list('id', flat= True))
+    from .tables import build_operations_data_table, build_revenue_table, build_total_funds_by_source
+    df = build_operations_data_table(years, user_org_id, org_classification)
+    rev_df = build_revenue_table(years, user_org_id, org_classification)
+    tfs = build_total_funds_by_source(years, user_org_id)
+    df = pd.concat([df, rev_df, tfs], axis = 0)
+    df.to_excel(r'I:\Public_Transportation\Data_Team\PT_Summary\2019\Transits\Statewide\2019 SW Fin Summ.xlsx')
+    user_org_id = list(organization.objects.filter(summary_organization_classifications_id=6).values_list('id', flat=True))
+    user_org_id = [i for i in user_org_id if i not in [15,33]]
+    df = build_operations_data_table(years, user_org_id, org_classification)
+    rev_df = build_revenue_table(years, user_org_id, org_classification)
+    tfs = build_total_funds_by_source(years, user_org_id)
+    df = pd.concat([df, rev_df, tfs], axis=0)
+    df.to_excel(r'I:\Public_Transportation\Data_Team\PT_Summary\2019\Transits\Statewide\2019 SW Fin Summ under a 1 million.xlsx')
+    return render(request, 'pages/summary/view_agency_report.html', {})
 
 
 @login_required(login_url='/Panacea/login')
@@ -1295,46 +1322,101 @@ def view_rollup(request):
 
 @login_required(login_url='/Panacea/login')
 def view_statewide_measures(request):
-    pass
-    # years = [2013, 2014, 2015, 2016, 2017, 2018]
-    # statewide_measure_list = []
-    # list_of_headings = []
-    # statewide_measure_dictionary = {'Revenue Vehicle Hours by Service Mode': ("Revenue Vehicle Hours"), 'Revenue Vehicle Miles by Service Mode': ('Revenue Vehicle Miles'),
-    #                                 'Passenger Trips by Service Mode':('Passenger Trips'), 'Farebox Revenues by Service Mode': ('Farebox Revenues'), 'Operating Expenses by Service Mode': ('Operating Expenses')}
-    # for key, measure in statewide_measure_dictionary.items():
-    #     df = generate_performance_measure_table(measure, years)
-    #     heading_list = [key] + years + ['One Year Change (%)']
-    #     list_of_headings.append(heading_list)
-    #     statewide_measure_list.append(df.to_dict(orient = 'records'))
-    # return render(request, 'pages/summary/view_statewide_measures.html', {'headings': list_of_headings, 'data': statewide_measure_list, 'titles': statewide_measure_dictionary.keys()})
+    import pandas as pd
+    years = [2014, 2015, 2016, 2017, 2018, 2019]
+    report = StatewideSixYearReportBuilder('investments', 'sound')
+    headings, data = report.build_tables()
+    data = pd.DataFrame(data)
+    data.columns = ['Capital Investment Sources'] + years
+    data.to_excel(r'I:\Public_Transportation\Data_Team\PT_Summary\2019\Transits\Statewide\2019 SW Investments under 1 million.xlsx')
+    return render(request, 'pages/summary/view_statewide_measures.html', {})
 
 
 @login_required(login_url='/Panacea/login')
 def view_performance_measures(request):
-    pass
-    # years = [2013, 2014, 2015, 2016, 2017, 2018]
-    # performance_measure_list = []
-    # list_of_headings = []
-    # performance_measure_dictionary = {
-    #     'Operating Costs per Passenger Trip': ('Operating Expenses', 'Passenger Trips'), 'Operating Cost per Revenue Vehicle Hour':('Operating Expenses', 'Revenue Vehicle Hours'),
-    #     'Passenger Trips per Revenue Vehicle Hour':('Passenger Trips', 'Revenue Vehicle Hours'), 'Passenger Trips per Revenue Vehicle Mile':('Passenger Trips', 'Revenue Vehicle Miles'),
-    #     'Revenue Vehicle Hours per Employee': ('Revenue Vehicle Hours', 'Employees - FTEs'), 'Farebox Recovery Ratio/Vanpool Revenue Recovery': ('Farebox Revenues', 'Operating Expenses')}
-    # for key, measure in performance_measure_dictionary.items():
-    #     df = generate_performance_measure_table(measure, years)
-    #     heading_list = [key] + years + ['One Year Change (%)']
-    #     list_of_headings.append(heading_list)
-    #     performance_measure_list.append(df.to_dict(orient = 'records'))
-    #
-    # return render(request, 'pages/summary/view_performance_measures.html', {'headings': list_of_headings, 'data': performance_measure_list, 'titles': performance_measure_dictionary.keys()})
+    from .statewide_tables import generate_performance_measure_table, create_statewide_revenue_table, create_statewide_expense_table
+    import pandas as pd
+    #report = StatewideSixYearReportBuilder('operating_stats')
+    #headings, data = report.build_tables()
+    years = [2014, 2015, 2016, 2017, 2018,2019]
+    performance_measure_list = []
+    list_of_headings = []
+    performance_measure_dictionary = {'Revenue Vehicle Hours by Service Mode': 'Revenue Vehicle Hours', 'Revenue Vehicle Miles by Service Mode':'Revenue Vehicle Miles', 'Passenger Trips by Service Mode': 'Passenger Trips', 'Operating Expenses by Service Mode': 'Operating Expenses', 'Farebox Revenues by Service Mode': 'Farebox Revenues',
+         'Operating Costs per Passenger Trip': ('Operating Expenses', 'Passenger Trips'), 'Operating Cost per Revenue Vehicle Hour':('Operating Expenses', 'Revenue Vehicle Hours'),
+         'Passenger Trips per Revenue Vehicle Hour':('Passenger Trips', 'Revenue Vehicle Hours'), 'Passenger Trips per Revenue Vehicle Mile':('Passenger Trips', 'Revenue Vehicle Miles'),
+         'Revenue Vehicle Hours per Employee': ('Revenue Vehicle Hours', 'Employees - FTEs'), 'Farebox Recovery Ratio/Vanpool Revenue Recovery': ('Farebox Revenues', 'Operating Expenses')}
+    count = 0
+    for key, measure in performance_measure_dictionary.items():
+         heading_list = [key] + years + ['One Year Change (%)']
+         df = generate_performance_measure_table(measure, years, 'all')
+
+         df = df.append(pd.Series(), ignore_index = True)
+         if count == 0:
+             finaldf = df
+             count +=1
+         else:
+             finaldf = pd.concat([finaldf, df], axis = 0)
+    finaldf.to_excel(r'I:\Public_Transportation\Data_Team\PT_Summary\2019\Transits\Statewide\2019 Ser Mode Tables.xlsx')
+    df = create_statewide_revenue_table(2019)
+    df.to_excel(r'I:\Public_Transportation\Data_Team\PT_Summary\2019\Transits\Statewide\SW Fin Rev Stats.xlsx')
+    df = create_statewide_expense_table(2019)
+    df.to_excel(r'I:\Public_Transportation\Data_Team\PT_Summary\2019\Transits\Statewide\SW Fin Exp Stats.xlsx')
+    report = StatewideSixYearReportBuilder('investments', 'all')
+    headings, data = report.build_tables()
+    data = pd.DataFrame(data)
+    data.columns = ['Capital Investment Sources'] + years
+    data.to_excel(r'I:\Public_Transportation\Data_Team\PT_Summary\2019\Transits\Statewide\2019 SW Investments.xlsx')
+    from .statewide_tables import create_statewide_revenue
+    df = create_statewide_revenue(2019, 'all')
+    df.to_excel(r'I:\Public_Transportation\Data_Team\PT_Summary\2019\Transits\Statewide\2019 SW revenues.xlsx')
+    return render(request, 'pages/summary/view_performance_measures.html', {})
 
 
 @login_required(login_url='/Panacea/login')
 def view_statewide_rollup(request):
-    pass
-    # year = 2017
-    # revenue_df = create_statewide_revenue_table(year)
-    # expense_df = create_statewide_expense_table(year)
-    # return render(request, 'pages/summary/view_statewide_rollup.html')
+    from .statewide_tables import generate_performance_measure_table, create_statewide_revenue_table, \
+        create_statewide_expense_table
+    import pandas as pd
+    # report = StatewideSixYearReportBuilder('operating_stats')
+    # headings, data = report.build_tables()
+    years = [2014, 2015, 2016, 2017, 2018, 2019]
+    performance_measure_list = []
+    list_of_headings = []
+    performance_measure_dictionary = {'Revenue Vehicle Hours': 'Revenue Vehicle Hours',
+                                      'Revenue Vehicle Miles': 'Revenue Vehicle Miles',
+                                      'Passenger Trips': 'Passenger Trips', 'Operating Expenses': 'Operating Expenses',
+                                      'Farebox Revenues': 'Farebox Revenues',
+                                      'Operating Costs per Passenger Trip': ('Operating Expenses', 'Passenger Trips'),
+                                      'Operating Cost per Revenue Vehicle Hour': (
+                                      'Operating Expenses', 'Revenue Vehicle Hours'),
+                                      'Passenger Trips per Revenue Vehicle Hour': (
+                                      'Passenger Trips', 'Revenue Vehicle Hours'),
+                                      'Passenger Trips per Revenue Vehicle Mile': (
+                                      'Passenger Trips', 'Revenue Vehicle Miles'),
+                                      'Revenue Vehicle Hours per Employee': (
+                                      'Revenue Vehicle Hours', 'Employees - FTEs'),
+                                      'Farebox Recovery Ratio/Vanpool Revenue Recovery': (
+                                      'Farebox Revenues', 'Operating Expenses')}
+    count = 0
+    for key, measure in performance_measure_dictionary.items():
+        df = generate_performance_measure_table(measure, years, 'sound')
+        heading_list = [key] + years + ['One Year Change (%)']
+        df = df.append(pd.Series(), ignore_index=True)
+        if count == 0:
+            finaldf = df
+            count += 1
+        else:
+            finaldf = pd.concat([finaldf, df], axis=0)
+    finaldf.to_excel(r'I:\Public_Transportation\Data_Team\PT_Summary\2019\Transits\Statewide\2019 Ser Mode Tables under 1 million.xlsx')
+    report = StatewideSixYearReportBuilder('investments', 'sound')
+    headings, data = report.build_tables()
+    data = pd.DataFrame(data)
+    data.columns = ['Capital Investment Sources'] + years
+    data.to_excel(r'I:\Public_Transportation\Data_Team\PT_Summary\2019\Transits\Statewide\2019 SW Investments under 1 million.xlsx')
+    from .statewide_tables import create_statewide_revenue
+    df = create_statewide_revenue(2019, 'sound')
+    df.to_excel(r'I:\Public_Transportation\Data_Team\PT_Summary\2019\Transits\Statewide\2019 SW revenues under 1 million.xlsx')
+    return render(request, 'pages/summary/view_statewide_rollup.html')
 
 
 @login_required(login_url='/Panacea/login')
@@ -1361,16 +1443,26 @@ def view_statewide_investment_tables(request):
 
 @login_required(login_url='/Panacea/login')
 def view_statewide_statistics(request):
-    pass
-    # statewide_mode_statistics_list = []
-    # list_of_headings = []
-    # year = 2017
-    # transit_mode_names = ['Fixed Route', 'Commuter Bus', 'Trolley Bus', 'Route Deviated', 'Demand Response', 'Vanpool', 'Commuter Rail', 'Light Rail', 'Streetcar']
-    # for mode in transit_mode_names:
-    #     df, heading = generate_mode_by_agency_tables(mode, year)
-    #     statewide_mode_statistics_list.append(df.to_dict(orient = 'records'))
-    #     list_of_headings.append(heading)
-    # return render(request, 'pages/summary/view_statewide_statistics.html', {'headings': list_of_headings, 'data':statewide_mode_statistics_list})
+    '''2019 SW Op Stats'''
+    from .statewide_tables import generate_mode_by_agency_tables
+    import pandas as pd
+    statewide_mode_statistics_list = []
+    list_of_headings = []
+    year = 2019
+    transit_mode_names = ['Fixed Route', 'Commuter Bus', 'Trolley Bus', 'Route Deviated', 'Demand Response', 'Vanpool', 'Commuter Rail', 'Light Rail', 'Streetcar']
+    count = 0
+    for mode in transit_mode_names:
+         df, heading = generate_mode_by_agency_tables(mode, year)
+         df = df.append(pd.Series(), ignore_index = True)
+         if count == 0:
+             finaldf = df
+             count +=1
+         else:
+             finaldf = pd.concat([finaldf, df], axis = 0)
+         statewide_mode_statistics_list.append(df.to_dict(orient = 'records'))
+         list_of_headings.append(heading)
+    finaldf.to_excel(r'I:\Public_Transportation\Data_Team\PT_Summary\2019\Transits\Statewide\2019 SW Op Stats.xlsx')
+    return render(request, 'pages/summary/view_statewide_statistics.html', {'headings': list_of_headings, 'data':statewide_mode_statistics_list})
 
 
 @login_required(login_url='/Panacea/login')

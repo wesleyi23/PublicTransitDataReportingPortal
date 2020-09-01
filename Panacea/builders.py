@@ -2,7 +2,7 @@ import datetime
 import itertools
 
 from django.db import transaction
-from django.db.models import Sum
+from django.db.models import Sum, F, Q, ExpressionWrapper, FloatField
 from django.forms import modelformset_factory
 from django.http import Http404
 from django.shortcuts import redirect
@@ -15,6 +15,137 @@ from django import forms
 from django.forms import modelformset_factory, BaseModelFormSet, ModelForm
 from openpyxl import Workbook
 from openpyxl.styles import Font, Border, Side
+
+
+
+class StatewideReports:
+    def __init__(self):
+        self.REPORT_TYPES = ['investments', 'financial_expenses', 'operating_stats',  'revenues', 'financial_revenues', 'service_mode_tables']
+    def get_current_report_years(self):
+        current_year = get_current_summary_report_year()
+        years = [current_year - 2, current_year - 1, current_year]
+        return years
+    def get_long_years(self):
+        current_year = get_current_summary_report_year()
+        years = [current_year-5, current_year-4, current_year-3, current_year - 2, current_year - 1, current_year]
+        return years
+    def get_current_report_year(self):
+        current_year = get_current_summary_report_year()
+        return current_year
+
+class StatewideSixYearReportBuilder(StatewideReports):
+    def __init__(self, report_type, big):
+        super().__init__()
+        self.report_type = report_type
+        self.big = big
+        self.years = self.get_long_years()
+        self.transits = 6
+        self.operational_dic = {'Revenue Vehicle Hours by Service Mode': 1, 'Revenue Vehicle Miles by Service Mode': 2, 'Passenger Trips by Service Mode':5, 'Farebox Revenues by Service Mode': 10,
+                           'Operating Expenses by Service Mode': 9, 'Operating Cost per Passenger Trip': [9, 5], 'Operating Cost per Revenue Vehicle Hour': [9, 1],
+                           'Passenger Trips per Revenue Vehicle Hour': [5,1], 'Passenger Trips per Revenue Vehicle Miles': [5,2], 'Revenue Vehicle Hours per Employee': [1,8],
+                           'Farebox Recovery Ratio': [10, 9]}
+        self.investment_types = ['Local', 'State', 'Federal', 'Other']
+        self.modes = ['Fixed Route', 'Route Deviated', 'Demand Response', 'Vanpool', 'Commuter Rail', 'Light Rail']
+
+    def pull_data(self):
+        if self.report_type == 'operating_stats':
+            return transit_data
+
+    def generate_percent_change(self, data_list):
+        '''function for adding percent change to summary tables'''
+        print(data_list)
+        try:
+            percent_change = ((data_list[-1] - data_list[-2]) / data_list[-2]) * 100
+        except ZeroDivisionError:
+            if data_list[-1] == data_list[-2] == 0:
+                percent_change = '-'
+            else:
+                percent_change = 100.00
+        return percent_change
+
+    def turn_into_list_of_lists_for_modes(self, iterables, report_data):
+        list_of_lists =[]
+        for mode in iterables:
+            year_list = []
+            year_list.append(mode)
+            for year in self.get_long_years():
+                value = report_data.filter(transit_mode__rollup_mode = mode, year = year).values_list('reported_value__sum', flat=True)[0]
+                year_list.append(value)
+            percent_change = self.generate_percent_change(year_list)
+            year_list = year_list + [percent_change]
+            list_of_lists.append(year_list)
+        return list_of_lists
+
+    def turn_into_list(self, ls):
+        result_list = []
+        for i in ls:
+            result_list.append(i['reported_value'])
+        return result_list
+
+
+
+    def build_tables(self):
+        if self.report_type =='operating_stats':
+            data_list = []
+            heading_list = []
+            for table_name in self.operational_dic.items():
+                if isinstance(table_name[1], list):
+                    report_data = transit_data.objects.filter(organization__summary_organization_classifications=6,
+                                                     transit_metric_id__in=table_name[1],year__in= self.years,
+                                                     reported_value__isnull=False).values('transit_mode__rollup_mode','year').annotate(denominator=Sum('reported_value', filter = Q(transit_metric_id=table_name[1][0])), numerator = Sum('reported_value', filter=Q(transit_metric_id=table_name[1][1])))
+                    report_data = report_data.annotate(reported_value__sum = ExpressionWrapper(F('denominator')*1.0/F('numerator'), output_field = FloatField()))
+                else:
+                    report_data = self.pull_data().objects.filter(organization__summary_organization_classifications=self.transits,
+                                                    transit_metric_id=table_name[1], year__in=self.years,
+                                                    reported_value__isnull=False).values('transit_mode__rollup_mode',
+                                                                                         'year').annotate(Sum('reported_value')).order_by('year')
+                report_data = self.turn_into_list_of_lists_for_modes(self.modes, report_data)
+                data_list.append(report_data)
+                heading = [table_name[0]] + self.years + ['One Year Change (%)']
+                heading_list.append(heading)
+        elif self.report_type == 'revenues':
+            pass
+        elif self.report_type == 'investments' and self.big is not 'sound':
+            heading_list = ['Capital Investment Source', self.years]
+            local_cap = ['Local Capital Investment'] + list(expense.objects.filter(organization__summary_organization_classifications=6, expense_source_id = 1, year__in = self.years, reported_value__isnull=False).values('year').annotate(reported_value = Sum('reported_value')).values_list('reported_value', flat=True).order_by('year'))
+            state_cap = ['State Capital Investment'] + list(revenue.objects.filter(organization__summary_organization_classifications = 6, revenue_source__government_type = 'State', revenue_source__funding_type = 'Capital', year__in = self.years, reported_value__isnull=False).exclude(revenue_source_id =96).values('year').annotate(reported_value = Sum('reported_value')).values_list('reported_value', flat=True).order_by('year'))
+            federal_cap = ['Federal Capital Investment'] + list(revenue.objects.filter(organization__summary_organization_classifications = 6, revenue_source__government_type = 'Federal', revenue_source__funding_type = 'Capital', year__in = self.years, reported_value__isnull=False).values('year').annotate(reported_value = Sum('reported_value')).values_list('reported_value', flat=True).order_by('year'))
+            other_cap = ['Other Capital Investment'] + list(expense.objects.filter(organization__summary_organization_classifications=6, expense_source_id__in = [2,4,5], year__in = self.years, reported_value__isnull=False).values('year').annotate(reported_value = Sum('reported_value')).values_list('reported_value', flat=True).order_by('year'))
+            total_list = [local_cap[1:], state_cap[1:], federal_cap[1:], other_cap[1:]]
+            total = [sum(i) for i in zip(*total_list)]
+            total = ['Total Investment'] + total
+            data_list =[local_cap, state_cap, federal_cap, other_cap, total]
+        elif self.report_type == 'investments' and self.big == 'sound':
+            heading_list = ['Capital Investment Source', self.years]
+            local_cap = ['Local Capital Investment'] + list(
+                expense.objects.filter(organization__summary_organization_classifications=6, expense_source_id=1,
+                                       year__in=self.years, reported_value__isnull=False).exclude(organization_id__in= [15,33]).values('year').annotate(
+                    reported_value=Sum('reported_value')).values_list('reported_value', flat=True).order_by('year'))
+            state_cap = ['State Capital Investment'] + list(
+                revenue.objects.filter(organization__summary_organization_classifications=6,
+                                       revenue_source__government_type='State', revenue_source__funding_type='Capital',
+                                       year__in=self.years, reported_value__isnull=False).exclude(
+                    revenue_source_id=96, organization_id__in = [15,33]).values('year').annotate(reported_value=Sum('reported_value')).values_list(
+                    'reported_value', flat=True).order_by('year'))
+            federal_cap = ['Federal Capital Investment'] + list(
+                revenue.objects.filter(organization__summary_organization_classifications=6,
+                                       revenue_source__government_type='Federal',
+                                       revenue_source__funding_type='Capital', year__in=self.years,
+                                       reported_value__isnull=False).exclude(organization_id__in= [15,33]).values('year').annotate(
+                    reported_value=Sum('reported_value')).values_list('reported_value', flat=True).order_by('year'))
+            other_cap = ['Other Capital Investment'] + list(
+                expense.objects.filter(organization__summary_organization_classifications=6,
+                                       expense_source_id__in=[2, 4, 5], year__in=self.years,
+                                       reported_value__isnull=False).exclude(organization_id__in= [15,33]).values('year').annotate(
+                    reported_value=Sum('reported_value')).values_list('reported_value', flat=True).order_by('year'))
+            total_list = [local_cap[1:], state_cap[1:], federal_cap[1:], other_cap[1:]]
+            total = [sum(i) for i in zip(*total_list)]
+            total = ['Total Investment'] + total
+            data_list = [local_cap, state_cap, federal_cap, other_cap, total]
+        return heading_list, data_list
+
+
+
 
 class SummaryBuilder:
     def __init__(self):
@@ -813,6 +944,7 @@ class SummaryBuilder:
             return metric_model.__name__ + '_id'
 
 
+
 class ReportAgencyDataTableBuilder(SummaryBuilder):
     def __init__(self, report_type, target_organization):
         super().__init__(report_type)
@@ -945,16 +1077,7 @@ class ReportAgencyDataTableBuilder(SummaryBuilder):
             filtered_transit_metric_dictionary[service] = filtered_metrics
         return filtered_transit_metric_dictionary
 
-    def generate_percent_change(self, data_list):
-        '''function for adding percent change to summary tables'''
-        try:
-            percent_change = ((data_list[-1][1] - data_list[-2][1]) / data_list[-2][1]) * 100
-        except ZeroDivisionError:
-            if data_list[-1][1] == data_list[-2][1] == 0:
-                percent_change = '-'
-            else:
-                percent_change = 100.00
-        return percent_change
+
 
     def add_labels_to_data(self, data):
         count = 1
@@ -968,27 +1091,51 @@ class ReportAgencyDataTableBuilder(SummaryBuilder):
         return data_list
 
 
-
-
-
     def create_total_funds_by_source(self):
-        data_report = SummaryTable()
-
+        total_funds_by_source = SummaryTable()
+        self.create_revenues()
+        self.create_investments()
 
     def create_revenues(self):
-        revenue_types = [['Local', 'Other'], ['State'], ['Federal']]
+        heading = [('source', 'Revenues'),('year1', ''), ('year2', ''), ('year3', ''), ('percent_change', ''), ('role', 'heading')]
+        heading_dic = dict(heading)
+        self.total_funds_by_source.add_row_component(heading_dic)
+        revenue_types = [['Local', 'Other'], ['State'], ['Federal'], ['Total Revenues (all sources)']]
         for revenue_type in revenue_types:
-            revenue_row = revenue.objects.filter(organization_id=self.target_organization, year__in=self.years, revenue_source__government_type__in=revenue_type, revenue_source__funding_type='Operating', reported_value__isnull=False).values('year').annotate(reported_value = Sum('reported_value')).order_by('year')
+            if revenue_type[0] =='Total Revenues (all sources)':
+                revenue_row = revenue.objects.filter(organization_id=self.target_organization, year__in=self.years, revenue_source__funding_type='Operating', reported_value__isnull=False).values('year').annotate(reported_value = Sum('reported_value')).order_by('year')
+            else:
+                revenue_row = revenue.objects.filter(organization_id=self.target_organization, year__in=self.years, revenue_source__government_type__in=revenue_type, revenue_source__funding_type='Operating', reported_value__isnull=False).values('year').annotate(reported_value = Sum('reported_value')).order_by('year')
             if not revenue_row:
                 continue
-            for row in list(revenue_row):
-                pass
-            # fix this up with functions
-
+            data_list = self.add_labels_to_data(revenue_row)
+            percent_change = self.generate_percent_change(data_list)
+            if revenue_type[0] == 'Total Revenues (all sources)':
+                heading = revenue_type
+                data_list = [('source', heading)] + data_list + [('percent_change', percent_change), ('role', 'subtotal')]
+            else:
+                heading = "{} Revenues".format(revenue_type[0])
+                data_list = [('source', heading)] + data_list + [('percent_change', percent_change), ('role', 'body')]
+            data_dic = dict(data_list)
+            self.total_funds_by_source.add_row_component(data_dic)
 
 
     def create_investments(self):
-        pass
+        total_investment_list = []
+        heading = [('source', 'Investments'), ('year1', ''), ('year2', ''), ('year3', ''), ('percent_change', ''), ('role', 'heading')]
+        heading_dic = dict(heading)
+        self.totals.add_row_component(heading_dic)
+        revenue_types = [('Operating Investment'), ('Local Capital Investment'), ('State', 'Capital'), ('Federal', 'Capital'), ('Other Investment'), ('Total Investment')]
+        for revenue_type in revenue_types:
+            if revenue_type[0] == ['Operating Investment']:
+                investment_row = transit_data.objects.filter(organization_id=self.target_organization, year__in = self.years, transit_metric_id = 9, reported_value__isnull= False).values('year').annotate(reported_value = Sum('reported_value')).order_by('year')
+                heading = revenue_type[0]
+            if not investment_row:
+                continue
+            investment_list = self.add_labels_to_data(investment_row)
+            if revenue_type[0] != 'Total Investment':
+                total_investment_list.append([row[1] for row in investment_list])
+            percent_change = self.generate_percent_change(investment_list)
 
 
     #TODO break this into two functions

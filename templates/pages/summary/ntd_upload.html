@@ -20,8 +20,7 @@
     <div class="container-fluid">
         <div class="row">
             <div class="card shadow mb-4 w-100">
-                <div class="card-header">
-                    <ul class="nav nav-tabs card-header-tabs">
+                {% comment %}    <ul class="nav nav-tabs card-header-tabs">
                         <li class="nav-item">
                             <a class="nav-link" href="{% url 'summary_instructions' %}">Instructions</a>
                         </li>
@@ -37,47 +36,37 @@
                         <li class="nav-item">
                             <a class="nav-link active" href="{% url 'ntd_upload' %}">NTD data upload</a>
                         </li>
-                    </ul>
-                </div>
+                    </ul>{% endcomment %}
+
                 <div class="card-body" style="min-height: 25rem">
+                    <div class="text-center">
+                    <h3 style="padding-top: 7rem; padding-bottom: 3rem">Upload NTD File</h3>
+
                     <div class="container-fluid w-100 h-100">
-                        <div class="row w-100 h-100" >
-                            <div class="col col-5 border-right text-center">
-                                <h3 style="padding-top: 7rem; padding-bottom: 3rem">Upload NTD File</h3>
-                                <label class="btn btn-primary" style="" for=""><i class="fas fa-upload"></i>  Choose a file</label>
-                            </div>
-                            <div class="col col-2">
-                                <div >
-                                    <ul class="c text-center">
-                                        <li></li>
-                                        <li></li>
-                                        <li></li>
-                                        <li></li>
-                                        <li></li>
-                                    </ul>
-                                </div>
+
+                        <div class="text-center"
+
+
+                        <form id = 'submit_ntd' action="{% url "ntd_upload" %}" method="POST" enctype="multipart/form-data">
+                                    {% csrf_token %}
+                            {{ form.as_p }}
+                            <div id="errormessage"></div>
+
+            <input type="file"
+                   title="Upload excel file"
+                   name="excel_file"
+                   style="border: 1px solid; padding: 5px;"
+                   required="required">
+            <p>
+            <input type="submit"
+                   value="Submit NTD Data"
+                    class="btn btn-primary float-right mt-3";>
+        </form>
+                    </div>
 
                             </div>
-                            <div class="col col-5 h-100">
-                                <div class="row ml-1" style="height: 33%">
-                                    <span class="my-auto ">Validating NTD file</span>
-                                    <div class="progress" style="height: 20px; width: 100%">
-                                        <div class="progress-bar" role="progressbar"  style="width: 100%; background-color: #99CABF;" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"></div>
-                                    </div>
-                                </div>
-                                <div class="row ml-1" style="height: 33%">
-                                    <span class="my-auto">Importing data</span>
-                                    <div class="progress" style="height: 20px; width: 100%">
-                                        <div class="progress-bar" role="progressbar" style="width: 100%; background-color: #66B09F;" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"></div>
-                                    </div>
-                                </div>
-                                <div class="row ml-1" style="height: 33%">
-                                    <span class="my-auto">Validating data</span>
-                                    <div class="progress" style="height: 20px; width: 100%">
-                                        <div class="progress-bar" role="progressbar" style="width: 33%; background-color: #33957F;" aria-valuenow="33" aria-valuemin="0" aria-valuemax="100"></div>
-                                    </div>
-                                </div>
-                            </div>
+
+
                         </div>
                     </div>
 
@@ -92,6 +81,50 @@
                     NTD data upload results
                 </div>
                 <div class="card-body">
+                    <h3> Transit Data Uploaded</h3>
+                    <table class = "table table-bordered">
+                        <tr>
+                            <th>Report Year</th>
+                            <th> Transit Mode </th>
+                            <th> Administration of Mode</th>
+                            <th> Organization</th>
+                            <th>Transit Metric</th>
+                            <th> Reported Value</th>
+                            <th>User </th>
+                            <th> Comments</th>
+                        </tr>
+                        {% for data in transit_data %}
+
+
+                            <tr>
+                                {%  for d in data %}
+                        <td>{{d}}</td>
+                                    {% endfor %}
+                            </tr>
+
+                        {%  endfor %}
+                    </table>
+
+                <h3> Revenue Data Uploaded</h3>
+                <table class = "table table-bordered">
+                    <thead>
+                    <tr><th>Report Year</th>
+                    <th>Reported Value</th>
+                    <th>Comments</th>
+                    <th>Organization</th>
+                    <th>User Id</th>
+                    <th>Revenue Source Id</th></tr>
+                    </thead>
+                    <tbody>
+                    {%  for d in revenue_data %}
+                        <tr>
+                        {%  for data in d %}
+                    <td>{{ data }}</td>
+                            {% endfor %}
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
 
                 </div>
             </div>

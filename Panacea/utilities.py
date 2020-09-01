@@ -6,7 +6,7 @@ from django.db import transaction
 # import pandas as pd
 # import numpy as np
 from .models import revenue_source, organization, vanpool_expansion_analysis, vanpool_report, profile, transit_data, \
-    service_offered, transit_mode, revenue, expense, depreciation, fund_balance, stylesheets,  summary_organization_progress, summary_report_status
+    ntd_transit_data, ntd_revenue_data, transit_mode, revenue, expense, depreciation, fund_balance, stylesheets,  summary_organization_progress, summary_report_status
 from django.db.models import Max, Subquery, F, OuterRef, Case, CharField, Value, When, Sum, Count, Avg, FloatField, \
     ExpressionWrapper, Q
 from django.db.models.functions import Coalesce
@@ -18,6 +18,67 @@ from dateutil.relativedelta import relativedelta
 #####
 
 #
+
+
+
+
+
+def ntd_mode_translator(mode):
+    '''pretty simplistc and community provider focused, can be updated for transits'''
+    mode = mode.replace(' DO', '')
+    mode = mode.replace(' PT', '')
+    if mode == 'DR':
+        transit_mode_id = 2
+    elif mode == 'VP':
+        transit_mode_id = 3
+    elif mode == 'MB':
+        transit_mode_id = 14
+    elif mode == 'CB':
+        transit_mode_id = 5
+    return transit_mode_id
+
+
+def clean_revenue_data_fron_ntd(revenue_data_wb, current_report_year, organization_id, user_id):
+    '''mode for cleaning ntd revenue data'''
+    revenue_data_list = []
+    for row in ntd_revenue_data.objects.all():
+        reported_value = revenue_data_wb[row.sheet_name][row.table_index].value
+        if reported_value is not None and reported_value > 0:
+            final_row = (current_report_year, reported_value, None, organization_id, user_id, row.revenue_source_id)
+            revenue_data_list.append(final_row)
+    return revenue_data_list
+
+
+def clean_transit_data_from_ntd(transit_data_wb, current_report_year, organization_id, user_id):
+    '''complex because need to account for mode (some things don't have an obvious mode) and because Farebox Revenues is on multiple lines and has multiple uses here'''
+    transit_data_list = []
+    first_mode = []
+    ntd_transit = ntd_transit_data.objects.all().order_by('id')
+    for row in ntd_transit:
+        try:
+            mode = ntd_mode_translator(transit_data_wb[row.sheet_name][row.mode].value)
+            first_mode.append(mode)
+        except:
+            mode = first_mode[0]
+        try:
+            reported_value = transit_data_wb[row.sheet_name][row.index].value
+            if reported_value is not None and reported_value > 0:
+                final_row = (current_report_year, mode, 'Direct Operated',organization_id, row.transit_metric, reported_value, user_id, None)
+                transit_data_list.append(final_row)
+        except:
+            ls = transit_data_wb[row.sheet_name][row.index]
+            if (ls[0][0].value != None) and (ls[1][0].value != None):
+                reported_value = ls[0][0].value + ls[1][0].value
+            elif ls[0][0].value == None:
+                reported_value = ls[1][0].value
+            else:
+                reported_value = ls[0][0].value
+            if reported_value is not None and reported_value > 0:
+                final_row = (current_report_year, mode, 'Direct Operated',organization_id, row.transit_metric, reported_value, user_id, None)
+                transit_data_list.append(final_row)
+    return transit_data_list
+
+
 
 
 def calculate_percent_change(data1, data2):
@@ -77,6 +138,7 @@ def data_check(year, models_list, summary_reporter_type):
 #     df = df.reindex(columns = ['Revenues', 'Sales or Local Tax', 'Fare Revenue (all modes except vanpool', 'Vanpool Revenue','Federal Operating Revenue', 'State Operating Revenue', 'Other Operating Revenue','Federal Capital Revenue',
 #                                'State Capital Revenue', 'Total Revenue'])
 #     return df
+
 
 
 # def create_dependent_statistics(df):
