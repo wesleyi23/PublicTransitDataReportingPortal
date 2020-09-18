@@ -197,11 +197,9 @@ class vanpool_report(models.Model):
     report_type = models.ForeignKey(ReportType, on_delete=models.PROTECT)
     report_year = models.IntegerField()
     report_month = models.IntegerField(choices=REPORT_MONTH)
-    # TODO we should come back and look at if these need to be here
-    # report_due_date = models.DateField()
-    #report_day = models.IntegerField(default = 1, null=True)
+    #created_at = models.DateTimeField(default = None, null=True)
     report_date = models.DateTimeField(default=None, null=True)
-    update_date = models.DateTimeField(auto_now=True, blank=True, null=True)
+    #update_date = models.DateTimeField(auto_now=True)
     report_by = models.ForeignKey(custom_user, on_delete=models.PROTECT, blank=True, null=True)
     organization = models.ForeignKey(organization, on_delete=models.PROTECT)
     vanshare_groups_in_operation = models.IntegerField(blank=True, null=True)
@@ -390,7 +388,7 @@ class expense(models.Model):
     organization = models.ForeignKey(organization, on_delete=models.PROTECT, related_name='+')
     year = models.IntegerField()
     expense_source = models.ForeignKey(expense_source, on_delete=models.PROTECT, related_name='+')
-    reported_value = models.IntegerField(blank=True, null=True)
+    reported_value = models.BigIntegerField(blank=True, null=True)
     report_by = models.ForeignKey(custom_user, on_delete=models.PROTECT, blank=True, null=True)
     comments = models.TextField(blank=True, null=True)
     history = HistoricalRecords()
@@ -463,7 +461,7 @@ class fund_balance(models.Model):
     organization = models.ForeignKey(organization, on_delete=models.PROTECT, related_name='+')
     year = models.IntegerField()
     fund_balance_type = models.ForeignKey(fund_balance_type, on_delete=models.PROTECT, related_name='+')
-    reported_value = models.IntegerField(blank=True, null=True)
+    reported_value = models.BigIntegerField(blank=True, null=True)
     report_by = models.ForeignKey(custom_user, on_delete=models.PROTECT, blank=True, null=True)
     comments = models.TextField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -545,9 +543,16 @@ class service_offered(models.Model):
     class Meta:
         unique_together = ('organization', 'transit_mode', 'administration_of_mode')
 
+class ntd_transit_data(models.Model):
+    mode = models.CharField(blank = True, null=True, max_length=10)
+    sheet_name = models.CharField(max_length=30)
+    index = models.CharField(max_length=20)
+    transit_metric = models.ForeignKey(transit_metrics, on_delete= models.PROTECT, related_name = '+', blank=False)
 
-
-
+class ntd_revenue_data(models.Model):
+    sheet_name = models.CharField(max_length=30)
+    table_index = models.CharField(max_length=10)
+    revenue_source = models.ForeignKey(revenue_source, on_delete=models.PROTECT, related_name='+', blank=False)
 
 
 

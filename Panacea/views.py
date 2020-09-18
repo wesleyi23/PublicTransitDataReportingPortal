@@ -1,6 +1,7 @@
 import base64
 import csv
 import datetime
+import openpyxl
 import itertools
 import json
 # import pandas as pd
@@ -75,7 +76,7 @@ from .utilities import calculate_latest_vanpool, find_maximum_vanpool, calculate
     calculate_if_goal_has_been_reached, \
     find_user_organization_id, find_user_organization, get_all_cover_sheet_steps_completed, \
     get_cover_sheet_submitted, get_all_data_steps_completed, get_data_submitted, reset_summary_reporter_tracking, \
-    reset_all_orgs_summary_progress
+    reset_all_orgs_summary_progress, clean_revenue_data_fron_ntd, clean_transit_data_from_ntd
 from .utilities import monthdelta, get_wsdot_color, get_vanpool_summary_charts_and_table, percent_change_calculation, \
     find_vanpool_organizations, get_current_summary_report_year, filter_revenue_sheet_by_classification, \
     complete_data, green_house_gas_per_sov_mile, green_house_gas_per_vanpool_mile
@@ -1035,10 +1036,37 @@ def cover_sheet_submitted(request):
     return render(request, 'pages/summary/cover_sheet_submitted.html', {'cover_sheet_status': cover_sheet_status})
 
 
+
 @login_required(login_url='/Panacea/login')
 @group_required('Summary reporter', 'WSDOT staff')
 def ntd_upload(request):
-    return render(request, 'pages/summary/ntd_upload.html', {})
+    if request.POST:
+        custom_user_id = request.POST.get('custom_user')
+        my_instance = profile.objects.get(custom_user_id=custom_user_id)
+        form = change_user_org(request.POST, instance=my_instance)
+        if form.is_valid():
+            form.save()
+        user_org = find_user_organization(custom_user_id)
+        print(user_org)
+        current_report_year = get_current_summary_report_year()
+        excel_file = request.FILES["excel_file"]
+        wb = openpyxl.load_workbook(excel_file)
+        data_transit = clean_transit_data_from_ntd(wb, current_report_year, user_org, request.user.id)
+        revenue_data = clean_revenue_data_fron_ntd(wb, current_report_year, user_org, request.user.id)
+        print(data_transit)
+        print(revenue_data)
+        for data in data_transit:
+            transit_data.objects.get_or_create(year = data['year'], report_by_id=data['report_by_id'], reported_value=data['reported_value'],administration_of_mode= data['administration_of_mode'],
+                                        comments = data['comments'], organization_id=data['organization_id'], transit_metric_id=data['transit_metric_id'], transit_mode_id=data['transit_mode_id'])
+        for data in revenue_data:
+                revenue.objects.get_or_create(year = data['year'], report_by_id=data['report_by_id'], reported_value=data['reported_value'], comments=data['comments'], organization_id=data['organization_id'],
+                                       revenue_source_id=data['revenue_source_id'])
+    else:
+        form = change_user_org()
+        data_transit = []
+        revenue_data = []
+    return render(request, 'pages/summary/ntd_upload.html',
+                  {'transit_data': data_transit, 'revenue_data': revenue_data, 'form': form})
 
 
 @login_required(login_url='/Panacea/login')

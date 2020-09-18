@@ -76,10 +76,11 @@
                             {% if request.user|is_summary_reporter %}
                                 <a class="collapse-item" href="{% url 'summary_instructions' %}">Coversheet report</a>
                                 <a class="collapse-item" href="{% url 'summary_report_data' %}">Report data</a>
+                                <a class = "collapse-item" href = "{% url 'ntd_upload' %} ">Upload NTD Data </a>
 {#                                <a class="collapse-item" href="{% url 'customer_review_instructions' %}">Review coversheet report</a>#}
                             {% endif %}
-{#                            <a class = "collapse-item" href = "{%  url 'view_transit_data' %}">View agency report</a>#}
-{#                            <a class = "collapse-item" href = "{%  url 'view_statewide_rollup' %}">View statewide reports</a>#}
+                            <a class = "collapse-item" href = "{%  url 'view_transit_data' %}">View agency report</a>
+                              <a class = "collapse-item" href = "{%  url 'view_performance_measures' %}">View statewide reports</a>
                         {% endif %}
                     </div>
                 </div>
