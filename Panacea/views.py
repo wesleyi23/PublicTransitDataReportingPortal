@@ -1036,7 +1036,6 @@ def ntd_upload(request):
         custom_user_id = request.POST.get('custom_user')
         my_instance = profile.objects.get(custom_user_id=custom_user_id)
         form = change_user_org(request.POST, instance=my_instance)
-        print(form.is_valid())
         if form.is_valid():
             form.save()
         user_org = find_user_organization(custom_user_id)
@@ -1044,15 +1043,22 @@ def ntd_upload(request):
         current_report_year = get_current_summary_report_year()
         excel_file = request.FILES["excel_file"]
         wb = openpyxl.load_workbook(excel_file)
-        transit_data = clean_transit_data_from_ntd(wb, current_report_year, user_org, request.user.id)
+        data_transit = clean_transit_data_from_ntd(wb, current_report_year, user_org, request.user.id)
         revenue_data = clean_revenue_data_fron_ntd(wb, current_report_year, user_org, request.user.id)
+        print(data_transit)
+        print(revenue_data)
+        for data in data_transit:
+            transit_data.objects.get_or_create(year = data['year'], report_by_id=data['report_by_id'], reported_value=data['reported_value'],administration_of_mode= data['administration_of_mode'],
+                                        comments = data['comments'], organization_id=data['organization_id'], transit_metric_id=data['transit_metric_id'], transit_mode_id=data['transit_mode_id'])
+        for data in revenue_data:
+                revenue.objects.get_or_create(year = data['year'], report_by_id=data['report_by_id'], reported_value=data['reported_value'], comments=data['comments'], organization_id=data['organization_id'],
+                                       revenue_source_id=data['revenue_source_id'])
     else:
         form = change_user_org()
-        print('here')
-        transit_data = []
+        data_transit = []
         revenue_data = []
     return render(request, 'pages/summary/ntd_upload.html',
-                  {'transit_data': transit_data, 'revenue_data': revenue_data, 'form': form})
+                  {'transit_data': data_transit, 'revenue_data': revenue_data, 'form': form})
 
 
 @login_required(login_url='/Panacea/login')

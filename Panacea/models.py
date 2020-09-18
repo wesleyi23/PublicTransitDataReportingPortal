@@ -197,11 +197,9 @@ class vanpool_report(models.Model):
     report_type = models.ForeignKey(ReportType, on_delete=models.PROTECT)
     report_year = models.IntegerField()
     report_month = models.IntegerField(choices=REPORT_MONTH)
-    # TODO we should come back and look at if these need to be here
-    # report_due_date = models.DateField()
-    #report_day = models.IntegerField(default = 1, null=True)
+    #created_at = models.DateTimeField(default = None, null=True)
     report_date = models.DateTimeField(default=None, null=True)
-    update_date = models.DateTimeField(auto_now=True, blank=True, null=True)
+    #update_date = models.DateTimeField(auto_now=True)
     report_by = models.ForeignKey(custom_user, on_delete=models.PROTECT, blank=True, null=True)
     organization = models.ForeignKey(organization, on_delete=models.PROTECT)
     vanshare_groups_in_operation = models.IntegerField(blank=True, null=True)

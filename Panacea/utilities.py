@@ -44,7 +44,7 @@ def clean_revenue_data_fron_ntd(revenue_data_wb, current_report_year, organizati
     for row in ntd_revenue_data.objects.all():
         reported_value = revenue_data_wb[row.sheet_name][row.table_index].value
         if reported_value is not None and reported_value > 0:
-            final_row = (current_report_year, reported_value, None, organization_id, user_id, row.revenue_source_id)
+            final_row = {'year':current_report_year, 'reported_value':reported_value, 'comments':None, 'organization_id':organization_id.id, 'report_by_id':user_id, 'revenue_source_id':row.revenue_source_id}
             revenue_data_list.append(final_row)
     return revenue_data_list
 
@@ -61,20 +61,22 @@ def clean_transit_data_from_ntd(transit_data_wb, current_report_year, organizati
         except:
             mode = first_mode[0]
         try:
+            print(transit_data_wb[row.sheet_name][row.index])
             reported_value = transit_data_wb[row.sheet_name][row.index].value
+            print(reported_value)
             if reported_value is not None and reported_value > 0:
-                final_row = (current_report_year, mode, 'Direct Operated',organization_id, row.transit_metric, reported_value, user_id, None)
+                final_row = {'year':current_report_year, 'transit_mode_id':mode, 'administration_of_mode':'Direct Operated','organization_id':organization_id.id, 'transit_metric_id':row.transit_metric.id, 'reported_value':reported_value, 'report_by_id':user_id, 'comments':None}
                 transit_data_list.append(final_row)
         except:
             ls = transit_data_wb[row.sheet_name][row.index]
             if (ls[0][0].value != None) and (ls[1][0].value != None):
-                reported_value = ls[0][0].value + ls[1][0].value
+                reported_value = ls[0][0].value + int(ls[1][0].value)
             elif ls[0][0].value == None:
                 reported_value = ls[1][0].value
             else:
                 reported_value = ls[0][0].value
             if reported_value is not None and reported_value > 0:
-                final_row = (current_report_year, mode, 'Direct Operated',organization_id, row.transit_metric, reported_value, user_id, None)
+                final_row = {'year':current_report_year, 'transit_mode_id':mode, 'administration_of_mode':'Direct Operated','organization_id':organization_id.id, 'transit_metric_id':row.transit_metric.id, 'reported_value':reported_value, 'report_by_id':user_id, 'comments':None}
                 transit_data_list.append(final_row)
     return transit_data_list
 
