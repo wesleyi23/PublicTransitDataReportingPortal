@@ -33,7 +33,8 @@ from django.urls import reverse
 from Panacea.decorators import group_required
 from .utilities import monthdelta, get_wsdot_color, get_vanpool_summary_charts_and_table, percent_change_calculation, \
     find_vanpool_organizations, get_current_summary_report_year, filter_revenue_sheet_by_classification, \
-    find_user_organization_id, complete_data, green_house_gas_per_sov_mile, green_house_gas_per_vanpool_mile
+    find_user_organization_id, complete_data, green_house_gas_per_sov_mile, green_house_gas_per_vanpool_mile, \
+    vanpool_chart_type_convert
 
 #    generate_performance_measure_table, generate_mode_by_agency_tables, create_statewide_revenue_table, \
 #    create_statewide_expense_table, create_all_summary_report_statuses
@@ -164,18 +165,34 @@ def dashboard(request):
                 return next_vanpool_report_status
 
             def ghg_calculator():
-                current_monthly_sov = green_house_gas_per_sov_mile() * recent_vanpool_report.average_riders_per_van * (
-                        recent_vanpool_report.vanpool_miles_traveled + recent_vanpool_report.vanshare_miles_traveled)
-                current_monthly_vanpool_emissions = recent_vanpool_report.vanpool_miles_traveled * green_house_gas_per_vanpool_mile()
+                # Replace Nones with 0
+                recent_average_riders_per_van = float(0 if recent_vanpool_report.average_riders_per_van is None else recent_vanpool_report.average_riders_per_van)
+                recent_vanpool_miles_traveled = float(0 if recent_vanpool_report.vanpool_miles_traveled is None else recent_vanpool_report.vanpool_miles_traveled)
+                recent_vanshare_miles_traveled = float(0 if recent_vanpool_report.vanshare_miles_traveled is None else recent_vanpool_report.vanshare_miles_traveled)
+
+                last_year_average_riders_per_van = float(0 if last_year_report.average_riders_per_van is None else last_year_report.average_riders_per_van)
+                last_year_vanpool_miles_traveled = float(0 if last_year_report.vanpool_miles_traveled is None else last_year_report.vanpool_miles_traveled)
+                last_year_vanshare_miles_traveled = float(0 if last_year_report.vanshare_miles_traveled is None else last_year_report.vanshare_miles_traveled)
+
+                # Calculate current monthly emissions
+                current_monthly_sov = green_house_gas_per_sov_mile() * recent_average_riders_per_van * (
+                        recent_vanpool_miles_traveled + recent_vanshare_miles_traveled)
+                current_monthly_vanpool_emissions = (recent_vanpool_miles_traveled + recent_vanshare_miles_traveled) * green_house_gas_per_vanpool_mile()
                 current_monthly_emissions = current_monthly_sov - current_monthly_vanpool_emissions
-                last_year_monthly_sov = green_house_gas_per_sov_mile() * last_year_report.average_riders_per_van * (
-                        last_year_report.vanpool_miles_traveled + last_year_report.vanshare_miles_traveled)
-                last_year_monthly_vanpool_emissions = (
-                                                              last_year_report.vanpool_miles_traveled + last_year_report.vanshare_miles_traveled) * green_house_gas_per_vanpool_mile()
+
+                # Calculate last years emisssions
+                last_year_monthly_sov = green_house_gas_per_sov_mile() * last_year_average_riders_per_van * (
+                        last_year_vanpool_miles_traveled + last_year_vanshare_miles_traveled)
+                last_year_monthly_vanpool_emissions = (last_year_vanpool_miles_traveled + last_year_vanshare_miles_traveled) * green_house_gas_per_vanpool_mile()
                 last_year_monthly_emissions = last_year_monthly_sov - last_year_monthly_vanpool_emissions
 
-                ghg_percent = ((current_monthly_emissions - last_year_monthly_emissions) / last_year_monthly_emissions)
-                return [round(current_monthly_emissions, 2), ghg_percent]
+                # Calculate percent
+                if last_year_monthly_emissions == 0:
+                    return "NA"
+                else:
+                    ghg_percent = ((current_monthly_emissions - last_year_monthly_emissions) / last_year_monthly_emissions)
+                    return [round(current_monthly_emissions, 2), ghg_percent]
+
 
             user_context.update({'user_org': user_org_id,
                                  'groups_in_operation': get_most_recent_and_change(
@@ -324,7 +341,8 @@ def OrganizationProfile(request, redirect_to=None):
         if not 'state' in form.data:
             form.data['state'] = user_profile_data.organization.state
         if not 'summary_organization_classifications' in form.data:
-            form.data['summary_organization_classifications'] = org.summary_organization_classifications
+            form.data['summary_organization_classifications'] = org.summary_organization_classifications_id
+
         if form.is_valid():
             # TODO figure out why is this here
             form.save()
@@ -341,6 +359,9 @@ def OrganizationProfile(request, redirect_to=None):
             else:
                 return redirect('OrganizationProfile')
         else:
+            for err in form.errors:
+                print(err)
+
             form.data['name'] = org.name
             form.data['address_line_1'] = org.address_line_1
             form.data['address_line_2'] = org.address_line_2
@@ -478,7 +499,7 @@ def Vanpool_report(request, year=None, month=None):
     max_year = organization_data.all().aggregate(Max('report_year')).get('report_year__max') == year
 
     # TODO rename to something better (this populates the navigation table)
-    past_report_data = vanpool_report.objects.filter(organization_id=user_organization_id, report_year=year)
+    past_report_data = vanpool_report.objects.filter(organization_id=user_organization_id, report_year=year).order_by('report_month')
 
     # Instance data to link form to data
     form_data = vanpool_report.objects.get(organization_id=user_organization_id, report_year=year, report_month=month)
@@ -594,18 +615,21 @@ def Vanpool_data(request):
     if request.POST:
         form = vanpool_metric_chart_form(data=request.POST)
         org_list = request.POST.getlist("chart_organizations")
-        chart_time_frame = monthdelta(datetime.datetime.now().date(), form.data['chart_time_frame'])
+        chart_time_frame = monthdelta(datetime.datetime.now().date(), int(form.data['chart_time_frame'])+1) # plus one to calculate %change for first month - dropped if not needed
         chart_measure = form.data['chart_measure']
+        chart_type = form.data['chart_type']
 
     # Default chart for first load
     else:
         default_time_frame = 36  # months
-        chart_time_frame = monthdelta(datetime.datetime.now().date(), default_time_frame)
+        chart_time_frame = monthdelta(datetime.datetime.now().date(), default_time_frame+1) # plus one to calculate %change for first month - dropped if not needed
         org_list = [profile.objects.get(custom_user_id=request.user.id).organization_id]
         chart_measure = 'total_miles_traveled'
+        chart_type = 'values'
         form = vanpool_metric_chart_form(initial={'chart_organizations': org_list[0],
                                                   'chart_measure': chart_measure,
-                                                  'chart_time_frame': default_time_frame})
+                                                  'chart_time_frame': default_time_frame,
+                                                  'chart_type': 'values'})
 
     if form.is_valid:
         # Get data for x axis labels
@@ -626,12 +650,21 @@ def Vanpool_data(request):
                                                                                          'report_month').all() if
                              chart_time_frame <= report.report_due_date <= datetime.datetime.today().date()]
             chart_dataset = [getattr(report, chart_measure) for report in chart_dataset]
+
+            if chart_measure not in ['average_riders_per_van', 'average_round_trip_miles']:
+                chart_dataset = vanpool_chart_type_convert(chart_dataset, chart_type)
+
             chart_datasets[organization.objects.get(id=org).name] = [json.dumps(list(chart_dataset)),
                                                                      get_wsdot_color(color_i)]
             color_i = color_i + 1
 
         # Set chart title
         chart_title = form.MEASURE_CHOICES_DICT[chart_measure]
+        if chart_measure not in ['average_riders_per_van', 'average_round_trip_miles']:
+            if chart_type == "index":
+                chart_title = chart_title + " (Indexed)"
+            if chart_type == 'percent_change':
+                chart_title = chart_title + " (Percent change - month / month)"
 
         return render(request, 'pages/vanpool/Vanpool_data.html', {'form': form,
                                                                    'chart_title': chart_title,

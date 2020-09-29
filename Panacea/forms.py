@@ -473,6 +473,11 @@ class vanpool_metric_chart_form(forms.Form):
         (120, "Ten Years"),
         (999, "All")
     )
+    TYPE_CHOICES = (
+        ('values', "Values"),
+        ('percent_change', 'Percent change (month / month)'),
+        ('index', 'Index')
+    )
 
     chart_measure = forms.CharField(widget=forms.Select(choices=MEASURE_CHOICES,
                                                         attrs={'class': 'form-control my_chart_control',
@@ -482,6 +487,9 @@ class vanpool_metric_chart_form(forms.Form):
                                                      attrs={'class': 'form-check checkbox-grid',
                                                             'data-form-name': "vanpool_metric_chart_form"}))
     chart_time_frame = forms.CharField(widget=forms.Select(choices=TIMEFRAME_CHOICES,
+                                                           attrs={'class': 'form-control my_chart_control',
+                                                                  'data-form-name': "vanpool_metric_chart_form"}))
+    chart_type = forms.CharField(widget=forms.Select(choices=TYPE_CHOICES,
                                                            attrs={'class': 'form-control my_chart_control',
                                                                   'data-form-name': "vanpool_metric_chart_form"}))
 

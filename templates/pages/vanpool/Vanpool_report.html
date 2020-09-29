@@ -243,7 +243,7 @@
                                     </td>
                                     <td class="AutoNumeric-Decimal">{{ form.average_round_trip_miles }}</td>
                                 </tr>
-                              <tr class="fieldWrapper">
+                                <tr class="fieldWrapper">
                                     <td>{{ form.frequency_of_claims.errors }}</td>
                                     <td>{{ form.frequency_of_claims.label_tag }}
                                         <sup>
@@ -269,6 +269,10 @@
                             </table>
                             {% if new_report %}
 
+                                <div id="change_reason" class="pb-1 pt-1" style="display: none;">
+                                    <p>Please provide a brief explanation for any issues identified by the validation:</p>
+                                    {{ form.changeReason }}
+                                </div>
                                 <input type="submit" value="Submit Report" class="btn btn-primary float-left" style="position: absolute; bottom: 20px; right: 20px">
 
                             {% else %}
@@ -337,6 +341,18 @@
             })
         })
 
+    </script>
+
+    <script>
+        $('#id_acknowledge_validation_errors').click(function(){
+            if($(this).is(':checked')){
+                $('#change_reason').attr('style', 'display: block');
+                $('#id_changeReason').attr('required', true);
+            } else {
+                $('#change_reason').attr('style', 'display: none');
+                $('#id_changeReason').attr('required', false);
+            }
+        });
     </script>
 
 {% endblock %}

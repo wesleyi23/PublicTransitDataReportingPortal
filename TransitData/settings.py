@@ -14,7 +14,7 @@ import os
 
 from celery.schedules import crontab
 
-MODE = "test"  #could be prod, dev, test
+MODE = "prod"  #could be prod, dev, test
 
 if MODE == "prod":
     DEBUG = False

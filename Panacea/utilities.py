@@ -485,6 +485,52 @@ def green_house_gas_per_sov_mile():
     return co2_per_sov_mile_traveled
 
 
+def vanpool_chart_type_convert(chart_data, chart_type='values'):
+    '''
+    Function that produces chart data from a chart dataset in the Vanpool_data view
+    :param chart_data: chart data passed to this function
+    :param chart_type: chart type
+    :return: dataset ready for conversion to json and drawing in chart.js
+    '''
+
+    CHART_TYPES = ['values', 'percent_change', 'index']
+    if chart_type not in CHART_TYPES:
+        raise ValueError("Invalid chart_type. Valid chart types: " + print(CHART_TYPES))
+
+    if chart_type == 'values':
+        chart_data.pop(0)
+        return chart_data
+    elif chart_type == 'percent_change':
+        output_chart = chart_data.copy()
+        i = 1
+        while i < len(output_chart):
+            if chart_data[i] is None:
+                output_chart[i] = None
+            elif chart_data[i-1] is None:
+                output_chart[i] = 1
+            else:
+                output_chart[i] = round(((chart_data[i] / chart_data[i-1])-1) * 100, 2)
+            i = i + 1
+        output_chart.pop(0)
+        return output_chart
+    elif chart_type == 'index':
+        chart_data.pop(0)
+        base_year = chart_data[0]
+        chart_data[0] = 100
+        i = 1
+        while i < len(chart_data):
+            if chart_data[i] is None:
+                pass
+            else:
+                chart_data[i] = round((chart_data[i] / base_year) * 100, 2)
+            i = i + 1
+        return chart_data
+
+
+
+
+
+
 def get_vanpool_summary_charts_and_table(include_years,
                                          is_org_summary=True,
                                          org_id=None,
@@ -507,9 +553,9 @@ def get_vanpool_summary_charts_and_table(include_years,
         ("vanpool_groups_in_operation", "vanshare_groups_in_operation"),
     ]
 
-    sov_miles_per_gallon = 22
-    co2e_per_gallon = 0.00889  # units = transit_metric tones
-    co2_per_sov_mile_traveled = (1 / sov_miles_per_gallon) * co2e_per_gallon
+    # sov_miles_per_gallon = 22
+    # co2e_per_gallon = 0.00889  # units = transit_metric tones
+    # co2_per_sov_mile_traveled = (1 / sov_miles_per_gallon) * co2e_per_gallon
 
     all_chart_data = [report for report in
                       vanpool_report.objects.order_by('report_year', 'report_month').all() if
@@ -569,10 +615,14 @@ def get_vanpool_summary_charts_and_table(include_years,
         statewide_average_riders_per_van=ExpressionWrapper(Avg(F('average_riders_per_van')) * Sum(F('vanpool_groups_in_operation')+ F('vanshare_groups_in_operation')) /
                                          Sum(F('vanpool_groups_in_operation') + F('vanshare_groups_in_operation')), output_field=FloatField())
     )
-    total_sov_co2 = summary_table_data_total['table_total_miles_traveled'] * summary_table_data_total['statewide_average_riders_per_van'] * green_house_gas_per_sov_mile()
-    total_van_co2 = summary_table_data_total['table_total_miles_traveled'] * green_house_gas_per_vanpool_mile()
-    total_co2_saved = total_sov_co2 - total_van_co2
-    summary_table_data_total['total_co2_saved'] = total_co2_saved
+
+    if summary_table_data_total['table_total_miles_traveled'] is None or summary_table_data_total['statewide_average_riders_per_van'] is None:
+        summary_table_data_total['total_co2_saved'] = 0
+    else:
+        total_sov_co2 = summary_table_data_total['table_total_miles_traveled'] * summary_table_data_total['statewide_average_riders_per_van'] * green_house_gas_per_sov_mile()
+        total_van_co2 = summary_table_data_total['table_total_miles_traveled'] * green_house_gas_per_vanpool_mile()
+        total_co2_saved = total_sov_co2 - total_van_co2
+        summary_table_data_total['total_co2_saved'] = total_co2_saved
 
     all_charts = list()
     for i in range(len(MEASURES) + 1):

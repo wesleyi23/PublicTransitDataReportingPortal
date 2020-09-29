@@ -1,26 +1,36 @@
 import datetime
 import itertools
 
+from django import forms
 from django.db import transaction
 from django.db.models import Sum
-from django.forms import modelformset_factory
+from django.forms import modelformset_factory, BaseModelFormSet, ModelForm
 from django.http import Http404
 from django.shortcuts import redirect
+from openpyxl import Workbook
+from openpyxl.styles import Font, Border, Side, Alignment
 
 from Panacea.models import service_offered, revenue, transit_data, expense, fund_balance, revenue_source, \
     transit_metrics, expense_source, fund_balance_type, transit_mode, summary_organization_progress, organization
-
 from Panacea.utilities import get_current_summary_report_year, get_all_data_steps_completed
-from django import forms
-from django.forms import modelformset_factory, BaseModelFormSet, ModelForm
-from openpyxl import Workbook
-from openpyxl.styles import Font, Border, Side
+
+
+def None_sum(*args):
+    args = [a for a in args if not a is None]
+    return sum(args) if args else 0
+
 
 class SummaryBuilder:
+    '''Basic building block for other classes it holds REPORT_TYPES'''
+
     def __init__(self):
         self.REPORT_TYPES = ['transit_data', 'revenue', 'expense', 'fund_balance']
+        self.REVENUE_TYPES = ['Operating', 'Capital', 'Other']
+        self.REVENUE_GOV = ['Local', 'State', 'Federal', 'Other']
+
 
 class SummaryBuilderReportType(SummaryBuilder):
+    '''This class contains key building instructions for all builders based on the summary builder REPORT_TYPE'''
 
     def __init__(self, report_type):
         super().__init__()
@@ -36,19 +46,23 @@ class SummaryBuilderReportType(SummaryBuilder):
             return expense
         elif self.report_type == "fund_balance":
             return fund_balance
+        elif self.report_type == 'organization':
+            return organization
         else:
             raise Http404("Report type does not exist. -4")
 
-    def get_model_data(self):
-        '''returns the appropriate model for the given report type'''
+    def get_model_data(self, filter_inactive=True):
+        '''returns the appropriate model objects for the given report type'''
         if self.report_type == "revenue":
-            return revenue.objects.filter(revenue_source__inactive_flag=False)
+            return revenue.objects.exclude(revenue_source__inactive_flag=filter_inactive)
         elif self.report_type == "transit_data":
             return transit_data.objects
         elif self.report_type == "expense":
             return expense.objects
         elif self.report_type == "fund_balance":
             return fund_balance.objects
+        elif self.report_type == 'organization':
+            return organization.objects
         else:
             raise Http404("Report type does not exist. -4")
 
@@ -62,24 +76,28 @@ class SummaryBuilderReportType(SummaryBuilder):
             return expense_source
         elif self.report_type == "fund_balance":
             return fund_balance_type
+        elif self.report_type == 'organization':
+            return organization
         else:
             raise Http404("Report type does not exist. -5")
 
-    def get_metric_model_data(self):
-        '''returns the appropriate metric model for the given report type'''
+    def get_metric_model_data(self, filter_inactive=True):
+        '''returns the appropriate metric model objects for the given report type'''
         if self.report_type == "revenue":
-            return revenue_source.objects.filter(inactive_flag=False)
+            return revenue_source.objects.exclude(inactive_flag=filter_inactive)
         elif self.report_type == "transit_data":
             return transit_metrics.objects
         elif self.report_type == "expense":
             return expense_source.objects
         elif self.report_type == "fund_balance":
             return fund_balance_type.objects
+        elif self.report_type == 'organization':
+            return organization.objects
         else:
             raise Http404("Report type does not exist. -5")
 
     def get_metric_model_name(self):
-        '''Returns the metric model as a string.'''
+        '''Returns the metric model as a string. Useful for certain queries and other operations'''
         if self.report_type == "revenue":
             return 'revenue_source'
         elif self.report_type == "transit_data":
@@ -99,9 +117,38 @@ class SummaryBuilderReportType(SummaryBuilder):
             metric_model = self.get_metric_model()
             return metric_model.__name__ + '_id'
 
+    def get_pretty_report_type(self):
+        if self.report_type == "revenue":
+            return 'Revenue'
+        elif self.report_type == "transit_data":
+            return 'Transit Data'
+        elif self.report_type == "expense":
+            return 'Expenses'
+        elif self.report_type == "fund_balance":
+            return 'Fund balances'
+        elif self.report_type == 'organization':
+            return "Organization"
+        else:
+            raise Http404("Report type does not exist. -6")
+
+    def has_order_in_summary(self):
+        if self.report_type in ['transit_data', 'revenue', 'expense']:
+            return True
+        else:
+            return False
+
+    def has_headings_in_summary(self):
+        if self.report_type in ["expense"]:
+            return True
+        else:
+            return False
+
 
 class SummaryDataEntryBuilder(SummaryBuilderReportType):
-    '''This class constructs all of the forms needed to collect summary data'''
+    '''This class constructs all of the forms needed to collect summary data.
+
+    For some REPORT_TYPEs the data collection form are split into multiple pages these are filtered using either one or
+    two parameters depending on the REPORT_TYPE'''
 
     def __init__(self, report_type, target_organization, form_filter_1=None, form_filter_2=None):
         super().__init__(report_type)
@@ -112,7 +159,7 @@ class SummaryDataEntryBuilder(SummaryBuilderReportType):
         self.form_filter_1 = form_filter_1  # Forms can be filtered by the selectors at the top of the page for example reporting based on direct operated, fixed route transit
         self.form_filter_2 = form_filter_2
         # These control how the form moves to the next form
-        self.max_form_increment = 0 #if the max increment is meet it will move to the next report type, otherwise it will go to the next set of filters
+        self.max_form_increment = 0  # if the max increment is meet it will move to the next report type, otherwise it will go to the next set of filters
         self.current_increment = 0
 
         self.nav_filter_count, self.nav_filters = self.get_header_navigation()
@@ -130,8 +177,10 @@ class SummaryDataEntryBuilder(SummaryBuilderReportType):
                 self.form_filter_2 = self.nav_filters[0][1]
             elif self.report_type == "transit_data":
                 # TODO Make this into something that makes more sense
-                self.form_filter_1 = service_offered.objects.filter(organization=self.target_organization).order_by('transit_mode__name').values_list('transit_mode__name').first()[0]
-                self.form_filter_2 = service_offered.objects.filter(organization=self.target_organization).order_by('transit_mode__name').values_list('administration_of_mode').first()[0]
+                self.form_filter_1 = service_offered.objects.filter(organization=self.target_organization).order_by(
+                    'transit_mode_id').values_list('transit_mode__name').first()[0]
+                self.form_filter_2 = service_offered.objects.filter(organization=self.target_organization).order_by(
+                    'transit_mode_id').values_list('administration_of_mode').first()[0]
                 # self.form_filter_1 = self.get_model().objects.filter(organization=self.target_organization).order_by(
                 #     'transit_mode__name').values_list('transit_mode__name').first()[0]
                 # self.form_filter_2 = self.get_model().objects.filter(organization=self.target_organization).order_by(
@@ -235,7 +284,8 @@ class SummaryDataEntryBuilder(SummaryBuilderReportType):
                     for m in missing_metrics:
                         model.create(**self.get_create_metric_dictionary(m))
 
-        form_metrics = model.filter(organization=self.target_organization).order_by(self.get_metric_id_field_name() + '__name')
+        form_metrics = model.filter(organization=self.target_organization).order_by(
+            self.get_metric_id_field_name() + '__name')
         return form_metrics
 
     def get_widgets(self):
@@ -244,7 +294,8 @@ class SummaryDataEntryBuilder(SummaryBuilderReportType):
         if self.report_type == 'transit_data':
             widget_attrs = {'class': 'form-control validate-field', 'autocomplete': "off"}
         else:
-            widget_attrs = {'class': 'form-control grand-total-sum validate-field', 'onchange': 'findTotal_wrapper();', 'autocomplete': "off"}
+            widget_attrs = {'class': 'form-control grand-total-sum validate-field', 'onchange': 'findTotal_wrapper();',
+                            'autocomplete': "off"}
 
         widgets = {'id': forms.NumberInput(),
                    self.get_metric_model_name(): forms.Select(),
@@ -282,9 +333,11 @@ class SummaryDataEntryBuilder(SummaryBuilderReportType):
                           'revenue_source__funding_type': self.form_filter_2,
                           'revenue_source__agency_classification': self.target_organization.summary_organization_classifications}
         elif self.report_type in ['expense', ]:
-            query_dict = {'expense_source__agency_classification': self.target_organization.summary_organization_classifications}
+            query_dict = {
+                'expense_source__agency_classification': self.target_organization.summary_organization_classifications}
         elif self.report_type in ['fund_balance', ]:
-            query_dict = {'fund_balance_type__agency_classification': self.target_organization.summary_organization_classifications}
+            query_dict = {
+                'fund_balance_type__agency_classification': self.target_organization.summary_organization_classifications}
         else:
             raise Http404
         return query_dict
@@ -346,7 +399,7 @@ class SummaryDataEntryBuilder(SummaryBuilderReportType):
         if self.report_type in ['transit_data', ]:
             filter_count = 2
             my_services_offered = service_offered.objects.filter(organization=self.target_organization).order_by(
-                'transit_mode__name')
+                'transit_mode_id')
             filters = []
             for service in my_services_offered:
                 filters.append([service.transit_mode.name, service.administration_of_mode])
@@ -361,8 +414,8 @@ class SummaryDataEntryBuilder(SummaryBuilderReportType):
                 filters.append([source['government_type'], source['funding_type']])
 
             if len(filters) > 1:
-                revenue_list_order_type = ['Operating', 'Capital', 'Other']
-                revenue_list_order_gov = ['Local', 'State', 'Federal', 'Other']
+                revenue_list_order_type = self.REVENUE_TYPES
+                revenue_list_order_gov = self.REVENUE_GOV
                 filters.sort(key=lambda x: revenue_list_order_type.index(x[1]))
                 filters.sort(key=lambda x: revenue_list_order_gov.index(x[0]))
 
@@ -375,7 +428,6 @@ class SummaryDataEntryBuilder(SummaryBuilderReportType):
                 filters = "Ending fund balances"
         else:
             raise Http404
-
         return filter_count, filters
 
     def save_with_post_data(self, post_data):
@@ -444,26 +496,26 @@ class SummaryDataEntryBuilder(SummaryBuilderReportType):
             new_form_filter_1 = self.nav_filters[self.current_increment - 1][0]
             new_form_filter_2 = self.nav_filters[self.current_increment - 1][1]
 
-        new_builder = SummaryDataEntryBuilder(new_report_type, self.target_organization, new_form_filter_1, new_form_filter_2)
+        new_builder = SummaryDataEntryBuilder(new_report_type, self.target_organization, new_form_filter_1,
+                                              new_form_filter_2)
 
         return new_builder
 
-
 class SummaryDataEntryTemplateData:
-    '''Simple class that uses the SummaryDataEntryBuilder to create data needed in the template'''
+    '''Class that uses the SummaryDataEntryBuilder to create data needed in the template.'''
 
-    def __init__(self, data_entry_factory, report_type):
-        self.formsets, self.formset_labels, self.masking_class, self.help_text = data_entry_factory.get_formsets_labels_masking_class_and_help_text()
-        self.report_type = report_type
-        self.year = data_entry_factory.year
-        self.form_filter_1 = data_entry_factory.form_filter_1
-        self.form_filter_2 = data_entry_factory.form_filter_2
-        self.other_totals = data_entry_factory.get_other_measure_totals()
+    def __init__(self, summary_data_entry_builder):
+        self.formsets, self.formset_labels, self.masking_class, self.help_text = summary_data_entry_builder.get_formsets_labels_masking_class_and_help_text()
+        self.report_type = summary_data_entry_builder.report_type
+        self.year = summary_data_entry_builder.year
+        self.form_filter_1 = summary_data_entry_builder.form_filter_1
+        self.form_filter_2 = summary_data_entry_builder.form_filter_2
+        self.other_totals = summary_data_entry_builder.get_other_measure_totals()
         self.masking_types = []
-        self.nav_filter_count = data_entry_factory.nav_filter_count
-        self.nav_filters = data_entry_factory.nav_filters
+        self.nav_filter_count = summary_data_entry_builder.nav_filter_count
+        self.nav_filters = summary_data_entry_builder.nav_filters
 
-        if data_entry_factory.report_type == "transit_data":
+        if summary_data_entry_builder.report_type == "transit_data":
             self.show_totals = False
         else:
             self.show_totals = True
@@ -475,6 +527,9 @@ class SummaryDataEntryTemplateData:
 
 
 class ConfigurationBuilder(SummaryBuilderReportType):
+    '''Builder that constructs the data reporting configuration forms based on REPORT_TYPE.
+
+    NOTE: Configuration forms have an additional REPORT_TYPE: organization'''
 
     def __init__(self, report_type, help_text=None):
         super().__init__(report_type)
@@ -487,45 +542,11 @@ class ConfigurationBuilder(SummaryBuilderReportType):
             self.primary_field_name = "help_text"
             self.other_fields_list = []
 
-    def get_model(self):
-        if self.report_type == 'organization':
-            return organization
-        else:
-            return super(ConfigurationBuilder, self).get_model()
-
     def get_model_data(self):
-        if self.report_type == 'organization':
-            return organization.objects
-        elif self.report_type == "revenue":
-            return revenue.objects.filter()
-        elif self.report_type == "transit_data":
-            return transit_data.objects
-        elif self.report_type == "expense":
-            return expense.objects
-        elif self.report_type == "fund_balance":
-            return fund_balance.objects
-        else:
-            raise Http404("Report type does not exist. -4")
-
-    def get_metric_model(self):
-        if self.report_type == 'organization':
-            return organization
-        else:
-            return super(ConfigurationBuilder, self).get_metric_model()
+        super(ConfigurationBuilder, self).get_metric_model_data(filter_inactive=False)
 
     def get_metric_model_data(self):
-        if self.report_type == 'organization':
-            return organization.objects
-        elif self.report_type == "revenue":
-            return revenue_source.objects
-        elif self.report_type == "transit_data":
-            return transit_metrics.objects
-        elif self.report_type == "expense":
-            return expense_source.objects
-        elif self.report_type == "fund_balance":
-            return fund_balance_type.objects
-        else:
-            raise Http404("Report type does not exist. -5")
+        super(ConfigurationBuilder, self).get_metric_model_data(filter_inactive=False)
 
     def get_model_fields(self):
         '''returns the appropriate model for the given report type'''
@@ -566,7 +587,8 @@ class ConfigurationBuilder(SummaryBuilderReportType):
         my_formset_factory = modelformset_factory(self.get_metric_model(), form=ModelForm, formfield_callback=None,
                                                   formset=BaseModelFormSet, extra=0, can_delete=False,
                                                   can_order=False, max_num=None,
-                                                  fields=['id', "name", self.primary_field_name] + self.other_fields_list,
+                                                  fields=['id', "name",
+                                                          self.primary_field_name] + self.other_fields_list,
                                                   exclude=None,
                                                   widgets=self.get_widgets(),
                                                   validate_max=False, localized_fields=None,
@@ -617,29 +639,35 @@ class ConfigurationBuilder(SummaryBuilderReportType):
 
 
 class ExportReport(SummaryBuilder):
+    """Builder builds multiple export reports based on organization and has methods to output these reports in various
+    formats"""
+
     def __init__(self, target_organization):
         super().__init__()
         self.target_organization = target_organization
-        self.report_type_sub_report_list = {}
+        self.report_type_sub_report_dictionary = {}
         self.gather_report_data()
 
     def gather_report_data(self):
-        next_builder = SummaryDataEntryBuilder(report_type=self.REPORT_TYPES[0], target_organization=self.target_organization)
-        while next_builder:
-            t, nav_headers = next_builder.get_header_navigation()
-            if isinstance(nav_headers, list):
-                nav_headers = nav_headers[next_builder.current_increment-1]
-            data = ExportReport_Data(nav_headers,
-                                     next_builder.get_form_queryset())
-            if next_builder.report_type not in self.report_type_sub_report_list:
-                new_report_type = ExportReport_ReportType(next_builder.report_type)
-                new_report_type.append_export_report_data(data)
-                self.report_type_sub_report_list[next_builder.report_type] = new_report_type
-            else:
-                self.report_type_sub_report_list[next_builder.report_type].append_export_report_data(data)
-            next_builder = next_builder.get_next_builder()
+        """
+        Gathers data for all report types.
+        Data is stored in a dictionary, report_type_sub_report_dictionary, for each report type which holds a
+        ExportReport_ReportType object.
+        """
 
-    def generate_report(self, file_save_os=False):
+        current_builder = SummaryDataEntryBuilder(report_type=self.REPORT_TYPES[0],
+                                                  target_organization=self.target_organization)
+        while current_builder:
+            data = ExportReport_Data(current_builder)
+            if current_builder.report_type not in self.report_type_sub_report_dictionary:
+                new_report_type = ExportReport_ReportType(current_builder.report_type)
+                new_report_type.append_export_report_data(data)
+                self.report_type_sub_report_dictionary[current_builder.report_type] = new_report_type
+            else:
+                self.report_type_sub_report_dictionary[current_builder.report_type].append_export_report_data(data)
+            current_builder = current_builder.get_next_builder()
+
+    def generate_excel_data_entry_report(self, file_save_os=False):
         year = get_current_summary_report_year()
         wb = Workbook()
         ws = wb.active
@@ -657,10 +685,9 @@ class ExportReport(SummaryBuilder):
         style_cell = ws.cell(row=ws.max_row, column=1)
         style_cell.font = Font(italic=True)
         ws.append([])
-        for report_type in self.report_type_sub_report_list.values():
+        for report_type in self.report_type_sub_report_dictionary.values():
 
             for data in report_type.export_report_data_list:
-                i = 0
                 ws.append(["{} - {}".format(report_type.pretty_report_type, data.nav_headers)])
                 style_cell = ws.cell(row=ws.max_row, column=1)
                 style_cell.font = Font(bold=True)
@@ -669,23 +696,480 @@ class ExportReport(SummaryBuilder):
                 ws.cell(row=ws.max_row, column=3).border = Border(bottom=bd)
                 ws.cell(row=ws.max_row, column=4).border = Border(bottom=bd)
 
-                col_data = {}
-                ws.append(['',  year - 2, year - 1, year])
-                for year_x in ['this_year', 'previous_year', 'two_years_ago']:
-                    col_data[year_x] = list(data.query_set.filter(year=year - i).values_list('reported_value', flat=True))
-                    i = i + 1
-                col_labels = data.query_set.filter(year=year).values_list(
-                    report_type.get_metric_model_name() + "__name", flat=True)
-                for k, col in enumerate(col_labels):
-                    ws.append([col, col_data['two_years_ago'][k], col_data['previous_year'][k], col_data['this_year'][k]])
+                ws.append(['', year - 2, year - 1, year])
+                for i in data.get_data(include_comment=False):
+                    ws.append(i)
                 ws.append([])
         if file_save_os:
             wb.save(filename="text.xlsx")
         else:
             return wb
 
+    def summary_final_excel_report(self, file_save_os=False):
+        pass
+
+    def generate_annual_operating_table(self, include_comment=False):
+        output = []
+        print(self.report_type_sub_report_dictionary["transit_data"])
+
+        for mode in self.report_type_sub_report_dictionary["transit_data"].export_report_data_list:
+            print(mode.nav_headers)
+            output.append(mode.pretty_nav_headers)
+            output.extend(mode.get_data(order_by_summary=True, remove_empty_data=True, include_comment=include_comment))
+
+        return output
+
+    def get_fare_revenue(self, include_comment=False):
+        output = []
+        temp_vanpool = False
+        temp_farebox = ["Farebox revenues", 0, 0, 0]
+        for mode in self.report_type_sub_report_dictionary["transit_data"].export_report_data_list:
+            data = mode.get_data(include_comment=include_comment)
+            print(mode.nav_headers)
+            if "Vanpool" in mode.nav_headers:
+                print('true')
+                for i in data:
+                    print(i)
+                    print(i[1:])
+                    if i[0] == "Farebox Revenues":
+                        temp_vanpool = ['Vanpooling revenue', i[1], i[2], i[3]]
+                        print('temp_vanpool: ' + str(temp_vanpool))
+            else:
+                # print(data)
+                for i in data:
+                    # print(i)
+                    # print(i[0])
+                    if i[0] == "Farebox Revenues":
+                        temp_farebox[1] = temp_farebox[1] + i[1]
+                        temp_farebox[2] = temp_farebox[2] + i[2]
+                        temp_farebox[3] = temp_farebox[3] + i[3]
+        output.append(temp_farebox)
+        if temp_vanpool:
+            output.append(temp_vanpool)
+
+        print('output: ' + str(output))
+        return [output]
+
+    def generate_financial_information_table(self, include_comment=False):
+
+        if self.target_organization.summary_organization_classifications.name in ["Transit", "Tribe", "Monorail", "Ferry"]:
+            financial_table_output = {'Farebox revenue': self.get_fare_revenue(),
+                                      'Operating revenue': [],
+                                      'Other operating': [],
+                                      'Other operating - subtotal': [],
+                                      'Federal capital grant revenues': [],
+                                      'State capital grant revenues': [],
+                                      'Local capital expenditures': [],
+                                      'Other expenditures': [],
+                                      'Debt service': [],
+                                      'Ending balances, December 31': []
+                                      }
+        else:
+            raise NotImplementedError
+
+        for value in financial_table_output['Farebox revenue']:
+            financial_table_output['Operating revenue'].extend(value)
+        del financial_table_output['Farebox revenue']
+
+        for source in self.report_type_sub_report_dictionary['revenue'].export_report_data_list:
+            if 'Operating' in source.nav_headers and 'Other' not in source.nav_headers:
+                data = source.get_data(order_by_summary=True, remove_empty_data=True, include_comment=include_comment)
+                financial_table_output['Operating revenue'].extend(data)
+
+                # operating_revenue_subtotal = ['Other operating sub-total']
+                # print('none: ' + str(financial_table_output['Operating revenue']))
+            elif 'Operating' in source.nav_headers and 'Other' in source.nav_headers:
+                data = source.get_data(order_by_summary=True, remove_empty_data=True, include_comment=include_comment)
+                subtotal = ['Other operating sub-total']
+                subtotal.extend(source.get_totals())
+
+                financial_table_output['Other operating - subtotal'].append(subtotal)
+                financial_table_output['Other operating'].extend(data)
+            elif 'Federal' in source.nav_headers and 'Capital' in source.nav_headers:
+                data = source.get_data(order_by_summary=True, remove_empty_data=True, include_comment=include_comment)
+                subtotal = ['Total federal capital']
+                subtotal.extend(source.get_totals())
+
+                financial_table_output['Federal capital grant revenues'].extend(data)
+                financial_table_output['Federal capital grant revenues'].append(subtotal)
+            elif 'State' in source.nav_headers and 'Capital' in source.nav_headers:
+                data = source.get_data(order_by_summary=True, remove_empty_data=True, include_comment=include_comment)
+                subtotal = ['Total state capital']
+                subtotal.extend(source.get_totals())
+
+                financial_table_output['State capital grant revenues'].extend(data)
+                financial_table_output['State capital grant revenues'].append(subtotal)
+            elif 'Local' in source.nav_headers and 'Capital' in source.nav_headers:
+                data = source.get_data(order_by_summary=True, remove_empty_data=True, include_comment=include_comment)
+                subtotal = ['Total local capital']
+                subtotal.extend(source.get_totals())
+
+                financial_table_output['Local capital grant revenues'].extend(data)
+                financial_table_output['Local capital grant revenues'].append(subtotal)
+            elif 'Other' in source.nav_headers:
+                data = source.get_data(order_by_summary=True, remove_empty_data=True, include_comment=include_comment)
+                subtotal = ['Other Capital total']
+                subtotal.extend(source.get_totals())
+
+                financial_table_output['Other capital'].extend(data)
+                financial_table_output['Other capital'].append(subtotal)
+
+        # print('target dict: ' + str(financial_table_output['State capital grant revenues']))
+        for source in self.report_type_sub_report_dictionary['expense'].export_report_data_list:
+            data = source.get_data(order_by_summary=True, remove_empty_data=True, include_comment=include_comment)
+            # print('data: ' + str(data))
+            for row in data:
+                # print('Row: ' + str(row))
+                heading = expense_source.objects.get(name=row[0]).heading
+                # print('heading: ' + str(heading))
+                if heading == "Local capital expenditures":
+                    financial_table_output['Local capital expenditures'].append(row)
+                elif heading == "Other expenditures":
+                    financial_table_output['Other expenditures'].append(row)
+                elif heading == "Debt service":
+                    financial_table_output['Debt service'].append(row)
+            # print('dict: ' + str(financial_table_output['Local capital expenditures']))
+
+        for source in self.report_type_sub_report_dictionary['fund_balance'].export_report_data_list:
+            data = source.get_data(order_by_summary=True, remove_empty_data=True, include_comment=include_comment)
+            subtotal = ['Ending balance total']
+            subtotal.extend(source.get_totals())
+
+            financial_table_output['Ending balances, December 31'].extend(data)
+            financial_table_output['Ending balances, December 31'].append(subtotal)
+
+        for key, value in {'Operating revenue': 'Total (excludes capital revenues)',
+                           'Local capital expenditures': 'Total local capital',
+                           'Debt service': 'Total debt service'}.items():
+
+            total_row = self._calculate_total(value, financial_table_output[key])
+            if total_row:
+                if key =='Operating revenue':
+                    financial_table_output['Operating revenue'].extend(financial_table_output['Other operating - subtotal'])
+                    financial_table_output['Operating revenue'].extend(financial_table_output['Other operating'])
+                    print(financial_table_output['Other operating - subtotal'])
+                    total_row[1] = None_sum(total_row[1], financial_table_output['Other operating - subtotal'][0][1])
+                    total_row[2] = None_sum(total_row[2], financial_table_output['Other operating - subtotal'][0][2])
+                    total_row[3] = None_sum(total_row[3], financial_table_output['Other operating - subtotal'][0][3])
+                    del financial_table_output['Other operating - subtotal']
+                    del financial_table_output['Other operating']
+                    financial_table_output['Operating revenue'].append(total_row)
+                else:
+                    financial_table_output[key].append(total_row)
+
+        output = []
+
+        for key in financial_table_output.keys():
+            output.append(key)
+            for i in financial_table_output[key]:
+                # print(i)
+                depth = lambda L: isinstance(L, list) and max(map(depth, L)) + 1
+                if i is not None:
+                    d = depth(i)
+                    if d > 1:
+                        output.extend(i)
+                    else:
+                        output.append(i)
+
+        return output
+
+    def _calculate_total(self, total_label, dict_value):
+        total_row = [total_label, 0, 0, 0]
+        # print(len(dict_value))
+        # print(dict_value)
+        for row in dict_value:
+            # print(row)
+            # print(len(row))
+            if row is None:
+                pass
+            elif len(row) == 1:
+                row = row[0]
+
+            if "Depreciation" in row[0]:
+                pass
+            else:
+                total_row[1] = None_sum(total_row[1], row[1])
+                total_row[2] = None_sum(total_row[2], row[2])
+                total_row[3] = None_sum(total_row[3], row[3])
+        if total_row[1] == 0 and total_row[2] == 0 and total_row[3] == 0:
+            return ['']
+        else:
+            return total_row
+
+    def _calculate_percent(self, list_of_lists):
+        # print(list_of_lists)
+        for row in list_of_lists:
+            if isinstance(row, list) and len(row) > 1:
+                if row[2] == 0:
+                    if row[3] == 0:
+                        value_to_append = 0
+                    else:
+                        value_to_append = 100.00
+                else:
+                    value_to_append = (row[3]/row[2] - 1) * 100
+                value_to_append = str("{:.2f}".format(round(value_to_append, 2)))
+                if len(row) == 5:
+                    row.append(row[4])
+                    row[4] = value_to_append
+                else:
+                    row.append(value_to_append)
+        return list_of_lists
+
+    def _format_numbers(self, list_of_lists):
+        non_money_transit_metrics = transit_metrics.objects.exclude(form_masking_class="Money").values_list('name', flat=True)
+
+        for row in list_of_lists:
+            # print(row)
+            if isinstance(row, list) and len(row) > 1:
+                if row[0] not in non_money_transit_metrics:
+                    row[1] = "${:,.0f}".format(row[1])
+                    row[2] = "${:,.0f}".format(row[2])
+                    row[3] = "${:,.0f}".format(row[3])
+                else:
+                    if "FTE" in row[0]:
+                        row[1] = "{:,.1f}".format(row[1])
+                        row[2] = "{:,.1f}".format(row[2])
+                        row[3] = "{:,.1f}".format(row[3])
+                    else:
+                        row[1] = "{:,.0f}".format(row[1])
+                        row[2] = "{:,.0f}".format(row[2])
+                        row[3] = "{:,.0f}".format(row[3])
+        return list_of_lists
+
+    def _format_report(self, list_of_lists):
+        list_of_lists = self._calculate_percent(list_of_lists)
+        list_of_lists = self._format_numbers(list_of_lists)
+        return list_of_lists
+
+    def generate_excel_summary_report(self, file_save_os=False, file_save_path='./', include_comment=False):
+        year = get_current_summary_report_year()
+        wb = Workbook()
+        ws = wb.active
+        bd = Side(style='thin', color="000000")
+        ws.title = "SummaryReportData"
+        ws.column_dimensions['A'].width = 47
+        ws.column_dimensions['B'].width = 10
+        ws.column_dimensions['C'].width = 10
+        ws.column_dimensions['D'].width = 10
+
+        operating = self.generate_annual_operating_table(include_comment=include_comment)
+        operating = self._format_report(operating)
+        financial = self.generate_financial_information_table(include_comment=include_comment)
+
+        financial = self._format_report(financial)
+
+        totals_by_fund_source = self.generate_total_funds_by_source_table()
+
+        ws.append([self.target_organization.name])
+        ws.cell(row=ws.max_row, column=1).font = Font(bold=True)
+
+
+
+        ws.append(['Annual Operating Information',
+                   get_current_summary_report_year()-2,
+                   get_current_summary_report_year()-1,
+                   get_current_summary_report_year()-0,
+                   "One year change (%)"])
+        for i in range(1, 6):
+            ws.cell(row=ws.max_row, column=i).font = Font(bold=True)
+            ws.cell(row=ws.max_row, column=i).alignment = Alignment(horizontal='center')
+            ws.cell(row=ws.max_row, column=i).border = Border(bottom=bd, top=bd, right=bd, left=bd)
+
+        first_item = True
+        for i in operating:
+            if isinstance(i, list):
+                ws.append(i)
+                print(i[0])
+
+
+            else:
+                if not first_item:
+                    ws.append([""])
+                else:
+                    first_item=False
+                ws.append([i])
+                ws.cell(row=ws.max_row, column=1).font = Font(bold=True)
+
+        ws.append([''])
+        ws.append(['Financial Information',
+                   get_current_summary_report_year() - 2,
+                   get_current_summary_report_year() - 1,
+                   get_current_summary_report_year() - 0,
+                   "One year change (%)"])
+        for i in range(1, 6):
+            ws.cell(row=ws.max_row, column=i).font = Font(bold=True)
+            ws.cell(row=ws.max_row, column=i).alignment = Alignment(horizontal='center')
+
+        first_item = True
+        skip_bold=False
+        for i in financial:
+            if isinstance(i, list):
+                ws.append(i)
+                if "Depreciation" in i[0]:
+                    skip_bold = True
+            else:
+                if not first_item or not skip_bold:
+                    ws.cell(row=ws.max_row, column=1).alignment = Alignment(horizontal='right')
+                else:
+                    first_item = False
+                if not skip_bold:
+                    for j in range(1, 6):
+                        ws.cell(row=ws.max_row, column=j).font = Font(bold=True)
+                else:
+                    skip_bold = False
+
+                ws.append([i])
+                ws.cell(row=ws.max_row, column=1).font = Font(bold=True)
+            if i[0] == "Other operating sub-total":
+                ws.cell(row=ws.max_row, column=1).alignment = Alignment(horizontal='right')
+                for j in range(1, 6):
+                    ws.cell(row=ws.max_row, column=j).font = Font(bold=True)
+            if "Other-" in i[0]:
+                ws.cell(row=ws.max_row, column=1).alignment = Alignment(horizontal='right')
+        ws.cell(row=ws.max_row, column=1).alignment = Alignment(horizontal='right')
+        for i in range(1, 6):
+            ws.cell(row=ws.max_row, column=i).font = Font(bold=True)
+
+        ws.append([''])
+        ws.append(['Total funds by source',
+                   get_current_summary_report_year() - 2,
+                   get_current_summary_report_year() - 1,
+                   get_current_summary_report_year() - 0,
+                   'One year change(%)'])
+        for i in range(1, 6):
+            ws.cell(row=ws.max_row, column=i).font = Font(bold=True)
+            ws.cell(row=ws.max_row, column=i).alignment = Alignment(horizontal='center')
+
+        # print(totals_by_fund_source)
+        first_item = True
+        for i in totals_by_fund_source:
+
+            print(i)
+            print(str(i) + ' - ' + str(len(i)))
+            if isinstance(i, list) and len(i) > 1:
+                ws.append(i)
+            else:
+                if not first_item:
+                    ws.cell(row=ws.max_row, column=1).alignment = Alignment(horizontal='right')
+                else:
+                    first_item=False
+                for j in range(1, 6):
+                    ws.cell(row=ws.max_row, column=j).font = Font(bold=True)
+
+                ws.append(i)
+                ws.cell(row=ws.max_row, column=1).font = Font(bold=True)
+        for i in range(1, 6):
+            ws.cell(row=ws.max_row, column=i).font = Font(bold=True)
+        ws.cell(row=ws.max_row, column=1).alignment = Alignment(horizontal='right')
+
+        if file_save_os:
+            save_name = file_save_path + self.target_organization.name + '.xlsx'
+            wb.save(filename=save_name)
+        else:
+            return wb
+
+    def generate_total_funds_by_source_table(self):
+        i = 0
+        output_dict = {'Local revenues': {},
+                       'State revenues': {},
+                       'Federal revenues': {},
+                       'Operating investments': {},
+                       'Local capital investments': {},
+                       'State capital investments': {},
+                       'Federal capital investments': {},
+                       'Other investments': {}
+                       }
+
+        for year_x in ['this_year', 'previous_year', 'two_years_ago']:
+            output_dict['Local revenues'][year_x] = revenue.objects.filter(
+                organization=self.target_organization,
+                year=get_current_summary_report_year() - i,
+                revenue_source__government_type__in=["Local", "Other"]).aggregate(sum=Sum('reported_value'))['sum']
+            output_dict['Local revenues'][year_x] = None_sum(output_dict['Local revenues'][year_x],
+                                                             transit_data.objects.filter(
+                                                                 organization=self.target_organization,
+                                                                 year=get_current_summary_report_year() - i,
+                                                                 transit_metric_id=10).aggregate(sum=Sum('reported_value'))['sum'])
+
+            output_dict['State revenues'][year_x] = revenue.objects.filter(
+                organization=self.target_organization,
+                year=get_current_summary_report_year() - i,
+                revenue_source__government_type="State").aggregate(sum=Sum('reported_value'))['sum']
+
+            output_dict['Federal revenues'][year_x] = revenue.objects.filter(
+                organization=self.target_organization,
+                year=get_current_summary_report_year() - i,
+                revenue_source__government_type="Federal").aggregate(sum=Sum('reported_value'))['sum']
+
+            output_dict['Operating investments'][year_x] = transit_data.objects.filter(
+                organization=self.target_organization,
+                year=get_current_summary_report_year() - i,
+                transit_metric_id=9).aggregate(sum=Sum('reported_value'))['sum']
+
+            # output_dict['Operating investments'][year_x] = None_sum(output_dict['Operating investments'][year_x],
+            #                                                         revenue.objects.filter(
+            #                                                             organization=self.target_organization,
+            #                                                             year=get_current_summary_report_year() - i,
+            #                                                             revenue_source__funding_type="Operating").aggregate(sum=Sum('reported_value'))['sum'])
+
+            output_dict['Local capital investments'][year_x] = expense.objects.filter(
+                organization=self.target_organization,
+                year=get_current_summary_report_year() - i,
+                expense_source__heading='Local capital expenditures').aggregate(sum=Sum('reported_value'))['sum']
+
+            output_dict['State capital investments'][year_x] = revenue.objects.filter(
+                organization=self.target_organization,
+                year=get_current_summary_report_year() - i,
+                revenue_source__government_type="State",
+                revenue_source__funding_type="Capital").aggregate(sum=Sum('reported_value'))['sum']
+
+            output_dict['Federal capital investments'][year_x] = revenue.objects.filter(
+                organization=self.target_organization,
+                year=get_current_summary_report_year() - i,
+                revenue_source__government_type="Federal",
+                revenue_source__funding_type="Capital").aggregate(sum=Sum('reported_value'))['sum']
+
+            output_dict['Other investments'][year_x] = expense.objects.filter(
+                organization=self.target_organization,
+                year=get_current_summary_report_year() - i,
+                expense_source__id__in=[2, 4, 5]).aggregate(sum=Sum('reported_value'))['sum']
+
+            i += 1
+        revenue_table = []
+        investment_table = []
+        output = []
+        for key, value in output_dict.items():
+            row = [key, value['two_years_ago'], value['previous_year'], value['this_year']]
+            if 'revenues' in key:
+                revenue_table.append(row)
+            else:
+                investment_table.append(row)
+
+        revenue_table = [[v if v is not None else 0 for v in nested] for nested in revenue_table]
+        investment_table = [[v if v is not None else 0 for v in nested] for nested in investment_table]
+
+        revenue_table.append(self._calculate_total('Total revenues', revenue_table))
+        revenue_table = self._calculate_percent(revenue_table)
+        revenue_table = self._format_numbers(revenue_table)
+
+        investment_table.append(self._calculate_total('Total investments', investment_table))
+        investment_table = self._calculate_percent(investment_table)
+        investment_table = self._format_numbers(investment_table)
+
+        output.append(['Revenues'])
+        output.extend(revenue_table)
+        output.append(['Investments'])
+        output.extend(investment_table)
+
+        return output
+
+
+
+
 
 class ExportReport_ReportType(SummaryBuilderReportType):
+    """Class for holding each Report Type and its data"""
+
     def __init__(self, report_type):
         super().__init__(report_type)
         self.export_report_data_list = []
@@ -694,335 +1178,131 @@ class ExportReport_ReportType(SummaryBuilderReportType):
     def append_export_report_data(self, data):
         self.export_report_data_list.append(data)
 
-    def get_pretty_report_type(self):
-        if self.report_type == "revenue":
-            return 'Revenue'
-        elif self.report_type == "transit_data":
-            return 'Transit Data'
-        elif self.report_type == "expense":
-            return 'Expenses'
-        elif self.report_type == "fund_balance":
-            return 'Fund balances'
-        else:
-            raise Http404("Report type does not exist. -6")
-
+####
+# For anyone encountering this code in the future.  I'm deeply sorry. Sometimes the only way out is through.
+# Maybe it will be refactored before you get read this.
+#
+# “Every now and then when your life gets complicated and the weasels start closing in, the only real cure is to load up on heinous chemicals (or write some shitty code) and then drive like a bastard from Hollywood to Las Vegas. To relax, as it were, in the womb of the desert sun.”
+# # ― Hunter S. Thompson
+####
 
 class ExportReport_Data():
-    def __init__(self, nav_headers, query_set):
+    def __init__(self, current_SummaryDataEntryBuilder):
+        t, nav_headers = current_SummaryDataEntryBuilder.get_header_navigation()
         if isinstance(nav_headers, list):
+            nav_headers = nav_headers[current_SummaryDataEntryBuilder.current_increment - 1]
+            self.nav_headers_as_list = nav_headers
             self.nav_headers = ' '.join([str(elem) for elem in nav_headers])
+            self.pretty_nav_headers = str(nav_headers[0]) + " (" + str(nav_headers[1]) + ")"
         else:
+            self.nav_headers_as_list = [nav_headers, None]
             self.nav_headers = nav_headers
-        self.query_set = query_set.filter(year__gte=get_current_summary_report_year()-3)
+            self.pretty_nav_headers = nav_headers
+        self.query_set = current_SummaryDataEntryBuilder.get_form_queryset().filter(
+            year__gte=get_current_summary_report_year() - 3)
+        self.current_builder = current_SummaryDataEntryBuilder
+        self.year = get_current_summary_report_year()
+
+    def _data_as_list_of_lists(self, include_comment=False, qry_set=None):
+        """Reformats data to a tabular form where each list in the list is a row.  This is used to format data for
+        easier printing, display, or manipulation"""
+        col_data = {}
+        list_of_lists = []
+        i = 0
+        if not qry_set:
+            my_query_set = self.query_set
+        for year_x in ['this_year', 'previous_year', 'two_years_ago']:
+            col_data[year_x] = list(my_query_set.filter(year=self.year - i).values_list('reported_value', flat=True))
+            i = i + 1
+
+        if include_comment:
+            comment = list(my_query_set.filter(year=self.year).values_list('comments', flat=True))
+        col_labels = my_query_set.filter(year=self.year).values_list(
+            self.current_builder.get_metric_model_name() + "__name", flat=True)
+        for k, col in enumerate(col_labels):
+            row = [col, col_data['two_years_ago'][k], col_data['previous_year'][k], col_data['this_year'][k]]
+            if include_comment:
+                if comment[k] is None:
+                    comment[k] = ''
+                row.extend([comment[k]])
+            list_of_lists.append(row)
+
+        return list_of_lists
+
+    def _remove_empty_data(self, list_of_lists):
+        for i in list_of_lists[:]:
+            delete_row = False
+            if all([x == 0 or x is None or x == 'None' for x in i[1:3]]):
+                delete_row = True
+            if delete_row:
+                list_of_lists.remove(i)
+        return list_of_lists
+
+    def get_data(self, order_by_summary=False, remove_empty_data=False, none_to_zero=True, include_comment=True):
+        if order_by_summary and self.current_builder.has_order_in_summary():
+            self.query_set = self.query_set.order_by(
+                self.current_builder.get_metric_model_name() + '__order_in_summary')
+        output = self._data_as_list_of_lists(include_comment=include_comment)
+        if remove_empty_data:
+            output = self._remove_empty_data(output)
+        if none_to_zero:
+            output = [[v if v is not None else 0 for v in nested] for nested in output]
+
+        return output
+
+    def get_totals(self):
+        # print(self.current_builder.report_type)
+        if self.current_builder.report_type in ['transit_data']:
+            self.can_total, self.totals_list = False, []
+        else:
+            totals = [0, 0, 0]
+            j = 0
+            for i in [2, 1, 0]:
+                value = self.query_set.filter(year=self.year - i,
+                                              reported_value__isnull=False).aggregate(Sum('reported_value'))['reported_value__sum']
+                if value is None:
+                    value = 0
+                totals[j] = value
+                j = j + 1
+        return totals
+
+    def get_farebox_revenue_as_list_of_lists(self):
+        output = False
+        if self.current_builder.report_type == "transit_data":
+            qry_set = self.query_set.filter(transit_metrics_id=10)
+            output = self._data_as_list_of_lists(qry_set)
+        return output
 
 
+def generate_org_summary_tables(include_comment=False, test_org=False, start_with_org=None):
+    if include_comment:
+        path="./output_with_comments"
+    else:
+        path="./output/"
 
-# what i need is a set of dictionaries/querysets in the correct order
-# I need the following special capabilities:
-# 1) create special rows/tables based on the type of data that is being queried
-# 2) dynamically create headings based on the data that is pulled
-# 3) preserve spacing and indentation norms
-# 4) follow a particular order of display that can change based on report type, separate for ferry/transit/tribe and cp
-# 5) have to be able to join created fields to queried field
-# 6)
+    if start_with_org:
+        run=False
+    else:
+        run=True
 
-#
-# class SummaryBuilder:
-#
-#     def __init__(self, report_type):
-#         self.REPORT_TYPES = ['transit_data', 'revenue', 'expense', 'fund_balance']
-#         self.report_type = report_type
-#
-#     def get_current_report_year(self):
-#         current_year = get_current_summary_report_year()
-#         years = [current_year-2, current_year-1, current_year]
-#         return years
-#
-#
-#     def get_model(self):
-#         '''returns the appropriate model for the given report type'''
-#         if self.report_type == "revenue":
-#             return revenue
-#         elif self.report_type == "transit_data":
-#             return transit_data
-#         elif self.report_type == "expense":
-#             return expense
-#         elif self.report_type == "fund_balance":
-#             return fund_balance
-#         else:
-#             raise Http404("Report type does not exist. -4")
-#
-#     def get_model_data(self):
-#         '''returns the appropriate model for the given report type'''
-#         if self.report_type == "revenue":
-#             return revenue.objects.filter(revenue_source__inactive_flag=False)
-#         elif self.report_type == "transit_data":
-#             return transit_data.objects
-#         elif self.report_type == "expense":
-#             return expense.objects
-#         elif self.report_type == "fund_balance":
-#             return fund_balance.objects
-#         else:
-#             raise Http404("Report type does not exist. -4")
-#
-#     def get_metric_model(self):
-#         '''returns the appropriate metric model for the given report type'''
-#         if self.report_type == "revenue":
-#             return revenue_source
-#         elif self.report_type == "transit_data":
-#             return transit_metrics
-#         elif self.report_type == "expense":
-#             return expense_source
-#         elif self.report_type == "fund_balance":
-#             return fund_balance_type
-#         else:
-#             raise Http404("Report type does not exist. -5")
-#
-#     def get_metric_model_data(self):
-#         '''returns the appropriate metric model for the given report type'''
-#         if self.report_type == "revenue":
-#             return revenue_source.objects.filter(inactive_flag=False)
-#         elif self.report_type == "transit_data":
-#             return transit_metrics.objects
-#         elif self.report_type == "expense":
-#             return expense_source.objects
-#         elif self.report_type == "fund_balance":
-#             return fund_balance_type.objects
-#         else:
-#             raise Http404("Report type does not exist. -5")
-#
-#     def get_metric_model_name(self):
-#         '''Returns the metric model as a string.'''
-#         if self.report_type == "revenue":
-#             return 'revenue_source'
-#         elif self.report_type == "transit_data":
-#             return 'transit_metric'
-#         elif self.report_type == "expense":
-#             return 'expense_source'
-#         elif self.report_type == "fund_balance":
-#             return 'fund_balance_type'
-#         else:
-#             raise Http404("Report type does not exist. -6")
-#
-#     def get_metric_id_field_name(self):
-#         '''Returns the name of the field name of the id field in the metric model as a string.'''
-#         if self.report_type == "transit_data":
-#             return 'transit_metric_id'
-#         else:
-#             metric_model = self.get_metric_model()
-#             return metric_model.__name__ + '_id'
-#
-#
-# class ReportAgencyDataTableBuilder(SummaryBuilder):
-#     def __init__(self, report_type, target_organization):
-#         super().__init__(report_type)
-#         self.REPORT_TYPES = ['transit_data', 'revenue', 'expense', 'fund_balance']
-#         self.years = self.get_current_report_year()
-#         self.report_type = report_type
-#         self.target_organization = target_organization
-#         self.services_offered = self.get_all_services_offered()
-#         self.summary_report = SummaryReport()
-#         self.data = self.get_model_data_for_agency()
-#         self.heading_list = []
-#         self.agency_classification = self.get_agency_classification()
-#         self.metrics = self.get_metrics_for_agency_classification()
-#         self.current_report_year = max(self.years)
-#         self.last_report_year = self.current_report_year-1
-#         self.revenue_type_list = [('Local', 'Operating'), ('State', 'Operating'), ('Federal', 'Operating'), ('Other', 'Operating'),('Federal', 'Capital'), ('State', 'Capital'), ('Local', 'Capital')]
-#         self.vanpooling_revenue = self.get_vanpool_revenue()
-#         self.farebox_revenue = self.get_farebox_revenue()
-#
-#
-#     def get_metrics_for_agency_classification(self):
-#         return self.get_metric_model().objects.filter(agency_classification = self.agency_classification).order_by('order_in_summary')
-#
-#
-#     def get_model_data_for_agency(self):
-#         return self.get_model_data().filter(organization_id = self.target_organization, year__in = self.years)
-#         #filtered by get_metrics_for_agency_classification() and filters(may need to build dictionary or move the query dict up a class higher)
-#
-#     def get_metric_model_fields(self):
-#         return self.get_metric_model_data().all()
-#
-#     def get_agency_classification(self):
-#         return organization.objects.get(id = self.target_organization).summary_organization_classifications_id
-#
-#
-#     def revenue_totals_and_exceptions(self, revenue):
-#         if revenue == 'Farebox Revenues':
-#             revenue_data = self.farebox_revenue
-#             return revenue_data
-#         elif revenue == 'Vanpooling Revenue':
-#             revenue_data = self.vanpooling_revenue
-#             return revenue_data
-#         elif revenue == 'Other Operating Subtotal':
-#             return self.data.filter(revenue_source__government_type = 'Other', revenue_source__funding_type = 'Operating').values('year').annotate(reported_value = Sum('reported_value')).order_by('year')
-#         elif revenue == 'Total (Excludes Capital Revenue)':
-#             return self.data.filter(revenue_source__funding_type='Operating').values('year').annotate(reported_value = Sum('reported_value')).order_by('year')
-#         elif revenue == 'Total State Capital':
-#             return self.data.filter(revenue_source__government_type='State',revenue_source__funding_type='Capital').values('year').annotate(reported_value=Sum('reported_value')).order_by('year')
-#         elif revenue == 'Total Federal Capital':
-#             return self.data.filter(organization_id=self.target_organization, year__in=self.years,revenue_source__government_type='Federal',revenue_source__funding_type='Capital').values('year').annotate(reported_value=Sum('reported_value')).order_by('year')
-#
-#     def get_vanpool_revenue(self):
-#         return transit_data.objects.filter(organization_id =self.target_organization, year__in=self.years,transit_metric__name='Farebox Revenues',
-#                                            transit_mode_id =3).values('reported_value').order_by('year')
-#
-#     def get_farebox_revenue(self):
-#         return transit_data.objects.filter(organization_id=self.target_organization, year__in=self.years,transit_metric__name='Farebox Revenues', transit_mode_id__in=[1,2,4,5,6,7,8,9,10,11], reported_value__isnull=False).values('year').annotate(reported_value = Sum('reported_value')).order_by('year')
-#
-#     def get_all_services_offered(self):
-#         '''gets the data needed to build header navigation for filters'''
-#         if self.report_type in ['transit_data', ]:
-#             services_offered = service_offered.objects.filter(organization_id =self.target_organization, service_mode_discontinued=False).order_by('transit_mode_id')
-#             return services_offered
-#         elif self.report_type in ['expense', 'fund_balance', 'revenue']:
-#             pass
-#         else:
-#             raise Http404
-#
-#
-#
-#     def get_table_types_by_organization(self):
-#         if self.report_type == 'transit_data':
-#             operating_report = SummaryTable()
-#             for service in self.services_offered:
-#                 heading = [('transit_metric', '{} ({})'.format(service.transit_mode.name, service.administration_of_mode)), ('year1', ''), ('year2', ''), ('year3', ''), ('percent_change', ''), ('role', 'heading')]
-#                 heading = dict(heading)
-#                 operating_report.add_row_component(heading)
-#                 for metric in list(self.metrics):
-#                     op_data = self.data.filter(administration_of_mode = service.administration_of_mode, transit_mode_id = service.transit_mode_id, transit_metric__name = metric).values('reported_value').order_by('year')
-#                     if not op_data:
-#                         continue
-#                     op_data_list = []
-#                     check_list = []
-#                     count = 1
-#                     op_data = list(op_data)
-#                     for k in op_data:
-#                         if k['reported_value'] == None:
-#                             k['reported_value'] = 0
-#                         op_data_list.append(('year{}'.format(count),k['reported_value']))
-#                         check_list.append(k['reported_value'])
-#                         count+=1
-#                     if list(set(check_list)) == [0]:
-#                         continue
-#                     try:
-#                         percent_change = ((op_data_list[-1][1] - op_data_list[-2][1])/op_data_list[-2][1])*100
-#                     except ZeroDivisionError:
-#                         if op_data_list[-1][1] == op_data_list[-2][1] == 0:
-#                             percent_change = 0.00
-#                         else:
-#                             percent_change = 100.00
-#                     op_data = [('transit_metric', str(metric))] + op_data_list + [('percent_change',percent_change), ('role', 'body')]
-#                     op_data = dict(op_data)
-#                     operating_report.add_row_component(op_data)
-#             return operating_report
-#         elif self.report_type == 'revenue':
-#             revenue_report = SummaryTable()
-#             for revenue_type in self.revenue_type_list:
-#                 revenue_source_list = self.metrics.filter(government_type=revenue_type[0], funding_type=revenue_type[1]).values_list('name', flat = True)
-#                 revenue_source_list = list(revenue_source_list)
-#                 print(revenue_source_list)
-#                 blank_heading_list = [('year1', ''), ('year2', ''), ('year3', ''), ('percent_change', ''), ('role', 'heading')]
-#                 if revenue_type == ('Local', 'Operating'):
-#                     heading = [('revenue_source', 'Operating Related Revenues')]
-#                     heading = heading + blank_heading_list
-#                     heading = dict(heading)
-#                     revenue_report.add_row_component(heading)
-#                 elif revenue_type == ('Federal', 'Capital'):
-#                     heading = [('revenue_source', 'Federal capital grant revenues')]
-#                     heading = heading + blank_heading_list
-#                     heading = dict(heading)
-#                     revenue_report.add_row_component(heading)
-#                 elif revenue_type == ('State', 'Capital'):
-#                     heading = [('revenue_source', 'State capital grant revenue')]
-#                     heading = heading + blank_heading_list
-#                     heading = dict(heading)
-#                     revenue_report.add_row_component(heading)
-#                 for revenue in revenue_source_list:
-#                     if revenue in ['Farebox Revenues', 'Vanpooling Revenue', 'Other Operating Subtotal', 'Total (Excludes Capital Revenue)', 'Total Federal Capital', 'Total State Capital']:
-#                         revenue_data = self.revenue_totals_and_exceptions(revenue)
-#                     else:
-#                         revenue_data = self.data.filter(revenue_source__name=revenue).values('reported_value').order_by('year')
-#                     if not revenue_data:
-#                         continue
-#                     revenue_data_list = []
-#                     check_list = []
-#                     count = 1
-#                     revenue_data = list(revenue_data)
-#                     for k in revenue_data:
-#                         check_list.append(k['reported_value'])
-#                         if k['reported_value'] == None:
-#                             k['reported_value'] = 0
-#                         revenue_data_list.append(('year{}'.format(count), k['reported_value']))
-#                         count += 1
-#                     if list(set(check_list)) == [None]:
-#                         continue
-#                     try:
-#                         percent_change = ((revenue_data_list[-1][1] - revenue_data_list[-2][1])/revenue_data_list[-2][1])*100
-#                     except ZeroDivisionError:
-#                         percent_change = 100.00
-#                     if revenue in ['Other Operating Subtotal', 'Total (Excludes Capital Revenue)', 'Total Federal Capital', 'Total State Capital']:
-#                         revenue_data = [('revenue_source', revenue)] + revenue_data_list + [('percent_change',percent_change), ('role', 'subtotal')]
-#                     else:
-#                         revenue_data = [('revenue_source', revenue)] + revenue_data_list + [('percent_change', percent_change), ('role', 'body')]
-#                     revenue_data = dict(revenue_data)
-#                     revenue_report.add_row_component(revenue_data)
-#             return revenue_report
-#
-#
-#
-# class SummaryReport:
-#     def __init__(self):
-#         self.summary_tables = {}
-#
-#     def add_table(self, summary_table):
-#         self.summary_tables.update(summary_table)
-#
-#
-# class SummaryTable:
-#
-#     def __init__(self):
-#         self.table_components = []
-#
-#     def add_row_component(self, table_component):
-#         self.table_components.append(table_component)
-#
-#
-# class SummaryTableComponent:
-#
-#     def __init__(self,  data):
-#         self.data = data
-#
-#
-#
-#
-# class SummaryDataReportBuilder(ReportAgencyDataTableBuilder):
-#
-#     def __init__(self):
-#         self.summary_report = SummaryReport()
-#         self.data = self.get_model_data_for_agency()
-#
-#
-#     def get_table_types_by_organization(self):
-#         if self.target_organization[0].summary_organization_classifications == "Transit":
-#             operating_report = SummaryTable()
-#             for service in self.services_offered:
-#                 op_data = self.data.filter(administration_of_mode = service.administration_of_mode, transit_mode_id = service.transit_mode_id).order_by('transit_metrics.order_in_summary')
-#                 # gonna need to add a heading in here
-#                 print(op_data)
-#                 operating_report.add_table_component(op_data)
-#
-#             SummaryReport.add_table(operating_report)
-#
-#
-#
-#         else:
-#             pass
-#
-#
-# #    def build
+    orgs = organization.objects.filter(summary_organization_classifications_id__in=[6, 7, 5], #2],
+                                       summary_reporter=True).all()
+    if test_org:
+        orgs = organization.objects.filter(id=test_org).all()
 
+    for org in orgs:
+        if start_with_org:
+            if org.name == start_with_org:
+                run = True
 
+        if run and not org.name in ['Lower Elwha Klallam Tribe',
+                                    'Nooksack Indian Tribe',
+                                    'Quileute Nation',
+                                    'Squaxin Island Tribe',
+                                    'Tulalip Tribes',
+                                    'Colville Confederated Tribes']:
+            print('working on: ' + org.name)
+            t = ExportReport(org)
+            t.generate_excel_summary_report(file_save_os=True, file_save_path=path, include_comment=include_comment)
 
-
+    return True
