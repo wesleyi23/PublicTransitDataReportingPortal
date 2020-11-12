@@ -59,7 +59,7 @@ from .forms import CustomUserCreationForm, \
     cover_sheet_organization, \
     transit_data_form, \
     service_offered_form, validation_error_form, email_contact_form, change_user_org, \
-    cover_sheet_wsdot_review, add_cover_sheet_review_note, tribal_permissions
+    cover_sheet_wsdot_review, add_cover_sheet_review_note, tribal_permissions,report_generating_form
 from .models import profile, vanpool_report, custom_user, vanpool_expansion_analysis, organization, cover_sheet, \
     revenue, transit_data, expense, expense_source, service_offered, revenue_source, \
     transit_metrics, transit_mode, fund_balance, fund_balance_type, summary_organization_type, validation_errors, \
@@ -156,16 +156,18 @@ def dashboard(request):
                 return next_vanpool_report_status
 
             def ghg_calculator():
+                if recent_vanpool_report.vanshare_miles_traveled == None:
+                    recent_vanpool_report.vanshare_miles_traveled = 0
+                if last_year_report.vanshare_miles_traveled == None:
+                    last_year_report.vanshare_miles_traveled = 0
                 current_monthly_sov = green_house_gas_per_sov_mile() * recent_vanpool_report.average_riders_per_van * (
-                        recent_vanpool_report.vanpool_miles_traveled + recent_vanpool_report.vanshare_miles_traveled)
+                        recent_vanpool_report.vanpool_miles_traveled +  recent_vanpool_report.vanshare_miles_traveled)
                 current_monthly_vanpool_emissions = recent_vanpool_report.vanpool_miles_traveled * green_house_gas_per_vanpool_mile()
                 current_monthly_emissions = current_monthly_sov - current_monthly_vanpool_emissions
                 last_year_monthly_sov = green_house_gas_per_sov_mile() * last_year_report.average_riders_per_van * (
                         last_year_report.vanpool_miles_traveled + last_year_report.vanshare_miles_traveled)
-                last_year_monthly_vanpool_emissions = (
-                                                              last_year_report.vanpool_miles_traveled + last_year_report.vanshare_miles_traveled) * green_house_gas_per_vanpool_mile()
+                last_year_monthly_vanpool_emissions = (last_year_report.vanpool_miles_traveled + last_year_report.vanshare_miles_traveled * green_house_gas_per_vanpool_mile())
                 last_year_monthly_emissions = last_year_monthly_sov - last_year_monthly_vanpool_emissions
-
                 ghg_percent = ((current_monthly_emissions - last_year_monthly_emissions) / last_year_monthly_emissions)
                 return [round(current_monthly_emissions, 2), ghg_percent]
 
@@ -1288,7 +1290,7 @@ def view_annual_operating_information(request):
     rev_df = build_revenue_table(years, user_org_id, org_classification)
     tfs = build_total_funds_by_source(years, user_org_id)
     df = pd.concat([df, rev_df, tfs], axis=0)
-    df.to_excel(r'I:\Public_Transportation\Data_Team\PT_Summary\2019\Transits\Statewide\2019 SW Fin Summ under a 1 million.xlsx')
+    #df.to_excel(r'I:\Public_Transportation\Data_Team\PT_Summary\2019\Transits\Statewide\2019 SW Fin Summ under a 1 million.xlsx')
     return render(request, 'pages/summary/view_agency_report.html', {})
 
 
@@ -1380,9 +1382,9 @@ def view_performance_measures(request):
 
 @login_required(login_url='/Panacea/login')
 def view_statewide_rollup(request):
+    import pandas as pd
     from .statewide_tables import generate_performance_measure_table, create_statewide_revenue_table, \
         create_statewide_expense_table
-    import pandas as pd
     # report = StatewideSixYearReportBuilder('operating_stats')
     # headings, data = report.build_tables()
     years = [2014, 2015, 2016, 2017, 2018, 2019]
@@ -1413,16 +1415,11 @@ def view_statewide_rollup(request):
             count += 1
         else:
             finaldf = pd.concat([finaldf, df], axis=0)
-    finaldf.to_excel(r'I:\Public_Transportation\Data_Team\PT_Summary\2019\Transits\Statewide\2019 Ser Mode Tables under 1 million.xlsx')
     report = StatewideSixYearReportBuilder('investments', 'sound')
     headings, data = report.build_tables()
-    data = pd.DataFrame(data)
-    data.columns = ['Capital Investment Sources'] + years
-    data.to_excel(r'I:\Public_Transportation\Data_Team\PT_Summary\2019\Transits\Statewide\2019 SW Investments under 1 million.xlsx')
-    from .statewide_tables import create_statewide_revenue
-    df = create_statewide_revenue(2019, 'sound')
-    df.to_excel(r'I:\Public_Transportation\Data_Team\PT_Summary\2019\Transits\Statewide\2019 SW revenues under 1 million.xlsx')
-    return render(request, 'pages/summary/view_statewide_rollup.html')
+    print(data)
+    print(headings)
+    return render(request, 'pages/summary/view_statewide_rollup.html', {'data': data, 'headings':headings})
 
 
 @login_required(login_url='/Panacea/login')
@@ -1999,6 +1996,19 @@ def configure_agency_types(request, model=None):
         return render(request, 'pages/summary/configure_agency_types.html', {'formset': formset,
 
                                                                              'model': model})
+
+
+@login_required(login_url='/Panacea/login')
+def run_statewide_report_tables(request):
+    if request.method == 'POST':
+        form = report_generating_form(request.POST)
+        print(form.is_valid())
+        if form.is_valid():
+            report_list = request.POST.getlist('report_selection')
+            print(report_list)
+    else:
+        form = report_generating_form
+    return render(request, 'pages/summary/run_statewide_report_tables.html', {'form':form})
 
 
 @login_required(login_url='/Panacea/login')

@@ -83,6 +83,12 @@ class StatewideSixYearReportBuilder(StatewideReports):
         return result_list
 
 
+    def percent_of_total(self, data_list):
+        for k in data_list[:-1]:
+            percent_of_total = k[-1]/data_list[-1][-1]
+            k.append(percent_of_total)
+        return data_list
+
 
     def build_tables(self):
         if self.report_type =='operating_stats':
@@ -111,37 +117,16 @@ class StatewideSixYearReportBuilder(StatewideReports):
             state_cap = ['State Capital Investment'] + list(revenue.objects.filter(organization__summary_organization_classifications = 6, revenue_source__government_type = 'State', revenue_source__funding_type = 'Capital', year__in = self.years, reported_value__isnull=False).exclude(revenue_source_id =96).values('year').annotate(reported_value = Sum('reported_value')).values_list('reported_value', flat=True).order_by('year'))
             federal_cap = ['Federal Capital Investment'] + list(revenue.objects.filter(organization__summary_organization_classifications = 6, revenue_source__government_type = 'Federal', revenue_source__funding_type = 'Capital', year__in = self.years, reported_value__isnull=False).values('year').annotate(reported_value = Sum('reported_value')).values_list('reported_value', flat=True).order_by('year'))
             other_cap = ['Other Capital Investment'] + list(expense.objects.filter(organization__summary_organization_classifications=6, expense_source_id__in = [2,4,5], year__in = self.years, reported_value__isnull=False).values('year').annotate(reported_value = Sum('reported_value')).values_list('reported_value', flat=True).order_by('year'))
-            total_list = [local_cap[1:], state_cap[1:], federal_cap[1:], other_cap[1:]]
-            total = [sum(i) for i in zip(*total_list)]
-            total = ['Total Investment'] + total
-            data_list =[local_cap, state_cap, federal_cap, other_cap, total]
         elif self.report_type == 'investments' and self.big == 'sound':
             heading_list = ['Capital Investment Source', self.years]
-            local_cap = ['Local Capital Investment'] + list(
-                expense.objects.filter(organization__summary_organization_classifications=6, expense_source_id=1,
-                                       year__in=self.years, reported_value__isnull=False).exclude(organization_id__in= [15,33]).values('year').annotate(
-                    reported_value=Sum('reported_value')).values_list('reported_value', flat=True).order_by('year'))
-            state_cap = ['State Capital Investment'] + list(
-                revenue.objects.filter(organization__summary_organization_classifications=6,
-                                       revenue_source__government_type='State', revenue_source__funding_type='Capital',
-                                       year__in=self.years, reported_value__isnull=False).exclude(
-                    revenue_source_id=96, organization_id__in = [15,33]).values('year').annotate(reported_value=Sum('reported_value')).values_list(
-                    'reported_value', flat=True).order_by('year'))
-            federal_cap = ['Federal Capital Investment'] + list(
-                revenue.objects.filter(organization__summary_organization_classifications=6,
-                                       revenue_source__government_type='Federal',
-                                       revenue_source__funding_type='Capital', year__in=self.years,
-                                       reported_value__isnull=False).exclude(organization_id__in= [15,33]).values('year').annotate(
-                    reported_value=Sum('reported_value')).values_list('reported_value', flat=True).order_by('year'))
-            other_cap = ['Other Capital Investment'] + list(
-                expense.objects.filter(organization__summary_organization_classifications=6,
-                                       expense_source_id__in=[2, 4, 5], year__in=self.years,
-                                       reported_value__isnull=False).exclude(organization_id__in= [15,33]).values('year').annotate(
-                    reported_value=Sum('reported_value')).values_list('reported_value', flat=True).order_by('year'))
-            total_list = [local_cap[1:], state_cap[1:], federal_cap[1:], other_cap[1:]]
-            total = [sum(i) for i in zip(*total_list)]
-            total = ['Total Investment'] + total
-            data_list = [local_cap, state_cap, federal_cap, other_cap, total]
+            local_cap = ['Local Capital Investment'] + list(expense.objects.filter(organization__summary_organization_classifications=6, expense_source_id=1,year__in=self.years, reported_value__isnull=False).exclude(organization_id__in= [15,33]).values('year').annotate(reported_value=Sum('reported_value')).values_list('reported_value', flat=True).order_by('year'))
+            state_cap = ['State Capital Investment'] + list(revenue.objects.filter(organization__summary_organization_classifications=6,revenue_source__government_type='State', revenue_source__funding_type='Capital',year__in=self.years, reported_value__isnull=False).exclude(revenue_source_id=96, organization_id__in = [15,33]).values('year').annotate(reported_value=Sum('reported_value')).values_list('reported_value', flat=True).order_by('year'))
+            federal_cap = ['Federal Capital Investment'] + list(revenue.objects.filter(organization__summary_organization_classifications=6,revenue_source__government_type='Federal',revenue_source__funding_type='Capital', year__in=self.years,reported_value__isnull=False).exclude(organization_id__in= [15,33]).values('year').annotate(reported_value=Sum('reported_value')).values_list('reported_value', flat=True).order_by('year'))
+            other_cap = ['Other Capital Investment'] + list(expense.objects.filter(organization__summary_organization_classifications=6,expense_source_id__in=[2, 4, 5], year__in=self.years,reported_value__isnull=False).exclude(organization_id__in= [15,33]).values('year').annotate(reported_value=Sum('reported_value')).values_list('reported_value', flat=True).order_by('year'))
+        total_list = [local_cap[1:], state_cap[1:], federal_cap[1:], other_cap[1:]]
+        total = [sum(i) for i in zip(*total_list)]
+        total = ['Total Investment'] + total
+        data_list = [local_cap, state_cap, federal_cap, other_cap, total]
         return heading_list, data_list
 
 

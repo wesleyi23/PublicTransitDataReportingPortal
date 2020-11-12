@@ -910,6 +910,14 @@ class email_contact_form(forms.Form):
 # endregion
 
 
+class report_generating_form(forms.Form):
+    size_of_transit = [('separate tables for agencies serving under 1 million','separate tables for agencies serving under 1 million')]
+    CHOICES =[('All Transits', 'All Transits'), ('Financial Summary', 'Financial Summary'), ('SW Financial Expenses', 'SW Financial Expenses'), ('SW Financial Revenues','SW Financial Revenues'), (5, 'SW Investments'), (6,'SW Revenues'),
+    ('Service Mode Tables', 'Service Mode Tables'), ('Operation Stats', 'Operation Stats')]
+    report_selection = forms.MultipleChoiceField(widget=forms.CheckboxSelectMultiple, choices=CHOICES, required=True)
+    report_size = forms.MultipleChoiceField(widget=forms.CheckboxSelectMultiple, choices=size_of_transit, required=False)
+    ferry_statewide_report = forms.MultipleChoiceField(widget=forms.CheckboxSelectMultiple, choices = [('SW Ferries','SW Ferries')], required=False)
+    community_provider_statewide_report = forms.MultipleChoiceField(widget=forms.CheckboxSelectMultiple, choices=[('SW Community Providers', 'SW Community Providers')], required=False)
 
 class change_user_org(forms.ModelForm):
     class Meta:

@@ -218,7 +218,6 @@ def build_revenue_table(years, user_org_id, classification):
     classification = 'Transit'
     data_revenue = revenue.objects.filter(organization_id__in = user_org_id, year__in = years).values('revenue_source', 'year').annotate(reported_value = Sum('reported_value'))
     df = read_frame(data_revenue)
-    df.to_csv(r'C:\Users\SchumeN\Documents\ptstest\test.csv')
     df = df[df.reported_value.notna()][['revenue_source', 'reported_value', 'year']]
     if df.empty == True:
         return df
