@@ -56,7 +56,7 @@ def notify_user_that_permissions_have_been_updated(full_name, email, groups, SEN
 
     msg_html = render_to_string("emails/permissions_update.html", {'full_name': full_name, 'groups': groups})
     msg_plain = render_to_string('emails/permissions_update.txt', {'full_name': full_name, 'groups': groups})
-    send_mail( subject='Updated Permissions - Public Transportation Reporting Portal',
+    send_mail(subject='Updated Permissions - Public Transportation Reporting Portal',
                message=msg_plain,
                from_email = settings.DEFAULT_FROM_EMAIL,
                recipient_list=recipient_list,

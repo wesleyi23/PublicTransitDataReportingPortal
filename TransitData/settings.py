@@ -14,10 +14,14 @@ import os
 
 from celery.schedules import crontab
 
-MODE = "prod"  #could be prod, dev, test
+
+MODE = "test"  #could be prod, dev, test
+
+ADMIN_EMAILS = ['wesleyi@wsdot.wa.gov']
+VANPOOL_ADMIN_EMAIL = ['wesleyi@wsdot.wa.gov']
 
 if MODE == "prod":
-    DEBUG = False
+    DEBUG = True
     ALLOWED_HOSTS = ['publictransportationportal.azurewebsites.net']
     db_USER = os.environ.get("db_USER")
     db_PASSWORD = os.environ.get("db_PASSWORD")
@@ -45,9 +49,12 @@ if MODE == "prod":
 elif MODE == "test":
     DEBUG = True
     ALLOWED_HOSTS = ['*']
-    db_USER = os.environ.get("db_USER")
-    db_PASSWORD = os.environ.get("db_PASSWORD")
-    SENDGRID_API_KEY = os.environ.get('SENDGRID_API_KEY')
+    # db_USER = os.environ.get("db_USER")
+    # db_PASSWORD = os.environ.get("db_PASSWORD")
+    import keys_and_passwords
+    db_USER = keys_and_passwords.db_USER
+    db_PASSWORD = keys_and_passwords.db_PASSWORD
+    SENDGRID_API_KEY = keys_and_passwords.SENDGRID_API_KEY
     os.environ.setdefault('FORKED_BY_MULTIPROCESSING', '1')
     ASSERTION_URL = "https://vanpooldev.azurewebsites.net"
     ENTITY_ID = "https://vanpooldev.azurewebsites.net"

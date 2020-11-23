@@ -316,10 +316,11 @@ class VanpoolMonthlyReport(forms.ModelForm):
             return error_list
         else:
             for category in self.cleaned_data.keys():
-                if self.cleaned_data[category] == None:
-                    continue
                 if category in untracked_categories:
                     continue
+                if self.cleaned_data[category] == None:
+                    continue
+
 
                 new_data = self.cleaned_data[category]
                 old_data = vanpool_report.objects.filter(organization_id=self.user_organization,
@@ -436,6 +437,24 @@ class VanpoolMonthlyReport(forms.ModelForm):
 
     def save(self, commit=True):
         instance = super(VanpoolMonthlyReport, self).save(commit=False)
+
+        for i in instance._meta.fields:
+            if i.name not in ['changeReason',
+                              'data_change_record',
+                              'acknowledge_validation_errors',
+                              'frequency_of_claims',
+                              "id",
+                              "report_type",
+                              "report_year",
+                              "report_month",
+                              "report_date",
+                              "report_by", "organization"
+                              ] and getattr(instance, i.name) is None:
+                print(getattr(instance, i.name))
+                setattr(instance, i.name, 0)
+
+
+
         if commit:
             instance.save()
         return instance
@@ -490,8 +509,8 @@ class vanpool_metric_chart_form(forms.Form):
                                                            attrs={'class': 'form-control my_chart_control',
                                                                   'data-form-name': "vanpool_metric_chart_form"}))
     chart_type = forms.CharField(widget=forms.Select(choices=TYPE_CHOICES,
-                                                           attrs={'class': 'form-control my_chart_control',
-                                                                  'data-form-name': "vanpool_metric_chart_form"}))
+                                                     attrs={'class': 'form-control my_chart_control',
+                                                            'data-form-name': "vanpool_metric_chart_form"}))
 
 
 class statewide_summary_settings(forms.Form):

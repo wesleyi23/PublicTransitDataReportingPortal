@@ -598,7 +598,9 @@ class ConfigurationBuilder(SummaryBuilderReportType):
         return my_formset_factory
 
     def get_query_set(self):
-        query_set = self.get_metric_model_data().order_by('name').all()
+        print(self.report_type)
+
+        query_set = self.get_metric_model().objects.order_by('name').all()
         return query_set
 
     def get_widgets(self):
@@ -710,10 +712,10 @@ class ExportReport(SummaryBuilder):
 
     def generate_annual_operating_table(self, include_comment=False):
         output = []
-        print(self.report_type_sub_report_dictionary["transit_data"])
+        # print(self.report_type_sub_report_dictionary["transit_data"])
 
         for mode in self.report_type_sub_report_dictionary["transit_data"].export_report_data_list:
-            print(mode.nav_headers)
+            # print(mode.nav_headers)
             output.append(mode.pretty_nav_headers)
             output.extend(mode.get_data(order_by_summary=True, remove_empty_data=True, include_comment=include_comment))
 
@@ -725,15 +727,15 @@ class ExportReport(SummaryBuilder):
         temp_farebox = ["Farebox revenues", 0, 0, 0]
         for mode in self.report_type_sub_report_dictionary["transit_data"].export_report_data_list:
             data = mode.get_data(include_comment=include_comment)
-            print(mode.nav_headers)
+            # print(mode.nav_headers)
             if "Vanpool" in mode.nav_headers:
-                print('true')
+                # print('true')
                 for i in data:
-                    print(i)
-                    print(i[1:])
+                    # print(i)
+                    # print(i[1:])
                     if i[0] == "Farebox Revenues":
                         temp_vanpool = ['Vanpooling revenue', i[1], i[2], i[3]]
-                        print('temp_vanpool: ' + str(temp_vanpool))
+                        # print('temp_vanpool: ' + str(temp_vanpool))
             else:
                 # print(data)
                 for i in data:
@@ -747,7 +749,7 @@ class ExportReport(SummaryBuilder):
         if temp_vanpool:
             output.append(temp_vanpool)
 
-        print('output: ' + str(output))
+        # print('output: ' + str(output))
         return [output]
 
     def generate_financial_information_table(self, include_comment=False):
@@ -783,36 +785,52 @@ class ExportReport(SummaryBuilder):
                 subtotal = ['Other operating sub-total']
                 subtotal.extend(source.get_totals())
 
-                financial_table_output['Other operating - subtotal'].append(subtotal)
-                financial_table_output['Other operating'].extend(data)
+                if sum(subtotal[1:4]) > 0:
+                    financial_table_output['Other operating - subtotal'].append(subtotal)
+                    financial_table_output['Other operating'].extend(data)
+                else:
+                    del financial_table_output['Other operating']
+                    del financial_table_output['Other operating - subtotal']
             elif 'Federal' in source.nav_headers and 'Capital' in source.nav_headers:
                 data = source.get_data(order_by_summary=True, remove_empty_data=True, include_comment=include_comment)
                 subtotal = ['Total federal capital']
                 subtotal.extend(source.get_totals())
 
-                financial_table_output['Federal capital grant revenues'].extend(data)
-                financial_table_output['Federal capital grant revenues'].append(subtotal)
+                if sum(subtotal[1:4]) > 0:
+                    financial_table_output['Federal capital grant revenues'].extend(data)
+                    financial_table_output['Federal capital grant revenues'].append(subtotal)
+                else:
+                    del financial_table_output['Federal capital grant revenues']
             elif 'State' in source.nav_headers and 'Capital' in source.nav_headers:
                 data = source.get_data(order_by_summary=True, remove_empty_data=True, include_comment=include_comment)
                 subtotal = ['Total state capital']
                 subtotal.extend(source.get_totals())
 
-                financial_table_output['State capital grant revenues'].extend(data)
-                financial_table_output['State capital grant revenues'].append(subtotal)
+                if sum(subtotal[1:4]) > 0:
+                    financial_table_output['State capital grant revenues'].extend(data)
+                    financial_table_output['State capital grant revenues'].append(subtotal)
+                else:
+                    del financial_table_output['State capital grant revenues']
             elif 'Local' in source.nav_headers and 'Capital' in source.nav_headers:
                 data = source.get_data(order_by_summary=True, remove_empty_data=True, include_comment=include_comment)
                 subtotal = ['Total local capital']
                 subtotal.extend(source.get_totals())
 
-                financial_table_output['Local capital grant revenues'].extend(data)
-                financial_table_output['Local capital grant revenues'].append(subtotal)
+                if sum(subtotal[1:4]) > 0:
+                    financial_table_output['Local capital grant revenues'].extend(data)
+                    financial_table_output['Local capital grant revenues'].append(subtotal)
+                else:
+                    del financial_table_output['Local capital grant revenues']
             elif 'Other' in source.nav_headers:
                 data = source.get_data(order_by_summary=True, remove_empty_data=True, include_comment=include_comment)
                 subtotal = ['Other Capital total']
                 subtotal.extend(source.get_totals())
 
-                financial_table_output['Other capital'].extend(data)
-                financial_table_output['Other capital'].append(subtotal)
+                if sum(subtotal[1:4]) > 0:
+                    financial_table_output['Other capital'].extend(data)
+                    financial_table_output['Other capital'].append(subtotal)
+                else:
+                    del financial_table_output['Other capital']
 
         # print('target dict: ' + str(financial_table_output['State capital grant revenues']))
         for source in self.report_type_sub_report_dictionary['expense'].export_report_data_list:
@@ -830,13 +848,18 @@ class ExportReport(SummaryBuilder):
                     financial_table_output['Debt service'].append(row)
             # print('dict: ' + str(financial_table_output['Local capital expenditures']))
 
+
         for source in self.report_type_sub_report_dictionary['fund_balance'].export_report_data_list:
             data = source.get_data(order_by_summary=True, remove_empty_data=True, include_comment=include_comment)
             subtotal = ['Ending balance total']
             subtotal.extend(source.get_totals())
 
-            financial_table_output['Ending balances, December 31'].extend(data)
-            financial_table_output['Ending balances, December 31'].append(subtotal)
+            if sum(subtotal[1:4]) > 0:
+                financial_table_output['Ending balances, December 31'].extend(data)
+                financial_table_output['Ending balances, December 31'].append(subtotal)
+            else:
+                del financial_table_output['Ending balances, December 31']
+
 
         for key, value in {'Operating revenue': 'Total (excludes capital revenues)',
                            'Local capital expenditures': 'Total local capital',
@@ -845,17 +868,30 @@ class ExportReport(SummaryBuilder):
             total_row = self._calculate_total(value, financial_table_output[key])
             if total_row:
                 if key =='Operating revenue':
-                    financial_table_output['Operating revenue'].extend(financial_table_output['Other operating - subtotal'])
-                    financial_table_output['Operating revenue'].extend(financial_table_output['Other operating'])
-                    print(financial_table_output['Other operating - subtotal'])
-                    total_row[1] = None_sum(total_row[1], financial_table_output['Other operating - subtotal'][0][1])
-                    total_row[2] = None_sum(total_row[2], financial_table_output['Other operating - subtotal'][0][2])
-                    total_row[3] = None_sum(total_row[3], financial_table_output['Other operating - subtotal'][0][3])
-                    del financial_table_output['Other operating - subtotal']
-                    del financial_table_output['Other operating']
+                    if 'Other operating - subtotal' in financial_table_output.keys():
+                        # print(financial_table_output['Other operating - subtotal'])
+                        financial_table_output['Operating revenue'].extend(financial_table_output['Other operating - subtotal'])
+                        total_row[1] = None_sum(total_row[1],
+                                                financial_table_output['Other operating - subtotal'][0][1])
+                        total_row[2] = None_sum(total_row[2],
+                                                financial_table_output['Other operating - subtotal'][0][2])
+                        total_row[3] = None_sum(total_row[3],
+                                                financial_table_output['Other operating - subtotal'][0][3])
+                        del financial_table_output['Other operating - subtotal']
+                    if 'Other operating' in financial_table_output.keys():
+                        financial_table_output['Operating revenue'].extend(financial_table_output['Other operating'])
+                        del financial_table_output['Other operating']
                     financial_table_output['Operating revenue'].append(total_row)
                 else:
-                    financial_table_output[key].append(total_row)
+                    if not total_row == ['']:
+                        financial_table_output[key].append(total_row)
+
+        if len(financial_table_output['Local capital expenditures']) == 0:
+            del financial_table_output['Local capital expenditures']
+        if len(financial_table_output['Other expenditures']) == 0:
+            del financial_table_output['Other expenditures']
+        if len(financial_table_output['Debt service']) == 0:
+            del financial_table_output['Debt service']
 
         output = []
 
@@ -979,9 +1015,6 @@ class ExportReport(SummaryBuilder):
         for i in operating:
             if isinstance(i, list):
                 ws.append(i)
-                print(i[0])
-
-
             else:
                 if not first_item:
                     ws.append([""])
@@ -1044,8 +1077,6 @@ class ExportReport(SummaryBuilder):
         first_item = True
         for i in totals_by_fund_source:
 
-            print(i)
-            print(str(i) + ' - ' + str(len(i)))
             if isinstance(i, list) and len(i) > 1:
                 ws.append(i)
             else:
@@ -1090,6 +1121,8 @@ class ExportReport(SummaryBuilder):
                                                                  organization=self.target_organization,
                                                                  year=get_current_summary_report_year() - i,
                                                                  transit_metric_id=10).aggregate(sum=Sum('reported_value'))['sum'])
+            print('Local revenues')
+            print(output_dict['Local revenues'][year_x])
 
             output_dict['State revenues'][year_x] = revenue.objects.filter(
                 organization=self.target_organization,
@@ -1140,12 +1173,16 @@ class ExportReport(SummaryBuilder):
         output = []
         for key, value in output_dict.items():
             row = [key, value['two_years_ago'], value['previous_year'], value['this_year']]
+            print(row)
             if 'revenues' in key:
                 revenue_table.append(row)
             else:
                 investment_table.append(row)
-
+        # print(revenue_table)
         revenue_table = [[v if v is not None else 0 for v in nested] for nested in revenue_table]
+        # print('revenue_table:')
+        # print(revenue_table)
+        # # print(investment_table)
         investment_table = [[v if v is not None else 0 for v in nested] for nested in investment_table]
 
         revenue_table.append(self._calculate_total('Total revenues', revenue_table))
@@ -1232,7 +1269,7 @@ class ExportReport_Data():
     def _remove_empty_data(self, list_of_lists):
         for i in list_of_lists[:]:
             delete_row = False
-            if all([x == 0 or x is None or x == 'None' for x in i[1:3]]):
+            if all([x == 0 or x is None or x == 'None' for x in i[1:4]]):
                 delete_row = True
             if delete_row:
                 list_of_lists.remove(i)
@@ -1285,7 +1322,7 @@ def generate_org_summary_tables(include_comment=False, test_org=False, start_wit
     else:
         run=True
 
-    orgs = organization.objects.filter(summary_organization_classifications_id__in=[6, 7, 5], #2],
+    orgs = organization.objects.filter(summary_organization_classifications_id__in=[5], # 7 - tribe, 6 - transit, 5 - monorail, 2 ferry
                                        summary_reporter=True).all()
     if test_org:
         orgs = organization.objects.filter(id=test_org).all()
@@ -1300,7 +1337,9 @@ def generate_org_summary_tables(include_comment=False, test_org=False, start_wit
                                     'Quileute Nation',
                                     'Squaxin Island Tribe',
                                     'Tulalip Tribes',
-                                    'Colville Confederated Tribes']:
+                                    'Colville Confederated Tribes',
+                                    'Confederated Tribes of the Umatilla',
+                                    'Cowlitz Tribe Transit Service']:
             print('working on: ' + org.name)
             t = ExportReport(org)
             t.generate_excel_summary_report(file_save_os=True, file_save_path=path, include_comment=include_comment)

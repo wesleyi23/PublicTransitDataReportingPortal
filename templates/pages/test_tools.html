@@ -6,10 +6,18 @@
         <!-- Page Heading -->
         <h1 class="h3 mb-2 text-gray-800">Test tools</h1>
     </div>
+    <h2>Change user org</h2>
     <form action = "{% url 'test_tools' %}" method="post" id="post-form">
         {% csrf_token %}
         {{ form.as_p }}
         <div id="errormessage"></div>
         <input type="submit" value="update org" class="btn btn-primary">
     </form>
+
+    <div>
+        <h2>Send Vanpool Email</h2>
+        <a href="{% url 'send_vanpool_email' %}" class="btn btn-primary">Send emails</a>
+    </div>
+
+
 {% endblock %}

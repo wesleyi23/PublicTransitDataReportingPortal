@@ -141,6 +141,8 @@ def dashboard(request):
                 """Return a list where first item is the current months stat and the second item is the year over year grouwth"""
                 current_monthly_stat = getattr(recent_vanpool_report, measure)
                 last_year_stat = getattr(last_year_report, measure)
+                if current_monthly_stat is None:
+                    current_monthly_stat = 0
                 if last_year_stat is None:
                     year_over_year_growth = "NA"
                 else:
@@ -188,7 +190,7 @@ def dashboard(request):
 
                 # Calculate percent
                 if last_year_monthly_emissions == 0:
-                    return "NA"
+                    return [round(current_monthly_emissions, 2), 'NA']
                 else:
                     ghg_percent = ((current_monthly_emissions - last_year_monthly_emissions) / last_year_monthly_emissions)
                     return [round(current_monthly_emissions, 2), ghg_percent]
@@ -551,6 +553,15 @@ def Vanpool_report(request, year=None, month=None):
 
 @login_required(login_url='/Panacea/login')
 @group_required('WSDOT staff')
+def send_vanpool_email(request):
+    from django.core.management import call_command
+    call_command('vanpool_monthly_email')
+    return render(request, 'pages/test_tools.html', {'form': form})
+
+
+
+@login_required(login_url='/Panacea/login')
+@group_required('WSDOT staff')
 def Vanpool_expansion_submission(request):
     if request.method == 'POST':
         form = submit_a_new_vanpool_expansion(data=request.POST)
@@ -634,9 +645,9 @@ def Vanpool_data(request):
     if form.is_valid:
         # Get data for x axis labels
         all_chart_data = [report for report in
-                          vanpool_report.objects.filter(organization_id__in=org_list).order_by('organization',
-                                                                                               'report_year',
-                                                                                               'report_month').all() if
+                          vanpool_report.objects.filter(organization_id__in=org_list).order_by('report_year',
+                                                                                               'report_month',
+                                                                                               'organization',).all() if
                           chart_time_frame <= report.report_due_date <= datetime.datetime.today().date()]
         x_axis_labels = [report.report_year_month_label for report in all_chart_data]
         x_axis_labels = list(dict.fromkeys(x_axis_labels))
@@ -652,7 +663,7 @@ def Vanpool_data(request):
             chart_dataset = [getattr(report, chart_measure) for report in chart_dataset]
 
             if chart_measure not in ['average_riders_per_van', 'average_round_trip_miles']:
-                chart_dataset = vanpool_chart_type_convert(chart_dataset, chart_type)
+                chart_dataset, x_axis_labels = vanpool_chart_type_convert(chart_dataset, x_axis_labels, chart_type)
 
             chart_datasets[organization.objects.get(id=org).name] = [json.dumps(list(chart_dataset)),
                                                                      get_wsdot_color(color_i)]

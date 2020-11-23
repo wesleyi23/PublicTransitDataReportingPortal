@@ -128,6 +128,8 @@ def print_dashboard_cards_data(data):
             percent = "<font class='text-danger'>" + str(percent) + "%</font>"
         else:
             percent = "<font class='text-success'>" + str(percent) + "%</font>"
+    if percent == "NA":
+        percent = "<font class='text-warning'>" + percent + "</font>"
 
     return f'{data[0]:,}' + " | " + str(percent)
 

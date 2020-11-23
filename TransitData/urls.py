@@ -49,6 +49,7 @@ urlpatterns = [
     path('vanpool/statewide_summary/', views.vanpool_statewide_summary, name="vanpool_statewide_summary"),
     path('vanpool/organization_summary/', views.vanpool_organization_summary, name="vanpool_organization_summary"),
     path('vanpool/organization_summary/<int:org_id>/', views.vanpool_organization_summary, name="vanpool_organization_summary"),
+    path('vanpool/send_vanpool_email/', views.send_vanpool_email, name="send_vanpool_email"),
     path('ContactUs/', views.contact_us, name = 'ContactUs'),
     path('UserProfile/', views.UserProfile, name="UserProfile"),
     path('OrganizationProfile/', views.OrganizationProfile, name="OrganizationProfile"),

@@ -271,6 +271,7 @@ class vanpool_report(models.Model):
     def save(self, no_report_date=False, *args, **kwargs):
         if not no_report_date and self.report_date is None:
             self.report_date = datetime.datetime.now().date()
+
         super(vanpool_report, self).save(*args, **kwargs)
 
     class Meta:
@@ -408,7 +409,7 @@ class transit_metrics(models.Model):
 
     name = models.CharField(max_length=120)
     agency_classification = models.ManyToManyField(summary_organization_type, blank=True)
-    order_in_summary = models.IntegerField(null=True, blank=True)
+    order_in_summary = models.FloatField(null=True, blank=True, unique=True)
     form_masking_class = models.CharField(max_length=25, choices=FORM_MASKING_CLASSES, null=True, blank=True)
     help_text = models.TextField(blank=True, null=True)
 

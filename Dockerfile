@@ -71,8 +71,6 @@ RUN mkdir $APP_HOME
 RUN mkdir $APP_HOME/staticfiles
 WORKDIR $APP_HOME
 
-
-
 # install dependencies
 RUN apk update && apk add libpq
 RUN echo 'http://dl-cdn.alpinelinux.org/alpine/v3.10/main' >> /etc/apk/repositories
@@ -102,19 +100,35 @@ RUN pip3 install django-rest-auth
 
 # copy entrypoint-prod.sh
 COPY ./entrypoint.prod.sh $APP_HOME
+
+#Copy SAML keys and metadata
 COPY ./mycert.pem /usr/bin
 COPY ./mykey.pem /usr/bin
 COPY ./sawidp_WaTech_metadata_TEST.xml /usr/bin
 COPY ./sawidp_WaTech_metadata_PROD.xml /usr/bin
 
+#Copy vanpool email task files
+RUN mkdir -p /home/PublicTransitDataReportingPortal/vanpool_email
+COPY ./vanpool_email_cron_job.sh /home/PublicTransitDataReportingPortal/vanpool_email
+RUN chmod +x /home/PublicTransitDataReportingPortal/vanpool_email
+
+# Create the log file to be able to run tail
+#RUN touch /var/log/cron.log
+
+#RUN crond -f -l 8
+
+#TODO move files up one level so they dont get copied to project.
 # copy project
 COPY . $APP_HOME
 
 # chown all the files to the app user
-RUN chown -R PublicTransitDataReportingPortal:PublicTransitDataReportingPortal $APP_HOME
+#RUN chown -R PublicTransitDataReportingPortal:PublicTransitDataReportingPortal $APP_HOME
+#RUN chown -R PublicTransitDataReportingPortal:PublicTransitDataReportingPortal /home/PublicTransitDataReportingPortal/vanpool_email
 
-# change to the app user
-USER PublicTransitDataReportingPortal
+# grant user cron permissions
+RUN touch /etc/cron.allow
+
+#USER PublicTransitDataReportingPortal
 
 EXPOSE 8000
 
