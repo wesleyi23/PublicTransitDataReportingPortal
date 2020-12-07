@@ -112,6 +112,23 @@
 
         {% endif %}
 
+         <!-- Nav Item - NTD menu -->
+         <li class="nav-item">
+                <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseNTDReport" aria-expanded="true" aria-controls="collapseVanpoolReport">
+                    {#                    <i class="fas fa-fw fa-clipboard-check"></i>#}
+                    <span>NTD Reporting</span>
+                </a>
+                <div id="collapseNTDReport" class="collapse" data-parent="#accordionSidebar">
+                    <div class="bg-white py-2 collapse-inner rounded">
+                        {% if request.user|has_group:"NTD reporter"%}
+                            <a class="collapse-item" href="{% url 'ntd_report_selection' %}">Start your NTD Report</a>
+                    {% endif %}
+                    </div>
+                </div>
+         </span>
+         </li>
+
+
         {% if request.user|has_group:"Summary reporter" or request.user|has_group:"Vanpool reporter" or request.user|has_group:"WSDOT staff" %}
             <!-- Divider -->
             <hr class="sidebar-divider">
@@ -137,6 +154,7 @@
                 </div>
             </li>
         {% endif %}
+
         <!-- Divider -->
         <hr class="sidebar-divider">
         <!-- Heading -->

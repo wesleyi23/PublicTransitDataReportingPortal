@@ -2018,3 +2018,44 @@ def download_excel_report(request):
     response = HttpResponse(content=save_virtual_workbook(report), content_type='application/ms-excel')
     response['Content-Disposition'] = 'attachment; filename=Summary_of_public_transportation_data_export.xlsx'
     return response
+
+
+#region NTD
+
+@login_required(login_url='/Panacea/login')
+def ntd_report_selection(request):
+    return render(request, 'pages/ntd/welcome_page.html')
+
+@login_required(login_url='/Panacea/login')
+def ntd_confirm_modes(request):
+    return render(request, 'pages/ntd/confirm_modes.html')
+
+@login_required(login_url='/Panacea/login')
+def ntd_modal_information(request):
+    return render(request, 'pages/ntd/modal_information.html')
+
+@login_required(login_url='/Panacea/login')
+def ntd_annual_service_data(request):
+    return render(request, 'pages/ntd/annual_service_data.html')
+
+@login_required(login_url='/Panacea/login')
+def ntd_funding_sources(request):
+    return render(request, 'pages/ntd/funding_sources.html')
+
+@login_required(login_url='/Panacea/login')
+def ntd_other_resources_and_safety(request):
+    return render(request, 'pages/ntd/other_resouces_and_safety.html')
+
+@login_required(login_url='/Panacea/login')
+def ntd_data_submission(request):
+    return render(request, 'pages/ntd/data_submission.html')
+
+@login_required(login_url='/Panacea/login')
+def ntd_validation_errors(request):
+    return render(request, 'pages/ntd/validation_errors.html')
+
+
+
+
+
+# end region

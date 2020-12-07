@@ -743,11 +743,11 @@ class NTD_mode(models.Model):
     mode = models.CharField(max_length=40)
 
 class NTD_organization(models.Model):
-    organization_id = models.ForeignKey(organization, on_delete=models.PROTECT)
+    organization = models.ForeignKey(organization, on_delete=models.PROTECT)
     mode = models.ForeignKey(NTD_mode, on_delete=models.PROTECT)
 
 class NTD_safety_and_volunteer_data(models.Model):
-    organization_id = models.ForeignKey(organization, on_delete=models.PROTECT)
+    organization = models.ForeignKey(organization, on_delete=models.PROTECT)
     number_of_volunteer_drivers = models.IntegerField(default=0)
     number_of_personal_vehicles = models.IntegerField(default=0)
     reportable_incidents = models.IntegerField(default=0)
@@ -763,7 +763,7 @@ class NTD_funding_source_name(models.Model):
 
     )
     name = models.CharField(max_length=120)
-    fund_source = models.CharField(CHOICES=fund_source_choices)
+    fund_source = models.CharField(max_length=100, choices=fund_source_choices)
 
 class NTD_funding_source(models.Model):
     fund_type_choice =(("Operating", 'Operating'),
@@ -771,15 +771,15 @@ class NTD_funding_source(models.Model):
 
     )
     name = models.ForeignKey(NTD_funding_source_name, on_delete=models.PROTECT)
-    fund_type = models.CharField(max_length=50, CHOICES = fund_type_choice)
+    fund_type = models.CharField(max_length=50, choices = fund_type_choice)
     fund_description = models.TextField()
     value = models.IntegerField()
     year = models.IntegerField()
-    organization_id = models.ForeignKey(organization, on_delete=models.PROTECT)
+    organization = models.ForeignKey(organization, on_delete=models.PROTECT)
 
 class NTD_service_data(models.Model):
     mode = models.ForeignKey(NTD_mode, on_delete=models.PROTECT)
-    organization_id = models.ForeignKey(organization, on_delete=models.PROTECT)
+    organization = models.ForeignKey(organization, on_delete=models.PROTECT)
     year = models.IntegerField()
     vehicles_of_maximum_service = models.IntegerField()
     unlinked_passenger_trips = models.IntegerField()
@@ -793,9 +793,9 @@ class NTD_modal_information(models.Model):
 
     )
     mode = models.ForeignKey(NTD_mode, on_delete=models.PROTECT)
-    organization_id = models.ForeignKey(organization, on_delete=models.PROTECT)
+    organization = models.ForeignKey(organization, on_delete=models.PROTECT)
     year = models.IntegerField()
-    expense_type = models.CharField(CHOICES = expense_type_choice)
+    expense_type = models.CharField(max_length=100, choices = expense_type_choice)
     operating_expenses = models.IntegerField()
     passenger_paid_fares = models.IntegerField()
     organization_paid_fares = models.IntegerField()
@@ -810,11 +810,11 @@ class NTD_validation(models.Model):
                   ('Safety Data', 'Safety Data')
 
     )
-    organization_id = models.ForeignKey(organization, on_delete=models.PROTECT)
+    organization = models.ForeignKey(organization, on_delete=models.PROTECT)
     mode = models.ForeignKey(NTD_mode, on_delete=models.PROTECT, null=True)
     error_message = models.TextField()
     year = models.IntegerField()
-    sheet_name = models.CharField(CHOICES = tab_fields)
+    sheet_name = models.CharField(max_length=80, choices = tab_fields)
     correction = models.TextField(default= None)
 
     @property
