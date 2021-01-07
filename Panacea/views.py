@@ -1,32 +1,20 @@
-import base64
 import csv
-import datetime
 import openpyxl
-import itertools
 import json
-# import pandas as pd
 from openpyxl.writer.excel import save_virtual_workbook
 
 from Panacea.builders import SummaryDataEntryBuilder, SummaryDataEntryTemplateData, ConfigurationBuilder, ExportReport, ReportAgencyDataTableBuilder, StatewideSixYearReportBuilder
-from .validators import validation_test_for_transit_data
-
 from django.contrib import messages
 from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.models import Group
-from django.core.mail import send_mail, BadHeaderError
 from django.db import transaction
-from django.db.models import Max
-from django.db.models import Min, Sum, Avg
-from django.db.models.functions import datetime
-from django.forms import modelformset_factory, BaseModelFormSet, ModelForm
+from django.db.models import Min, Sum, Avg, Max
+from django.forms import modelformset_factory, BaseModelFormSet, ModelForm, formset_factory
 from django.http import Http404, HttpResponseRedirect
 from django.http import JsonResponse, HttpResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.db.models.functions import datetime
 from django.core.mail import send_mail, BadHeaderError
-from django.template.loader import render_to_string
-from django.db.models import Max
 from dateutil.relativedelta import relativedelta
 import datetime
 from django.urls import reverse
@@ -59,12 +47,12 @@ from .forms import CustomUserCreationForm, \
     cover_sheet_organization, \
     transit_data_form, \
     service_offered_form, validation_error_form, email_contact_form, change_user_org, \
-    cover_sheet_wsdot_review, add_cover_sheet_review_note, tribal_permissions,report_generating_form
+    cover_sheet_wsdot_review, add_cover_sheet_review_note, tribal_permissions,report_generating_form, ntd_modes, ntd_modal_information_form
 from .models import profile, vanpool_report, custom_user, vanpool_expansion_analysis, organization, cover_sheet, \
     revenue, transit_data, expense, expense_source, service_offered, revenue_source, \
     transit_metrics, transit_mode, fund_balance, fund_balance_type, summary_organization_type, validation_errors, \
     summary_report_status, cover_sheet_review_notes, summary_organization_progress, tribal_reporter_permissions, \
-    tax_rates
+    tax_rates, NTD_reports, NTD_organization, NTD_modal_information
 from django.contrib.auth.models import Group
 from .utilities import calculate_latest_vanpool, find_maximum_vanpool, calculate_remaining_months, \
     calculate_if_goal_has_been_reached, \
@@ -1096,7 +1084,6 @@ def summary_modes(request, error_no_modes=None):
     if request.method == 'POST':
         form = service_offered_form(data=request.POST)
         if form.is_valid():
-            print(form.is_valid())
             instance, created = service_offered.objects.get_or_create(organization_id=org.id,
                                                                       transit_mode=form.cleaned_data["transit_mode"],
                                                                       administration_of_mode=form.cleaned_data[
@@ -2024,15 +2011,41 @@ def download_excel_report(request):
 
 @login_required(login_url='/Panacea/login')
 def ntd_report_selection(request):
-    return render(request, 'pages/ntd/welcome_page.html')
+    user_org = find_user_organization_id(request.user.id)
+    reports = NTD_reports.objects.filter(organization_id=user_org).values()
+    return render(request, 'pages/ntd/welcome_page.html', {"reports":reports})
 
 @login_required(login_url='/Panacea/login')
 def ntd_confirm_modes(request):
-    return render(request, 'pages/ntd/confirm_modes.html')
+    org = find_user_organization_id(request.user.id)
+    if request.method == 'POST':
+        form = ntd_modes(data=request.POST)
+        if form.is_valid():
+            instance, created = NTD_organization.objects.get_or_create(organization_id=org,
+                                                                      mode=form.cleaned_data["mode"])
+            if not created:
+                print("not created")
+                messages.error(request, "This name has already been added")
+    else:
+        form = ntd_modes()
+    modes = NTD_organization.objects.filter(organization_id=org).all()
+    return render(request, 'pages/ntd/confirm_modes.html', {'form': form,
+                                                                'modes': modes,
+                                                                'org': org})
 
 @login_required(login_url='/Panacea/login')
 def ntd_modal_information(request):
-    return render(request, 'pages/ntd/modal_information.html')
+    org = find_user_organization_id(request.user.id)
+    year = 2019
+    initial_data = NTD_modal_information.objects.filter(year = year, organization = org)
+    Modalformset = modelformset_factory(NTD_modal_information, form=ntd_modal_information_form, exclude=())
+    if request.method == 'POST':
+        formset = Modalformset(request.POST, queryset = initial_data)
+        if formset.valid() == True:
+            print(formset.cleaned_data)
+    else:
+        formset = Modalformset(queryset = initial_data)
+    return render(request, 'pages/ntd/modal_information.html', {'formset': formset})
 
 @login_required(login_url='/Panacea/login')
 def ntd_annual_service_data(request):

@@ -1,9 +1,7 @@
 from ckeditor.widgets import CKEditorWidget
 from django import forms
-from django.forms import BaseModelFormSet, BaseModelForm, ModelForm
 from django.forms.formsets import BaseFormSet
 from django.contrib.auth import password_validation, login
-from django.contrib.auth.forms import UserChangeForm, AuthenticationForm
 import datetime
 
 from Panacea.utilities import find_user_organization, find_vanpool_organizations, calculate_percent_change
@@ -15,14 +13,12 @@ from .models import custom_user, \
     vanpool_expansion_analysis, \
     cover_sheet, \
     transit_data, expense, revenue, revenue_source, transit_mode, service_offered, transit_metrics, expense_source, \
-    fund_balance, fund_balance_type, validation_errors, cover_sheet_review_notes, tribal_reporter_permissions
+    fund_balance, fund_balance_type, validation_errors, cover_sheet_review_notes, tribal_reporter_permissions, NTD_organization
+from .models import NTD_mode, NTD_modal_information, NTD_funding_source_name, NTD_funding_source, NTD_safety_and_volunteer_data, \
+NTD_service_data
 from django.utils.translation import gettext, gettext_lazy as _
 from phonenumber_field.formfields import PhoneNumberField
-from localflavor.us.forms import USStateSelect, USZipCodeField
-from django.core import serializers
 from dateutil.relativedelta import relativedelta
-from tempus_dominus.widgets import DatePicker
-from .widgets import FengyuanChenDatePickerInput
 
 
 # region shared
@@ -868,46 +864,7 @@ class email_contact_form(forms.Form):
     message = forms.CharField(widget=forms.Textarea, required=True)
 
 
-# class source_id_formset(BaseModelFormSet):
-#     def __init__(self, source_ids, year, my_user, *args, **kwargs):
-#         super(source_id_formset, self).__init__(*args, **kwargs)
-#         self.source_ids = source_ids
-#         self.year = year
-#         self.my_user = my_user
-#
-#     def get_form_kwargs(self, form_index):
-#         form_kwargs = super(source_id_formset, self).get_form_kwargs(form_index)
-#         if form_index < len(self.source_ids):
-#             form_kwargs = {'source_id': self.source_ids[form_index],
-#                            'year': self.year,
-#                            'my_user': self.my_user}
-#         else:
-#             form_kwargs = {'source_id': None,
-#                            'year': self.year,
-#                            'my_user': self.my_user}
-#
-#         print(form_kwargs)
-#         return form_kwargs
 
-
-# class summary_expense_form(base_summary_expense_form):
-#
-#     def __init__(self, year, my_user, source_id, *args, **kwargs):
-#         super().__init__(*args, **kwargs)
-#         self.source_id = source_id
-#         self.year = year
-#         self.my_user = my_user
-#
-#     def save(self, commit=True):
-#         instance = super().save(commit=False)
-#         instance.specific_expense_source_id = self.source_id
-#         instance.organization = find_user_organization(self.my_user.id)
-#         instance.year = self.year
-#         instance.report_by = self.my_user
-#         instance.save()
-
-
-# endregion
 
 
 class report_generating_form(forms.Form):
@@ -932,3 +889,26 @@ class change_user_org(forms.ModelForm):
         super(change_user_org, self).__init__(*args, **kwargs)
         self.fields['organization'].queryset = self.fields['organization'].queryset.order_by('name')
 
+
+class ntd_modes(forms.ModelForm):
+    class Meta:
+        model = NTD_organization
+        fields = ['mode']
+        widgets = {
+        'mode': forms.Select(choices=NTD_mode.objects.all(), attrs={'class': 'form-control'})
+        }
+
+class ntd_modal_information_form(forms.ModelForm):
+    class Meta:
+        model = NTD_modal_information
+        fields = ['operating_expenses', 'passenger_paid_fares', 'organization_paid_fares', 'mode', 'expense_type', 'organization', 'year']
+        widgets = {
+            'operating_expenses': forms.NumberInput(attrs={'class': 'form-control'}),
+            'passenger_paid_fares': forms.NumberInput(attrs={'class': 'form-control'}),
+            'organization_paid_fares': forms.NumberInput(attrs={'class': 'form-control'}),
+            'mode': forms.TextInput(attrs={ 'class': 'form-control','readonly':'readonly'}),
+            'expense_type': forms.TextInput(attrs={ 'class': 'form-control','readonly':'readonly'}),
+            'organization': forms.NumberInput(attrs={ 'class': 'form-control','readonly':'readonly'}),
+            'year': forms.NumberInput(attrs={ 'class': 'form-control','readonly':'readonly'})
+            # add mode in here as a read only field
+        }

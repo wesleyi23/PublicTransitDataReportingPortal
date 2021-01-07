@@ -19,31 +19,42 @@
     <h3>Welcome to WSDOT's National Transit Database Reporting Module</h3>
 </div>
 
-    <div class="card-body"></div>
+    <div class="card-body">
         <div class="row">
-            <div class="card shadow mb-4">
 
+        <p class="align-center"> Please select the report you will be filling out and click on that row. </p>
+                    <table class='table table-borderd tdt-bootstrap4' style="margin-bottom:0px">
 
-        <table>
-            <thead>
+            <thead class="table-secondary">
             <tr>
-                <td>Report Selection</td>
-                <td>Status</td>
+                <th scope="col">Report Selection</th>
+                <th scope="col">Completed</th>
             </tr>
             </thead>
             <tbody>
-            <tr>
-                <td>RR-20</td>
-                <td></td>
-            </tr>
-            </tbody>
-        </table>
+            {%  for report in reports %}
+                {% if report.ntd_report == 'RR-20' %}
 
+            <tr class='clickable-row' data-href="{% url 'ntd_confirm_modes' %}">
+                     <td class="d-none d-md-table-cell  align=center">{{ report.ntd_report }}</td>
+                <td class="d-none d-md-table-cell  align=center">{{ report.report_submission|yesno:"✔,✘" }}</td>
+            </tr>
+                {%  else %}
+                    <tr>
+                     <td class="d-none d-md-table-cell  align=center">{{ report.ntd_report }}</td>
+                <td class="d-none d-md-table-cell  align=center">{{ report.report_submission|yesno:"✔,✘" }}</td>
+            </tr>
+
+                                    {% endif %}
+
+            {% endfor %}
+            </tbody>
+                    </table>
+        </div>
 
 
 </div>
-    </div>
-    </div>
+</div>
 
 
         {% endblock %}

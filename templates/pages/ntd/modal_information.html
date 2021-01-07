@@ -47,6 +47,41 @@
                         {% endif %}
                     </ul>
                 </div>
+
+            <div class="card-body">
+
+            <form method="POST">
+
+                            {% csrf_token %}
+
+    {{ formset.management_form }}
+    <table>
+            <thead><tr><th>Mode</th>
+            <th>Operating</th>
+            <th>Capital</th></tr>
+            </thead>
+        <tbody>
+        {% for form in formset %}
+            {{ form.expense_type }}
+
+            <tr><td>{{ form.mode }}</td>
+                {% if form.expense_type == 'Operating' %}
+            <td>{{ form.operating_expenses}}
+            </td>
+                {%  endif %}
+            {% if form.expense_type == 'Capital' %}
+            <td>
+            {{ form.operating_expenses }}</td></tr>
+            {%  endif %}
+        {% endfor %}
+    </tbody>
+    </table>
+    </form>
+                <input type="submit" value="Submit"  href="url {% url 'ntd_funding_sources' %}" class="btn btn-sm btn-primary">
+
+
+
+            </div>
             </div>
         </div>
     </div>

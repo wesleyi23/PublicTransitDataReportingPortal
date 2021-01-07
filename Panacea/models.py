@@ -740,11 +740,17 @@ class tribal_reporter_permissions(models.Model):
 
 
 class NTD_mode(models.Model):
-    mode = models.CharField(max_length=40)
+    mode = models.CharField(max_length=150)
+
+    def __str__(self):
+        return self.mode
+
+
 
 class NTD_organization(models.Model):
     organization = models.ForeignKey(organization, on_delete=models.PROTECT)
     mode = models.ForeignKey(NTD_mode, on_delete=models.PROTECT)
+
 
 class NTD_safety_and_volunteer_data(models.Model):
     organization = models.ForeignKey(organization, on_delete=models.PROTECT)
@@ -764,6 +770,9 @@ class NTD_funding_source_name(models.Model):
     )
     name = models.CharField(max_length=120)
     fund_source = models.CharField(max_length=100, choices=fund_source_choices)
+
+    def __str__(self):
+        return self.name
 
 class NTD_funding_source(models.Model):
     fund_type_choice =(("Operating", 'Operating'),
@@ -801,6 +810,10 @@ class NTD_modal_information(models.Model):
     organization_paid_fares = models.IntegerField()
 
 
+class NTD_reports(models.Model):
+    ntd_report = models.CharField(max_length=100)
+    organization = models.ForeignKey(organization, on_delete=models.PROTECT)
+    report_submission = models.BooleanField(default=False)
 
 class NTD_validation(models.Model):
     tab_fields = (('Modal Information', 'Modal Information'),
