@@ -15,15 +15,13 @@
                 <div class="card-header">
                     <p>Please select which reports you would like to run:</p>
                     <form method="post">
+                        <p>{{form.report_size }}</p>
                         {% csrf_token %}
                         {% for f in form.report_selection %}
-                      <p><input type = 'checkbox' name = 'report_selection' value = '{{ f }}'>  {{ f}}
-                      {{ f.errors }}</p>
-
+                            <p>{{ f }} </p>
                         {% endfor %}
-                    <p></p>
-                    <p><input type = 'checkbox' name = 'report_selection' value = '{{ form.community_provider_statewide_report }}'>  {{ form.community_provider_statewide_report}}
-                        {{ form.community_provider_statewide_report.errors }} </p>
+
+
                     <p><button type="submit" class="btn btn-danger">Submit</button>  </p>
                         </form>
                 </div>

@@ -2,7 +2,7 @@ import csv
 import openpyxl
 import json
 from openpyxl.writer.excel import save_virtual_workbook
-
+from Panacea.report_builders import run_reports
 from Panacea.builders import SummaryDataEntryBuilder, SummaryDataEntryTemplateData, ConfigurationBuilder, ExportReport, ReportAgencyDataTableBuilder, StatewideSixYearReportBuilder
 from django.contrib import messages
 from django.contrib.auth import login, logout
@@ -1305,14 +1305,6 @@ def view_financial_information(request):
 @login_required(login_url='/Panacea/login')
 def view_rollup(request):
     pass
-    # current_year = get_current_summary_report_year()
-    # years = [current_year-2, current_year-1, current_year]
-    # current_user_id = request.user.id
-    # user_org_id = profile.objects.get(custom_user_id=current_user_id).organization_id
-    # rollup_data = build_total_funds_by_source(years, [user_org_id])
-    # rollup_heading = ['Total Funds by Source'] + years + ['One Year Change (%)']
-    # rollup_data = rollup_data.to_dict(orient = 'records')
-    # return render(request, 'pages/summary/view_agency_rollup.html', {'rollup_data': rollup_data, 'rollup_heading': rollup_heading})
 
 
 @login_required(login_url='/Panacea/login')
@@ -1412,13 +1404,7 @@ def view_statewide_rollup(request):
 @login_required(login_url='/Panacea/login')
 def view_statewide_operating(request):
     pass
-    # current_year = get_current_summary_report_year()
-    # years = [current_year-2, current_year-1, current_year]
-    # current_user_id = request.user.id
-    # user_org_id = profile.objects.get(custom_user_id=current_user_id).organization_id
-    # org_classification = organization.objects.get(id = user_org_id).summary_organization_classifications
-    # org_list = list(organization.objects.filter(summary_organization_classifications = org_classification).value_list('id', flat = True))
-    # return render(request)
+
 
 
 @login_required(login_url='/Panacea/login')
@@ -1989,10 +1975,12 @@ def configure_agency_types(request, model=None):
 def run_statewide_report_tables(request):
     if request.method == 'POST':
         form = report_generating_form(request.POST)
+        print(form.fields)
         print(form.is_valid())
         if form.is_valid():
             report_list = request.POST.getlist('report_selection')
-            print(report_list)
+            size = request.POST.get('report_size')
+            run_reports(report_list, size)
     else:
         form = report_generating_form
     return render(request, 'pages/summary/run_statewide_report_tables.html', {'form':form})
