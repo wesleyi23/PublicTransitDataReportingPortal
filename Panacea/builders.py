@@ -53,7 +53,6 @@ class StatewideSixYearReportBuilder(StatewideReports):
 
     def generate_percent_change(self, data_list):
         '''function for adding percent change to summary tables'''
-        print(data_list)
         try:
             percent_change = ((data_list[-1] - data_list[-2]) / data_list[-2]) * 100
         except ZeroDivisionError:

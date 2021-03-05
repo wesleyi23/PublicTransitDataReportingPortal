@@ -1,6 +1,7 @@
 from Panacea.utilities import *
 from Panacea.models import *
 from itertools import chain
+import collections
 
 #init object that reads all the stuff
 #super class reads the data dictionary and defines parameters
@@ -31,6 +32,19 @@ class AggregateReport:
         # separates out very large and smaller transits
      return reportAttributeDictionary[self.size]
 
+    def generatePercentChange(self, data_list):
+        '''function for adding percent change to summary tables'''
+        try:
+            percent_change = ((data_list[-1] - data_list[-2]) / data_list[-2]) * 100
+        except ZeroDivisionError:
+            if data_list[-1] == data_list[-2] == 0:
+                percent_change = '-'
+            else:
+                percent_change = 100.00
+        data_list.append(percent_change)
+        return data_list
+
+
     def generateReportYear(self):
         # mechanism for generating the report_years variable, necessary as years covered are 1, 3, and six
         # dynamically generates the years based on the range variable, returns a list
@@ -42,6 +56,8 @@ class AggregateReport:
                 report_years.append(self.current_report_year - year)
             return report_years #list returned here
 
+    def pull_farebox_revenue(self):
+        result = transit_data.objects.filter(organization_id__in=self.agency_list, organization__summary_organization_classifications=6)
 
 
     def callData(self):
@@ -49,10 +65,9 @@ class AggregateReport:
         # if clause exists to apply the > 1 million/< 1 million metric to the code, as its one of the new nuances to this issue
         if self.classification == 6:
             for key, metric in self.metrics.items():
-                print(metric)
                 aggregation = self.aggregationSelector(metric[0])
-                print(aggregation)
-                print(metric[1])
+                # TODO test why fixed route isn't showing up here
+                # TODO integrate in some of the farebox revenue things here, unclear how to do that though
                 result = self.getModel(metric).filter(organization_id__in = self.agency_list, organization__summary_organization_classifications=self.classification, year__in = self.report_years,
                                                **metric[1]).values("year", *aggregation).annotate(reported_value = Sum('reported_value'))
                 #going to need to add a variable about totals here; seems like this method may need to go live inside the financial summary class
@@ -66,7 +81,37 @@ class AggregateReport:
                 result = self.getModel(metric).filter(organization__summary_organization_classifications=self.classification, year__in = self.report_years,
                                                **metric[1], ).values()
                 data_tables[key] = result
-        print(data_tables)
+        return data_tables
+
+
+    def cleanData(self, data_tables):
+        final_dic = collections.OrderedDict()
+        if len(self.report_years) > 1:
+            for key, value in data_tables.items():
+                local_dic = collections.OrderedDict()
+                chartLength = len(self.report_years)+1
+                heading = [""]*chartLength
+                local_dic[key] = heading
+                data_list = []
+                print(value)
+                for v in value:
+                    print(v)
+                    if "transit_mode__rollup_mode" in v.keys() and v['transit_mode__rollup_mode'] +" Services" not in local_dic.keys():
+                        local_dic[v["transit_mode__rollup_mode"] + " Services"] = heading
+                    print(local_dic)
+                    named_key = [i for i in v.keys() if i.endswith('name')]
+                    print(v[named_key[0]])
+                    data_list.append(v["reported_value"])
+                    if len(data_list) == len(self.report_years):
+                        #TODO add in a it's all null detector to delete everything in a row and hit continue
+                        data_list = self.generatePercentChange(data_list)
+                        local_dic[v[named_key[0]]] = data_list
+                        data_list = []
+                final_dic.update(local_dic)
+                #TODO nothing is order in any sort of reasonable way over here!!!!!!!!!!!!!!!!!!!!!!!!, so the code logic wont work
+
+
+
 
 
     def getModel(self, metric):
@@ -99,12 +144,17 @@ class FinancialSummary(AggregateReport):
         super().__init__(size, self.report)
 
 
-
+#1. figure out how to filter and transform data (procedurally?)
+#2. need to combine datasets into lists, maybe to a dic-list, and include % change,
+#3 order based on summary data
+#4 add in some other data in Financial Summary class
+#5  output to excel
 
 
 def run_reports(report_list, size):
     fs = FinancialSummary(size)
-    fs.callData()
+    results = fs.callData()
+    fs.cleanData(results)
 
 
 
