@@ -408,7 +408,7 @@ class transit_metrics(models.Model):
 
     name = models.CharField(max_length=120)
     agency_classification = models.ManyToManyField(summary_organization_type, blank=True)
-    order_in_summary = models.IntegerField(null=True, blank=True)
+    order_in_summary = models.FloatField(null=True, blank=True)
     form_masking_class = models.CharField(max_length=25, choices=FORM_MASKING_CLASSES, null=True, blank=True)
     help_text = models.TextField(blank=True, null=True)
 
@@ -419,6 +419,7 @@ class transit_metrics(models.Model):
 class transit_mode(models.Model):
     name = models.CharField(max_length=90, blank=True)
     rollup_mode = models.CharField(max_length=90, blank=True, null=True)
+    order_in_summary = models.IntegerField(blank=True, null=True)
 
     def __str__(self):
         return self.name
@@ -452,6 +453,8 @@ class fund_balance_type(models.Model):
     name = models.CharField(max_length=100)
     agency_classification = models.ManyToManyField(summary_organization_type, blank=True)
     help_text = models.TextField(blank=True, null=True)
+    order_in_summary = models.FloatField(null=True, blank=True)
+
 
     def __str__(self):
         return self.name

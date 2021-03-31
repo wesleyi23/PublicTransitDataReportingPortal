@@ -11,7 +11,7 @@ import collections
 #has all the paramters of data dictionary, has a generate method that gets run when the class gets initialized
 #init object looks at report list, generates the requisite objects, downloads them all as data objects
 #TODO camelCase for methods, _for objects,
-
+import csv
 
 class AggregateReport:
     def __init__(self, size, report):
@@ -32,10 +32,80 @@ class AggregateReport:
         # separates out very large and smaller transits
      return reportAttributeDictionary[self.size]
 
+
+    def toExcel(self, final_list):
+        '''excel function that writes everything out'''
+        if self.size != 'all transits':
+            with open("{}__{}.csv".format(self.report, self.size), 'w', newline="") as f:
+                writer = csv.writer(f)
+                for k in final_list:
+                    writer.writerow(k)
+        else:
+            with open(r"C:\Users\SchumeN\Documents\{}.csv".format(self.report), 'w', newline="") as f:
+                writer = csv.writer(f)
+                for k in final_list:
+                    writer.writerow(k)
+
+
+
+    def findOtherOperatingSubtotal(self):
+        other_subtotal = revenue.objects.filter(organization_id__in=self.agency_list, organization__summary_organization_classifications=self.classification, year__in = self.report_years,
+                               revenue_source__government_type="Other", revenue_source__funding_type='Operating').values('year').annotate(reported_value = Sum('reported_value')).order_by('year')
+        for i in other_subtotal:
+            i['revenue_source__name'] = 'Other Operating Subtotal'
+        return other_subtotal
+
+
+    def addOtherOperatingSubtotalToQuery(self, result):
+        '''this function creates an other operating subtotal for the revenue section'''
+        other_subtotal = self.findOtherOperatingSubtotal()
+        for index, value in enumerate(result):  #iterates through indexes and values
+            if value.get('revenue_source__name') == 'Other-Advertising':
+                result = list(chain(result[:index-1], other_subtotal, result[index:])) #adds the other operating subtotal to the list at the precise point
+                break
+        return result
+
+    def getLandBank(self):
+        landbank = revenue.objects.filter(revenue_source_id = 96, year__in = self.report_years).values('year').annotate(reported_value = Sum('reported_value')).order_by('year')
+        for i in landbank:
+            i['revenue_source__name'] = "Land Bank Agreement & Credits"
+        return landbank
+
+    def addLandBank(self, result):
+        '''adds a landbank column to the State Capital section, so that it doesn't get included in totals'''
+        landbank = self.getLandBank()
+        result = list(chain(landbank, result))
+        return result
+
+
+
+    def findFareboxRevenueAndVanpool(self):
+        farebox = transit_data.objects.filter(organization_id__in=self.agency_list,
+                                              organization__summary_organization_classifications=self.classification,
+                                              year__in=self.report_years, transit_metric_id=10,
+                                              transit_mode_id__in=[1, 2, 4, 5, 6, 7, 8, 9, 10]).values('year','transit_metric__name').annotate(reported_value=Sum('reported_value'))
+        vanpool = transit_data.objects.filter(organization_id__in=self.agency_list, organization__summary_organization_classifications=self.classification,
+                                              year__in=self.report_years, transit_metric_id=10, transit_mode_id__in=[3]).values('year', 'transit_metric__name').annotate(reported_value=Sum('reported_value'))
+        for i in vanpool:
+            i['transit_metric__name'] = 'Vanpooling Revenue'
+        return farebox, vanpool
+
+    def addFareboxRevenueToAList(self, result):
+        farebox, vanpool = self.findFareboxRevenueAndVanpool()
+        result = list(chain(farebox, vanpool, result))
+        return result
+
+    def addFareboxAndVanpoolToTotals(self, result):
+        farebox, vanpool = self.findFareboxRevenueAndVanpool()
+        zipped = zip(farebox, vanpool, result)
+        for fb, vp, total in zipped:
+            total['reported_value'] = fb['reported_value'] + vp['reported_value'] + total['reported_value']
+        return result
+
     def generatePercentChange(self, data_list):
         '''function for adding percent change to summary tables'''
         try:
-            percent_change = ((data_list[-1] - data_list[-2]) / data_list[-2]) * 100
+            percent_change = round(((data_list[-1] - data_list[-2]) / data_list[-2]) * 100,2)
         except ZeroDivisionError:
             if data_list[-1] == data_list[-2] == 0:
                 percent_change = '-'
@@ -59,20 +129,36 @@ class AggregateReport:
     def pull_farebox_revenue(self):
         result = transit_data.objects.filter(organization_id__in=self.agency_list, organization__summary_organization_classifications=6)
 
+        #TODO turn most things into strings, write them out with appropriate markers (dollars, commas, etc.)
+        #TODO filter the queryset based on list, and then do that in order
+        #TODO assess what's unique to this set of problems/more generalizable, rearrange code on that basis
+        #TODO good documentation
 
+
+
+    #TODO this is kind of a mess, and may only work for aggregate reporting, which is fine!
     def callData(self):
         data_tables = {}
         # if clause exists to apply the > 1 million/< 1 million metric to the code, as its one of the new nuances to this issue
         if self.classification == 6:
             for key, metric in self.metrics.items():
                 aggregation = self.aggregationSelector(metric[0])
-                # TODO test why fixed route isn't showing up here
-                # TODO integrate in some of the farebox revenue things here, unclear how to do that though
-                result = self.getModel(metric).filter(organization_id__in = self.agency_list, organization__summary_organization_classifications=self.classification, year__in = self.report_years,
-                                               **metric[1]).values("year", *aggregation).annotate(reported_value = Sum('reported_value'))
-                #going to need to add a variable about totals here; seems like this method may need to go live inside the financial summary class
+                if metric[0] == transit_data:
+                    for mode in list(metric[1].values()): #could probably do this less weirdly, need to make this more dynamic and build it off a function related ot services offered
+                        result = self.getModel(metric).filter(organization_id__in = self.agency_list, organization__summary_organization_classifications=self.classification, year__in = self.report_years,
+                                               transit_mode__rollup_mode__in=mode).values("year", *aggregation).annotate(reported_value = Sum('reported_value')).order_by('transit_metric__order_in_summary')
+                else:
+                    result = self.getModel(metric).filter(organization_id__in=self.agency_list, organization__summary_organization_classifications=self.classification,year__in=self.report_years,
+                                                          **metric[1]).values("year", *aggregation).annotate(reported_value=Sum('reported_value')).order_by('{}__order_in_summary'.format(aggregation[0].replace('__name', '')))
+
                 if self.report == "Financial Summary" and metric[0] != transit_data:
-                    result2 = self.getModel(metric).filter(organization_id__in = self.agency_list, organization__summary_organization_classifications=self.classification, year__in = self.report_years, **metric[1]).values('year').annotate(total = Sum('reported_value'))
+                    result2 = self.getModel(metric).filter(organization_id__in = self.agency_list, organization__summary_organization_classifications=self.classification, year__in = self.report_years, **metric[1]).values('year').annotate(reported_value = Sum('reported_value')).order_by('year')
+                    if key == 'Operating Related Revenues':
+                        result = self.addFareboxRevenueToAList(result)
+                        result = self.addOtherOperatingSubtotalToQuery(result)
+                        result2 = self.addFareboxAndVanpoolToTotals(result2)
+                    elif key == 'State Capital Grant Revenues':
+                        result = self.addLandBank(result)
                     result = list(chain(result, result2))
                 data_tables[key] = result
 
@@ -83,35 +169,86 @@ class AggregateReport:
                 data_tables[key] = result
         return data_tables
 
+        #gotta revise this so it functions on a list of lists basis, reads things, digests headings, and filters by mode
+
+    def filterEmptyDataLists(self, data_list):
+        '''logic for finding and catching empty data in  function form'''
+        if list(set(data_list[1:])) == [None]:  # this gets rid of empty datasets
+            data_list = []
+            return data_list
+        elif list(set(data_list[1:])) == [0.0]:
+            data_list = []
+            return data_list
+        else:
+            if data_list[0] != 'Employees - FTEs':
+                data_list[1:] = [0 if v is None else v for v in data_list[1:]]  # list comprehension replaces nulls with 0s for processing
+                data_list[1:] = [int(i) for i in data_list[1:]]
+                if list(set(data_list[1:])) == [0]:
+                    data_list = []
+                    return data_list
+                else:
+                    return data_list
+            else:
+                data_list[1:] = [0.0 if v is None else v for v in data_list[1:]]  # list comprehension replaces nulls with 0s for processing
+                data_list[1:] = [round(i, 1) for i in data_list[1:]]
+                if list(set(data_list[1:])) == [0.0]:
+                    data_list = []
+                    return  data_list
+                else:
+                    return data_list
 
     def cleanData(self, data_tables):
-        final_dic = collections.OrderedDict()
+        final_list = []
+        mode_heading = ""
+        transit_mode_list = []
         if len(self.report_years) > 1:
             for key, value in data_tables.items():
-                local_dic = collections.OrderedDict()
                 chartLength = len(self.report_years)+1
-                heading = [""]*chartLength
-                local_dic[key] = heading
+                blank_heading = [""]*chartLength
+                heading = [key] + blank_heading
+                final_list.append(heading)
                 data_list = []
-                print(value)
                 for v in value:
-                    print(v)
-                    if "transit_mode__rollup_mode" in v.keys() and v['transit_mode__rollup_mode'] +" Services" not in local_dic.keys():
-                        local_dic[v["transit_mode__rollup_mode"] + " Services"] = heading
-                    print(local_dic)
+                    if "transit_mode__rollup_mode" in v.keys():
+                        mode_key = v['transit_mode__rollup_mode'] + " Services"
+                        mode_heading = [mode_key] + blank_heading
+                        if mode_heading not in transit_mode_list:
+                            transit_mode_list.append(mode_heading)
+                            final_list.append(mode_heading)
                     named_key = [i for i in v.keys() if i.endswith('name')]
-                    print(v[named_key[0]])
-                    data_list.append(v["reported_value"])
-                    if len(data_list) == len(self.report_years):
-                        #TODO add in a it's all null detector to delete everything in a row and hit continue
+                    if named_key == []:
+                        if key == "Operating Related Revenues":
+                            metric = 'Total (Excludes Capital Revenue)'
+                        elif key == 'Other expenditures':
+                            continue
+                        elif key == 'Ending balances, December 31':
+                            metric = 'Total'
+                        elif key == 'Debt service':
+                            metric = 'Total Debt service'
+                        else:
+                            key = key.replace(' Revenues', '')
+                            key = key.replace(' expenditures', '')
+                            metric = 'Total ' + key
+                    else:
+                        named_key = named_key[0]
+                        metric = v[str(named_key)]
+
+                    if len(data_list) == 0:
+                        data_list.append(metric)
+                        data_list.append(v["reported_value"])
+                    else:
+                        data_list.append(v["reported_value"])
+                    if len(data_list) == len(self.report_years)+1:
+                        data_list  =self.filterEmptyDataLists(data_list)
+                        if data_list == []:
+                            continue
                         data_list = self.generatePercentChange(data_list)
-                        local_dic[v[named_key[0]]] = data_list
+                        final_list.append(data_list)
                         data_list = []
-                final_dic.update(local_dic)
-                #TODO nothing is order in any sort of reasonable way over here!!!!!!!!!!!!!!!!!!!!!!!!, so the code logic wont work
+        return final_list
 
-
-
+#TODO get farebox revenues in there
+#TODO write out to excel
 
 
     def getModel(self, metric):
@@ -144,6 +281,7 @@ class FinancialSummary(AggregateReport):
         super().__init__(size, self.report)
 
 
+
 #1. figure out how to filter and transform data (procedurally?)
 #2. need to combine datasets into lists, maybe to a dic-list, and include % change,
 #3 order based on summary data
@@ -154,7 +292,8 @@ class FinancialSummary(AggregateReport):
 def run_reports(report_list, size):
     fs = FinancialSummary(size)
     results = fs.callData()
-    fs.cleanData(results)
+    results = fs.cleanData(results)
+    fs.toExcel(results)
 
 
 
