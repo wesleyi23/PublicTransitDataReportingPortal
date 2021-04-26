@@ -1975,10 +1975,9 @@ def configure_agency_types(request, model=None):
 def run_statewide_report_tables(request):
     if request.method == 'POST':
         form = report_generating_form(request.POST)
-        print(form.fields)
-        print(form.is_valid())
         if form.is_valid():
             report_list = request.POST.getlist('report_selection')
+            print(report_list)
             size = request.POST.get('report_size')
             run_reports(report_list, size)
     else:
