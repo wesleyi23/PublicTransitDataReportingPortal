@@ -1020,7 +1020,7 @@ def cover_sheet_submitted(request):
 
 
 @login_required(login_url='/Panacea/login')
-@group_required('Summary reporter', 'WSDOT staff')
+@group_required('WSDOT staff')
 def ntd_upload(request):
     if request.POST:
         custom_user_id = request.POST.get('custom_user')
@@ -1035,20 +1035,24 @@ def ntd_upload(request):
         wb = openpyxl.load_workbook(excel_file)
         data_transit = clean_transit_data_from_ntd(wb, current_report_year, user_org, request.user.id)
         revenue_data = clean_revenue_data_fron_ntd(wb, current_report_year, user_org, request.user.id)
-        print(data_transit)
-        print(revenue_data)
+        transit_data_created = [] #list to collect booleans from created
+        revenue_data_created = []
         for data in data_transit:
-            transit_data.objects.get_or_create(year = data['year'], report_by_id=data['report_by_id'], reported_value=data['reported_value'],administration_of_mode= data['administration_of_mode'],
+            obj, created = transit_data.objects.get_or_create(year = data['year'], report_by_id=data['report_by_id'], reported_value=data['reported_value'],administration_of_mode= data['administration_of_mode'],
                                         comments = data['comments'], organization_id=data['organization_id'], transit_metric_id=data['transit_metric_id'], transit_mode_id=data['transit_mode_id'])
+            transit_data_created.append(created)
         for data in revenue_data:
-                revenue.objects.get_or_create(year = data['year'], report_by_id=data['report_by_id'], reported_value=data['reported_value'], comments=data['comments'], organization_id=data['organization_id'],
+                obj, created = revenue.objects.get_or_create(year = data['year'], report_by_id=data['report_by_id'], reported_value=data['reported_value'], comments=data['comments'], organization_id=data['organization_id'],
                                        revenue_source_id=data['revenue_source_id'])
+                revenue_data_created.append(created)
     else:
         form = change_user_org()
         data_transit = []
         revenue_data = []
+        revenue_data_created = []
+        transit_data_created = []
     return render(request, 'pages/summary/ntd_upload.html',
-                  {'transit_data': data_transit, 'revenue_data': revenue_data, 'form': form})
+                  {'transit_data': data_transit, 'revenue_data': revenue_data, 'form': form, 'transit_created_list':transit_data_created, 'revenue_created_list':revenue_data_created})
 
 
 @login_required(login_url='/Panacea/login')

@@ -76,11 +76,8 @@
                             {% if request.user|is_summary_reporter %}
                                 <a class="collapse-item" href="{% url 'summary_instructions' %}">Coversheet report</a>
                                 <a class="collapse-item" href="{% url 'summary_report_data' %}">Report data</a>
-                                <a class = "collapse-item" href = "{% url 'ntd_upload' %} ">Upload NTD Data </a>
 {#                                <a class="collapse-item" href="{% url 'customer_review_instructions' %}">Review coversheet report</a>#}
                             {% endif %}
-                            <a class = "collapse-item" href = "{%  url 'view_transit_data' %}">View agency report</a>
-                              <a class = "collapse-item" href = "{%  url 'view_performance_measures' %}">View statewide reports</a>
                         {% endif %}
                     </div>
                 </div>
@@ -112,21 +109,6 @@
 
         {% endif %}
 
-         <!-- Nav Item - NTD menu -->
-         <li class="nav-item">
-                <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseNTDReport" aria-expanded="true" aria-controls="collapseVanpoolReport">
-                    {#                    <i class="fas fa-fw fa-clipboard-check"></i>#}
-                    <span>NTD Reporting</span>
-                </a>
-                <div id="collapseNTDReport" class="collapse" data-parent="#accordionSidebar">
-                    <div class="bg-white py-2 collapse-inner rounded">
-                        {% if request.user|has_group:"NTD reporter"%}
-                            <a class="collapse-item" href="{% url 'ntd_report_selection' %}">Start your NTD Report</a>
-                    {% endif %}
-                    </div>
-                </div>
-         </span>
-         </li>
 
 
         {% if request.user|has_group:"Summary reporter" or request.user|has_group:"Vanpool reporter" or request.user|has_group:"WSDOT staff" %}
@@ -189,6 +171,7 @@
                         <a class="collapse-item" href="{% url 'yearly_setup_instructions' %}">Yearly setup</a>
                         <a class="collapse-item" href="{% url 'metric_configurations' %}">Metric configuration</a>
                         <a class="collapse-item" href="{%  url 'run_statewide_report_tables'%}">Run statewide report tables</a>
+                         <a class = "collapse-item" href = "{% url 'ntd_upload' %} ">Upload NTD Data </a>
                     </div>
                 </div>
             </li>

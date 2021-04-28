@@ -117,6 +117,7 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 # Application definition
 
 INSTALLED_APPS = [
+    'multiforloop',
     'whitenoise.runserver_nostatic',
     'bootstrap4',
     'phonenumber_field',
