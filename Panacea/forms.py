@@ -870,7 +870,7 @@ class email_contact_form(forms.Form):
 class report_generating_form(forms.Form):
     size_of_transit = [('all transits','all transits'), ('separate tables for agencies with populations under a million','separate tables for agencies with populations under a million')]
     CHOICES =[('Financial Summary', 'Financial Summary'), ('Statewide Financial Expenses', 'Statewide Financial Expenses'), ('Statewide Financial Revenues','Statewide Financial Revenues'), ('Statewide Investments', 'Statewide Investments'), ('Statewide Revenues','Statewide Revenues'),
-    ('Service Mode Tables', 'Service Mode Tables'), ('Operation Stats', 'Operation Stats'), ('Statewide Ferries','Statewide Ferries'), ('Statewide Community Providers', 'Statewide Community Providers')]
+    ('Service Mode Tables', 'Service Mode Tables'), ('Operation Stats', 'Operation Stats'), ('Statewide Ferries','Statewide Ferries'), ('Statewide Community Providers', 'Statewide Community Providers'), ('All Random Text', 'All Random Text')]
     report_selection = forms.MultipleChoiceField(widget=forms.CheckboxSelectMultiple, choices=CHOICES, required=True)
     report_size = forms.CharField(widget=forms.Select(choices=size_of_transit), required=False)
 

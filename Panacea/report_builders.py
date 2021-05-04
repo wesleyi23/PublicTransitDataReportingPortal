@@ -495,6 +495,37 @@ class FiveYearReport(AggregateReport):
             final_list = self.percentOfTotal(final_list, total)
         return final_list
 
+class RandomText(AggregateReport):
+    def __init__(self, size):
+        self.report_year = get_current_summary_report_year()
+        self.report_years = [self.report_year, self.report_year-1]
+        self.random_text_dictionary = random_text_dictionary
+        self.agency_list = self.evaluateReportSize()
+        pass
+
+    def cleanDataAndMakeList(self, data):
+        '''takes data and puts it in a list'''
+        return 0
+
+    def callData(self):
+        for key, value in random_text_dictionary.items():
+            #need to add an if clause in here to check if there is more than one model, if so, iterates through list, chains them together
+            filtered_values = self.getModel(value['model']).objects.filter(*value['metric'],year__in = self.report_years, organization__summary_organization_classifications = value['classification']).values('year').annotate(reported_value = Sum('reported_value'))
+            list_of_data = self.cleanDataAndMakeList(filtered_values)
+# when need to aggregate multiple calls, data type is list here
+        return list_of_data
+
+    def cleanData(self, list_of_data):
+            pass
+
+#need a method to calculate what percentage of local tax is sound transit
+# need a method to caluclate farebox % of operating
+# need a method for all revenues
+# need a method for all capital
+
+#for specificied value types, going to build a dictionary so they can be used in secondary random text, secondary random text uses tuples as keys, and thus
+#contains instructions to check this results dictionary to make relevant percentages
+
 
 
 
@@ -517,6 +548,8 @@ def run_reports(report_list, size):
             results = agg.callData()
             results = agg.cleanData(results)
             agg.toExcel(results)
+
+
 
 
 
@@ -544,3 +577,20 @@ reportAttributeDictionary = { 'separate tables for agencies with populations und
 
 
 }
+
+
+random_text_dictionary = {'Revenue Vehicle Hours':{'model':[transit_data], 'classification': 6, 'metric':{'transit_metric_id__in':'[1]'}},
+'Revenue Vehicle Miles':{'model':[transit_data], 'classification':6, 'metric':{'transit_metric_id__in':'[3]'}}, 'Passenger Trips':{'model':[transit_data], 'classification':6,'metric':{'transit_metric_id__in':'[5]'}},
+          'Farebox Revenues':{'model':[transit_data], 'classification':6,'metric':{'transit_metric_id__in':'[10]'}}, 'Operating Expenses':{'model':[transit_data], 'classification':6,'metric':{'transit_metric_id__in':'[9]'}},
+    ('Fixed Route Services', 'Revenue Vehicle Hours'):{'model':[transit_data], 'classification': 6, 'metric':{'transit_metric_id__in':'[1]', 'transit_mode__rollup_mode':'Fixed'}},
+('Fixed Route Services', 'Passenger Trips'):{'model':[transit_data], 'classification': 6, 'metric':{'transit_metric_id__in':'[5]', 'transit_mode__rollup_mode':'Fixed'}},
+'Local revenues':[{"Fares":{'model':[transit_data], 'classification':6, 'metric':{"transit_metric_id__in": [10]}},'Local Tax':{'model':[revenue], 'classification':6, 'metric':{"revenue_source__government_type__in": ["Local", "Other"]}}, "Local Capital":{'model':[expense], 'classification':6, 'metric':{"expense_source_id__in": [1]}}}],
+                          'State revenues':{'model':[revenue], 'classification':6, 'metric':{"revenue_source__government_type": "State"}}, 'Federal revenues':{'model':[revenue],
+'classification':6, 'metric':{"revenue_source__government_type": 'Federal'}}, 'Local tax revenues':{'model': [revenue], 'classification':6, 'metric':{'revenue_source__government_type':'Local'}},
+                          'Local capital investment':{'model':[expense], 'classification':6, 'metric':{"expense_source_id__in": [1]}}, 'State capital investment':{'model':[revenue], 'classification':6, 'metric':{'revenue_source__government_type':'State', 'revenue_source__funding_type':'Capital'}},
+                          'Federal capital investment':{'model':[revenue], 'classification':6, 'metric':{'revenue_source__government_type':'Federal', 'revenue_source__funding_type':'Capital'}},
+                          'Other capital investment':{'model':[expense], 'classification':6, 'metric':{"expense_source_id__in": [2,4,5]}}
+
+
+}
+
