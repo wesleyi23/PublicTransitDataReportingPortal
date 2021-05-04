@@ -16,7 +16,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import Group
 from django.core.mail import send_mail, BadHeaderError
 from django.db import transaction
-from django.db.models import Max
+from django.db.models import Max, F
 from django.db.models import Min, Sum, Avg
 from django.db.models.functions import datetime
 from django.forms import modelformset_factory, BaseModelFormSet, ModelForm
@@ -108,8 +108,6 @@ def index(request):
 
 @login_required(login_url='/Panacea/login')
 def dashboard(request):
-    if settings.SEND_EMAILS:
-        print('this is a print statement')
     current_user_profile = profile.objects.get(custom_user=request.user)
 
     if not current_user_profile.profile_submitted:
@@ -349,7 +347,6 @@ def OrganizationProfile(request, redirect_to=None):
             # TODO figure out why is this here
             form.save()
             if redirect_to:
-                print(redirect_to)
                 if redirect_to == "organizational_information":
                     summary_progress, created = summary_organization_progress.objects.get_or_create(
                         organization=find_user_organization(request.user.id))
@@ -433,7 +430,6 @@ def Admin_assignPermissions(request, active=None):
                     notify_user_that_permissions_have_been_updated(custom_user.objects.get(id=this_user_id).get_full_name(), email, groups)
                     my_profile.active_permissions_request = False
                     my_profile.save()
-                    # print(email)
                 form.save()
 
         return JsonResponse({'success': True})
@@ -816,63 +812,19 @@ def Vanpool_Growth(request):
     return render(request, 'pages/vanpool/VanpoolGrowth.html', {})
 
 
-
 @login_required(login_url='/Panacea/login')
 @group_required('WSDOT staff')
-def Operation_Summary(request):
-    total_vp = vanpool_report.objects.values('report_year').annotate(Sum('vanpool_groups_in_operation')).filter(
-        report_month=12, vanpool_groups_in_operation__isnull=False)
-    years = [i['report_year'] for i in total_vp]
-    print(years)
-    total_vp = vanpool_report.objects.values('report_year').annotate(Sum('vanpool_groups_in_operation')).filter(
-        report_month=12, vanpool_groups_in_operation__isnull=False)
-    vp_percent_change = percent_change_calculation(total_vp, 'vanpool_groups_in_operation__sum')
-    total_vs = vanpool_report.objects.values('report_year').annotate(Sum('vanshare_groups_in_operation')).filter(
-        report_month=12, vanshare_groups_in_operation__isnull=False)
-    vs_percent_change = percent_change_calculation(total_vs, 'vanshare_groups_in_operation__sum')
-    total_starts = vanpool_report.objects.values('report_year').annotate(Sum('vanpool_group_starts')).filter(
-        vanpool_groups_in_operation__isnull=False)
-    starts_percent_change = percent_change_calculation(total_starts, 'vanpool_group_starts__sum')
-    total_folds = vanpool_report.objects.values('report_year').annotate(Sum('vanpool_group_folds')).filter(
-        vanpool_groups_in_operation__isnull=False)
-    folds_percent_change = percent_change_calculation(total_folds, 'vanpool_group_folds__sum')
-    zipped = zip(total_starts, total_vp)
-    starts_as_a_percent = []
-    for i in zipped:
-        percent = round((i[0]['vanpool_group_starts__sum'] / i[1]['vanpool_groups_in_operation__sum']) * 100, 2)
-        starts_as_a_percent.append(percent)
-    folds_as_a_percent = []
-    zipped = zip(total_folds, total_vp)
-    for i in zipped:
-        percent = round((i[0]['vanpool_group_folds__sum'] / i[1]['vanpool_groups_in_operation__sum']) * 100, 2)
-        folds_as_a_percent.append(percent)
-    zipped = zip(total_starts, total_folds)
-    net_vanpool = []
-    for start, fold in zipped:
-        net_vanpool.append(start['vanpool_group_starts__sum'] - fold['vanpool_group_folds__sum'])
-    avg_riders = vanpool_report.objects.values('report_year').annotate(Avg('average_riders_per_van')).filter(
-        vanpool_groups_in_operation__isnull=False)
-    avg_miles = vanpool_report.objects.values('report_year').annotate(Avg('average_round_trip_miles')).filter(
-        vanpool_groups_in_operation__isnull=False)
-    print(avg_riders)
-    print(avg_miles)
-    vp_totals = zip(total_vp, vp_percent_change)
-    vs_totals = zip(total_vs, vs_percent_change)
-    starts = zip(total_starts, starts_percent_change)
-    folds = zip(total_folds, folds_percent_change)
-    empty_list = [''] * len(total_vp)
-    starts_as_percent = zip(starts_as_a_percent, empty_list)
-    folds_as_percent = zip(folds_as_a_percent, empty_list)
-    net_vans = zip(net_vanpool, empty_list)
-    average_riders = zip(avg_riders, empty_list)
-    average_miles = zip(avg_miles, empty_list)
+def vanpool_report_status(request):
 
-    return render(request, 'pages/vanpool/OperationSummary.html',
-                  {'vp_totals': vp_totals, 'vs_totals': vs_totals, 'starts': starts, 'folds': folds,
-                   'starts_as_a_percent': starts_as_percent,
-                   'folds_as_percent': folds_as_percent, 'net_vans': net_vans, 'average_riders': average_riders,
-                   'average_miles': average_miles, 'years': years})
+    most_recent_report = vanpool_report.objects.values('organization_id', 'organization__name').\
+        filter(organization__vanpool_program=True).annotate(Max('report_date')).order_by('report_date__max')
 
+    def get_vanpool_contact_info(org_id):
+        profile.objects.filter(organization_id=org_id, reports_on__reporttype__name='Vanpool Report')
+
+
+
+    return render(request, 'pages/vanpool/vanpool_report_status.html', {'most_recent_report': most_recent_report})
 
 # endregion
 
@@ -957,11 +909,9 @@ def cover_sheet_organization_view(request):
     notes = cover_sheet_review_notes.objects.filter(year=get_current_summary_report_year(), summary_report_status__organization=org, note_area="Organization")
     new_note_form = add_cover_sheet_review_note()
     if org.summary_organization_classifications.name == "Transit":
-        print("transit")
         tax_rate, created = tax_rates.objects.get_or_create(organization=org)
         tax_description = tax_rate.tax_rate_description
     else:
-        print("not transit")
         tax_description = None
     try:
         base64_logo = base64.encodebytes(cover_sheet_instance.organization_logo).decode("utf-8")
@@ -1017,7 +967,6 @@ def cover_sheet_service_view(request):
         form = cover_sheet_service(data=request.POST, instance=cover_sheet_instance)
 
         if form.is_valid():
-            print("valid")
             form.save()
             summary_progress, created = summary_organization_progress.objects.get_or_create(
                 organization=find_user_organization(request.user.id))
@@ -1026,7 +975,6 @@ def cover_sheet_service_view(request):
 
             return redirect('submit_cover_sheet')
         else:
-            print("Error")
             for error in form.errors:
                 print(error)
 
@@ -1091,14 +1039,11 @@ def ntd_upload(request):
         if form.is_valid():
             form.save()
         user_org = find_user_organization(custom_user_id)
-        print(user_org)
         current_report_year = get_current_summary_report_year()
         excel_file = request.FILES["excel_file"]
         wb = openpyxl.load_workbook(excel_file)
         data_transit = clean_transit_data_from_ntd(wb, current_report_year, user_org, request.user.id)
         revenue_data = clean_revenue_data_fron_ntd(wb, current_report_year, user_org, request.user.id)
-        print(data_transit)
-        print(revenue_data)
         for data in data_transit:
             transit_data.objects.get_or_create(year = data['year'], report_by_id=data['report_by_id'], reported_value=data['reported_value'],administration_of_mode= data['administration_of_mode'],
                                         comments = data['comments'], organization_id=data['organization_id'], transit_metric_id=data['transit_metric_id'], transit_mode_id=data['transit_mode_id'])
@@ -1146,17 +1091,15 @@ def summary_modes(request, error_no_modes=None):
     if request.method == 'POST':
         form = service_offered_form(data=request.POST)
         if form.is_valid():
-            print(form.is_valid())
             instance, created = service_offered.objects.get_or_create(organization_id=org.id,
                                                                       transit_mode=form.cleaned_data["transit_mode"],
                                                                       administration_of_mode=form.cleaned_data[
                                                                           "administration_of_mode"])
             if not created:
-                print("not created")
+
                 messages.error(request, "This name has already been added")
     else:
         form = service_offered_form()
-    print(form)
     modes = service_offered.objects.filter(organization_id=org).all()
     ready_to_submit = get_all_data_steps_completed(find_user_organization_id(request.user.id))
     return render(request, 'pages/summary/summary_modes.html', {'form': form,
@@ -1314,131 +1257,6 @@ def contact_us(request):
 
     return render(request, 'pages/ContactUs.html', {'form':form})
 
-
-@login_required(login_url='/Panacea/login')
-def view_annual_operating_information(request):
-    pass
-    # current_year = get_current_summary_report_year()
-    # years = [current_year-2, current_year-1, current_year]
-    # current_user_id = request.user.id
-    # user_org_id = profile.objects.get(custom_user_id=current_user_id).organization_id
-    # org_classification = organization.objects.get(id = user_org_id).summary_organization_classifications
-    # df = build_operations_data_table(years, [user_org_id], org_classification)
-    # heading_list = ['Annual Operating Information'] + years +['One Year Change (%)']
-    # data = df.to_dict(orient = 'records')
-    # return render(request, 'pages/summary/view_agency_report.html', {'data':data, 'years': heading_list})
-
-
-@login_required(login_url='/Panacea/login')
-def view_financial_information(request):
-    pass
-    # current_year = get_current_summary_report_year()
-    # years = [current_year - 2, current_year - 1, current_year]
-    # current_user_id = request.user.id
-    # user_org_id = profile.objects.get(custom_user_id=current_user_id).organization_id
-    # org_classification = organization.objects.get(id=user_org_id).summary_organization_classifications
-    # if str(org_classification) == 'Community provider':
-    #     revenuedf = build_community_provider_revenue_table(years, [user_org_id])
-    # else:
-    #     revenuedf = build_revenue_table(years, [user_org_id], org_classification)
-    # financial_data = revenuedf.to_dict(orient = 'records')
-    # financial_heading_years = ['Financial Information'] + years + ['One Year Change(%)']
-    # return render(request, 'pages/summary/view_financial_report.html', {'financial_data':financial_data, 'finance_years': financial_heading_years})
-
-
-@login_required(login_url='/Panacea/login')
-def view_rollup(request):
-    pass
-    # current_year = get_current_summary_report_year()
-    # years = [current_year-2, current_year-1, current_year]
-    # current_user_id = request.user.id
-    # user_org_id = profile.objects.get(custom_user_id=current_user_id).organization_id
-    # rollup_data = build_total_funds_by_source(years, [user_org_id])
-    # rollup_heading = ['Total Funds by Source'] + years + ['One Year Change (%)']
-    # rollup_data = rollup_data.to_dict(orient = 'records')
-    # return render(request, 'pages/summary/view_agency_rollup.html', {'rollup_data': rollup_data, 'rollup_heading': rollup_heading})
-
-
-@login_required(login_url='/Panacea/login')
-def view_statewide_measures(request):
-    pass
-    # years = [2013, 2014, 2015, 2016, 2017, 2018]
-    # statewide_measure_list = []
-    # list_of_headings = []
-    # statewide_measure_dictionary = {'Revenue Vehicle Hours by Service Mode': ("Revenue Vehicle Hours"), 'Revenue Vehicle Miles by Service Mode': ('Revenue Vehicle Miles'),
-    #                                 'Passenger Trips by Service Mode':('Passenger Trips'), 'Farebox Revenues by Service Mode': ('Farebox Revenues'), 'Operating Expenses by Service Mode': ('Operating Expenses')}
-    # for key, measure in statewide_measure_dictionary.items():
-    #     df = generate_performance_measure_table(measure, years)
-    #     heading_list = [key] + years + ['One Year Change (%)']
-    #     list_of_headings.append(heading_list)
-    #     statewide_measure_list.append(df.to_dict(orient = 'records'))
-    # return render(request, 'pages/summary/view_statewide_measures.html', {'headings': list_of_headings, 'data': statewide_measure_list, 'titles': statewide_measure_dictionary.keys()})
-
-
-@login_required(login_url='/Panacea/login')
-def view_performance_measures(request):
-    pass
-    # years = [2013, 2014, 2015, 2016, 2017, 2018]
-    # performance_measure_list = []
-    # list_of_headings = []
-    # performance_measure_dictionary = {
-    #     'Operating Costs per Passenger Trip': ('Operating Expenses', 'Passenger Trips'), 'Operating Cost per Revenue Vehicle Hour':('Operating Expenses', 'Revenue Vehicle Hours'),
-    #     'Passenger Trips per Revenue Vehicle Hour':('Passenger Trips', 'Revenue Vehicle Hours'), 'Passenger Trips per Revenue Vehicle Mile':('Passenger Trips', 'Revenue Vehicle Miles'),
-    #     'Revenue Vehicle Hours per Employee': ('Revenue Vehicle Hours', 'Employees - FTEs'), 'Farebox Recovery Ratio/Vanpool Revenue Recovery': ('Farebox Revenues', 'Operating Expenses')}
-    # for key, measure in performance_measure_dictionary.items():
-    #     df = generate_performance_measure_table(measure, years)
-    #     heading_list = [key] + years + ['One Year Change (%)']
-    #     list_of_headings.append(heading_list)
-    #     performance_measure_list.append(df.to_dict(orient = 'records'))
-    #
-    # return render(request, 'pages/summary/view_performance_measures.html', {'headings': list_of_headings, 'data': performance_measure_list, 'titles': performance_measure_dictionary.keys()})
-
-
-@login_required(login_url='/Panacea/login')
-def view_statewide_rollup(request):
-    pass
-    # year = 2017
-    # revenue_df = create_statewide_revenue_table(year)
-    # expense_df = create_statewide_expense_table(year)
-    # return render(request, 'pages/summary/view_statewide_rollup.html')
-
-
-@login_required(login_url='/Panacea/login')
-def view_statewide_operating(request):
-    pass
-    # current_year = get_current_summary_report_year()
-    # years = [current_year-2, current_year-1, current_year]
-    # current_user_id = request.user.id
-    # user_org_id = profile.objects.get(custom_user_id=current_user_id).organization_id
-    # org_classification = organization.objects.get(id = user_org_id).summary_organization_classifications
-    # org_list = list(organization.objects.filter(summary_organization_classifications = org_classification).value_list('id', flat = True))
-    # return render(request)
-
-
-@login_required(login_url='/Panacea/login')
-def view_statewide_revenue(request):
-    return render(request)
-
-
-@login_required(login_url='/Panacea/login')
-def view_statewide_investment_tables(request):
-    return render(request)
-
-
-@login_required(login_url='/Panacea/login')
-def view_statewide_statistics(request):
-    pass
-    # statewide_mode_statistics_list = []
-    # list_of_headings = []
-    # year = 2017
-    # transit_mode_names = ['Fixed Route', 'Commuter Bus', 'Trolley Bus', 'Route Deviated', 'Demand Response', 'Vanpool', 'Commuter Rail', 'Light Rail', 'Streetcar']
-    # for mode in transit_mode_names:
-    #     df, heading = generate_mode_by_agency_tables(mode, year)
-    #     statewide_mode_statistics_list.append(df.to_dict(orient = 'records'))
-    #     list_of_headings.append(heading)
-    # return render(request, 'pages/summary/view_statewide_statistics.html', {'headings': list_of_headings, 'data':statewide_mode_statistics_list})
-
-
 @login_required(login_url='/Panacea/login')
 @group_required('WSDOT staff')
 def create_new_tracking_year(request, year):
@@ -1458,14 +1276,12 @@ def summary_tracking(request, year=None):
     if year is None:
         year = summary_report_status.objects.aggregate(Max('year'))
         year = year['year__max']
-        print(year)
     if request.POST:
         pass
     else:
         pass
     tracking_data = summary_report_status.objects.filter(year=year, organization__summary_reporter=True).order_by(
         'organization__name')
-    print(tracking_data)
 
     return render(request, 'pages/summary/admin/summary_tracking.html', {'year': year, 'tracking_data': tracking_data})
 
@@ -1483,7 +1299,6 @@ def summary_yearly_setup(request, action=None):
         elif action == "create_all_summary_report_statuses":
             year = get_current_summary_report_year()
             summary_orgs = organization.objects.filter(summary_reporter=True)
-            print(summary_orgs)
             for org in summary_orgs:
                 summary_report_status.objects.get_or_create(year=year, organization=org)
         else:
@@ -1730,7 +1545,6 @@ def return_cover_sheet_to_user(request, summary_report_status_id):
     if notes_count > 0:
         url = reverse('wsdot_review_cover_sheets_year_org', kwargs={'year': cover_sheet_status.year,
                                                                     'organization_id': cover_sheet_status.organization_id})
-        print('url > 0')
         cover_sheet_status.cover_sheet_status = "With user"
         cover_sheet_status.save()
 
@@ -1841,7 +1655,6 @@ def approve_data_submittal(request, summary_report_status_id):
     data_report_status = summary_report_status.objects.get(id=summary_report_status_id)
     data_report_status.data_report_status = "Complete"
     data_report_status.save()
-    print(data_report_status)
     url = reverse('wsdot_review_data_submittal_year_org', kwargs={'year': data_report_status.year,
                                                                   'organization_id': data_report_status.organization_id})
     data_report_review_complete(data_report_status.organization_id)
@@ -1856,7 +1669,6 @@ def return_data_submittal_to_user(request, summary_report_status_id):
                                                                   'organization_id': data_report_status.organization_id})
     data_report_status.data_report_status = "With user"
     data_report_status.save()
-    print(data_report_status.data_report_status)
     return HttpResponseRedirect(url)
 
 
@@ -1866,7 +1678,6 @@ def test_tools(request):
     if request.POST:
         custom_user_id = request.POST.get('custom_user')
         my_instance = profile.objects.get(custom_user_id=custom_user_id)
-        print(request.POST)
         form = change_user_org(request.POST, instance=my_instance)
         if form.is_valid():
             form.save()

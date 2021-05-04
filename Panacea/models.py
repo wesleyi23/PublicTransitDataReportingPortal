@@ -595,13 +595,6 @@ class stylesheets(models.Model):
     ferry_data = models.CharField(max_length=200, blank=True, null=True)
 
 
-#class statewide_measures(models.Model):
- #   title = models.CharField(max_length= 200, null=True, blank=True)
-  #  transit_data_files = models.CharField(max_length=500, blank=True, null=True)
-   # data_type = models.CharField(max_length=40, null=True, blank=True)
-    #measure_type = models.CharField(max_length=40, null=True, blank = True)
-
-
 class service_area_population(models.Model):
     population = models.IntegerField(blank=False, null=False)
     year = models.IntegerField(blank=False, null=False)
@@ -742,6 +735,109 @@ class tribal_reporter_permissions(models.Model):
 #     report_by = models.ForeignKey(custom_user, on_delete=models.PROTECT, blank=True, null=True)
 #     comments = models.TextField(blank=True, null=True)
 #     history = HistoricalRecords()
+
+
+#region NTD tables
+
+
+class NTD_mode(models.Model):
+    mode = models.CharField(max_length=150)
+
+    def __str__(self):
+        return self.mode
+
+
+
+class NTD_organization(models.Model):
+    organization = models.ForeignKey(organization, on_delete=models.PROTECT)
+    mode = models.ForeignKey(NTD_mode, on_delete=models.PROTECT)
+
+
+class NTD_safety_and_volunteer_data(models.Model):
+    organization = models.ForeignKey(organization, on_delete=models.PROTECT)
+    number_of_volunteer_drivers = models.IntegerField(default=0)
+    number_of_personal_vehicles = models.IntegerField(default=0)
+    reportable_incidents = models.IntegerField(default=0)
+    fatalities = models.IntegerField(default=0)
+    injuries = models.IntegerField(default=0)
+    year = models.IntegerField()
+
+class NTD_funding_source_name(models.Model):
+    fund_source_choices = (("Federal", "Federal"),
+                           ("Non-Federal", "Non-Federal"),
+                           ('Purchased Transportation', 'Purchased Transportation'),
+                           ('Other Directly Generated Funds', 'Other Directly Generated Funds')
+
+    )
+    name = models.CharField(max_length=120)
+    fund_source = models.CharField(max_length=100, choices=fund_source_choices)
+
+    def __str__(self):
+        return self.name
+
+class NTD_funding_source(models.Model):
+    fund_type_choice =(("Operating", 'Operating'),
+                       ("Capital", "Capital")
+
+    )
+    name = models.ForeignKey(NTD_funding_source_name, on_delete=models.PROTECT)
+    fund_type = models.CharField(max_length=50, choices = fund_type_choice)
+    fund_description = models.TextField()
+    value = models.IntegerField()
+    year = models.IntegerField()
+    organization = models.ForeignKey(organization, on_delete=models.PROTECT)
+
+class NTD_service_data(models.Model):
+    mode = models.ForeignKey(NTD_mode, on_delete=models.PROTECT)
+    organization = models.ForeignKey(organization, on_delete=models.PROTECT)
+    year = models.IntegerField()
+    vehicles_of_maximum_service = models.IntegerField()
+    unlinked_passenger_trips = models.IntegerField()
+    vehicle_revenue_hours = models.IntegerField()
+    vehicle_revenue_miles = models.IntegerField()
+    sponsored_service_upt = models.IntegerField()
+
+class NTD_modal_information(models.Model):
+    expense_type_choice= (("Operating", 'Operating'),
+                       ("Capital", "Capital")
+
+    )
+    mode = models.ForeignKey(NTD_mode, on_delete=models.PROTECT)
+    organization = models.ForeignKey(organization, on_delete=models.PROTECT)
+    year = models.IntegerField()
+    expense_type = models.CharField(max_length=100, choices = expense_type_choice)
+    operating_expenses = models.IntegerField()
+    passenger_paid_fares = models.IntegerField()
+    organization_paid_fares = models.IntegerField()
+
+
+class NTD_reports(models.Model):
+    ntd_report = models.CharField(max_length=100)
+    organization = models.ForeignKey(organization, on_delete=models.PROTECT)
+    report_submission = models.BooleanField(default=False)
+
+class NTD_validation(models.Model):
+    tab_fields = (('Modal Information', 'Modal Information'),
+                  ('Funding Sources', 'Funding Sources'),
+                  ('Other Resources', 'Other Resources'),
+                  ('Annual Service Data', 'Annual Service Data'),
+                  ('Safety Data', 'Safety Data')
+
+    )
+    organization = models.ForeignKey(organization, on_delete=models.PROTECT)
+    mode = models.ForeignKey(NTD_mode, on_delete=models.PROTECT, null=True)
+    error_message = models.TextField()
+    year = models.IntegerField()
+    sheet_name = models.CharField(max_length=80, choices = tab_fields)
+    correction = models.TextField(default= None)
+
+    @property
+    def error_correction(self):
+        if self.correction == None:
+            return False
+        else:
+            return True
+
 
 
 

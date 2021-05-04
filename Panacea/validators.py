@@ -77,16 +77,6 @@ def validation_test_for_transit_data(report_year, mode_id, administration_of_mod
                 validation_errors.objects.create(year = report_year, error = error, organization_id= organization,report_by_id= user, administration_of_mode = administration_of_mode, transit_mode_id= mode_id)
     return error_list
 
-
-
-
-
-
-
-
-
-
-
 def validate_image_file(file):
     ALLOWED_EXTENSIONS = [".png", ".jpeg", ".jpg", ".tif"]
 

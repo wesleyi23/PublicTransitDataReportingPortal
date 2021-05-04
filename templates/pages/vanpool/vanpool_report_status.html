@@ -1,0 +1,30 @@
+{% extends 'index.html' %}
+{% load humanize %}
+{% load custom_tags %}
+{% load static %}
+
+{% block content %}
+
+    <table>
+    <thead>
+    <th>Organization name</th>
+    <th>Last report</th>
+    </thead>
+    <tbody>
+    {% for report in most_recent_report %}
+        <tr>
+            <td>{{ report.organization__name }}</td>
+            <td>{{ report.report_date__max }}</td>
+        </tr>
+    {% endfor %}
+
+    </tbody>
+    </table>
+
+
+
+{% endblock %}
+
+{% block page_scripts %}
+
+{% endblock %}

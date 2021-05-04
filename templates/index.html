@@ -20,7 +20,6 @@
 
     <link href="{% static 'vendor/fontawesome-free/css/all.min.css' %}" rel="stylesheet" type="text/css">
     <link href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i" rel="stylesheet">
-    {#    <link href="{% static 'vendor/datatables/dataTables.bootstrap4.css' %}" rel="stylesheet" type="text/css">#}
 
     <!-- Custom styles for this template-->
     <link href="{% static 'css/sb-admin-2.css'%}" rel="stylesheet">
@@ -49,7 +48,6 @@
         <!-- Nav Item - Dashboard -->
         <li class="nav-item active">
             <a class="nav-link" href="{% url 'dashboard' %}">
-                {#                <i class="fas fa-fw fa-tachometer-alt"></i>#}
                 <span>Dashboard</span>
             </a>
         </li>
@@ -77,11 +75,8 @@
                                 <a class="collapse-item" href="{% url 'summary_instructions' %}">Coversheet report</a>
                                 <a class="collapse-item" href="{% url 'summary_report_data' %}">Report data</a>
                                 <a class = "collapse-item" href = "{% url 'ntd_upload' %} ">Upload NTD Data </a>
-{#                                <a class="collapse-item" href="{% url 'customer_review_instructions' %}">Review coversheet report</a>#}
                             {% endif %}
-{#                            <a class = "collapse-item" href = "{%  url 'view_transit_data' %}">View agency report</a>#}
-{#                            <a class = "collapse-item" href = "{%  url 'view_statewide_rollup' %}">View statewide reports</a>#}
-                        {% endif %}
+                    {% endif %}
                     </div>
                 </div>
             </li>
@@ -93,7 +88,6 @@
 
             <li class="nav-item">
                 <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseVanpoolReport" aria-expanded="true" aria-controls="collapseVanpoolReport">
-                    {#                    <i class="fas fa-fw fa-clipboard-check"></i>#}
                     <span>Vanpool Reporting</span>
                 </a>
                 <div id="collapseVanpoolReport" class="collapse" data-parent="#accordionSidebar">
@@ -124,7 +118,6 @@
             <!-- Nav Item - Settings Collapse Menu -->
             <li class="nav-item">
                 <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseSettings" aria-expanded="true" aria-controls="collapseSettings">
-                    {#                <i class="fas fa-fw fa-user"></i>#}
                     <span>Settings</span>
                 </a>
                 <div id="collapseSettings" class="collapse" data-parent="#accordionSidebar">
@@ -152,11 +145,9 @@
                 </a>
                 <div id="collapseVanpoolAdmin" class="collapse" data-parent="#accordionSidebar">
                     <div class="bg-white py-2 collapse-inner rounded">
-                        <a class="collapse-item" href="{% url 'Vanpool_expansion_analysis' %}">Vanpool Expansion</a>
-
-                        <a class = "collapse-item" href = "{%  url 'Operation_Summary' %}"> Operation Summary </a>
-                        <a class = "collapse-item" href = "{%  url 'Vanpool_Growth' %}"> Vanpool Growth </a>
-
+{#                        <a class="collapse-item" href="{% url 'Vanpool_expansion_analysis' %}">Vanpool Expansion</a>#}
+{#                        <a class = "collapse-item" href = "{%  url 'Vanpool_Growth' %}">Vanpool Growth </a>#}
+                        <a class = "collapse-item" href = "{%  url 'vanpool_report_status' %}">Vanpool Report Status</a>
                     </div>
                 </div>
             </li>
@@ -177,15 +168,11 @@
             <!-- Nav Item - Admin Tools -->
             <li class="nav-item">
                 <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseAdmin" aria-expanded="true" aria-controls="collapseAdmin">
-                    {#                    <i class="fas fa-fw fa-tools"></i>#}
+
                     <span>Admin Tools</span>
                 </a>
                 <div id="collapseAdmin" class="collapse" data-parent="#accordionSidebar">
                     <div class="bg-white py-2 collapse-inner rounded">
-                        {% comment %}
-                         <a class="collapse-item" href="{% url 'Admin_reports' %}">Reports</a>
-                         <a class="collapse-item" href="{% url 'Admin_ReminderEmail' %}">Reminder Emails</a>
-                        {% endcomment %}
                         <a class="collapse-item" href="{% url 'Admin_assignPermissions' "active"%}">Assign permissions</a>
                         <a class="collapse-item" href="{% url 'test_tools' %}">Testing tools</a>
                     </div>

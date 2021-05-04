@@ -712,7 +712,6 @@ class ExportReport(SummaryBuilder):
 
     def generate_annual_operating_table(self, include_comment=False):
         output = []
-        # print(self.report_type_sub_report_dictionary["transit_data"])
 
         for mode in self.report_type_sub_report_dictionary["transit_data"].export_report_data_list:
             # print(mode.nav_headers)
@@ -1309,39 +1308,3 @@ class ExportReport_Data():
             qry_set = self.query_set.filter(transit_metrics_id=10)
             output = self._data_as_list_of_lists(qry_set)
         return output
-
-
-def generate_org_summary_tables(include_comment=False, test_org=False, start_with_org=None):
-    if include_comment:
-        path="./output_with_comments"
-    else:
-        path="./output/"
-
-    if start_with_org:
-        run=False
-    else:
-        run=True
-
-    orgs = organization.objects.filter(summary_organization_classifications_id__in=[5], # 7 - tribe, 6 - transit, 5 - monorail, 2 ferry
-                                       summary_reporter=True).all()
-    if test_org:
-        orgs = organization.objects.filter(id=test_org).all()
-
-    for org in orgs:
-        if start_with_org:
-            if org.name == start_with_org:
-                run = True
-
-        if run and not org.name in ['Lower Elwha Klallam Tribe',
-                                    'Nooksack Indian Tribe',
-                                    'Quileute Nation',
-                                    'Squaxin Island Tribe',
-                                    'Tulalip Tribes',
-                                    'Colville Confederated Tribes',
-                                    'Confederated Tribes of the Umatilla',
-                                    'Cowlitz Tribe Transit Service']:
-            print('working on: ' + org.name)
-            t = ExportReport(org)
-            t.generate_excel_summary_report(file_save_os=True, file_save_path=path, include_comment=include_comment)
-
-    return True
