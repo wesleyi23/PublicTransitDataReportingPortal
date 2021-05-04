@@ -25,6 +25,7 @@ from tempus_dominus.widgets import DatePicker
 from .widgets import FengyuanChenDatePickerInput
 
 
+
 # region shared
 class CustomUserCreationForm(forms.ModelForm):
     """
