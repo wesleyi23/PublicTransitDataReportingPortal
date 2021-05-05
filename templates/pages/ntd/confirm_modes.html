@@ -1,0 +1,207 @@
+{% extends 'index.html' %}
+{% load humanize %}
+{% load custom_tags %}
+{% load static %}
+{% load widget_tweaks %}
+
+{% block head_content %}
+
+
+{% endblock %}
+
+{% block content %}
+
+    <div class="container-fluid">
+
+        <!-- Page Heading -->
+
+    </div>
+
+    <div class="container-fluid">
+        <div class="row">
+            <div class="card shadow mb-4 w-100">
+                <div class="card-header">
+                    <ul class="nav nav-tabs card-header-tabs">
+                        <li class="nav-item">
+                            <a class="nav-link active" href="{% url 'ntd_confirm_modes' %}">Confirm RR-20 Modes</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'ntd_modal_information' %}">Modal Information</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'ntd_funding_sources' %}">Funding Sources</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'ntd_other_resources_and_safety' %}">Safety and Other Resources</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'ntd_annual_service_data' %}">Annual Service Data</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'ntd_data_submission' %}">Submit your data</a>
+                        </li>
+                        {%  if successful_submit %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'ntd_validation_errors' %}">Validation Errors</a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="card shadow mb-4 w-100">
+<div class="card-body" style="min-height: 25rem">
+                    <div class="text-center mt-5">
+                      <p>Please confirm that these NTD modes are correct for your agency</p>
+
+                           {% if error_no_modes %}
+                            <div class="alert alert-danger">
+                                You must have at least one mode before entering data.  Please add a mode.
+                            </div>
+                        {% endif %}
+
+                        <div class = 'table-responsive'>
+                            <table class = "table table-bordered table-hover">
+                                <thead>
+                                <tr>
+                                    <th style="width:25%">Mode</th>
+                                    <th style="width:10%; text-align: center">Delete</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                {%  for mode in modes %}
+                                    <tr class="fieldWrapper">
+                                        <td>{{ mode.mode.mode}}</td>
+                                        <td style="text-align: center;">
+                                            <a href="#" class="delete-mode" data-mode="{{ mode.mode.mode }}">
+                                                <i class="fa fa-times-circle text-danger"> </i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                {%  endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <h3>Add new service</h3>
+                    <div style="padding-left: 1rem">
+                        <p> Please add any new modes of service here</p>
+                        {% if messages %}
+                            {% for message in messages %}
+                                <h4 class="{{ message.tags }}">{{ message }}</h4>
+                            {% endfor %}
+                        {% endif %}
+
+                        <form method="POST" class="" onkeydown="return event.key != 'Enter';">
+                            {% csrf_token %}
+                            <div class = 'table-responsive'>
+                                <table class = "table table-bordered table-hover">
+                                    <thead>
+                                    <tr>
+                                        <th style="width:25%">Mode</th>
+                                        <th style="width:10%; text-align: center">Add</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+
+                                    <tr class="fieldWrapper">
+                                        <td>{{ form.mode }}</td>
+                                        <td style="text-align: center"><input type="submit" value="Add mode" class="btn btn-sm btn-primary"></td>
+                                    </tr>
+
+                                    </tbody>
+                                </table>
+                            </div>
+                        </form>
+
+    <div class="text-center">
+                        <a class="btn btn-lg btn-primary" href="{% url 'ntd_modal_information' %}">Confirm service</a>
+                    </div>
+
+                        <div class="modal fade" id="deleteModal" tabindex="-1" role="dialog" aria-labelledby="deleteModal" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="deleteModal">Are you sure you wish to delete this mode?</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class = 'table-responsive'>
+                        <table class = "table table-bordered">
+                            <thead>
+                            <tr>
+                                <th>Mode</th>
+                                <th>Administration of mode</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr>
+                                <td><span id="delete-mode-detail"></span></td>
+                                <td><span id="delete-admin-mode-detail"></span></td>
+                            </tr>
+                            </tbody>
+
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                    <a id="final-delete" type="button" class="btn btn-danger" style="color: white">Delete mode</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    </div>
+    </div>
+        </div>
+    </div>
+
+    <div class="container-fluid">
+        <div class="row">
+            <div class="card shadow mb-4 w-100">
+                <div class="card-header">
+    <h3>NTD Definition of Modes</h3>
+                </div>
+    <div class = "card-body">
+    <li>Bus (MB) is a transit mode using rubber-tired passenger vehicles
+    operating on fixed routes and schedules over roadways.
+    Vehicles are powered by a motor and fuel or electricity
+    stored on board the vehicle. Transit agencies must report
+    any route-deviated or point-deviated service as MB. </li>
+        <li>Commuter Bus (CB) local fixed-route bus transportation that
+    primarily connects outlying areas with a central city and
+    operates predominantly in one direction during peak periods.
+    It has limited stops in outlying areas, limited stops in the central city, and at least five
+    miles of closed-door service.</li>
+        <li>Demand Response (DR) is a transit mode operating on roadways in response to
+    requests from passengers or their agents to the transit
+    operator, who groups rides together when possible and
+    dispatches a vehicle to provide the rides. Vehicles do not
+    operate over a fixed route or on a fixed schedule unless temporarily satisfying a special
+    transit need. Many transit systems operate DR service to meet the requirements of the
+    ADA.</li>
+        <li>Vanpool (VP) operates as a ride sharing arrangement, providing
+transportation to a pre-arranged group of individuals. To be
+considered public transportation, Vanpool programs must:
+        <ul>
+<li> Use vehicles with a minimum seating capacity of
+        seven people, including the driver; </li>
+        <li> Use vehicles for which 80 percent of the yearly mileage will come from commuting; </li>
+<li> Be open to the public (any vans that are restricted by rule to particular employers
+    are not public transportation); </li>
+<li> Be actively engaged in advertising the Vanpool service to the public and in
+    matching interested members of the public to vans with available seats; </li>
+        <li> Be publicly sponsored. </li>
+        </ul>
+Transit agencies adding Vanpool service to their NTD report must complete and submit
+to FTA a questionnaire. </li>
+    </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+

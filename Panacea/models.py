@@ -197,9 +197,11 @@ class vanpool_report(models.Model):
     report_type = models.ForeignKey(ReportType, on_delete=models.PROTECT)
     report_year = models.IntegerField()
     report_month = models.IntegerField(choices=REPORT_MONTH)
-    #created_at = models.DateTimeField(default = None, null=True)
+    # TODO we should come back and look at if these need to be here
+    # report_due_date = models.DateField()
+    #report_day = models.IntegerField(default = 1, null=True)
     report_date = models.DateTimeField(default=None, null=True)
-    #update_date = models.DateTimeField(auto_now=True)
+    update_date = models.DateTimeField(auto_now=True, blank=True, null=True)
     report_by = models.ForeignKey(custom_user, on_delete=models.PROTECT, blank=True, null=True)
     organization = models.ForeignKey(organization, on_delete=models.PROTECT)
     vanshare_groups_in_operation = models.IntegerField(blank=True, null=True)
@@ -271,7 +273,6 @@ class vanpool_report(models.Model):
     def save(self, no_report_date=False, *args, **kwargs):
         if not no_report_date and self.report_date is None:
             self.report_date = datetime.datetime.now().date()
-
         super(vanpool_report, self).save(*args, **kwargs)
 
     class Meta:
@@ -420,6 +421,7 @@ class transit_metrics(models.Model):
 class transit_mode(models.Model):
     name = models.CharField(max_length=90, blank=True)
     rollup_mode = models.CharField(max_length=90, blank=True, null=True)
+    order_in_summary = models.IntegerField(blank=True, null=True)
 
     def __str__(self):
         return self.name
@@ -453,6 +455,8 @@ class fund_balance_type(models.Model):
     name = models.CharField(max_length=100)
     agency_classification = models.ManyToManyField(summary_organization_type, blank=True)
     help_text = models.TextField(blank=True, null=True)
+    order_in_summary = models.FloatField(null=True, blank=True)
+
 
     def __str__(self):
         return self.name

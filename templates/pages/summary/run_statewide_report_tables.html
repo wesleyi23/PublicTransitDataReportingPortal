@@ -1,0 +1,31 @@
+{% extends 'index.html' %}
+{% load humanize %}
+{% load custom_tags %}
+{% load static %}
+{% load widget_tweaks %}
+
+{% block head_content %}
+
+{%  endblock %}
+<!-- Page Heading -->
+{% block content %}
+    <div class="container-fluid">
+        <div class="row">
+            <div class="card shadow mb-4 w-100">
+                <div class="card-header">
+                    <p>Please select which reports you would like to run:</p>
+                    <form method="post">
+                        <p>{{form.report_size }}</p>
+                        {% csrf_token %}
+                        {% for f in form.report_selection %}
+                            <p>{{ f }} </p>
+                        {% endfor %}
+
+
+                    <p><button type="submit" class="btn btn-danger">Submit</button>  </p>
+                        </form>
+                </div>
+            </div>
+        </div>
+    </div>
+        {% endblock %}

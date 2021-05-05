@@ -1,0 +1,54 @@
+{% extends 'index.html' %}
+{% load humanize %}
+{% load custom_tags %}
+{% load static %}
+{% load widget_tweaks %}
+
+{% block head_content %}
+
+
+{% endblock %}
+
+{% block content %}
+
+    <div class="container-fluid">
+
+        <!-- Page Heading -->
+
+    </div>
+
+    <div class="container-fluid">
+        <div class="row">
+            <div class="card shadow mb-4 w-100">
+                <div class="card-header">
+                    <ul class="nav nav-tabs card-header-tabs">
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'ntd_confirm_modes' %}">Confirm RR-20 Modes</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'ntd_modal_information' %}">Modal Information</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link active" href="{% url 'ntd_funding_sources' %}">Funding Sources</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'ntd_other_resources_and_safety' %}">Safety and Other Resources</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'ntd_annual_service_data' %}">Annual Service Data</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'ntd_data_submission' %}">Submit your data</a>
+                        </li>
+                        {%  if successful_submit %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'ntd_validation_errors' %}">Validation Errors</a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}

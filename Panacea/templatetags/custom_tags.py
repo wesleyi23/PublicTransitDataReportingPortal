@@ -255,3 +255,9 @@ def is_prod_mode():
     else:
         return False
 
+
+@register.filter(name='ntd_mode_translator')
+def ntd_mode_translator(number):
+    ntd_dict = {1:'Demand Response (Purchased Transportation)', 2:'Demand Response (Direct Operated)', 3:'Commuter Bus (Direct Operated)',4:'Commuter Bus (Purchased Transportation)',
+                5:'Bus (Direct Operated)', 6:'Vanpool (Direct Operated)', 7:'Bus (Purchased Transportation)', 8:'Intercity Bus'}
+    return ntd_dict[number]

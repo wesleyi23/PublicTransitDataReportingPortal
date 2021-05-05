@@ -3,6 +3,7 @@
 {% load custom_tags %}
 {% load static %}
 {% load widget_tweaks %}
+{% load multifor %}
 
 {% block head_content %}
     <link href="{% static 'css/slidder.css'%}" rel="stylesheet">
@@ -93,14 +94,16 @@
                             <th> Reported Value</th>
                             <th>User </th>
                             <th> Comments</th>
+                            <th>Record Uploaded</th>
                         </tr>
-                        {% for data in transit_data %}
+                        {% for data in transit_data; bool in transit_created_list %}
 
 
                             <tr>
                                 {%  for key, value in data.items %}
                         <td>{{value}}</td>
                                     {% endfor %}
+                            <td>{{ bool }}</td>
                             </tr>
 
                         {%  endfor %}
@@ -114,14 +117,16 @@
                     <th>Comments</th>
                     <th>Organization</th>
                     <th>User Id</th>
-                    <th>Revenue Source Id</th></tr>
+                    <th>Revenue Source Id</th>
+                    <th>Record Uploaded</th></tr>
                     </thead>
                     <tbody>
-                    {%  for d in revenue_data %}
+                    {%  for d in revenue_data; bool in revenue_created_list %}
                         <tr>
                         {%  for key, value in d.items %}
                     <td>{{ value }}</td>
                             {% endfor %}
+                        <td>{{ bool }}</td>
                     </tr>
                     {% endfor %}
                     </tbody>

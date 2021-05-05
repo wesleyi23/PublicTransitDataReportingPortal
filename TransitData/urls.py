@@ -130,6 +130,7 @@ urlpatterns = [
     path('summary/admin/wsdot_review_data_submittal/<int:year>/<int:organization_id>', views.wsdot_review_data_submittal, name="wsdot_review_data_submittal_year_org"),
     path('summary/admin/wsdot_review_data_submittal/approve_data_submittal/<int:summary_report_status_id>', views.approve_data_submittal, name="approve_data_submittal"),
     path('summary/admin/wsdot_review_data_submittal/return_data_submittal_to_user/<int:summary_report_status_id>', views.return_data_submittal_to_user, name="return_data_submittal_to_user"),
+    path('summary/run_statewide_report_tables', views.run_statewide_report_tables, name = 'run_statewide_report_tables'),
     path('summary/reports/coversheet', views_reports.cover_sheet_report, name="coversheet_html"),
     path('summary/reports/coversheet/<str:pdf>', views_reports.cover_sheet_report, name="coversheet_pdf"),
     path('logged_in/', views.your_logged_in, name='your_logged_in'),
@@ -139,6 +140,17 @@ urlpatterns = [
     path('sso/saw/', views_SAML_SAW.signin, name="saw_sso"),
     path('sso/saw/acs/', views_SAML_SAW.acs, name="saw_sso_acs"),
     # path('summary/test', views.test, name='test'),
+   path('ntd/annual_service_data', views.ntd_annual_service_data, name = 'ntd_annual_service_data'),
+   path('ntd/confirm_modes', views.ntd_confirm_modes, name = 'ntd_confirm_modes'),
+   path('ntd/funding_sources', views.ntd_funding_sources, name = 'ntd_funding_sources'),
+   path('ntd/modal_information', views.ntd_modal_information, name = 'ntd_modal_information'),
+   path('ntd/other_resources_and_safety', views.ntd_other_resources_and_safety, name = 'ntd_other_resources_and_safety'),
+   path('ntd/validation_errors', views.ntd_validation_errors, name = 'ntd_validation_errors'),
+   path('ntd/welcome_page', views.ntd_report_selection, name = 'ntd_report_selection'),
+    path('ntd/data_submission', views.ntd_data_submission, name = 'ntd_data_submission')
+
+
+
 ]
 
 handler404 = views.handler404
