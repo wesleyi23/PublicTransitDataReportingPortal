@@ -591,6 +591,52 @@ def green_house_gas_per_sov_mile():
     return co2_per_sov_mile_traveled
 
 
+def vanpool_chart_type_convert(chart_data, x_axis_labels, chart_type='values'):
+    '''
+    Function that produces chart data from a chart dataset in the Vanpool_data view
+    :param chart_data: chart data passed to this function
+    :param x_axis_labels: a list with chart axis labels
+    :param chart_type: chart type
+    :return: dataset ready for conversion to json and drawing in chart.js
+    '''
+
+    CHART_TYPES = ['values', 'percent_change', 'index']
+    if chart_type not in CHART_TYPES:
+        raise ValueError("Invalid chart_type. Valid chart types: " + print(CHART_TYPES))
+
+    if chart_type == 'values':
+        chart_data.pop(0)
+        x_axis_labels.pop(0)
+        return chart_data, x_axis_labels
+    elif chart_type == 'percent_change':
+        output_chart = chart_data.copy()
+        i = 1
+        while i < len(output_chart):
+            if chart_data[i] is None:
+                output_chart[i] = None
+            elif chart_data[i-1] is None:
+                output_chart[i] = 1
+            else:
+                output_chart[i] = round(((chart_data[i] / chart_data[i-1])-1) * 100, 2)
+            i = i + 1
+        output_chart.pop(0)
+        x_axis_labels.pop(0)
+        return output_chart, x_axis_labels
+    elif chart_type == 'index':
+        chart_data.pop(0)
+        x_axis_labels.pop(0)
+        base_year = chart_data[0]
+        chart_data[0] = 100
+        i = 1
+        while i < len(chart_data):
+            if chart_data[i] is None:
+                pass
+            else:
+                chart_data[i] = round((chart_data[i] / base_year) * 100, 2)
+            i = i + 1
+        return chart_data, x_axis_labels
+
+
 def get_vanpool_summary_charts_and_table(include_years,
                                          is_org_summary=True,
                                          org_id=None,

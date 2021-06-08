@@ -32,7 +32,7 @@ ENV PYTHONUNBUFFERED 1
 # install psycopg2 dependencies
 RUN echo 'http://dl-cdn.alpinelinux.org/alpine/v3.10/main' >> /etc/apk/repositories
 RUN apk update
-RUN apk add gcc musl-dev g++ unixodbc-dev python3-dev jpeg-dev zlib-dev libffi-dev cairo-dev pango-dev gdk-pixbuf-dev
+RUN apk add gcc musl-dev g++ unixodbc-dev python3-dev jpeg-dev zlib-dev libffi-dev cairo-dev pango-dev gdk-pixbuf-dev libxslt-dev
 
 #RUN apk add gcc python3-dev musl-dev
 
@@ -75,7 +75,7 @@ WORKDIR $APP_HOME
 RUN apk update && apk add libpq
 RUN echo 'http://dl-cdn.alpinelinux.org/alpine/v3.10/main' >> /etc/apk/repositories
 RUN apk add openssl-dev zlib-dev jpeg-dev
-RUN apk add gcc musl-dev libffi-dev xmlsec g++ py-pip unixodbc-dev gnupg curl python3-dev jpeg-dev zlib-dev libffi-dev cairo-dev pango-dev gdk-pixbuf-dev
+RUN apk add gcc musl-dev libffi-dev xmlsec g++ py-pip unixodbc-dev gnupg curl python3-dev jpeg-dev zlib-dev libffi-dev cairo-dev pango-dev gdk-pixbuf-dev libxslt-dev
 RUN pip3 install --upgrade pip
 RUN pip3 install --no-cache-dir -U pip
 RUN pip3 install cryptography==2.8 wheel

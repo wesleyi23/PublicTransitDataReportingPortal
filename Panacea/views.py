@@ -32,7 +32,7 @@ from Panacea.decorators import group_required
 from .utilities import monthdelta, get_wsdot_color, get_vanpool_summary_charts_and_table, percent_change_calculation, \
     find_vanpool_organizations, get_current_summary_report_year, filter_revenue_sheet_by_classification, \
     find_user_organization_id, complete_data, green_house_gas_per_sov_mile, green_house_gas_per_vanpool_mile, \
-    validate_RR20
+    validate_RR20, vanpool_chart_type_convert
 from django.http import Http404
 from .filters import VanpoolExpansionFilter, VanpoolReportFilter
 from django.conf import settings
@@ -1966,7 +1966,7 @@ def configure_agency_types(request, model=None):
 @login_required(login_url='/Panacea/login')
 def download_excel_report(request):
     org = find_user_organization(request.user.id)
-    report = ExportReport(org).generate_report()
+    report = ExportReport(org).generate_excel_data_entry_report()
     response = HttpResponse(content=save_virtual_workbook(report), content_type='application/ms-excel')
     response['Content-Disposition'] = 'attachment; filename=Summary_of_public_transportation_data_export.xlsx'
     return response
