@@ -6,7 +6,8 @@ from django.db import transaction
 # import pandas as pd
 # import numpy as np
 from .models import revenue_source, organization, vanpool_expansion_analysis, vanpool_report, profile, transit_data, \
-    ntd_transit_data, ntd_revenue_data, transit_mode, revenue, expense, depreciation, fund_balance, stylesheets,  summary_organization_progress, summary_report_status
+    ntd_transit_data, ntd_revenue_data, transit_mode, revenue, expense, depreciation, fund_balance, stylesheets, \
+    summary_organization_progress, summary_report_status, system_configuration_variables
 from django.db.models import Max, Subquery, F, OuterRef, Case, CharField, Value, When, Sum, Count, Avg, FloatField, \
     ExpressionWrapper, Q
 from django.db.models.functions import Coalesce
@@ -21,8 +22,9 @@ from dateutil.relativedelta import relativedelta
 
 # TODO make this real
 def get_current_summary_report_year():
-    return 2019
-
+    year = system_configuration_variables.objects.get(name='active_report_year').get_value()
+    print(year)
+    return year
 
 def ntd_mode_translator(mode):
     '''pretty simplistc and community provider focused, can be updated for transits'''
@@ -36,6 +38,8 @@ def ntd_mode_translator(mode):
         transit_mode_id = 14
     elif mode == 'CB':
         transit_mode_id = 5
+    else:
+        raise NotImplementedError
     return transit_mode_id
 
 
@@ -45,7 +49,12 @@ def clean_revenue_data_fron_ntd(revenue_data_wb, current_report_year, organizati
     for row in ntd_revenue_data.objects.all():
         reported_value = revenue_data_wb[row.sheet_name][row.table_index].value
         if reported_value is not None and reported_value > 0:
-            final_row = {'year':current_report_year, 'reported_value':reported_value, 'comments':None, 'organization_id':organization_id.id, 'report_by_id':user_id, 'revenue_source_id':row.revenue_source_id}
+            final_row = {'year': current_report_year,
+                         'reported_value': reported_value,
+                         'comments': None,
+                         'organization_id': organization_id.id,
+                         'report_by_id': user_id,
+                         'revenue_source_id': row.revenue_source_id}
             revenue_data_list.append(final_row)
     return revenue_data_list
 
@@ -53,20 +62,26 @@ def clean_revenue_data_fron_ntd(revenue_data_wb, current_report_year, organizati
 def clean_transit_data_from_ntd(transit_data_wb, current_report_year, organization_id, user_id):
     '''complex because need to account for mode (some things don't have an obvious mode) and because Farebox Revenues is on multiple lines and has multiple uses here'''
     transit_data_list = []
-    first_mode = []
     ntd_transit = ntd_transit_data.objects.all().order_by('id')
     for row in ntd_transit:
-        try:
+        if not row.mode:
+            mode = 1001 # General information no mode
+        else:
             mode = ntd_mode_translator(transit_data_wb[row.sheet_name][row.mode].value)
-            first_mode.append(mode)
-        except:
-            mode = first_mode[0]
+        # TODO figure out why nathan used try catch
         try:
             print(transit_data_wb[row.sheet_name][row.index])
             reported_value = transit_data_wb[row.sheet_name][row.index].value
             print(reported_value)
             if reported_value is not None and reported_value > 0:
-                final_row = {'year':current_report_year, 'transit_mode_id':mode, 'administration_of_mode':'Direct Operated','organization_id':organization_id.id, 'transit_metric_id':row.transit_metric.id, 'reported_value':reported_value, 'report_by_id':user_id, 'comments':None}
+                final_row = {'year': current_report_year,
+                             'transit_mode_id': mode,
+                             'administration_of_mode': 'Direct Operated',
+                             'organization_id': organization_id.id,
+                             'transit_metric_id': row.transit_metric.id,
+                             'reported_value': reported_value,
+                             'report_by_id': user_id,
+                             'comments': None}
                 transit_data_list.append(final_row)
         except:
             ls = transit_data_wb[row.sheet_name][row.index]
@@ -77,12 +92,33 @@ def clean_transit_data_from_ntd(transit_data_wb, current_report_year, organizati
             else:
                 reported_value = ls[0][0].value
             if reported_value is not None and reported_value > 0:
-                final_row = {'year':current_report_year, 'transit_mode_id':mode, 'administration_of_mode':'Direct Operated','organization_id':organization_id.id, 'transit_metric_id':row.transit_metric.id, 'reported_value':reported_value, 'report_by_id':user_id, 'comments':None}
+                final_row = {'year': current_report_year,
+                             'transit_mode_id': mode,
+                             'administration_of_mode': 'Direct Operated',
+                             'organization_id': organization_id.id,
+                             'transit_metric_id': row.transit_metric.id,
+                             'reported_value': reported_value,
+                             'report_by_id': user_id,
+                             'comments': None}
                 transit_data_list.append(final_row)
     return transit_data_list
 
 
-
+def validate_RR20(wb):
+    if wb['Instructions']['A1'].value.strip() != "Reduced Reporting (RR-20) Import Instructions":
+        print(1)
+        print(wb['Instructions']['A1'].value)
+        return False
+    elif wb['Funding Sources']['A2'].value.strip() != "Funding Sources":
+        print(2)
+        print(wb['Funding Sources']['A2'].value)
+        return False
+    elif wb['Modal Information']['A2'].value.strip() != "Funds Expended":
+        print(3)
+        print(['Modal Information']['A2'].value)
+        return False
+    else:
+        return True
 
 
 def ntd_mode_translator(mode):
@@ -106,7 +142,7 @@ def clean_revenue_data_fron_ntd(revenue_data_wb, current_report_year, organizati
     for row in ntd_revenue_data.objects.all():
         reported_value = revenue_data_wb[row.sheet_name][row.table_index].value
         if reported_value is not None and reported_value > 0:
-            final_row = {'year':current_report_year, 'reported_value':reported_value, 'comments':None, 'organization_id':organization_id.id, 'report_by_id':user_id, 'revenue_source_id':row.revenue_source_id}
+            final_row = {'year': current_report_year, 'reported_value': reported_value, 'comments': None, 'organization_id': organization_id.id, 'report_by_id': user_id, 'revenue_source_id': row.revenue_source_id}
             revenue_data_list.append(final_row)
     return revenue_data_list
 
@@ -125,7 +161,14 @@ def clean_transit_data_from_ntd(transit_data_wb, current_report_year, organizati
         try:
             reported_value = transit_data_wb[row.sheet_name][row.index].value
             if reported_value is not None and reported_value > 0:
-                final_row = {'year':current_report_year, 'transit_mode_id':mode, 'administration_of_mode':'Direct Operated','organization_id':organization_id.id, 'transit_metric_id':row.transit_metric.id, 'reported_value':reported_value, 'report_by_id':user_id, 'comments':None}
+                final_row = {'year': current_report_year,
+                             'transit_mode_id': mode,
+                             'administration_of_mode': 'Direct Operated',
+                             'organization_id': organization_id.id,
+                             'transit_metric_id': row.transit_metric.id,
+                             'reported_value': reported_value,
+                             'report_by_id': user_id,
+                             'comments': None}
                 transit_data_list.append(final_row)
         except:
             ls = transit_data_wb[row.sheet_name][row.index]
@@ -136,11 +179,9 @@ def clean_transit_data_from_ntd(transit_data_wb, current_report_year, organizati
             else:
                 reported_value = ls[0][0].value
             if reported_value is not None and reported_value > 0:
-                final_row = {'year':current_report_year, 'transit_mode_id':mode, 'administration_of_mode':'Direct Operated','organization_id':organization_id.id, 'transit_metric_id':row.transit_metric.id, 'reported_value':reported_value, 'report_by_id':user_id, 'comments':None}
+                final_row = {'year':current_report_year, 'transit_mode_id': mode, 'administration_of_mode': 'Direct Operated','organization_id':organization_id.id, 'transit_metric_id':row.transit_metric.id, 'reported_value':reported_value, 'report_by_id':user_id, 'comments':None}
                 transit_data_list.append(final_row)
     return transit_data_list
-
-
 
 
 def calculate_percent_change(data1, data2):
@@ -319,6 +360,10 @@ def filter_revenue_sheet_by_classification(classification):
 
 def find_vanpool_organizations():
     return organization.objects.all().filter(vanpool_program=True)
+
+
+def find_summary_organizations():
+    return organization.objects.all().filter(summary_reporter=True)
 
 
 def generate_summary_report_years():

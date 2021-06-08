@@ -1,4 +1,4 @@
-pysaml2
+pysaml2==5.0.0
 amqp==2.5.1
 Babel==2.7.0
 billiard==3.6.1.0
@@ -53,3 +53,6 @@ openpyxl
 WeasyPrint
 django-ckeditor
 Pillow==7.1.2
+django-multiforloop
+htmldocx
+docx

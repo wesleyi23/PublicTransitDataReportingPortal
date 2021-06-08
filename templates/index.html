@@ -75,7 +75,7 @@
                             {% if request.user|is_summary_reporter %}
                                 <a class="collapse-item" href="{% url 'summary_instructions' %}">Coversheet report</a>
                                 <a class="collapse-item" href="{% url 'summary_report_data' %}">Report data</a>
-                                <a class = "collapse-item" href = "{% url 'ntd_upload' %} ">Upload NTD Data </a>
+{#                                <a class="collapse-item" href="{% url 'customer_review_instructions' %}">Review coversheet report</a>#}
                             {% endif %}
                     {% endif %}
                     </div>
@@ -162,6 +162,8 @@
                         <a class="collapse-item" href="{% url 'summary_tracking' %}">Summary tracking</a>
                         <a class="collapse-item" href="{% url 'yearly_setup_instructions' %}">Yearly setup</a>
                         <a class="collapse-item" href="{% url 'metric_configurations' %}">Metric configuration</a>
+                        <a class="collapse-item" href="{%  url 'exports_home'%}">Export data for report</a>
+                         <a class = "collapse-item" href = "{% url 'ntd_upload' %} ">Upload NTD Data </a>
                     </div>
                 </div>
             </li>

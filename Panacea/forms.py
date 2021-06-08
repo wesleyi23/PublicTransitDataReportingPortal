@@ -4,7 +4,8 @@ from django.forms.formsets import BaseFormSet
 from django.contrib.auth import password_validation, login
 import datetime
 
-from Panacea.utilities import find_user_organization, find_vanpool_organizations, calculate_percent_change
+from Panacea.utilities import find_user_organization, find_vanpool_organizations, calculate_percent_change, \
+    find_summary_organizations
 from .models import custom_user, \
     profile, \
     organization, \
@@ -916,6 +917,10 @@ class change_user_org(forms.ModelForm):
         self.fields['organization'].queryset = self.fields['organization'].queryset.order_by('name')
 
 
+class ntd_organization_select(forms.Form):
+    organization_name = forms.ChoiceField(choices=[(org.id, org.name) for org in organization.objects.filter(wsdot_managed_ntd_reporter=True).order_by('name')])
+
+
 class ntd_modes(forms.ModelForm):
     class Meta:
         model = NTD_organization
@@ -923,6 +928,7 @@ class ntd_modes(forms.ModelForm):
         widgets = {
         'mode': forms.Select(choices=NTD_mode.objects.all(), attrs={'class': 'form-control'})
         }
+
 
 class ntd_modal_information_form(forms.ModelForm):
     class Meta:
@@ -938,3 +944,11 @@ class ntd_modal_information_form(forms.ModelForm):
             'year': forms.NumberInput(attrs={ 'class': 'form-control','readonly':'readonly'})
             # add mode in here as a read only field
         }
+
+
+class export_organization_select(forms.Form):
+    cover_sheet_organizations = forms.ModelChoiceField(queryset=find_summary_organizations().order_by('name'), empty_label=None,
+                                                 widget=forms.CheckboxSelectMultiple(
+                                                     attrs={'class': 'form-check checkbox-grid',
+                                                            'data-form-name': "org_select"}))
+

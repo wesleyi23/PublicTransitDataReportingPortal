@@ -13,6 +13,26 @@ import datetime
 
 from simple_history.models import HistoricalRecords
 
+class system_configuration_variables(models.Model):
+    variable_type_choices = (('int', 'int'),
+                             ('char', 'char'))
+
+
+    name = models.CharField(max_length=255, null=False)
+    type = models.CharField(max_length=50,
+                            choices=variable_type_choices,
+                            default='char')
+    value = models.CharField(max_length=255, null=False)
+
+    def get_value(self):
+        if self.type == 'char':
+            return self.value
+        elif self.type == 'int':
+            return int(self.value)
+        else:
+            raise NotImplementedError
+
+
 # region shared
 class CustomUserManager(BaseUserManager):
     """Define a model manager for User model with no username field."""
@@ -136,13 +156,14 @@ class organization(models.Model):
     in_puget_sound_area = models.BooleanField(blank=True, null=True)
     summary_reporter = models.BooleanField(default=True)
     summary_organization_classifications = models.ForeignKey(summary_organization_type, on_delete=models.PROTECT, blank=True, null=True)
+    wsdot_managed_ntd_reporter = models.BooleanField(default=False)
     #fixed_route_expansion = models.BooleanField(blank=True, null=True)
 
 
 #class vanpool_details(models.Model):
- #   organization = models.ForeignKey(organization, on_delete=models.PROTECT, related_name="+")
-  #  vanpool_program_start_date = models.DateField(blank=True, null=True)
-   # vanpool_program_end_date = models.DateField(blank=True, null= True)
+#   organization = models.ForeignKey(organization, on_delete=models.PROTECT, related_name="+")
+#  vanpool_program_start_date = models.DateField(blank=True, null=True)
+# vanpool_program_end_date = models.DateField(blank=True, null= True)
 
 
 class profile(models.Model):
@@ -201,7 +222,7 @@ class vanpool_report(models.Model):
     # report_due_date = models.DateField()
     #report_day = models.IntegerField(default = 1, null=True)
     report_date = models.DateTimeField(default=None, null=True)
-    update_date = models.DateTimeField(auto_now=True, blank=True, null=True)
+    # update_date = models.DateTimeField(auto_now=True, blank=True, null=True)
     report_by = models.ForeignKey(custom_user, on_delete=models.PROTECT, blank=True, null=True)
     organization = models.ForeignKey(organization, on_delete=models.PROTECT)
     vanshare_groups_in_operation = models.IntegerField(blank=True, null=True)
@@ -627,6 +648,7 @@ class summary_report_status(models.Model):
     STATUS = (
         ("With user", "With user"),
         ("With WSDOT", "With WSDOT"),
+        ("User approved", "User approved"),
         ("Complete", "Complete")
     )
 
@@ -636,6 +658,7 @@ class summary_report_status(models.Model):
     cover_sheet_submitted_for_review = models.BooleanField(default=False)
     data_report_status = models.CharField(default="With user", max_length=80, choices=STATUS)
     data_report_submitted_for_review = models.BooleanField(default=False)
+    last_update_date = models.DateTimeField(auto_now=True, blank=True, null=True)
     history = HistoricalRecords()
 
     class Meta:
@@ -772,7 +795,7 @@ class NTD_funding_source_name(models.Model):
                            ('Purchased Transportation', 'Purchased Transportation'),
                            ('Other Directly Generated Funds', 'Other Directly Generated Funds')
 
-    )
+                           )
     name = models.CharField(max_length=120)
     fund_source = models.CharField(max_length=100, choices=fund_source_choices)
 
@@ -783,7 +806,7 @@ class NTD_funding_source(models.Model):
     fund_type_choice =(("Operating", 'Operating'),
                        ("Capital", "Capital")
 
-    )
+                       )
     name = models.ForeignKey(NTD_funding_source_name, on_delete=models.PROTECT)
     fund_type = models.CharField(max_length=50, choices = fund_type_choice)
     fund_description = models.TextField()
@@ -803,9 +826,9 @@ class NTD_service_data(models.Model):
 
 class NTD_modal_information(models.Model):
     expense_type_choice= (("Operating", 'Operating'),
-                       ("Capital", "Capital")
+                          ("Capital", "Capital")
 
-    )
+                          )
     mode = models.ForeignKey(NTD_mode, on_delete=models.PROTECT)
     organization = models.ForeignKey(organization, on_delete=models.PROTECT)
     year = models.IntegerField()
@@ -827,7 +850,7 @@ class NTD_validation(models.Model):
                   ('Annual Service Data', 'Annual Service Data'),
                   ('Safety Data', 'Safety Data')
 
-    )
+                  )
     organization = models.ForeignKey(organization, on_delete=models.PROTECT)
     mode = models.ForeignKey(NTD_mode, on_delete=models.PROTECT, null=True)
     error_message = models.TextField()

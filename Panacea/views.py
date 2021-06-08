@@ -7,7 +7,7 @@ import json
 # import pandas as pd
 from openpyxl.writer.excel import save_virtual_workbook
 from Panacea.report_builders import run_reports
-from Panacea.builders import SummaryDataEntryBuilder, SummaryDataEntryTemplateData, ConfigurationBuilder, ExportReport, ReportAgencyDataTableBuilder, StatewideSixYearReportBuilder
+from Panacea.builders import SummaryDataEntryBuilder, SummaryDataEntryTemplateData, ConfigurationBuilder, ExportReport
 from django.contrib import messages
 from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
@@ -32,10 +32,7 @@ from Panacea.decorators import group_required
 from .utilities import monthdelta, get_wsdot_color, get_vanpool_summary_charts_and_table, percent_change_calculation, \
     find_vanpool_organizations, get_current_summary_report_year, filter_revenue_sheet_by_classification, \
     find_user_organization_id, complete_data, green_house_gas_per_sov_mile, green_house_gas_per_vanpool_mile, \
-    vanpool_chart_type_convert
-
-#    generate_performance_measure_table, generate_mode_by_agency_tables, create_statewide_revenue_table, \
-#    create_statewide_expense_table, create_all_summary_report_statuses
+    validate_RR20
 from django.http import Http404
 from .filters import VanpoolExpansionFilter, VanpoolReportFilter
 from django.conf import settings
@@ -64,7 +61,8 @@ from .forms import CustomUserCreationForm, \
     cover_sheet_organization, \
     transit_data_form, \
     service_offered_form, validation_error_form, email_contact_form, change_user_org, \
-    cover_sheet_wsdot_review, add_cover_sheet_review_note, tribal_permissions,report_generating_form, ntd_modes, ntd_modal_information_form
+    cover_sheet_wsdot_review, add_cover_sheet_review_note, tribal_permissions, report_generating_form, ntd_modes, \
+    ntd_modal_information_form, ntd_organization_select
 from .models import profile, vanpool_report, custom_user, vanpool_expansion_analysis, organization, cover_sheet, \
     revenue, transit_data, expense, expense_source, service_offered, revenue_source, \
     transit_metrics, transit_mode, fund_balance, fund_balance_type, summary_organization_type, validation_errors, \
@@ -101,7 +99,6 @@ def index(request):
     return render(request, 'index.html', {})
 
 
-
 @login_required(login_url='/Panacea/login')
 def dashboard(request):
     current_user_profile = profile.objects.get(custom_user=request.user)
@@ -118,10 +115,12 @@ def dashboard(request):
         user_org_id = profile.objects.get(custom_user_id=current_user_id).organization_id
         user_context = {'user_org': user_org_id}
 
-        if not organization.objects.get(id=user_org_id).vanpool_program or not request.user.groups.filter(name__in=['Vanpool reporter']).exists():
+        if not organization.objects.get(id=user_org_id).vanpool_program or not request.user.groups.filter(
+                name__in=['Vanpool reporter']).exists():
             vp_program = False
             user_context.update({'vp_program': vp_program})
-        elif organization.objects.get(id=user_org_id).vanpool_program == True and request.user.groups.filter(name__in=['Vanpool reporter']).exists():
+        elif organization.objects.get(id=user_org_id).vanpool_program == True and request.user.groups.filter(
+                name__in=['Vanpool reporter']).exists():
             recent_vanpool_report = vanpool_report.objects. \
                 filter(organization_id=user_org_id, report_date__isnull=False). \
                 order_by('-report_year', '-report_month').first()
@@ -162,33 +161,41 @@ def dashboard(request):
 
             def ghg_calculator():
                 # Replace Nones with 0
-                recent_average_riders_per_van = float(0 if recent_vanpool_report.average_riders_per_van is None else recent_vanpool_report.average_riders_per_van)
-                recent_vanpool_miles_traveled = float(0 if recent_vanpool_report.vanpool_miles_traveled is None else recent_vanpool_report.vanpool_miles_traveled)
-                recent_vanshare_miles_traveled = float(0 if recent_vanpool_report.vanshare_miles_traveled is None else recent_vanpool_report.vanshare_miles_traveled)
+                recent_average_riders_per_van = float(
+                    0 if recent_vanpool_report.average_riders_per_van is None else recent_vanpool_report.average_riders_per_van)
+                recent_vanpool_miles_traveled = float(
+                    0 if recent_vanpool_report.vanpool_miles_traveled is None else recent_vanpool_report.vanpool_miles_traveled)
+                recent_vanshare_miles_traveled = float(
+                    0 if recent_vanpool_report.vanshare_miles_traveled is None else recent_vanpool_report.vanshare_miles_traveled)
 
-                last_year_average_riders_per_van = float(0 if last_year_report.average_riders_per_van is None else last_year_report.average_riders_per_van)
-                last_year_vanpool_miles_traveled = float(0 if last_year_report.vanpool_miles_traveled is None else last_year_report.vanpool_miles_traveled)
-                last_year_vanshare_miles_traveled = float(0 if last_year_report.vanshare_miles_traveled is None else last_year_report.vanshare_miles_traveled)
+                last_year_average_riders_per_van = float(
+                    0 if last_year_report.average_riders_per_van is None else last_year_report.average_riders_per_van)
+                last_year_vanpool_miles_traveled = float(
+                    0 if last_year_report.vanpool_miles_traveled is None else last_year_report.vanpool_miles_traveled)
+                last_year_vanshare_miles_traveled = float(
+                    0 if last_year_report.vanshare_miles_traveled is None else last_year_report.vanshare_miles_traveled)
 
                 # Calculate current monthly emissions
                 current_monthly_sov = green_house_gas_per_sov_mile() * recent_average_riders_per_van * (
                         recent_vanpool_miles_traveled + recent_vanshare_miles_traveled)
-                current_monthly_vanpool_emissions = (recent_vanpool_miles_traveled + recent_vanshare_miles_traveled) * green_house_gas_per_vanpool_mile()
+                current_monthly_vanpool_emissions = (
+                                                            recent_vanpool_miles_traveled + recent_vanshare_miles_traveled) * green_house_gas_per_vanpool_mile()
                 current_monthly_emissions = current_monthly_sov - current_monthly_vanpool_emissions
 
                 # Calculate last years emisssions
                 last_year_monthly_sov = green_house_gas_per_sov_mile() * last_year_average_riders_per_van * (
                         last_year_vanpool_miles_traveled + last_year_vanshare_miles_traveled)
-                last_year_monthly_vanpool_emissions = (last_year_vanpool_miles_traveled + last_year_vanshare_miles_traveled) * green_house_gas_per_vanpool_mile()
+                last_year_monthly_vanpool_emissions = (
+                                                              last_year_vanpool_miles_traveled + last_year_vanshare_miles_traveled) * green_house_gas_per_vanpool_mile()
                 last_year_monthly_emissions = last_year_monthly_sov - last_year_monthly_vanpool_emissions
 
                 # Calculate percent
                 if last_year_monthly_emissions == 0:
                     return [round(current_monthly_emissions, 2), 'NA']
                 else:
-                    ghg_percent = ((current_monthly_emissions - last_year_monthly_emissions) / last_year_monthly_emissions)
+                    ghg_percent = (
+                            (current_monthly_emissions - last_year_monthly_emissions) / last_year_monthly_emissions)
                     return [round(current_monthly_emissions, 2), ghg_percent]
-
 
             user_context.update({'user_org': user_org_id,
                                  'groups_in_operation': get_most_recent_and_change(
@@ -206,13 +213,16 @@ def dashboard(request):
                                  'last_report_year': recent_vanpool_report.report_year
                                  })
 
-        if not organization.objects.get(id=user_org_id).summary_reporter or not request.user.groups.filter(name__in=['Summary reporter']).exists():
+        if not organization.objects.get(id=user_org_id).summary_reporter or not request.user.groups.filter(
+                name__in=['Summary reporter']).exists():
             user_context.update({'summary_reporter': False})
-        elif organization.objects.get(id=user_org_id).summary_reporter and request.user.groups.filter(name__in=['Summary reporter']).exists():
+        elif organization.objects.get(id=user_org_id).summary_reporter and request.user.groups.filter(
+                name__in=['Summary reporter']).exists():
             org_progress, created = summary_organization_progress.objects.get_or_create(organization_id=user_org_id)
 
             user_context.update({'summary_reporter': True,
-                                 'summary_report_status': summary_report_status.objects.get(year=get_current_summary_report_year(), organization_id=user_org_id),
+                                 'summary_report_status': summary_report_status.objects.get(
+                                     year=get_current_summary_report_year(), organization_id=user_org_id),
                                  'summary_organization_progress': org_progress
                                  })
 
@@ -372,7 +382,6 @@ def Permissions(request):
     if request.POST:
         form = request_user_permissions(data=request.POST)
         if form.is_valid():
-
             groups = ' & '.join(str(s[1]) for s in form.cleaned_data['groups'].values_list())
             notify_user_that_permissions_have_been_requested(request.user.get_full_name(), groups, request.user.email)
             active_permissions_request_notification()
@@ -420,7 +429,8 @@ def Admin_assignPermissions(request, active=None):
                     this_user_id = custom_user.objects.get(email=email).id
                     my_profile = profile.objects.get(custom_user_id=this_user_id)
                     my_profile.profile_complete = True
-                    notify_user_that_permissions_have_been_updated(custom_user.objects.get(id=this_user_id).get_full_name(), email, groups)
+                    notify_user_that_permissions_have_been_updated(
+                        custom_user.objects.get(id=this_user_id).get_full_name(), email, groups)
                     my_profile.active_permissions_request = False
                     my_profile.save()
                 form.save()
@@ -495,7 +505,6 @@ def Vanpool_report(request, year=None, month=None):
     # Instance data to link form to data
     form_data = vanpool_report.objects.get(organization_id=user_organization_id, report_year=year, report_month=month)
 
-
     # Logic if form is a new report or is an existing report (Comments are needed before editing an existing reports)
     if form_data.report_date is None:
         new_report = True
@@ -546,7 +555,6 @@ def send_vanpool_email(request):
     from django.core.management import call_command
     call_command('vanpool_monthly_email')
     return render(request, 'pages/test_tools.html', {'form': form})
-
 
 
 @login_required(login_url='/Panacea/login')
@@ -604,25 +612,26 @@ def Vanpool_expansion_modify(request, id=None):
     else:
         form = Modify_A_Vanpool_Expansion(instance=form_data)
     zipped = zip(organization_name, vea)
-    return render(request, 'pages/vanpool/Vanpool_expansion_modify.html', {'zipped':zipped, 'id': id, 'form':form})
+    return render(request, 'pages/vanpool/Vanpool_expansion_modify.html', {'zipped': zipped, 'id': id, 'form': form})
 
 
 @login_required(login_url='/Panacea/login')
 @group_required('Vanpool reporter', 'WSDOT staff')
 def Vanpool_data(request):
-
     # If it is a request for a chart
     if request.POST:
         form = vanpool_metric_chart_form(data=request.POST)
         org_list = request.POST.getlist("chart_organizations")
-        chart_time_frame = monthdelta(datetime.datetime.now().date(), int(form.data['chart_time_frame'])+1) # plus one to calculate %change for first month - dropped if not needed
+        chart_time_frame = monthdelta(datetime.datetime.now().date(), int(
+            form.data['chart_time_frame']) + 1)  # plus one to calculate %change for first month - dropped if not needed
         chart_measure = form.data['chart_measure']
         chart_type = form.data['chart_type']
 
     # Default chart for first load
     else:
         default_time_frame = 36  # months
-        chart_time_frame = monthdelta(datetime.datetime.now().date(), default_time_frame+1) # plus one to calculate %change for first month - dropped if not needed
+        chart_time_frame = monthdelta(datetime.datetime.now().date(),
+                                      default_time_frame + 1)  # plus one to calculate %change for first month - dropped if not needed
         org_list = [profile.objects.get(custom_user_id=request.user.id).organization_id]
         chart_measure = 'total_miles_traveled'
         chart_type = 'values'
@@ -636,7 +645,8 @@ def Vanpool_data(request):
         all_chart_data = [report for report in
                           vanpool_report.objects.filter(organization_id__in=org_list).order_by('report_year',
                                                                                                'report_month',
-                                                                                               'organization',).all() if
+                                                                                               'organization', ).all()
+                          if
                           chart_time_frame <= report.report_due_date <= datetime.datetime.today().date()]
         x_axis_labels = [report.report_year_month_label for report in all_chart_data]
         x_axis_labels = list(dict.fromkeys(x_axis_labels))
@@ -679,11 +689,11 @@ def Vanpool_data(request):
 
 @login_required(login_url='/Panacea/login')
 @group_required('Vanpool reporter', 'WSDOT staff')
-def download_vanpool_data(request, org_id = None):
+def download_vanpool_data(request, org_id=None):
     org_id = profile.objects.get(custom_user_id=request.user.id).organization_id
     org_name = organization.objects.get(id=org_id).name
-    vanshare_existence = organization.objects.get(id = org_id).vanshare_program
-    vanpool_data = vanpool_report.objects.filter(organization_id = org_id, vanpool_groups_in_operation__isnull=False)
+    vanshare_existence = organization.objects.get(id=org_id).vanshare_program
+    vanpool_data = vanpool_report.objects.filter(organization_id=org_id, vanpool_groups_in_operation__isnull=False)
 
     response = HttpResponse(content_type='text/csv')
     response['Content-Disposition'] = 'attachment; filename="{}.csv"'.format(org_name)
@@ -693,7 +703,7 @@ def download_vanpool_data(request, org_id = None):
     for k in vanpool_data:
         if count == 0:
             writer.writerow(list(k.__dict__.keys())[1:])
-            count +=1
+            count += 1
         else:
             writer.writerow(list(k.__dict__.values())[1:])
     return response
@@ -702,7 +712,6 @@ def download_vanpool_data(request, org_id = None):
 @login_required(login_url='/Panacea/login')
 @group_required('Vanpool reporter', 'WSDOT staff')
 def vanpool_organization_summary(request, org_id=None):
-
     if request.POST:
         settings_form = organisation_summary_settings(data=request.POST)
         include_years = int(settings_form.data['include_years'])
@@ -738,7 +747,6 @@ def vanpool_organization_summary(request, org_id=None):
 @login_required(login_url='/Panacea/login')
 @group_required('Vanpool reporter', 'WSDOT staff')
 def vanpool_statewide_summary(request):
-
     latest_complete_data = complete_data()
 
     if request.POST:
@@ -766,7 +774,6 @@ def vanpool_statewide_summary(request):
             include_regions=include_regions,
             include_agency_classifications=include_agency_classifications)
 
-
     return render(request, 'pages/vanpool/vanpool_statewide_summary.html', {'settings_form': settings_form,
                                                                             'chart_label': x_axis_labels,
                                                                             'all_charts': all_charts,
@@ -782,7 +789,6 @@ def vanpool_statewide_summary(request):
 @login_required(login_url='/Panacea/login')
 @group_required('WSDOT staff')
 def Vanpool_Growth(request):
-
     # class growth_report_table():
     #
     #     def __init__(self, start_vanpool_report_year, end_vanpool_report_year):
@@ -805,20 +811,39 @@ def Vanpool_Growth(request):
     return render(request, 'pages/vanpool/VanpoolGrowth.html', {})
 
 
-
 @login_required(login_url='/Panacea/login')
 @group_required('WSDOT staff')
 def vanpool_report_status(request):
-
-    most_recent_report = vanpool_report.objects.values('organization_id', 'organization__name').\
+    most_recent_report = vanpool_report.objects.values('organization_id', 'organization__name'). \
         filter(organization__vanpool_program=True).annotate(Max('report_date')).order_by('report_date__max')
 
     def get_vanpool_contact_info(org_id):
-        profile.objects.filter(organization_id=org_id, reports_on__reporttype__name='Vanpool Report')
+        contact = profile.objects.filter(organization_id=org_id, reports_on__name='Vanpool Report')
+        if contact.count == 0:
+            return ""
+        if contact.count == 1:
+            user = custom_user.objects.get(id=i.custom_user_id)
+            return "{0} {1} (<a href='{2}'>{2}</a>)".format(user.first_name,
+                                          user.last_name,
+                                          user.email)
+        else:
+            result = ""
+            for i in contact:
+                user = custom_user.objects.get(id=i.custom_user_id)
+                print("{0} {1} (<a href='{2}'>{2}</a>)".format(user.first_name,
+                                             user.last_name,
+                                             user.email))
+                result = result + "{0} {1} (<a href='{2}'>{2}</a>)".format(user.first_name,
+                                                user.last_name,
+                                                user.email)
+                result = result + "; "
+            return result[:-2]
 
-
+    for i in most_recent_report:
+        i['contacts'] = get_vanpool_contact_info(i['organization_id'])
 
     return render(request, 'pages/vanpool/vanpool_report_status.html', {'most_recent_report': most_recent_report})
+
 
 # endregion
 
@@ -827,8 +852,10 @@ def vanpool_report_status(request):
 @login_required(login_url='/Panacea/login')
 @group_required('Summary reporter', 'WSDOT staff')
 def pick_up_where_you_left_off(request):
-    summary_status = summary_report_status.objects.get(year=get_current_summary_report_year(), organization=find_user_organization(request.user.id))
-    org_progress, created = summary_organization_progress.objects.get_or_create(organization=find_user_organization(request.user.id))
+    summary_status = summary_report_status.objects.get(year=get_current_summary_report_year(),
+                                                       organization=find_user_organization(request.user.id))
+    org_progress, created = summary_organization_progress.objects.get_or_create(
+        organization=find_user_organization(request.user.id))
 
     if not org_progress.started:
         return redirect('summary_instructions')
@@ -900,7 +927,8 @@ def cover_sheet_organization_view(request):
     org_name = org.name
     cover_sheet_instance, created = cover_sheet.objects.get_or_create(organization_id=org.id)
     form = cover_sheet_organization(instance=cover_sheet_instance)
-    notes = cover_sheet_review_notes.objects.filter(year=get_current_summary_report_year(), summary_report_status__organization=org, note_area="Organization")
+    notes = cover_sheet_review_notes.objects.filter(year=get_current_summary_report_year(),
+                                                    summary_report_status__organization=org, note_area="Organization")
     new_note_form = add_cover_sheet_review_note()
     if org.summary_organization_classifications.name == "Transit":
         tax_rate, created = tax_rates.objects.get_or_create(organization=org)
@@ -984,8 +1012,9 @@ def submit_cover_sheet(request):
     tribe = False
     form = None
     if user_org.summary_organization_classifications.name == "Tribe":
-        tribe_instance, created = tribal_reporter_permissions.objects.get_or_create(year=get_current_summary_report_year(),
-                                                                                    organization=user_org)
+        tribe_instance, created = tribal_reporter_permissions.objects.get_or_create(
+            year=get_current_summary_report_year(),
+            organization=user_org)
         tribe = True
         form = tribal_permissions(instance=tribe_instance)
     if request.POST:
@@ -1018,45 +1047,61 @@ def submit_cover_sheet_submit(request):
 @login_required(login_url='/Panacea/login')
 @group_required('Summary reporter', 'WSDOT staff')
 def cover_sheet_submitted(request):
-    cover_sheet_status = summary_report_status.objects.get(year=get_current_summary_report_year(), organization=find_user_organization(request.user.id)).cover_sheet_status
+    cover_sheet_status = summary_report_status.objects.get(year=get_current_summary_report_year(),
+                                                           organization=find_user_organization(
+                                                               request.user.id)).cover_sheet_status
     return render(request, 'pages/summary/cover_sheet_submitted.html', {'cover_sheet_status': cover_sheet_status})
-
 
 
 @login_required(login_url='/Panacea/login')
 @group_required('WSDOT staff')
 def ntd_upload(request):
     if request.POST:
-        custom_user_id = request.POST.get('custom_user')
-        my_instance = profile.objects.get(custom_user_id=custom_user_id)
-        form = change_user_org(request.POST, instance=my_instance)
-        if form.is_valid():
-            form.save()
-        user_org = find_user_organization(custom_user_id)
-        print(user_org)
+        form = ntd_organization_select(request.POST)
+        ntd_org_id = form.data['organization_name']
+        ntd_org = organization.objects.get(id=ntd_org_id)
+
         current_report_year = get_current_summary_report_year()
         excel_file = request.FILES["excel_file"]
         wb = openpyxl.load_workbook(excel_file)
-        data_transit = clean_transit_data_from_ntd(wb, current_report_year, user_org, request.user.id)
-        revenue_data = clean_revenue_data_fron_ntd(wb, current_report_year, user_org, request.user.id)
-        transit_data_created = [] #list to collect booleans from created
+
+        if not validate_RR20(wb):
+            raise TypeError('Invalid RR-20 form')
+
+        data_transit = clean_transit_data_from_ntd(wb, current_report_year, ntd_org, request.user.id)
+        revenue_data = clean_revenue_data_fron_ntd(wb, current_report_year, ntd_org, request.user.id)
+        transit_data_created = []  # list to collect booleans from created
         revenue_data_created = []
         for data in data_transit:
-            obj, created = transit_data.objects.get_or_create(year = data['year'], report_by_id=data['report_by_id'], reported_value=data['reported_value'],administration_of_mode= data['administration_of_mode'],
-                                        comments = data['comments'], organization_id=data['organization_id'], transit_metric_id=data['transit_metric_id'], transit_mode_id=data['transit_mode_id'])
-            transit_data_created.append(created)
+            obj, created = transit_data.objects.get_or_create(year=data['year'],
+                                                              administration_of_mode=data['administration_of_mode'],
+                                                              organization_id=data['organization_id'],
+                                                              transit_metric_id=data['transit_metric_id'],
+                                                              transit_mode_id=data['transit_mode_id'])
+            obj.report_by_id = data['report_by_id']
+            obj.reported_value = data['reported_value']
+            obj.comments = data['comments']
+            obj.save()
+
+            transit_data_created.append(True)
         for data in revenue_data:
-                obj, created = revenue.objects.get_or_create(year = data['year'], report_by_id=data['report_by_id'], reported_value=data['reported_value'], comments=data['comments'], organization_id=data['organization_id'],
-                                       revenue_source_id=data['revenue_source_id'])
-                revenue_data_created.append(created)
+            obj, created = revenue.objects.get_or_create(year=data['year'],
+                                                         organization_id=data['organization_id'],
+                                                         revenue_source_id=data['revenue_source_id'])
+            obj.report_by_id = data['report_by_id']
+            obj.reported_value = data['reported_value']
+            obj.comments = data['comments']
+            obj.save()
+            revenue_data_created.append(True)
     else:
-        form = change_user_org()
+        form = ntd_organization_select()
         data_transit = []
         revenue_data = []
         revenue_data_created = []
         transit_data_created = []
     return render(request, 'pages/summary/ntd_upload.html',
-                  {'transit_data': data_transit, 'revenue_data': revenue_data, 'form': form, 'transit_created_list':transit_data_created, 'revenue_created_list':revenue_data_created})
+                  {'transit_data': data_transit, 'revenue_data': revenue_data, 'form': form,
+                   'transit_created_list': transit_data_created, 'revenue_created_list': revenue_data_created})
 
 
 @login_required(login_url='/Panacea/login')
@@ -1064,22 +1109,30 @@ def ntd_upload(request):
 def summary_report_data(request):
     user_org = find_user_organization(request.user.id)
     service_type = user_org.summary_organization_classifications.name
+    ntd_reporter = user_org.wsdot_managed_ntd_reporter
     tribal_data_permission = False
     if service_type == 'Tribe':
-        tribal_data, created = tribal_reporter_permissions.objects.get_or_create(organization_id=user_org.id, year=get_current_summary_report_year())
+        tribal_data, created = tribal_reporter_permissions.objects.get_or_create(organization_id=user_org.id,
+                                                                                 year=get_current_summary_report_year())
         tribal_data_permission = tribal_data.permission_to_publish_reported_data
     if get_data_submitted(user_org.id):
         return redirect('data_submitted')
 
     ready_to_submit = get_all_data_steps_completed(user_org.id)
 
-    return render(request, 'pages/summary/summary_report_data_instructions.html', {'ready_to_submit': ready_to_submit, 'service_type':service_type,'tribal_data_permission':tribal_data_permission})
+    return render(request, 'pages/summary/summary_report_data_instructions.html',
+                  {'ready_to_submit': ready_to_submit,
+                   'service_type': service_type,
+                   'ntd_reporter': ntd_reporter,
+                   'tribal_data_permission': tribal_data_permission})
 
 
 @login_required(login_url='/Panacea/login')
 @group_required('Summary reporter', 'WSDOT staff')
 def data_submitted(request):
-    data_status = summary_report_status.objects.get(year=get_current_summary_report_year(), organization=find_user_organization(request.user.id)).data_report_status
+    data_status = summary_report_status.objects.get(year=get_current_summary_report_year(),
+                                                    organization=find_user_organization(
+                                                        request.user.id)).data_report_status
     return render(request, 'pages/summary/data_submitted.html', {'data_status': data_status})
 
 
@@ -1097,7 +1150,6 @@ def summary_modes(request, error_no_modes=None):
                                                                       administration_of_mode=form.cleaned_data[
                                                                           "administration_of_mode"])
             if not created:
-
                 messages.error(request, "This name has already been added")
     else:
         form = service_offered_form()
@@ -1113,7 +1165,8 @@ def summary_modes(request, error_no_modes=None):
 @login_required(login_url='/Panacea/login')
 @group_required('Summary reporter', 'WSDOT staff')
 def accept_modes(request):
-    org_progress, created = summary_organization_progress.objects.get_or_create(organization=find_user_organization(request.user.id))
+    org_progress, created = summary_organization_progress.objects.get_or_create(
+        organization=find_user_organization(request.user.id))
     org_progress.confirm_service = True
     org_progress.save()
     return redirect('summary_reporting')
@@ -1185,7 +1238,7 @@ def summary_reporting(request, report_type=None, form_filter_1=None, form_filter
         requested_form.save_with_post_data(request.POST)
         return requested_form.go_to_next_form()
 
-    template_data = SummaryDataEntryTemplateData(requested_form, report_type)
+    template_data = SummaryDataEntryTemplateData(requested_form)
 
     ready_to_submit = get_all_data_steps_completed(find_user_organization_id(request.user.id))
 
@@ -1216,7 +1269,8 @@ def submit_data(request):
 @login_required(login_url='/Panacea/login')
 @group_required('Summary reporter', 'WSDOT staff')
 def submit_data_submit(request):
-    status = summary_report_status.objects.get(year=get_current_summary_report_year(), organization=find_user_organization(request.user.id))
+    status = summary_report_status.objects.get(year=get_current_summary_report_year(),
+                                               organization=find_user_organization(request.user.id))
     status.data_report_submitted_for_review = True
     status.data_report_status = "With WSDOT"
     status.save()
@@ -1228,7 +1282,6 @@ def submit_data_submit(request):
 @group_required('Summary reporter', 'WSDOT staff')
 def you_skipped_a_step(request):
     return render(request, 'pages/summary/you_skipped_a_step.html', {})
-
 
 
 @login_required(login_url='/Panacea/login')
@@ -1256,7 +1309,7 @@ def contact_us(request):
     else:
         form = email_contact_form()
 
-    return render(request, 'pages/ContactUs.html', {'form':form})
+    return render(request, 'pages/ContactUs.html', {'form': form})
 
 
 @login_required(login_url='/Panacea/login')
@@ -1415,7 +1468,6 @@ def summary_tracking(request, year=None):
 @login_required(login_url='/Panacea/login')
 @group_required('WSDOT staff')
 def summary_yearly_setup(request, action=None):
-
     if action:
         if action == "reset_summary_reporter_tracking":
             year = get_current_summary_report_year()
@@ -1439,11 +1491,10 @@ def summary_yearly_setup_instructions(request):
     return render(request, 'pages/summary/admin/summary_yearly_setup_instructions.html', {})
 
 
-
 @login_required(login_url='/Panacea/login')
 @group_required('WSDOT staff')
 def wsdot_review_cover_sheets(request, year=None, organization_id=None, needs_note=False):
-    #TODO add classification type to this/test alternatives
+    # TODO add classification type to this/test alternatives
     if year is None:
         year = summary_report_status.objects.aggregate(Max('year'))
         year = year['year__max']
@@ -1452,7 +1503,7 @@ def wsdot_review_cover_sheets(request, year=None, organization_id=None, needs_no
                                                                         organization__summary_reporter=True).order_by(
             'organization__name').first()
         organization_id = cover_sheet_organization.organization_id
-    service_type = organization.objects.get(id = organization_id).summary_organization_classifications.name
+    service_type = organization.objects.get(id=organization_id).summary_organization_classifications.name
 
     org_cover_sheet, created = cover_sheet.objects.get_or_create(organization_id=organization_id)
 
@@ -1477,7 +1528,8 @@ def wsdot_review_cover_sheets(request, year=None, organization_id=None, needs_no
 
     if cover_sheet_submitted:
         if request.POST:
-            cover_sheet_form = cover_sheet_wsdot_review(data=request.POST, instance=org_cover_sheet, files=request.FILES)
+            cover_sheet_form = cover_sheet_wsdot_review(data=request.POST, instance=org_cover_sheet,
+                                                        files=request.FILES)
             if cover_sheet_form.is_valid():
                 instance = cover_sheet_form.save(commit=False)
                 filepath = request.FILES.get('organization_logo_input', False)
@@ -1491,11 +1543,12 @@ def wsdot_review_cover_sheets(request, year=None, organization_id=None, needs_no
                         instance.organization_logo = None
             instance.save()
         else:
-            cover_sheet_form = cover_sheet_wsdot_review(instance=cover_sheet.objects.get(organization_id=organization_id))
-
+            cover_sheet_form = cover_sheet_wsdot_review(
+                instance=cover_sheet.objects.get(organization_id=organization_id))
 
         organization_notes = cover_sheet_review_notes.objects.filter(year=year,
-                                                                     summary_report_status=summary_report_status.objects.get(organization_id=organization_id, year=year),
+                                                                     summary_report_status=summary_report_status.objects.get(
+                                                                         organization_id=organization_id, year=year),
                                                                      note_area='Organization')
         service_notes = cover_sheet_review_notes.objects.filter(year=year,
                                                                 summary_report_status=summary_report_status.objects.get(
@@ -1505,7 +1558,6 @@ def wsdot_review_cover_sheets(request, year=None, organization_id=None, needs_no
                                                               summary_report_status=summary_report_status.objects.get(
                                                                   organization_id=organization_id, year=year),
                                                               parent_note__isnull=False)
-
 
         new_note_form = add_cover_sheet_review_note()
 
@@ -1557,7 +1609,8 @@ def add_cover_sheet_note_wsdot(request, year, summary_report_status_id, note_are
         instance.custom_user = request.user
         instance.save()
     url = reverse('wsdot_review_cover_sheets_year_org', kwargs={'year': year,
-                                                                'organization_id': summary_report_status.objects.get(id=summary_report_status_id).organization_id})
+                                                                'organization_id': summary_report_status.objects.get(
+                                                                    id=summary_report_status_id).organization_id})
     return HttpResponseRedirect(url)
 
 
@@ -1608,12 +1661,12 @@ def add_cover_sheet_note_customer(request, year, note_area, note_field):
     else:
         raise PermissionError
 
-
     if request.POST:
         form = add_cover_sheet_review_note(request.POST)
         instance = form.save(commit=False)
         instance.year = year
-        instance.summary_report_status_id = summary_report_status.objects.get(organization_id=find_user_organization_id(request.user.id), year=year).id
+        instance.summary_report_status_id = summary_report_status.objects.get(
+            organization_id=find_user_organization_id(request.user.id), year=year).id
         instance.wsdot_note = False
         instance.note_area = note_area
         instance.note_area = note_field
@@ -1644,7 +1697,6 @@ def delete_cover_sheet_note(request, note_id):
         raise PermissionError
     else:
         note.delete()
-
 
     return HttpResponseRedirect(url)
 
@@ -1688,13 +1740,14 @@ def customer_review_cover_sheets(request):
     org_summary_report_status = summary_report_status.objects.get(year=year, organization_id=organization_id)
 
     notes = cover_sheet_review_notes.objects.filter(year=year,
-                                                    summary_report_status=summary_report_status.objects.get(organization_id=organization_id, year=year),
+                                                    summary_report_status=summary_report_status.objects.get(
+                                                        organization_id=organization_id, year=year),
                                                     parent_note__isnull=True).exclude(note_status="Closed")
     child_notes = cover_sheet_review_notes.objects.filter(year=year,
-                                                          summary_report_status=summary_report_status.objects.get(organization_id=organization_id, year=year),
+                                                          summary_report_status=summary_report_status.objects.get(
+                                                              organization_id=organization_id, year=year),
                                                           parent_note__isnull=False)
     new_note_form = add_cover_sheet_review_note()
-
 
     return render(request, 'pages/summary/customer_review_cover_sheet.html', {'year': year,
                                                                               'organization_id': organization_id,
@@ -1719,10 +1772,12 @@ def accept_wsdot_edit(request, note_id):
     note = cover_sheet_review_notes.objects.get(id=note_id)
     note.note_status = "Closed"
     note.save()
-    unresolved_notes_count = cover_sheet_review_notes.objects.filter(summary_report_status=note.summary_report_status, parent_note__isnull=True).exclude(note_status="Closed").count()
+    unresolved_notes_count = cover_sheet_review_notes.objects.filter(summary_report_status=note.summary_report_status,
+                                                                     parent_note__isnull=True).exclude(
+        note_status="Closed").count()
     if unresolved_notes_count == 0:
         report_status = summary_report_status.objects.get(id=note.summary_report_status_id)
-        report_status.cover_sheet_status = "With WSDOT"
+        report_status.cover_sheet_status = "User approved"
         report_status.cover_sheet_submitted_for_review = True
         report_status.save()
         to_wsdot_cover_sheet_submitted(report_status.organization_id)
@@ -1816,7 +1871,6 @@ def test_tools(request):
     return render(request, 'pages/test_tools.html', {'form': form})
 
 
-
 @login_required(login_url='/Panacea/login')
 @group_required('WSDOT staff')
 def summary_metric_configurations(request, report_type=None, help_text=None):
@@ -1850,7 +1904,6 @@ def summary_metric_configurations(request, report_type=None, help_text=None):
 
 @login_required(login_url='/Panacea/login')
 def configure_agency_types(request, model=None):
-
     if not model or model == "organization":
         model = "organization"
         my_model = organization
@@ -1905,23 +1958,9 @@ def configure_agency_types(request, model=None):
     else:
         my_queryset = my_model.objects.all()
         formset = formset_factory(queryset=my_queryset.select_related())
-        return render(request, 'pages/summary/configure_agency_types.html', {'formset': formset,
+        return render(request, 'pages/summary/admin/configure_agency_types.html', {'formset': formset,
 
                                                                              'model': model})
-
-
-@login_required(login_url='/Panacea/login')
-def run_statewide_report_tables(request):
-    if request.method == 'POST':
-        form = report_generating_form(request.POST)
-        if form.is_valid():
-            report_list = request.POST.getlist('report_selection')
-            print(report_list)
-            size = request.POST.get('report_size')
-            run_reports(report_list, size)
-    else:
-        form = report_generating_form
-    return render(request, 'pages/summary/run_statewide_report_tables.html', {'form':form})
 
 
 @login_required(login_url='/Panacea/login')
@@ -1933,13 +1972,14 @@ def download_excel_report(request):
     return response
 
 
-#region NTD
+# region NTD
 
 @login_required(login_url='/Panacea/login')
 def ntd_report_selection(request):
     user_org = find_user_organization_id(request.user.id)
     reports = NTD_reports.objects.filter(organization_id=user_org).values()
-    return render(request, 'pages/ntd/welcome_page.html', {"reports":reports})
+    return render(request, 'pages/ntd/welcome_page.html', {"reports": reports})
+
 
 @login_required(login_url='/Panacea/login')
 def ntd_confirm_modes(request):
@@ -1948,7 +1988,7 @@ def ntd_confirm_modes(request):
         form = ntd_modes(data=request.POST)
         if form.is_valid():
             instance, created = NTD_organization.objects.get_or_create(organization_id=org,
-                                                                      mode=form.cleaned_data["mode"])
+                                                                       mode=form.cleaned_data["mode"])
             if not created:
                 print("not created")
                 messages.error(request, "This name has already been added")
@@ -1956,45 +1996,47 @@ def ntd_confirm_modes(request):
         form = ntd_modes()
     modes = NTD_organization.objects.filter(organization_id=org).all()
     return render(request, 'pages/ntd/confirm_modes.html', {'form': form,
-                                                                'modes': modes,
-                                                                'org': org})
+                                                            'modes': modes,
+                                                            'org': org})
+
 
 @login_required(login_url='/Panacea/login')
 def ntd_modal_information(request):
     org = find_user_organization_id(request.user.id)
-    year = 2019
-    initial_data = NTD_modal_information.objects.filter(year = year, organization = org)
+    year = get_current_summary_report_year()
+    initial_data = NTD_modal_information.objects.filter(year=year, organization=org)
     Modalformset = modelformset_factory(NTD_modal_information, form=ntd_modal_information_form, exclude=())
     if request.method == 'POST':
-        formset = Modalformset(request.POST, queryset = initial_data)
+        formset = Modalformset(request.POST, queryset=initial_data)
         if formset.valid() == True:
             print(formset.cleaned_data)
     else:
-        formset = Modalformset(queryset = initial_data)
+        formset = Modalformset(queryset=initial_data)
     return render(request, 'pages/ntd/modal_information.html', {'formset': formset})
+
 
 @login_required(login_url='/Panacea/login')
 def ntd_annual_service_data(request):
     return render(request, 'pages/ntd/annual_service_data.html')
 
+
 @login_required(login_url='/Panacea/login')
 def ntd_funding_sources(request):
     return render(request, 'pages/ntd/funding_sources.html')
+
 
 @login_required(login_url='/Panacea/login')
 def ntd_other_resources_and_safety(request):
     return render(request, 'pages/ntd/other_resouces_and_safety.html')
 
+
 @login_required(login_url='/Panacea/login')
 def ntd_data_submission(request):
     return render(request, 'pages/ntd/data_submission.html')
 
+
 @login_required(login_url='/Panacea/login')
 def ntd_validation_errors(request):
     return render(request, 'pages/ntd/validation_errors.html')
-
-
-
-
 
 # end region

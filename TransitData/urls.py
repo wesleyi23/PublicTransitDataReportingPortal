@@ -16,7 +16,7 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 
-from Panacea import views, views_SAML_SAW, views_reports
+from Panacea import views, views_SAML_SAW, views_summary_exports
 from Panacea import views_SAML
 from django.conf.urls import url
 
@@ -130,9 +130,13 @@ urlpatterns = [
     path('summary/admin/wsdot_review_data_submittal/<int:year>/<int:organization_id>', views.wsdot_review_data_submittal, name="wsdot_review_data_submittal_year_org"),
     path('summary/admin/wsdot_review_data_submittal/approve_data_submittal/<int:summary_report_status_id>', views.approve_data_submittal, name="approve_data_submittal"),
     path('summary/admin/wsdot_review_data_submittal/return_data_submittal_to_user/<int:summary_report_status_id>', views.return_data_submittal_to_user, name="return_data_submittal_to_user"),
-    path('summary/run_statewide_report_tables', views.run_statewide_report_tables, name = 'run_statewide_report_tables'),
-    path('summary/reports/coversheet', views_reports.cover_sheet_report, name="coversheet_html"),
-    path('summary/reports/coversheet/<str:pdf>', views_reports.cover_sheet_report, name="coversheet_pdf"),
+    path('summary/exports/', views_summary_exports.exports_home, name="exports_home"),
+    path('summary/exports/run_statewide_report_tables', views_summary_exports.run_statewide_report_tables, name='run_statewide_report_tables'),
+    path('summary/exports/exports_cover_sheets_for_report', views_summary_exports.exports_cover_sheets_for_report, name="exports_cover_sheets_for_report"),
+    path('summary/exports/coversheet', views_summary_exports.cover_sheet_report, name="coversheet_html"),
+    path('summary/exports/coversheet/<str:pdf>', views_summary_exports.cover_sheet_report, name="coversheet_pdf"),
+    path('summary/exports/coversheet/<str:pdf>', views_summary_exports.cover_sheet_report, name="coversheet_pdf"),
+    path('summary/exports/data_tables', views_summary_exports.export_data_tables, name="export_data_tables"),
     path('logged_in/', views.your_logged_in, name='your_logged_in'),
     path('login_denied/', views.login_denied, name='login_denied'),
     path('sso/wsdot/', views_SAML.signin, name="wsdot_sso"),

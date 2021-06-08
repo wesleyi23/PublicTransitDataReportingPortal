@@ -1,0 +1,22 @@
+--Summary reporter contact list
+
+select Panacea_custom_user.id
+     , first_name
+     , last_name
+     , is_active
+     , job_title
+     , email
+     , telephone_number
+     , Panacea_organization.name as 'Organization'
+     , summary_reporter
+     , classification as 'Transit agency type'
+     , Panacea_summary_organization_type.name as 'Summary organization type'
+       from Panacea_profile left join
+    Panacea_custom_user on Panacea_profile.custom_user_id = Panacea_custom_user.id left join
+    Panacea_organization on Panacea_profile.organization_id = Panacea_organization.id left join
+    Panacea_summary_organization_type on Panacea_organization.summary_organization_classifications_id = Panacea_summary_organization_type.id left join
+    Panacea_custom_user_groups on Panacea_profile.custom_user_id = Panacea_custom_user_groups.custom_user_id
+where not organization_id = 1 and not
+    Panacea_profile.id in (13, 14, 15, 17, 19, 21, 28, 43, 58, 60, 128) and
+      is_active = 1 and
+      group_id = 3

@@ -61,33 +61,42 @@
                         <p>We appreciate your work on the Summary. We we’ll be in contact if any further action is needed on your part.</p>
                         <p><b>We are here to help!</b>  If at any point you get stuck or have difficulties please reach out to us and ask for <a href="{% url 'Help' %}"> help </a>.</p>
                     {% else %}
-                        {% if service_type == 'Transit' or service_type == 'Ferry' or service_type == 'Community provider' or service_type == 'Monorail' or service_type == "Tribe"%}
-                            <b>Now that you have submitted your coversheet, it's time to report your data:</b>
-                            <ul>
-                                <li>After you press the ‘let’s get started’ button below, you will be taken to the first page to confirm or update information about the types of services you operate.</li>
-                                <li>Once you are satisfied with the content press the 'confirm service' button to go to the next screen.</li>
-                                <li>Here you will begin to enter you data.</li>
-                                <li>The service you are entering data for will be in the heading in black text.</li>
-                                <li>You may get some validation errors when you enter data. If this happens, please provide a comment to explain your data in more detail.</li>
-                                <li>After completing each page, press the next button to go to the next service or the next section of reporting</li>
-                                <li>You will repeat this process until you've completed your report.</li>
-                                <li>You may go back to previous sections by navigating through the tabs, and clicking on the links for each service, revenue, or expense type.</li>
-                                <li>Once you've finished, be sure to submit your data.</li>
-                            </ul>
-                            <p><b>Download data</b> - Some organizations find it easier to review and gather all data in an excel file and then enter it into the application. You may download you data
-                                by clicking the download data button below. The file is organized in the same order as the reporting forms.  It may take a few moments to download. </p>
-                            <p><b>We are here to help!</b>  If at any point you get stuck or have difficulties please reach out to us and ask for <a href="{% url 'Help' %}"> help </a>.</p>
-                            <div class="text-center">
-                                <a class="btn btn-outline-secondary btn-lg" href="{% url 'download_excel_report' %}">Download data</a>
-                                <a class="btn btn-primary btn-lg" href="{% url 'summary_modes' %}">Let's get started</a>
-                            </div>
-                        {% else %}
+                        {% if service_type == 'Community provider' and ntd_reporter %}
                             <p>Thank you for your coversheet submission. You’ve completed your Summary reporting for the year!</p>
                             <p>For service and financial data featured in the Summary, we will use data from your National Transit Database submission.</p>
                             <p>We appreciate your work on the Summary. We we’ll be in contact if any further action is needed on your part.</p>
 
                             <p><b>We are here to help!</b>  If at any point you get stuck or have difficulties please reach out to us and ask for <a href="{% url 'Help' %}"> help </a>.</p>
-                        {%  endif %}
+                        {% else %}
+                            {% if service_type == 'Transit' or service_type == 'Ferry' or service_type == 'Community provider' or service_type == 'Monorail' or service_type == "Tribe"%}
+                                <b>Now that you have submitted your coversheet, it's time to report your data:</b>
+                                <ul>
+                                    <li>After you press the ‘let’s get started’ button below, you will be taken to the first page to confirm or update information about the types of services you operate.</li>
+                                    <li>Once you are satisfied with the content press the 'confirm service' button to go to the next screen.</li>
+                                    <li>Here you will begin to enter you data.</li>
+                                    <li>The service you are entering data for will be in the heading in black text.</li>
+                                    <li>You may get some validation errors when you enter data. If this happens, please provide a comment to explain your data in more detail.</li>
+                                    <li>After completing each page, press the next button to go to the next service or the next section of reporting</li>
+                                    <li>You will repeat this process until you've completed your report.</li>
+                                    <li>You may go back to previous sections by navigating through the tabs, and clicking on the links for each service, revenue, or expense type.</li>
+                                    <li>Once you've finished, be sure to submit your data.</li>
+                                </ul>
+                                <p><b>Download data</b> - Some organizations find it easier to review and gather all data in an excel file and then enter it into the application. You may download you data
+                                    by clicking the download data button below. The file is organized in the same order as the reporting forms.  It may take a few moments to download. </p>
+                                <p><b>We are here to help!</b>  If at any point you get stuck or have difficulties please reach out to us and ask for <a href="{% url 'Help' %}"> help </a>.</p>
+                                <div class="text-center">
+                                    <a class="btn btn-outline-secondary btn-lg" href="{% url 'download_excel_report' %}">Download data</a>
+                                    <a class="btn btn-primary btn-lg" href="{% url 'summary_modes' %}">Let's get started</a>
+                                </div>
+                            {% else %}
+                                <p>Thank you for your coversheet submission.</p>>
+                                <p><b>You’ve completed your reporting for the Summary of Public Transportation report for the year.</b></p>
+                                <p>For service and financial data featured in the Summary of Public Transportation, we will use data from your National Transit Database submission.</p>
+                                <p>We appreciate your work on the Summary. We require no further action from you in the portal, unless we run into issues with your coversheet.</p>
+
+                                <p><b>We are here to help!</b>  If at any point you get stuck or have difficulties please reach out to us and ask for <a href="{% url 'Help' %}"> help </a>.</p>
+                            {%  endif %}
+                        {% endif %}
                     {% endif %}
                 </div>
             </div>

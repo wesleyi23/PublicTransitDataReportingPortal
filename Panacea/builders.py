@@ -753,7 +753,7 @@ class ExportReport(SummaryBuilder):
 
     def generate_financial_information_table(self, include_comment=False):
 
-        if self.target_organization.summary_organization_classifications.name in ["Transit", "Tribe", "Monorail", "Ferry"]:
+        if self.target_organization.summary_organization_classifications.name in ["Transit", "Tribe", "Monorail", "Ferry", "Community provider"]:
             financial_table_output = {'Farebox revenue': self.get_fare_revenue(),
                                       'Operating revenue': [],
                                       'Other operating': [],
@@ -816,10 +816,10 @@ class ExportReport(SummaryBuilder):
                 subtotal.extend(source.get_totals())
 
                 if sum(subtotal[1:4]) > 0:
-                    financial_table_output['Local capital grant revenues'].extend(data)
-                    financial_table_output['Local capital grant revenues'].append(subtotal)
+                    financial_table_output['Local capital expenditures'].extend(data)
+                    financial_table_output['Local capital expenditures'].append(subtotal)
                 else:
-                    del financial_table_output['Local capital grant revenues']
+                    del financial_table_output['Local capital expenditures']
             elif 'Other' in source.nav_headers:
                 data = source.get_data(order_by_summary=True, remove_empty_data=True, include_comment=include_comment)
                 subtotal = ['Other Capital total']
@@ -829,7 +829,10 @@ class ExportReport(SummaryBuilder):
                     financial_table_output['Other capital'].extend(data)
                     financial_table_output['Other capital'].append(subtotal)
                 else:
-                    del financial_table_output['Other capital']
+                    try:
+                        del financial_table_output['Other capital']
+                    except KeyError:
+                        pass
 
         # print('target dict: ' + str(financial_table_output['State capital grant revenues']))
         for source in self.report_type_sub_report_dictionary['expense'].export_report_data_list:
@@ -907,6 +910,13 @@ class ExportReport(SummaryBuilder):
                         output.append(i)
 
         return output
+
+    def generate_vehicle_table(self, include_comment=False):
+        if self.target_organization.summary_organization_classifications.name != "Community provider":
+            return False
+        else:
+            pass
+
 
     def _calculate_total(self, total_label, dict_value):
         total_row = [total_label, 0, 0, 0]
@@ -990,15 +1000,13 @@ class ExportReport(SummaryBuilder):
         operating = self.generate_annual_operating_table(include_comment=include_comment)
         operating = self._format_report(operating)
         financial = self.generate_financial_information_table(include_comment=include_comment)
-
         financial = self._format_report(financial)
+        vehicle = self.generate_vehicle_table(include_comment=include_comment)
 
         totals_by_fund_source = self.generate_total_funds_by_source_table()
 
         ws.append([self.target_organization.name])
         ws.cell(row=ws.max_row, column=1).font = Font(bold=True)
-
-
 
         ws.append(['Annual Operating Information',
                    get_current_summary_report_year()-2,
@@ -1033,7 +1041,7 @@ class ExportReport(SummaryBuilder):
             ws.cell(row=ws.max_row, column=i).alignment = Alignment(horizontal='center')
 
         first_item = True
-        skip_bold=False
+        skip_bold = False
         for i in financial:
             if isinstance(i, list):
                 ws.append(i)
@@ -1075,22 +1083,30 @@ class ExportReport(SummaryBuilder):
         # print(totals_by_fund_source)
         first_item = True
         for i in totals_by_fund_source:
-
             if isinstance(i, list) and len(i) > 1:
                 ws.append(i)
             else:
                 if not first_item:
                     ws.cell(row=ws.max_row, column=1).alignment = Alignment(horizontal='right')
                 else:
-                    first_item=False
+                    first_item = False
                 for j in range(1, 6):
                     ws.cell(row=ws.max_row, column=j).font = Font(bold=True)
-
                 ws.append(i)
                 ws.cell(row=ws.max_row, column=1).font = Font(bold=True)
         for i in range(1, 6):
             ws.cell(row=ws.max_row, column=i).font = Font(bold=True)
         ws.cell(row=ws.max_row, column=1).alignment = Alignment(horizontal='right')
+
+        if vehicle:
+            ws.append([''])
+            ws.append(['Vehicles',
+                   get_current_summary_report_year() - 2,
+                   get_current_summary_report_year() - 1,
+                   get_current_summary_report_year() - 0,
+                   'One year change(%)'])
+            for i in vehicle:
+                ws.append(i)
 
         if file_save_os:
             save_name = file_save_path + self.target_organization.name + '.xlsx'
@@ -1220,6 +1236,8 @@ class ExportReport_ReportType(SummaryBuilderReportType):
 #
 # “Every now and then when your life gets complicated and the weasels start closing in, the only real cure is to load up on heinous chemicals (or write some shitty code) and then drive like a bastard from Hollywood to Las Vegas. To relax, as it were, in the womb of the desert sun.”
 # # ― Hunter S. Thompson
+#
+# Ian checking in next year.  Yeah I have no idea WTF is going on here.  Lets hope I figure it out.
 ####
 
 class ExportReport_Data():

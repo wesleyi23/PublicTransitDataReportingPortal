@@ -15,7 +15,7 @@
 #
 # Run Image on Azure
 #
-# 1. Got to app services portal page
+# 1. Got to Azure app services portal page
 # 2. Stop and restart app
 ###########
 

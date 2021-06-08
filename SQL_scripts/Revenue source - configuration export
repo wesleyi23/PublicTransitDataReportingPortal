@@ -1,0 +1,12 @@
+--Revenue source - configuration export
+
+select panacea_revenue_source.name as name
+    , government_type
+    , funding_type
+    , inactive_flag
+    , help_text
+    , STRING_AGG( ISNULL(Panacea_summary_organization_type.name, ' '), ',') As organization_type
+from Panacea_revenue_source left join
+    Panacea_revenue_source_agency_classification on Panacea_revenue_source.id = Panacea_revenue_source_agency_classification.revenue_source_id left join
+    Panacea_summary_organization_type on Panacea_revenue_source_agency_classification.summary_organization_type_id = Panacea_summary_organization_type.id
+group by panacea_revenue_source.name,government_type, funding_type, inactive_flag, help_text

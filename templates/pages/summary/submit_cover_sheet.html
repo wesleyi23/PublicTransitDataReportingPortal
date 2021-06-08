@@ -51,7 +51,7 @@
                         {% if tribe == False %}
                             <a href="{% url 'submit_cover_sheet_submit' %}" class="btn btn-primary btn-lg" role="button" aria-disabled="true">Submit your cover sheet</a>
                         {% else %}
-                            <input id="submit_btn" type="button" data-toggle="modal" data-target="#tribal_modal" data-backdrop="static" data-keyboard="false" value="Submit" class="btn btn-primary btn-lg mt-3" style="min-width: 12rem;">
+                            <input id="submit_btn" type="button" data-toggle="modal" data-target="#tribal_modal" data-backdrop="static" data-keyboard="false" value="Submit" class="btn btn-primary btn-lg" style="min-width: 12rem;">
                         {% endif %}
                     </div>
                 </div>
@@ -89,11 +89,12 @@
                             {#                            </tr>#}
                             <tr>
                                 <td>{{ form.permission_to_publish_ntd_data }}</td>
-                                <td>I would like WSDOT to publish our agency's coversheet and NTD data:</td>
+                                <td>I would like WSDOT to publish our agency's coversheet and NTD data, which I will
+                                    provide in the same format I provided to NTD. WSDOT will follow up via eamil to get this data.</td>
                             </tr>
                             <tr>
                                 <td>{{ form.permission_to_publish_reported_data }}</td>
-                                <td>I would like WSDOT to publish the coversheet and the data I am about to report for our agency:</td>
+                                <td>I would like WSDOT to publish the coversheet and the data I am about to report for our agency.</td>
                             </tr>
                         </table>
                     </div>

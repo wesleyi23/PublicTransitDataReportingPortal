@@ -84,128 +84,128 @@
                 <td style="vertical-align: top; min-width: 5.1in; white-space: nowrap;">
                     <h1>{{ organization.name }}</h1>
                     <div class="contact_info">
-                        {% if cover_sheet.executive_officer_first_name %}{{ cover_sheet.executive_officer_first_name }} {{ cover_sheet.executive_officer_last_name }} <br>{% endif %}
-                        {% if cover_sheet.executive_officer_title %}{{ cover_sheet.executive_officer_title }}  <br>{% endif %}
+                        {% if cover_sheet.executive_officer_first_name %}{{ cover_sheet.executive_officer_first_name }} {{ cover_sheet.executive_officer_last_name }}<br>{% endif %}
+                        {% if cover_sheet.executive_officer_title %}{{ cover_sheet.executive_officer_title }}<br>{% endif %}
                         {{ organization.address_line_1 }}<br>
                         {% if organization.address_line_2 %}{{ organization.address_line_2 }}<br>{% endif %}
-                        {{ organization.city }}, {{ organization.state }} {{ organization.zip_code }} <br>
-                        <a href="{{ cover_sheet.service_website_url }}">{{ cover_sheet.service_website_url }}</a>
+                        {{ organization.city }}, {{ organization.state }} {{ organization.zip_code }}<br>
+                        {% if file_type != 'docx' %}<a href="{{ cover_sheet.service_website_url }}">{{ cover_sheet.service_website_url }}</a> {% else %}{{ cover_sheet.service_website_url }}{% endif %}
                     </div>
                 </td>
                 <td style="text-align: right; vertical-align: top; min-width: 2.5in">
-                    <img class="logo" src="data:image/jpeg;base64, {{ base64_logo }}" alt="organization logo" />
+                    {% if file_type != 'docx' %}<img class="logo" src="data:image/jpeg;base64, {{ base64_logo }}" alt="organization logo" />{% endif %}
                 </td>
             </tr>
         </table>
     </div>
     <br>
     <div class="row" style="height: 6.5in">
-        <ul class="report_content">
-            <li>
+        {% if file_type != 'docx' %}<ul class="report_content"> {% endif %}
+            {% if file_type != 'docx' %}<li>{% endif %}
                 <h2>Service area</h2>
                 <p>{{ cover_sheet.service_area_description | safe}}</p>
-            </li>
-            <li>
+            {% if file_type != 'docx' %}</li>{% endif %}
+            {% if file_type != 'docx' %}<li>{% endif %}
                 <h2>Congressional district</h2>
                 <p>{{ cover_sheet.congressional_districts }}</p>
-            </li>
-            <li>
+            {% if file_type != 'docx' %}</li>{% endif %}
+            {% if file_type != 'docx' %}<li>{% endif %}
                 <h2>Legislative district</h2>
                 <p>{{ cover_sheet.legislative_districts }}</p>
-            </li>
+            {% if file_type != 'docx' %}</li>{% endif %}
             {% if agency_type == "Community provider" or agency_type == "Medicaid broker"%}
-                <li>
+                {% if file_type != 'docx' %}<li>{% endif %}
                     <h2>Planning region</h2>
                     <p>{{ cover_sheet.community_planning_region | safe }}</p>
-                </li>
+                {% if file_type != 'docx' %}</li>{% endif %}
             {% endif %}
             {% if agency_type == "Monorail" %}
-                <li>
+                {% if file_type != 'docx' %}<li>{% endif %}
                     <h2>Ownership</h2>
                     <p>{{ cover_sheet.monorail_ownership | safe}}</p>
-                </li>
+                {% if file_type != 'docx' %}</li>{% endif %}
             {% endif %}
             {% if agency_type == "Transit" or agency_type == "Tribe" or agency_type == "Ferry" %}
-                <li>
+                {% if file_type != 'docx' %}<li>{% endif %}
                     <h2>Type of government</h2>
                     <p>{{ cover_sheet.type_of_government | safe}}</p>
-                </li>
+                {% if file_type != 'docx' %}</li>{% endif %}
             {% endif %}
             {% if not agency_type == "Monorail" and not agency_type == "Intercity bus" %}
-                <li>
+                {% if file_type != 'docx' %}<li>{% endif %}
                     <h2>Governing body</h2>
                     <p>{{ cover_sheet.governing_body | safe}}</p>
-                </li>
+                {% if file_type != 'docx' %}</li>{% endif %}
             {% endif %}
             {% if agency_type == "Community provider" %}
-                <li>
+                {% if file_type != 'docx' %}<li>{% endif %}
                     <h2>Types of service and eligibility</h2>
                     <p>{{ cover_sheet.service_and_eligibility | safe}}</p>
-                </li>
-                <li>
+                {% if file_type != 'docx' %}</li>{% endif %}
+                {% if file_type != 'docx' %}<li>{% endif %}
                     <h2>Current operations</h2>
                     <p>{{ cover_sheet.current_operations | safe}}</p>
-                </li>
-                <li>
+                {% if file_type != 'docx' %}</li>{% endif %}
+                {% if file_type != 'docx' %}<li>{% endif %}
                     <h2>Revenue service vehicles</h2>
                     <p>{{ cover_sheet.revenue_service_vehicles | safe}}</p>
-                </li>
+                {% if file_type != 'docx' %}</li>{% endif %}
             {% elif agency_type == "Medicaid broker"%}
-                <li>
+                {% if file_type != 'docx' %}<li>{% endif %}
                     <h2>Current operations</h2>
                     <p>{{ cover_sheet.current_operations | safe}}</p>
-                </li>
+                {% if file_type != 'docx' %}</li>{% endif %}
             {% elif not agency_type == "Monorail" and not agency_type == "Intercity bus" %}
-                <li>
+                {% if file_type != 'docx' %}<li>{% endif %}
                     <h2>Tax authorized</h2>
                     <p>{{ tax_description }}</p>
-                </li>
+                {% if file_type != 'docx' %}</li>{% endif %}
             {% endif %}
             {% if agency_type == "Intercity bus" %}
-                <li>
+                {% if file_type != 'docx' %}<li>{% endif %}
                     <h2>Planning regions</h2>
                     <p>{{ cover_sheet.community_planning_region | safe}}</p>
-                </li>
-                <li>
+                {% if file_type != 'docx' %}</li>{% endif %}
+                {% if file_type != 'docx' %}<li>{% endif %}
                     <h2>Type of agency</h2>
                     <p>{{ cover_sheet.type_of_government | safe}}</p>
-                </li>
-                <li>
+                {% if file_type != 'docx' %}</li>{% endif %}
+                {% if file_type != 'docx' %}<li>{% endif %}
                     <h2>Days of services</h2>
                     <p>{{ cover_sheet.days_of_service | safe}}</p>
-                </li>
-                <li>
+                {% if file_type != 'docx' %}</li>{% endif %}
+                {% if file_type != 'docx' %}<li>{% endif %}
                     <h2>Current operations</h2>
                     <p>{{ cover_sheet.current_operations | safe}}</p>
-                </li>
-                <li>
+                {% if file_type != 'docx' %}</li>{% endif %}
+                {% if file_type != 'docx' %}<li>{% endif %}
                     <h2>Revenue service vehicles</h2>
                     <p>{{ cover_sheet.revenue_service_vehicles | safe}}</p>
-                </li>
+                {% if file_type != 'docx' %}</li>{% endif %}
             {% endif %}
             {% if agency_type == "Ferry" %}
-                <li>
+                {% if file_type != 'docx' %}<li>{% endif %}
                     <h2>Background and current operations</h2>
                     <p>{{ cover_sheet.current_operations | safe}}</p>
-                </li>
+                {% if file_type != 'docx' %}</li>{% endif %}
             {% endif %}
-            <li>
+            {% if file_type != 'docx' %}<li>{% endif %}
                 <h2>Connections to other systems</h2>
                 <p>{{ cover_sheet.intermodal_connections | safe}}</p>
-            </li>
+            {% if file_type != 'docx' %}</li>{% endif %}
             {% if agency_type == "Community provider" %}
-                <li>
+                {% if file_type != 'docx' %}<li>{% endif %}
                     <h2>Days of services</h2>
                     <p>{{ cover_sheet.days_of_service | safe}}</p>
-                </li>
+                {% if file_type != 'docx' %}</li>{% endif %}
             {% endif %}
             {% if not agency_type == "Medicaid broker" %}
-                <li>
+                {% if file_type != 'docx' %}<li>{% endif %}
                     <h2>Fares</h2>
                     <p>{{ cover_sheet.fares_description | safe}}</p>
-                </li>
+                {% if file_type != 'docx' %}</li>{% endif %}
             {% endif %}
-        </ul>
+        {% if file_type != 'docx' %}</ul>{% endif %}
     </div>
 </div>
 </body>

@@ -3,22 +3,29 @@
 {% load custom_tags %}
 {% load static %}
 
+{% block head_content %}
+    {#  <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.19/css/jquery.dataTables.css">#}
+    <link href="{% static 'vendor/datatables/dataTables.bootstrap4.css' %}" rel="stylesheet" type="text/css">
+{% endblock %}
+
 {% block content %}
 
-    <table>
-    <thead>
-    <th>Organization name</th>
-    <th>Last report</th>
-    </thead>
-    <tbody>
-    {% for report in most_recent_report %}
-        <tr>
-            <td>{{ report.organization__name }}</td>
-            <td>{{ report.report_date__max }}</td>
-        </tr>
-    {% endfor %}
+    <table id="vanpool_report_status_table" class="table tdt-bootstrap4 dataTable dataTable_wrapper">
+        <thead>
+        <th>Organization name</th>
+        <th>Last report</th>
+        <th>Contacts</th>
+        </thead>
+        <tbody>
+        {% for report in most_recent_report %}
+            <tr>
+                <td>{{ report.organization__name }}</td>
+                <td>{{ report.report_date__max | date:"M d, Y"}}</td>
+                <td>{{ report.contacts | safe }}</td>
+            </tr>
+        {% endfor %}
 
-    </tbody>
+        </tbody>
     </table>
 
 
@@ -26,5 +33,27 @@
 {% endblock %}
 
 {% block page_scripts %}
+        <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.19/js/jquery.dataTables.js"></script>
+        <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.19/js/dataTables.bootstrap4.min.js "></script>
+        <script type="text/javascript">
+            $(document).ready( function () {
+                var table = $('#vanpool_report_status_table').DataTable({
+                    "scrollX": true,
+                    "sScrollX": "100%",
+                    "sScrollXInner": "100%",
+                    "bLengthChange": false,
+                    "pageLength": 50,
+                    "order": [[ 1, "asc" ]],
+                    "dom": '<"top"fl>rt<"bottom"ip><"clear">'
+                });
+                $('.dataTables_filter').addClass('form-inline');
+                $('.dataTables_filter').css({"float":"left", "margin-bottom":"2px", "margin-left":"2px"});
+
+                $(document).on('click', '#sidebarToggle', function () {
+                    table.draw();
+                });
+
+            });
+        </script>
 
 {% endblock %}

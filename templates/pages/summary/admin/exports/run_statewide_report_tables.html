@@ -1,0 +1,47 @@
+{% extends 'index.html' %}
+{% load humanize %}
+{% load custom_tags %}
+{% load static %}
+{% load widget_tweaks %}
+
+{% block head_content %}
+
+{%  endblock %}
+<!-- Page Heading -->
+{% block content %}
+    <div class="container-fluid">
+        <div class="row">
+            <div class="card shadow mb-4 w-100">
+                <div class="card-header">
+                    <ul class="nav nav-tabs card-header-tabs">
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'exports_home' %}">Export Home</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link active" href="{% url 'run_statewide_report_tables' %}">Statewide Tables</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'exports_cover_sheets_for_report' %}">Cover sheets</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'export_data_tables' %}">Data tables</a>
+                        </li>
+                    </ul>
+                </div>
+                <div class="card-body">
+                    <p>Please select which reports you would like to run:</p>
+                    <form method="post">
+                        <p>{{form.report_size }}</p>
+                        {% csrf_token %}
+                        {% for f in form.report_selection %}
+                            <p>{{ f }} </p>
+                        {% endfor %}
+
+
+                        <p><button type="submit" class="btn btn-danger">Submit</button>  </p>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
