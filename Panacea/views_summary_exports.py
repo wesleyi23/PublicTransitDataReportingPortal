@@ -9,18 +9,20 @@ from zipfile import ZipFile
 
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseRedirect
 from django.template.loader import render_to_string
 from docx.image.exceptions import UnrecognizedImageError
 from weasyprint import HTML
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 
 from Panacea.decorators import group_required
 from Panacea.utilities import find_user_organization
 from .builders import ExportReport
-from .forms import report_generating_form, export_organization_select
-from .models import cover_sheet, tax_rates, organization
+from .forms import report_generating_form, export_organization_select, create_new_summary_report_form, \
+    summary_report_subpart_form
+from .models import cover_sheet, tax_rates, organization, report_summary_table, report_summary_table_subpart
 from .report_builders import run_reports
+from .summary_report_tables_v3 import ReportSummaryTable
 
 
 @login_required(login_url='/Panacea/login')
@@ -230,3 +232,90 @@ def export_data_tables(request):
         form = export_organization_select()
 
         return render(request, 'pages/summary/admin/exports/export_data_tables.html', {'form': form})
+
+
+@login_required(login_url='/Panacea/login')
+@group_required('WSDOT staff')
+def review_summary_tables(request):
+    report_summary_table_data = report_summary_table.objects.all()
+    return render(request, 'pages/summary/admin/exports/review_summary_tables.html',
+                  {'report_summary_table_data': report_summary_table_data})
+
+@login_required(login_url='/Panacea/login')
+@group_required('WSDOT staff')
+def create_new_summary_tables(request):
+    form = create_new_summary_report_form()
+    if request.POST:
+        form = create_new_summary_report_form(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect(review_summary_tables)
+    else:
+        form = create_new_summary_report_form()
+    return render(request, 'pages/summary/admin/exports/create_new_summary_table.html',
+                  {'form': form})
+
+
+@login_required(login_url='/Panacea/login')
+@group_required('WSDOT staff')
+def edit_summary_tables(request, summary_table_id):
+    this_summary_table = report_summary_table.objects.get(id=summary_table_id)
+    form = create_new_summary_report_form(request.POST or None, instance=this_summary_table)
+    table_sub_parts = report_summary_table_subpart.objects.all()
+
+    if request.POST and form.is_valid():
+        form.save()
+
+    return render(request, 'pages/summary/admin/exports/edit_summary_table.html', {'form': form,
+                                                                                   'this_summary_table': this_summary_table,
+                                                                                   'table_sub_parts': table_sub_parts})
+
+@login_required(login_url='/Panacea/login')
+@group_required('WSDOT staff')
+def edit_create_subpart(request, sub_part_id=None):
+    if sub_part_id:
+        this_sub_part = report_summary_table_subpart.objects.get(id=sub_part_id)
+        form = summary_report_subpart_form(request.POST or None, instance=this_sub_part)
+    else:
+        form = summary_report_subpart_form(request.POST or None)
+    if request.POST:
+        print('post')
+        if form.is_valid():
+            print('valid')
+            form.save()
+
+    return render(request, 'pages/summary/admin/exports/sub_part_page.html', {'form': form,
+                                                                              'sub_part_id': sub_part_id
+                                                                              })
+@login_required(login_url='/Panacea/login')
+@group_required('WSDOT staff')
+def get_summary_table(request, summary_table_id):
+    this_summary_table = report_summary_table.objects.get(id=summary_table_id)
+    report = ReportSummaryTable(this_summary_table)
+    print(report.produce_table())
+    return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+
+
+@login_required(login_url='/Panacea/login')
+@group_required('WSDOT staff')
+def add_sub_part_to_table(request, summary_table_id, sub_part_id):
+    this_summary_table = report_summary_table.objects.get(id=summary_table_id)
+    this_sub_part = report_summary_table_subpart.objects.get(id=sub_part_id)
+    this_summary_table.table_sub_part_list.add(this_sub_part)
+    return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+
+@login_required(login_url='/Panacea/login')
+@group_required('WSDOT staff')
+def remove_sub_part_from_table(request, summary_table_id, sub_part_id):
+    this_summary_table = report_summary_table.objects.get(id=summary_table_id)
+    this_sub_part = report_summary_table_subpart.objects.get(id=sub_part_id)
+    this_summary_table.table_sub_part_list.remove(this_sub_part)
+    return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+
+
+@login_required(login_url='/Panacea/login')
+@group_required('WSDOT staff')
+def delete_summary_table(request, summary_table_id):
+    this_summary_table = report_summary_table.objects.get(id=summary_table_id)
+    this_summary_table.delete()
+    return HttpResponseRedirect(request.META.get('HTTP_REFERER'))

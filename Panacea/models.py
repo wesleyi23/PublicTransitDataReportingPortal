@@ -774,7 +774,6 @@ class NTD_mode(models.Model):
         return self.mode
 
 
-
 class NTD_organization(models.Model):
     organization = models.ForeignKey(organization, on_delete=models.PROTECT)
     mode = models.ForeignKey(NTD_mode, on_delete=models.PROTECT)
@@ -789,6 +788,7 @@ class NTD_safety_and_volunteer_data(models.Model):
     injuries = models.IntegerField(default=0)
     year = models.IntegerField()
 
+
 class NTD_funding_source_name(models.Model):
     fund_source_choices = (("Federal", "Federal"),
                            ("Non-Federal", "Non-Federal"),
@@ -802,6 +802,7 @@ class NTD_funding_source_name(models.Model):
     def __str__(self):
         return self.name
 
+
 class NTD_funding_source(models.Model):
     fund_type_choice =(("Operating", 'Operating'),
                        ("Capital", "Capital")
@@ -814,6 +815,7 @@ class NTD_funding_source(models.Model):
     year = models.IntegerField()
     organization = models.ForeignKey(organization, on_delete=models.PROTECT)
 
+
 class NTD_service_data(models.Model):
     mode = models.ForeignKey(NTD_mode, on_delete=models.PROTECT)
     organization = models.ForeignKey(organization, on_delete=models.PROTECT)
@@ -823,6 +825,7 @@ class NTD_service_data(models.Model):
     vehicle_revenue_hours = models.IntegerField()
     vehicle_revenue_miles = models.IntegerField()
     sponsored_service_upt = models.IntegerField()
+
 
 class NTD_modal_information(models.Model):
     expense_type_choice= (("Operating", 'Operating'),
@@ -843,6 +846,7 @@ class NTD_reports(models.Model):
     organization = models.ForeignKey(organization, on_delete=models.PROTECT)
     report_submission = models.BooleanField(default=False)
 
+
 class NTD_validation(models.Model):
     tab_fields = (('Modal Information', 'Modal Information'),
                   ('Funding Sources', 'Funding Sources'),
@@ -855,8 +859,8 @@ class NTD_validation(models.Model):
     mode = models.ForeignKey(NTD_mode, on_delete=models.PROTECT, null=True)
     error_message = models.TextField()
     year = models.IntegerField()
-    sheet_name = models.CharField(max_length=80, choices = tab_fields)
-    correction = models.TextField(default= None)
+    sheet_name = models.CharField(max_length=80, choices=tab_fields)
+    correction = models.TextField(default=None)
 
     @property
     def error_correction(self):
@@ -864,6 +868,33 @@ class NTD_validation(models.Model):
             return False
         else:
             return True
+
+
+class report_summary_table_subpart(models.Model):
+    TYPES = (
+        ("Standard", "Standard"),
+        ("NOT IMPLEMENTED", "NOT IMPLEMENTED")
+    )
+    name = models.CharField(max_length=100)
+    sub_part_type = models.CharField(max_length=100, choices=TYPES)
+    sub_heading = models.CharField(max_length=100, null=True)
+    sql_query = models.TextField(default=None)
+    has_sub_total = models.BooleanField(default=False)
+    sub_total_text = models.CharField(max_length=100, null=True)
+    calculate_percentage_change = models.BooleanField(default=False)
+    round_using_form_masking_class = models.BooleanField(default=False)
+
+class report_summary_table(models.Model):
+    TYPES = (
+        ("Standard", "Standard"),
+        ("NOT IMPLEMENTED", "NOT IMPLEMENTED")
+    )
+
+    report_summary_table_type = models.CharField(max_length=100, choices=TYPES)
+    table_heading = models.CharField(max_length=100)
+    description = models.TextField(default=None)
+    table_sub_part_list = models.ManyToManyField(report_summary_table_subpart)
+    number_of_years_to_pull = models.IntegerField()
 
 
 

@@ -1,0 +1,71 @@
+{% extends 'index.html' %}
+{% load humanize %}
+{% load custom_tags %}
+{% load static %}
+{% load widget_tweaks %}
+
+{% block head_content %}
+
+{%  endblock %}
+<!-- Page Heading -->
+{% block content %}
+    <div class="container-fluid">
+        <div class="row">
+            <div class="card shadow mb-4 w-100">
+                <div class="card-header">
+                    <ul class="nav nav-tabs card-header-tabs">
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'exports_home' %}">Export Home</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'run_statewide_report_tables' %}">Statewide Tables</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'exports_cover_sheets_for_report' %}">Cover sheets</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'export_data_tables' %}">Data tables</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link active" href="{% url 'review_summary_tables' %}">Summary tables</a>
+                        </li>
+                    </ul>
+                </div>
+                <div class="card-body" style="">
+                    <h4>If you wish to use the subtotal, percentage change, or rounding functions you must follow these
+                        rules:</h4>
+                    <ul>
+                        <li>The first column should be the metric name. For example: "Revenue vehicle hours"</li>
+                        <li>The second column should be the value that appears in the first column of the table.
+                            This may be a repeat of the first column or something else.</li>
+                        <li>Every other value should be a number result displayed in the table.</li>
+                    </ul>
+
+                    The application supports using the following variables:
+                    <ul>
+                        <li>'year' - which returns the current summary report year</li>
+                    </ul>
+                    <p>
+                        To use these variables you can use them like this: '&#123;&#123;year&#125;&#125;'.  You may also do basic math: +, -, *, & /.
+                        For example: '&#123;&#123;year-1&#125;&#125;'
+                    </p>
+                    <p>
+                        If you cant follow these rules you must create the table as it will appear in the report
+                        using SQL except the first column will always be removed.
+                    </p>
+                    <hr>
+
+                    {% if sub_part_id %}
+                        <form action={% url 'edit_subpart' sub_part_id %} method="post">
+                    {% else %}
+                        <form action={% url 'create_subpart' %} method="post">
+                    {% endif %}
+                    {% csrf_token  %}
+                    {{ form }}
+                    <button type="submit" class="btn btn-primary">Create</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

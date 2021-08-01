@@ -229,6 +229,7 @@ class SummaryDataEntryBuilder(SummaryBuilderReportType):
             metric_ids = list(
                 self.get_metric_model_data().filter(agency_classification=classification).values_list('id',
                                                                                                       flat=True).distinct())
+            print(metric_ids)
         elif self.report_type in ['fund_balance', 'expense', ]:
             metric_ids = list(self.get_metric_model_data().values_list('id', flat=True).distinct())
         else:
@@ -272,17 +273,17 @@ class SummaryDataEntryBuilder(SummaryBuilderReportType):
         all_report_metric_ids = self.get_all_metric_ids()
         all_metric_ids_and_years = list(
             itertools.product(all_report_metric_ids, [self.year, self.year - 1, self.year - 2]))
-        if len(current_report_metric_ids) != len(all_metric_ids_and_years):
+        # if len(current_report_metric_ids) != len(all_metric_ids_and_years):
 
-            all_metric_ids_and_years = set(map(tuple, all_metric_ids_and_years))
-            current_report_metric_ids = set(map(tuple, current_report_metric_ids))
-            missing_metrics = list(all_metric_ids_and_years - current_report_metric_ids)
-            # missing_metrics = all_metric_ids_and_years.symmetric_difference(current_report_metric_ids)
-            # TODO there are some metrics that are currently filtered out that orgs previously reported on. How do we want to deal with these?
-            if len(missing_metrics) > 0:
-                with transaction.atomic():
-                    for m in missing_metrics:
-                        model.create(**self.get_create_metric_dictionary(m))
+        all_metric_ids_and_years = set(map(tuple, all_metric_ids_and_years))
+        current_report_metric_ids = set(map(tuple, current_report_metric_ids))
+        missing_metrics = list(all_metric_ids_and_years - current_report_metric_ids)
+        # missing_metrics = all_metric_ids_and_years.symmetric_difference(current_report_metric_ids)
+        # TODO there are some metrics that are currently filtered out that orgs previously reported on. How do we want to deal with these?
+        if len(missing_metrics) > 0:
+            with transaction.atomic():
+                for m in missing_metrics:
+                    model.create(**self.get_create_metric_dictionary(m))
 
         form_metrics = model.filter(organization=self.target_organization).order_by(
             self.get_metric_id_field_name() + '__name')
@@ -384,6 +385,7 @@ class SummaryDataEntryBuilder(SummaryBuilderReportType):
             report_model_data = self.get_model_data()
             total_not_this_form_queryset = report_model_data.filter(organization=self.target_organization).exclude(
                 **self.get_formset_query_dict())
+
             i = 0
             for year_x in ['this_year', 'previous_year', 'two_years_ago']:
                 total_not_this_form[year_x] = total_not_this_form_queryset.filter(year=self.year - i).aggregate(
@@ -866,8 +868,11 @@ class ExportReport(SummaryBuilder):
         for key, value in {'Operating revenue': 'Total (excludes capital revenues)',
                            'Local capital expenditures': 'Total local capital',
                            'Debt service': 'Total debt service'}.items():
+            try:
+                total_row = self._calculate_total(value, financial_table_output[key])
+            except KeyError:
+                total_row = None
 
-            total_row = self._calculate_total(value, financial_table_output[key])
             if total_row:
                 if key =='Operating revenue':
                     if 'Other operating - subtotal' in financial_table_output.keys():
@@ -887,13 +892,21 @@ class ExportReport(SummaryBuilder):
                 else:
                     if not total_row == ['']:
                         financial_table_output[key].append(total_row)
-
-        if len(financial_table_output['Local capital expenditures']) == 0:
-            del financial_table_output['Local capital expenditures']
-        if len(financial_table_output['Other expenditures']) == 0:
-            del financial_table_output['Other expenditures']
-        if len(financial_table_output['Debt service']) == 0:
-            del financial_table_output['Debt service']
+        try:
+            if len(financial_table_output['Local capital expenditures']) == 0:
+                del financial_table_output['Local capital expenditures']
+        except KeyError:
+            pass
+        try:
+            if len(financial_table_output['Other expenditures']) == 0:
+                del financial_table_output['Other expenditures']
+        except KeyError:
+            pass
+        try:
+            if len(financial_table_output['Debt service']) == 0:
+                del financial_table_output['Debt service']
+        except KeyError:
+            pass
 
         output = []
 
@@ -949,10 +962,16 @@ class ExportReport(SummaryBuilder):
                     if row[3] == 0:
                         value_to_append = 0
                     else:
-                        value_to_append = 100.00
+                        value_to_append = 'NA'
                 else:
                     value_to_append = (row[3]/row[2] - 1) * 100
-                value_to_append = str("{:.2f}".format(round(value_to_append, 2)))
+                try:
+                    value_to_append = str("{:.2f}".format(round(value_to_append, 2)))
+                except TypeError:
+                    if type(value_to_append) == str:
+                        pass
+                    else:
+                        raise TypeError
                 if len(row) == 5:
                     row.append(row[4])
                     row[4] = value_to_append

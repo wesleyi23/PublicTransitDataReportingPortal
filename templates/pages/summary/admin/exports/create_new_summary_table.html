@@ -27,13 +27,16 @@
                             <a class="nav-link" href="{% url 'export_data_tables' %}">Data tables</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{% url 'review_summary_tables' %}">Summary tables</a>
+                            <a class="nav-link active" href="{% url 'review_summary_tables' %}">Summary tables</a>
                         </li>
                     </ul>
                 </div>
                 <div class="card-body" style="">
-                    <p>This page is the home page where you can access all of the formatted data needed to generate
-                    the Public Transportation Summary Report.</p>
+                    <form action={% url 'create_new_summary_tables' %} method="post">
+                        {% csrf_token  %}
+                        {{ form }}
+                        <button type="submit" class="btn btn-primary">Create</button>
+                    </form>
                 </div>
             </div>
         </div>

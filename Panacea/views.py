@@ -136,7 +136,7 @@ def dashboard(request):
                 last_year_stat = getattr(last_year_report, measure)
                 if current_monthly_stat is None:
                     current_monthly_stat = 0
-                if last_year_stat is None:
+                if last_year_stat is None or last_year_stat == 0:
                     year_over_year_growth = "NA"
                 else:
                     year_over_year_growth = (current_monthly_stat / last_year_stat) - 1

@@ -245,11 +245,11 @@ class AggregateReport:
         if self.report in ["Statewide Financial Revenues", "Statewide Financial Expenses"]:
             data_list[1:] = list(map(lambda x: "${:,}".format(int(x)), data_list[1:]))
         else:
-            if data_list[0] not in ['Revenue Vehicle Hours', 'Total Vehicle Hours', 'Passenger Trips',
-                                'Total Vehicle Miles', 'Revenue Vehicle Miles',
-                                'Diesel Fuel Consumed (gallons)', 'Gasoline Fuel Consumed (gallons)',
-                                'Propane Fuel Consumed (gallons)', 'Electricity Consumed (kWh)',
-                                'CNG Fuel Consumed (therms)']:
+            if data_list[0] not in ['Revenue vehicle hours', 'Total vehicle hours', 'Passenger trips',
+                                'Total vehicle miles', 'Revenue vehicle miles',
+                                'Diesel fuel consumed (gallons)', 'Gasoline fuel consumed (gallons)',
+                                'Propane fuel consumed (gallons)', 'Electricity consumed (kWh)',
+                                'CNG fuel consumed (therms)']:
                 data_list[1:4] = list(map(lambda x: "${:,}".format(x), data_list[1:4]))
             elif data_list[0] == 'Employees - FTEs':
                 data_list[1:4] = list(map(lambda x: "{:,.1f}".format(x), data_list[1:4]))

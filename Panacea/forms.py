@@ -14,7 +14,8 @@ from .models import custom_user, \
     vanpool_expansion_analysis, \
     cover_sheet, \
     transit_data, expense, revenue, revenue_source, transit_mode, service_offered, transit_metrics, expense_source, \
-    fund_balance, fund_balance_type, validation_errors, cover_sheet_review_notes, tribal_reporter_permissions, NTD_organization
+    fund_balance, fund_balance_type, validation_errors, cover_sheet_review_notes, tribal_reporter_permissions, \
+    NTD_organization, report_summary_table, report_summary_table_subpart
 from .models import NTD_mode, NTD_modal_information, NTD_funding_source_name, NTD_funding_source, NTD_safety_and_volunteer_data, \
 NTD_service_data
 from django.utils.translation import gettext, gettext_lazy as _
@@ -915,7 +916,7 @@ class change_user_org(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super(change_user_org, self).__init__(*args, **kwargs)
         self.fields['organization'].queryset = self.fields['organization'].queryset.order_by('name')
-
+        self.fields['custom_user'].queryset = self.fields['custom_user'].queryset.order_by('email')
 
 class ntd_organization_select(forms.Form):
     organization_name = forms.ChoiceField(choices=[(org.id, org.name) for org in organization.objects.filter(wsdot_managed_ntd_reporter=True).order_by('name')])
@@ -952,3 +953,39 @@ class export_organization_select(forms.Form):
                                                      attrs={'class': 'form-check checkbox-grid',
                                                             'data-form-name': "org_select"}))
 
+
+class create_new_summary_report_form(forms.ModelForm):
+    class Meta:
+        model = report_summary_table
+        fields = ['report_summary_table_type',
+                  'table_heading',
+                  'number_of_years_to_pull',
+                  'description']
+        widgets = {
+            'report_summary_table_type': forms.Select(choices=report_summary_table.TYPES, attrs={'class': 'form-control'}),
+            'table_heading': forms.TextInput(attrs={'class': 'form-control'}),
+            'description': forms.Textarea(attrs={'rows': 3, 'class': 'form-control'}),
+            'number_of_years_to_pull': forms.NumberInput(attrs={'class': 'form-control'}),
+        }
+
+class summary_report_subpart_form(forms.ModelForm):
+    class Meta:
+        model = report_summary_table_subpart
+        fields = ['name',
+                  'sub_part_type',
+                  'sub_heading',
+                  'sql_query',
+                  'has_sub_total',
+                  'sub_total_text',
+                  'calculate_percentage_change',
+                  'round_using_form_masking_class']
+        widgets = {
+            'name': forms.TextInput(attrs={'class': 'form-control'}),
+            'sub_part_type': forms.Select(choices=report_summary_table_subpart.TYPES, attrs={'class': 'form-control'}),
+            'sub_heading': forms.TextInput(attrs={'class': 'form-control'}),
+            'sql_query': forms.Textarea(attrs={'rows': 3, 'class': 'form-control'}),
+            'has_sub_total': forms.CheckboxInput(attrs={'class': 'form-control'}),
+            'sub_total_text': forms.TextInput(attrs={'class': 'form-control'}),
+            'calculate_percentage_change': forms.CheckboxInput(attrs={'class': 'form-control'}),
+            'round_using_form_masking_class': forms.CheckboxInput(attrs={'class': 'form-control'}),
+        }
