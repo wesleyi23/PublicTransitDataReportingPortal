@@ -15,7 +15,7 @@ import os
 from celery.schedules import crontab
 
 
-MODE = "test"  #could be prod, dev, test
+MODE = "prod"  #could be prod, dev, test
 
 ADMIN_EMAILS = ['wesleyi@wsdot.wa.gov']
 VANPOOL_ADMIN_EMAIL = ['wesleyi@wsdot.wa.gov']
