@@ -136,6 +136,7 @@ urlpatterns = [
     path('summary/exports/coversheet', views_summary_exports.cover_sheet_report, name="coversheet_html"),
     path('summary/exports/coversheet/<str:file_output>', views_summary_exports.cover_sheet_report, name="coversheet_pdf"),
     path('summary/exports/data_tables', views_summary_exports.export_data_tables, name="export_data_tables"),
+    path('summary/exports/data_tables/<int:summary_organization_classifications_id>', views_summary_exports.export_data_tables, name="export_data_tables"),
     path('summary/exports/summary_tables/review', views_summary_exports.review_summary_tables, name="review_summary_tables"),
     path('summary/exports/summary_tables/create_new', views_summary_exports.create_new_summary_tables, name="create_new_summary_tables"),
     path('summary/exports/summary_tables/edit/<int:summary_table_id>', views_summary_exports.edit_summary_tables, name="edit_summary_tables"),

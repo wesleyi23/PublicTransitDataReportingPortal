@@ -12,6 +12,8 @@ class ReportSummaryTable:
         self.table_heading = report_summary_table.table_heading
         self.table_sub_part_list = report_summary_table.table_sub_part_list.all()
         self.number_of_years_to_pull = report_summary_table.number_of_years_to_pull
+        self.save_name = self.clean_save_name()
+        self.table_has_percentage_change = self.set_table_has_percentage_change()
 
     def produce_table(self):
         sql_list = []
@@ -19,6 +21,19 @@ class ReportSummaryTable:
             sub_part = ReportSummaryTableSubPart(i)
             sql_list.append(sub_part.return_final_sub_part())
         return sql_list
+
+    def clean_save_name(self):
+        import string
+        valid_chars = "-_.() %s%s" % (string.ascii_letters, string.digits)
+        save_name = ''.join(c for c in self.table_heading if c in valid_chars)
+        return save_name
+
+    def set_table_has_percentage_change(self):
+        result = False
+        for i in self.table_sub_part_list:
+            if i.calculate_percentage_change:
+                result = True
+        return result
 
 
 class ReportSummaryTableSubPart:

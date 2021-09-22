@@ -763,6 +763,7 @@ class ExportReport(SummaryBuilder):
                                       'Federal capital grant revenues': [],
                                       'State capital grant revenues': [],
                                       'Local capital expenditures': [],
+                                      'Other capital revenue': [],
                                       'Other expenditures': [],
                                       'Debt service': [],
                                       'Ending balances, December 31': []
@@ -822,14 +823,18 @@ class ExportReport(SummaryBuilder):
                     financial_table_output['Local capital expenditures'].append(subtotal)
                 else:
                     del financial_table_output['Local capital expenditures']
-            elif 'Other' in source.nav_headers:
+            elif 'Capital' in source.nav_headers and 'Other' in source.nav_headers:
                 data = source.get_data(order_by_summary=True, remove_empty_data=True, include_comment=include_comment)
                 subtotal = ['Other Capital total']
                 subtotal.extend(source.get_totals())
 
                 if sum(subtotal[1:4]) > 0:
-                    financial_table_output['Other capital'].extend(data)
-                    financial_table_output['Other capital'].append(subtotal)
+                    try:
+                        financial_table_output['Other capital revenue'].extend(data)
+                        financial_table_output['Other capital revenue'].append(subtotal)
+                    except:
+                        print(financial_table_output)
+                        raise KeyError
                 else:
                     try:
                         del financial_table_output['Other capital']
@@ -905,6 +910,11 @@ class ExportReport(SummaryBuilder):
         try:
             if len(financial_table_output['Debt service']) == 0:
                 del financial_table_output['Debt service']
+        except KeyError:
+            pass
+        try:
+            if len(financial_table_output['Other capital revenue']) == 0:
+                del financial_table_output['Other capital revenue']
         except KeyError:
             pass
 

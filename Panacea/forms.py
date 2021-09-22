@@ -17,7 +17,7 @@ from .models import custom_user, \
     fund_balance, fund_balance_type, validation_errors, cover_sheet_review_notes, tribal_reporter_permissions, \
     NTD_organization, report_summary_table, report_summary_table_subpart
 from .models import NTD_mode, NTD_modal_information, NTD_funding_source_name, NTD_funding_source, NTD_safety_and_volunteer_data, \
-NTD_service_data
+    NTD_service_data
 from django.utils.translation import gettext, gettext_lazy as _
 from phonenumber_field.formfields import PhoneNumberField
 from dateutil.relativedelta import relativedelta
@@ -900,7 +900,7 @@ class email_contact_form(forms.Form):
 class report_generating_form(forms.Form):
     size_of_transit = [('all transits','all transits'), ('separate tables for agencies with populations under a million','separate tables for agencies with populations under a million')]
     CHOICES =[('Financial Summary', 'Financial Summary'), ('Statewide Financial Expenses', 'Statewide Financial Expenses'), ('Statewide Financial Revenues','Statewide Financial Revenues'), ('Statewide Investments', 'Statewide Investments'), ('Statewide Revenues','Statewide Revenues'),
-    ('Service Mode Tables', 'Service Mode Tables'), ('Operation Stats', 'Operation Stats'), ('Statewide Ferries','Statewide Ferries'), ('Statewide Community Providers', 'Statewide Community Providers'), ('All Random Text', 'All Random Text')]
+              ('Service Mode Tables', 'Service Mode Tables'), ('Operation Stats', 'Operation Stats'), ('Statewide Ferries','Statewide Ferries'), ('Statewide Community Providers', 'Statewide Community Providers'), ('All Random Text', 'All Random Text')]
     report_selection = forms.MultipleChoiceField(widget=forms.CheckboxSelectMultiple, choices=CHOICES, required=True)
     report_size = forms.CharField(widget=forms.Select(choices=size_of_transit), required=False)
 
@@ -927,7 +927,7 @@ class ntd_modes(forms.ModelForm):
         model = NTD_organization
         fields = ['mode']
         widgets = {
-        'mode': forms.Select(choices=NTD_mode.objects.all(), attrs={'class': 'form-control'})
+            'mode': forms.Select(choices=NTD_mode.objects.all(), attrs={'class': 'form-control'})
         }
 
 
@@ -947,11 +947,23 @@ class ntd_modal_information_form(forms.ModelForm):
         }
 
 
-class export_organization_select(forms.Form):
-    cover_sheet_organizations = forms.ModelChoiceField(queryset=find_summary_organizations().order_by('name'), empty_label=None,
-                                                 widget=forms.CheckboxSelectMultiple(
-                                                     attrs={'class': 'form-check checkbox-grid',
-                                                            'data-form-name': "org_select"}))
+class export_organization_select_coversheet(forms.Form):
+    cover_sheet_format = forms.ChoiceField(choices=(('Word', 'Word'), ('PDF', 'PDF')))
+    organizations = forms.ModelChoiceField(queryset=find_summary_organizations().
+                                           order_by('summary_organization_classifications_id', 'name'), empty_label=None,
+                                           widget=forms.CheckboxSelectMultiple(
+                                               attrs={'class': 'form-check checkbox-grid',
+                                                      'data-form-name': "org_select"}))
+
+class export_organization_select_data(forms.Form):
+    organizations = forms.ModelChoiceField(queryset=find_summary_organizations().
+                                           order_by('summary_organization_classifications_id', 'name'), empty_label=None,
+                                           widget=forms.CheckboxSelectMultiple(
+                                               attrs={'class': 'form-check checkbox-grid',
+                                                      'data-form-name': "org_select"}))
+    include_comments = forms.BooleanField(required=False, widget=forms.CheckboxInput(
+                                                                     attrs={'class': 'form-check checkbox-grid',
+                                                                            'data-form-name': "org_select"}))
 
 
 class create_new_summary_report_form(forms.ModelForm):

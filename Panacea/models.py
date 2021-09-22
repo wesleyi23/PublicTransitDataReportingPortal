@@ -369,7 +369,7 @@ class revenue_source(models.Model):
     )
 
     name = models.CharField(max_length=120, null=True, blank=True)
-    order_in_summary = models.IntegerField(null=True, blank=True)
+    order_in_summary = models.DecimalField(null=False, blank=False, decimal_places=2, max_digits=5)
     government_type = models.CharField(max_length=100, choices=LEVIATHANS, null=True, blank=True)
     funding_type = models.CharField(max_length=30, choices=FUNDING_KIND, null=True, blank=True)
     agency_classification = models.ManyToManyField(summary_organization_type, blank=True)

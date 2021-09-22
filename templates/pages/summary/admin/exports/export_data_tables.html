@@ -29,6 +29,17 @@
                     </ul>
                 </div>
                 <div class="card-body">
+                    <b>Filter by:</b>
+                    <ul>
+                        <li><a href="{% url 'export_data_tables' 1 %}">Community provider - Works - Needs NTD Data</a></li>
+                        <li><a href="{% url 'export_data_tables' 2 %}">Ferry - Works</a></li>
+                        <li><a href="{% url 'export_data_tables' 3 %}">Intercity bus - Does not work</a></li>
+                        <li><a href="{% url 'export_data_tables' 4 %}">Medicaid broker - Does not work</a></li>
+                        <li><a href="{% url 'export_data_tables' 5 %}">Monorail - Works</a></li>
+                        <li><a href="{% url 'export_data_tables' 6 %}">Transit - Works (except Sound Transit)</a></li>
+                        <li><a href="{% url 'export_data_tables' 7 %}">Tribe - Partially works (tribes without data cause an error) - Needs review</a></li>
+                    </ul>
+
                     <form id="org_select" action="{% url 'export_data_tables' %}" method="post">
                         {{ form }}
                         {% csrf_token %}

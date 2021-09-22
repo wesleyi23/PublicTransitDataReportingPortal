@@ -298,8 +298,13 @@ def find_vanpool_organizations():
     return organization.objects.all().filter(vanpool_program=True)
 
 
-def find_summary_organizations():
-    return organization.objects.all().filter(summary_reporter=True)
+def find_summary_organizations(summary_organization_classifications_id=None):
+    print(summary_organization_classifications_id)
+    if summary_organization_classifications_id:
+        return organization.objects.all().filter(summary_reporter=True,
+                                                 summary_organization_classifications_id=summary_organization_classifications_id)
+    else:
+        return organization.objects.all().filter(summary_reporter=True)
 
 
 def generate_summary_report_years():

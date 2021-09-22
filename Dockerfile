@@ -108,9 +108,9 @@ COPY ./sawidp_WaTech_metadata_TEST.xml /usr/bin
 COPY ./sawidp_WaTech_metadata_PROD.xml /usr/bin
 
 #Copy vanpool email task files
-RUN mkdir -p /home/PublicTransitDataReportingPortal/vanpool_email
-COPY ./vanpool_email_cron_job.sh /home/PublicTransitDataReportingPortal/vanpool_email
-RUN chmod +x /home/PublicTransitDataReportingPortal/vanpool_email
+#RUN mkdir -p /home/PublicTransitDataReportingPortal/vanpool_email
+#COPY ./vanpool_email_cron_job.sh /home/PublicTransitDataReportingPortal/vanpool_email
+#RUN chmod +x /home/PublicTransitDataReportingPortal/vanpool_email
 
 # Create the log file to be able to run tail
 #RUN touch /var/log/cron.log
@@ -125,8 +125,8 @@ COPY . $APP_HOME
 #RUN chown -R PublicTransitDataReportingPortal:PublicTransitDataReportingPortal $APP_HOME
 #RUN chown -R PublicTransitDataReportingPortal:PublicTransitDataReportingPortal /home/PublicTransitDataReportingPortal/vanpool_email
 
-# grant user cron permissions
-RUN touch /etc/cron.allow
+## grant user cron permissions
+#RUN touch /etc/cron.allow
 
 #USER PublicTransitDataReportingPortal
 

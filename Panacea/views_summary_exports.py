@@ -16,14 +16,15 @@ from weasyprint import HTML
 from django.shortcuts import render, redirect
 
 from Panacea.decorators import group_required
-from Panacea.utilities import find_user_organization
+from Panacea.utilities import find_user_organization, find_summary_organizations, get_current_summary_report_year
 from .builders import ExportReport
-from .forms import report_generating_form, export_organization_select, create_new_summary_report_form, \
-    summary_report_subpart_form
+from .forms import report_generating_form, create_new_summary_report_form, \
+    summary_report_subpart_form, export_organization_select_data, export_organization_select_coversheet
 from .models import cover_sheet, tax_rates, organization, report_summary_table, report_summary_table_subpart
 from .report_builders import run_reports
 from .summary_report_tables_v3 import ReportSummaryTable
-
+from openpyxl import Workbook
+from openpyxl.styles import Font, Border, Side, Alignment
 
 @login_required(login_url='/Panacea/login')
 @group_required('Summary reporter', 'WSDOT staff')
@@ -81,7 +82,10 @@ def generate_cover_sheet_report(org_id, file_type='pdf'):
                                                                              'base64_logo': base64_logo,
                                                                              'file_type': file_type})
     if file_type == 'pdf':
-        file = HTML(string=html_report).write_pdf()
+        pdf_bytes = HTML(string=html_report).write_pdf()
+        file = io.BytesIO()
+        file.write(pdf_bytes)
+        file.seek(0)
     if file_type == 'docx':
         from htmldocx import HtmlToDocx
         from docx import Document
@@ -104,7 +108,7 @@ def generate_cover_sheet_report(org_id, file_type='pdf'):
         file = io.BytesIO()
         doc.save(file)
         file.seek(0)
-        file.name = org.name + "." + file_type
+    file.name = org.name + "." + file_type
 
     return file
 
@@ -166,7 +170,15 @@ def exports_home(request):
 def exports_cover_sheets_for_report(request):
     if request.POST:
 
-        org_list = request.POST.getlist('cover_sheet_organizations')
+        org_list = request.POST.getlist('organizations')
+        cover_sheet_format = request.POST.get('cover_sheet_format')
+        if cover_sheet_format == 'Word':
+            file_type = 'docx'
+        elif cover_sheet_format == "PDF":
+            file_type = 'pdf'
+        else:
+            raise NotImplementedError
+
         if type(org_list) != list:
             org_list = [org_list]
 
@@ -177,13 +189,13 @@ def exports_cover_sheets_for_report(request):
             print(org)
 
             try:
-                file = generate_cover_sheet_report(org, file_type='docx')
+                file = generate_cover_sheet_report(org, file_type=file_type)
                 with zip_archive.open(file.name, 'w') as this_file:
                     this_file.write(file.getvalue())
                 this_file.close()
             except ObjectDoesNotExist:
                 missing_org = organization.objects.get(id=org)
-                with zip_archive.open("DOES_NOT_EXIST - " + missing_org.name + ".docx", 'w') as this_file:
+                with zip_archive.open("DOES_NOT_EXIST - " + missing_org.name + "." + file_type, 'w') as this_file:
                     this_file.close()
 
             file.close()
@@ -195,16 +207,18 @@ def exports_cover_sheets_for_report(request):
 
 
     else:
-        form = export_organization_select()
+        form = export_organization_select_coversheet()
 
         return render(request, 'pages/summary/admin/exports/export_cover_sheets.html', {'form': form})
 
 
 @login_required(login_url='/Panacea/login')
 @group_required('WSDOT staff')
-def export_data_tables(request):
+def export_data_tables(request, summary_organization_classifications_id=None):
     if request.POST:
-        org_list = request.POST.getlist('cover_sheet_organizations')
+        org_list = request.POST.getlist('organizations')
+        include_comments = request.POST.get('include_comments')
+        print(include_comments)
         if type(org_list) != list:
             org_list = [org_list]
         print(org_list)
@@ -214,7 +228,7 @@ def export_data_tables(request):
         for org in org_list:
             this_org = organization.objects.get(id=org)
             report_builder = ExportReport(this_org)
-            excel_file = report_builder.generate_excel_summary_report()
+            excel_file = report_builder.generate_excel_summary_report(include_comment=include_comments)
 
             file = io.BytesIO()
             excel_file.save(file)
@@ -229,9 +243,12 @@ def export_data_tables(request):
         return response
 
     else:
-        form = export_organization_select()
+        form = export_organization_select_data()
+        if summary_organization_classifications_id:
+            from django import forms
+            form.fields['organizations'].queryset = find_summary_organizations(summary_organization_classifications_id=summary_organization_classifications_id)
 
-        return render(request, 'pages/summary/admin/exports/export_data_tables.html', {'form': form})
+    return render(request, 'pages/summary/admin/exports/export_data_tables.html', {'form': form})
 
 
 @login_required(login_url='/Panacea/login')
@@ -292,8 +309,31 @@ def edit_create_subpart(request, sub_part_id=None):
 def get_summary_table(request, summary_table_id):
     this_summary_table = report_summary_table.objects.get(id=summary_table_id)
     report = ReportSummaryTable(this_summary_table)
-    print(report.produce_table())
-    return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+    report_table = report.produce_table()
+
+    wb = Workbook()
+    ws = wb.active
+
+    heading_row = [report.table_heading]
+    report_year = get_current_summary_report_year()
+    for i in range(report_year - report.number_of_years_to_pull + 1, report_year + 1):
+        heading_row.append(i)
+
+    if report.table_has_percentage_change:
+        heading_row.append('One year change (%)')
+    ws.append(heading_row)
+    print(report_table)
+    for subpart in report_table:
+        for row in subpart:
+            print(type(row))
+            print(row)
+            ws.append(row)
+    file = io.BytesIO()
+    wb.save(file)
+    response = HttpResponse(file.getvalue(), content_type='application/force-download')
+    response['Content-Disposition'] = 'attachment; filename="%s"' % report.save_name + ".xlsx"
+
+    return response
 
 
 @login_required(login_url='/Panacea/login')

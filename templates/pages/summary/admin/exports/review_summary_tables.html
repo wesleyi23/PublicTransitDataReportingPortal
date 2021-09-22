@@ -40,6 +40,7 @@
                             <th>Report summary table type</th>
                             <th>Number of years to pull</th>
                             <th>Edit</th>
+                            <td>Download</td>
                         </tr>
                         </thead>
                         <tbody>
@@ -49,6 +50,7 @@
                             <td>{{ i.report_summary_table_type }}</td>
                             <td>{{ i.number_of_years_to_pull }}</td>
                             <td><a href="{% url 'edit_summary_tables' i.id %}">Edit</a></td>
+                            <td><a href="{% url 'get_summary_table' i.id %}">Download</a></td>
                             </tr>
                         {% endfor %}
                         </tbody>
