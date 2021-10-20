@@ -9,17 +9,23 @@ from Panacea.utilities import get_current_summary_report_year
 class ReportSummaryTable:
     def __init__(self, report_summary_table):
         self.report_summary_table = report_summary_table
+        self.report_summary_table_type = report_summary_table.report_summary_table_type
         self.table_heading = report_summary_table.table_heading
-        self.table_sub_part_list = report_summary_table.table_sub_part_list.all()
+        self.table_sub_part_list = report_summary_table.table_sub_part_list.all().order_by('order')
         self.number_of_years_to_pull = report_summary_table.number_of_years_to_pull
         self.save_name = self.clean_save_name()
         self.table_has_percentage_change = self.set_table_has_percentage_change()
 
     def produce_table(self):
         sql_list = []
-        for i in self.table_sub_part_list:
-            sub_part = ReportSummaryTableSubPart(i)
-            sql_list.append(sub_part.return_final_sub_part())
+        if self.report_summary_table_type == "Standard":
+            for i in self.table_sub_part_list:
+                sub_part = ReportSummaryTableSubPart(i)
+                sql_list.append(sub_part.return_final_sub_part())
+        elif self.report_summary_table_type == "Non-standard headings":
+            for i in self.table_sub_part_list:
+                sub_part = ReportSummaryTableSubPart(i)
+                sql_list.append(sub_part.return_final_sub_part(trim_first_row=False, include_column_names=True))
         return sql_list
 
     def clean_save_name(self):
@@ -40,6 +46,7 @@ class ReportSummaryTableSubPart:
     def __init__(self, report_summary_table_subpart):
         self.report_summary_table_subpart = report_summary_table_subpart
         self.sub_heading = report_summary_table_subpart.sub_heading
+        self.display_sub_heading = report_summary_table_subpart.display_sub_heading
         self.sql_query = report_summary_table_subpart.sql_query
         self.has_sub_total = report_summary_table_subpart.has_sub_total
         self.sub_total_text = report_summary_table_subpart.sub_total_text
@@ -68,7 +75,8 @@ class ReportSummaryTableSubPart:
     def execute_sql_str(self):
         with connection.cursor() as cursor:
             cursor.execute(self.parse_sql_str())
-            return cursor.fetchall()
+            column_names = [i[0] for i in cursor.description]
+            return cursor.fetchall(), column_names
 
     @staticmethod
     def remove_none_from_query_results(results):
@@ -85,11 +93,11 @@ class ReportSummaryTableSubPart:
                 rounded_items = item_i[2:-1]
             else:
                 rounded_items = item_i[2:]
-
-            if item_i[0] in int_transit_metrics:
+            print(item_i[1])
+            if item_i[1] in int_transit_metrics:
                 for count_j, item_j in enumerate(rounded_items, start=2):
                     results[count_i][count_j] = round(item_j)
-            elif item_i[0] in float_transit_metrics:
+            elif item_i[1] in float_transit_metrics:
                 pass
             else:
                 for count_j, item_j in enumerate(rounded_items, start=2):
@@ -117,29 +125,34 @@ class ReportSummaryTableSubPart:
         year_sub_total = 0
         subtotal = [results[0][0], self.sub_total_text]
         for i in range(0, len(results[0][2:])):
-            for j in range(0, len(results) - 1):
-                print(str(year_sub_total) + '+' + str(results[j][2 + i]))
+            for j in range(0, len(results)):
+                # print(str(year_sub_total) + '+' + str(results[j][2 + i]))
                 year_sub_total = year_sub_total + results[j][2 + i]
             subtotal.append(year_sub_total)
             year_sub_total = 0
         results.append(subtotal)
         return results
 
-    def return_final_sub_part(self):
-        query_result = self.execute_sql_str()
+    def return_final_sub_part(self, trim_first_row=True, include_column_names=False):
+        query_result, column_names = self.execute_sql_str()
         query_result = self.remove_none_from_query_results(query_result)
         list_query_results = []
         for i in query_result:
             list_query_results.append(list(i))
-        print(list_query_results)
+        # print(list_query_results)
         if self.has_sub_total:
             list_query_results = self.calculate_subtotal_function(list_query_results)
         if self.calculate_percentage_change:
             list_query_results = self.calculate_percent_change_function(list_query_results)
         if self.round_using_form_masking_class:
             list_query_results = self.round_query_results_function(list_query_results)
-        for count, item in enumerate(list_query_results):
-            list_query_results[count] = list_query_results[count][1:]
+        if trim_first_row:
+            for count, item in enumerate(list_query_results):
+                list_query_results[count] = list_query_results[count][1:]
+        if self.display_sub_heading:
+            list_query_results = [[self.sub_heading]] + list_query_results
+        if include_column_names:
+            list_query_results = [column_names] + list_query_results
         return list_query_results
 
 

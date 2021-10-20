@@ -12,7 +12,7 @@ https://docs.djangoproject.com/en/2.1/ref/settings/
 
 import os
 
-from celery.schedules import crontab
+# from celery.schedules import crontab
 
 
 MODE = "dev"  #could be prod, dev, test
@@ -142,7 +142,7 @@ INSTALLED_APPS = [
     'django.forms',
     'django_filters',
     'simple_history',
-    'django_celery_beat',
+    # 'django_celery_beat',
     'rest_framework',
     'rest_framework.authtoken',
     'rest_auth',
@@ -253,10 +253,10 @@ CELERY_ACCEPT_CONTENT = ['application/json']
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TASK_SERIALIZER = 'json'
 
-CELERY_BEAT_SCHEDULE = {'send_emails_now': {'task': 'Panacea.tasks.send_emails_now',
-                                            'schedule': crontab(minute="*")}
+# CELERY_BEAT_SCHEDULE = {'send_emails_now': {'task': 'Panacea.tasks.send_emails_now',
+#                                             'schedule': crontab(minute="*")}
 
-                        }
+                        # }
 
 MEDIA_ROOT = '/var/media/'
 MEDIA_URL = '/media/'

@@ -44,7 +44,7 @@
                         <div class="col">
                             <h4>Current report sub parts:</h4>
                             <ol>
-                                {% for i in this_summary_table.table_sub_part_list.all %}
+                                {% for i in this_summary_table_sub_parts %}
                                     <li>{{ i.name }} <a href="{% url 'edit_subpart' i.id %}">Edit</a> - <a href="{% url 'remove_sub_part_from_table' this_summary_table.id i.id %}" class="text-danger">Remove</a></li>
                                 {% endfor %}
                             </ol>

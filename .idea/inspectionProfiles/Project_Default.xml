@@ -4,7 +4,7 @@
     <inspection_tool class="PyPackageRequirementsInspection" enabled="true" level="WARNING" enabled_by_default="true">
       <option name="ignoredPackages">
         <value>
-          <list size="21">
+          <list size="48">
             <item index="0" class="java.lang.String" itemvalue="python-stdnum" />
             <item index="1" class="java.lang.String" itemvalue="six" />
             <item index="2" class="java.lang.String" itemvalue="Babel" />
@@ -26,6 +26,33 @@
             <item index="18" class="java.lang.String" itemvalue="django-phonenumber-field" />
             <item index="19" class="java.lang.String" itemvalue="pytz" />
             <item index="20" class="java.lang.String" itemvalue="billiard" />
+            <item index="21" class="java.lang.String" itemvalue="PyJWT" />
+            <item index="22" class="java.lang.String" itemvalue="django-rest-auth" />
+            <item index="23" class="java.lang.String" itemvalue="django-pyodbc" />
+            <item index="24" class="java.lang.String" itemvalue="django-ckeditor" />
+            <item index="25" class="java.lang.String" itemvalue="htmldocx" />
+            <item index="26" class="java.lang.String" itemvalue="django-mailer" />
+            <item index="27" class="java.lang.String" itemvalue="defusedxml" />
+            <item index="28" class="java.lang.String" itemvalue="pysaml2" />
+            <item index="29" class="java.lang.String" itemvalue="pycparser" />
+            <item index="30" class="java.lang.String" itemvalue="pyOpenSSL" />
+            <item index="31" class="java.lang.String" itemvalue="sendgrid-django" />
+            <item index="32" class="java.lang.String" itemvalue="monotonic" />
+            <item index="33" class="java.lang.String" itemvalue="urllib3" />
+            <item index="34" class="java.lang.String" itemvalue="djangorestframework" />
+            <item index="35" class="java.lang.String" itemvalue="django-multiforloop" />
+            <item index="36" class="java.lang.String" itemvalue="WeasyPrint" />
+            <item index="37" class="java.lang.String" itemvalue="dnspython" />
+            <item index="38" class="java.lang.String" itemvalue="pyodbc" />
+            <item index="39" class="java.lang.String" itemvalue="djangorestframework-jwt" />
+            <item index="40" class="java.lang.String" itemvalue="django-mssql-backend" />
+            <item index="41" class="java.lang.String" itemvalue="whitenoise" />
+            <item index="42" class="java.lang.String" itemvalue="sendgrid" />
+            <item index="43" class="java.lang.String" itemvalue="docx" />
+            <item index="44" class="java.lang.String" itemvalue="django-reorder" />
+            <item index="45" class="java.lang.String" itemvalue="idna" />
+            <item index="46" class="java.lang.String" itemvalue="openpyxl" />
+            <item index="47" class="java.lang.String" itemvalue="Pillow" />
           </list>
         </value>
       </option>

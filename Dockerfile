@@ -3,15 +3,22 @@
 ###########
 # Build Docker image
 #
+# Before starting be sure you have correctly configured the settings to be "Prod", "Dev", or "Test" as needed.
 # 1. From windows command line change directory to directory with this file
-# 2. Run docker build: docker build -t  wsdotdev.azurecr.io/ptd_report:latest . OR  docker build -t wsdotprod.azurecr.io/ptd_report:latest .
+# 2. Run docker build:
+    # - FOR DEV: docker build -t  wsdotdev.azurecr.io/ptd_report:latest .
+    # - FOR PROD: docker build -t wsdotprod.azurecr.io/ptd_report:latest .
 # 3. Run docker image: docker run -p 8000:8000 [image id]  Image id comand: docker image ls
 #
 # PUSH to Auzure CR
 #
 # 1. Log in to azure: az login
-# 2. Log into Azure container registry: az acr login --name wsdotdev  OR  az acr login --name wsdotprod
-# 3. Push image: docker push wsdotdev.azurecr.io/ptd_report:latest OR docker push wsdotprod.azurecr.io/ptd_report:latest
+# 2. Log into Azure container registry:
+    # - FOR DEV: az acr login --name wsdotdev
+    # - FOR PROD: az acr login --name wsdotprod
+# 3. Push image: docker push wsdotprod.azurecr.io/ptd_report:latest
+    # - FOR DEV:docker push wsdotdev.azurecr.io/ptd_report:latest
+    # - FOR PROD: docker push wsdotprod.azurecr.io/ptd_report:latest
 #
 # Run Image on Azure
 #

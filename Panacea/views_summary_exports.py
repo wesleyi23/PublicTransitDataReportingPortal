@@ -12,6 +12,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.http import HttpResponse, HttpResponseRedirect
 from django.template.loader import render_to_string
 from docx.image.exceptions import UnrecognizedImageError
+from openpyxl.cell import Cell
 from weasyprint import HTML
 from django.shortcuts import render, redirect
 
@@ -24,7 +25,8 @@ from .models import cover_sheet, tax_rates, organization, report_summary_table, 
 from .report_builders import run_reports
 from .summary_report_tables_v3 import ReportSummaryTable
 from openpyxl import Workbook
-from openpyxl.styles import Font, Border, Side, Alignment
+from openpyxl.styles import Font, Border, Side, Alignment, numbers
+
 
 @login_required(login_url='/Panacea/login')
 @group_required('Summary reporter', 'WSDOT staff')
@@ -32,7 +34,7 @@ def cover_sheet_report(request, file_output=None):
     user_org = find_user_organization(request.user.id)
     org_cover_sheet = cover_sheet.objects.get(organization_id=user_org.id)
     agency_type = user_org.summary_organization_classifications.name
-    print(agency_type)
+    # print(agency_type)
     try:
         base64_logo = base64.encodebytes(org_cover_sheet.organization_logo).decode("utf-8")
     except:
@@ -66,7 +68,7 @@ def generate_cover_sheet_report(org_id, file_type='pdf'):
     org = organization.objects.get(id=org_id)
     org_cover_sheet = cover_sheet.objects.get(organization_id=org.id)
     agency_type = org.summary_organization_classifications.name
-    print(agency_type)
+    # print(agency_type)
     try:
         base64_logo = base64.encodebytes(org_cover_sheet.organization_logo).decode("utf-8")
     except:
@@ -133,7 +135,7 @@ def generate_all_coversheets_backend_process_not_for_ui(start_with_org_name=None
         skip = False
 
     for org in organization.objects.all():
-        print(org.name)
+        # print(org.name)
         if org.name == start_with_org_name:
             skip = False
         if not skip:
@@ -152,7 +154,7 @@ def run_statewide_report_tables(request):
         form = report_generating_form(request.POST)
         if form.is_valid():
             report_list = request.POST.getlist('report_selection')
-            print(report_list)
+            # print(report_list)
             size = request.POST.get('report_size')
             run_reports(report_list, size)
     else:
@@ -186,8 +188,7 @@ def exports_cover_sheets_for_report(request):
         zip_archive = ZipFile(zip_file, 'w')
 
         for org in org_list:
-            print(org)
-
+            # print(org)
             try:
                 file = generate_cover_sheet_report(org, file_type=file_type)
                 with zip_archive.open(file.name, 'w') as this_file:
@@ -218,10 +219,10 @@ def export_data_tables(request, summary_organization_classifications_id=None):
     if request.POST:
         org_list = request.POST.getlist('organizations')
         include_comments = request.POST.get('include_comments')
-        print(include_comments)
+        # print(include_comments)
         if type(org_list) != list:
             org_list = [org_list]
-        print(org_list)
+        # print(org_list)
         zip_file = io.BytesIO()
         zip_archive = ZipFile(zip_file, 'w')
 
@@ -277,6 +278,7 @@ def create_new_summary_tables(request):
 @group_required('WSDOT staff')
 def edit_summary_tables(request, summary_table_id):
     this_summary_table = report_summary_table.objects.get(id=summary_table_id)
+    this_summary_table_sub_parts = this_summary_table.table_sub_part_list.order_by('order')
     form = create_new_summary_report_form(request.POST or None, instance=this_summary_table)
     table_sub_parts = report_summary_table_subpart.objects.all()
 
@@ -285,6 +287,7 @@ def edit_summary_tables(request, summary_table_id):
 
     return render(request, 'pages/summary/admin/exports/edit_summary_table.html', {'form': form,
                                                                                    'this_summary_table': this_summary_table,
+                                                                                   'this_summary_table_sub_parts': this_summary_table_sub_parts,
                                                                                    'table_sub_parts': table_sub_parts})
 
 @login_required(login_url='/Panacea/login')
@@ -296,14 +299,52 @@ def edit_create_subpart(request, sub_part_id=None):
     else:
         form = summary_report_subpart_form(request.POST or None)
     if request.POST:
-        print('post')
+        # print('post')
         if form.is_valid():
-            print('valid')
+            # print('valid')
             form.save()
 
     return render(request, 'pages/summary/admin/exports/sub_part_page.html', {'form': form,
                                                                               'sub_part_id': sub_part_id
                                                                               })
+
+
+def styled_cells(ws, data, first_row_not_number=True):
+    i = 0
+    for c in data:
+        if i == 0 and first_row_not_number:
+            c = Cell(ws, column="A", row=1, value=c)
+        else:
+            if isinstance(c, str):
+                if c[0] == '$':
+                    c = Cell(ws, column="A", row=1, value=int(c[1:]))
+                    c.number_format = numbers.FORMAT_CURRENCY_USD
+                elif c[-1] == '%':
+                    c = Cell(ws, column="A", row=1, value=float(c[:-1])/100)
+                    c.number_format = numbers.FORMAT_PERCENTAGE_00
+                elif c.isnumeric():
+                    c = float(c)
+                    if c.is_integer():
+                        c = int(c)
+                else:
+                    c = Cell(ws, column="A", row=1, value=c)
+            if not isinstance(c, Cell):
+                if isinstance(c, int):
+                    my_format = numbers.BUILTIN_FORMATS[3]
+                elif isinstance(c, float):
+                    if c.is_integer():
+                        my_format = numbers.BUILTIN_FORMATS[3]
+                    else:
+                        my_format = numbers.FORMAT_NUMBER_COMMA_SEPARATED1
+                else:
+                    my_format = numbers.FORMAT_GENERAl
+                c = Cell(ws, column="A", row=1, value=c)
+                c.number_format = my_format
+        i = i + 1
+        yield c
+    return data
+
+
 @login_required(login_url='/Panacea/login')
 @group_required('WSDOT staff')
 def get_summary_table(request, summary_table_id):
@@ -314,20 +355,31 @@ def get_summary_table(request, summary_table_id):
     wb = Workbook()
     ws = wb.active
 
-    heading_row = [report.table_heading]
-    report_year = get_current_summary_report_year()
-    for i in range(report_year - report.number_of_years_to_pull + 1, report_year + 1):
-        heading_row.append(i)
+    heading_row = []
 
-    if report.table_has_percentage_change:
-        heading_row.append('One year change (%)')
-    ws.append(heading_row)
-    print(report_table)
+    if report.report_summary_table_type == 'Standard':
+        heading_row = [report.table_heading]
+        report_year = get_current_summary_report_year()
+        for i in range(report_year - report.number_of_years_to_pull + 1, report_year + 1):
+            heading_row.append(i)
+        if report.table_has_percentage_change:
+            heading_row.append('One year change (%)')
+        ws.append(heading_row)
+    elif report.report_summary_table_type == 'Non-standard headings':
+        i = 0
+        for subpart in report_table:
+            if i == 0:
+                heading_row = subpart[0]
+            subpart = subpart[1:]
+            report_table[i] = subpart
+            i = i + 1
+        ws.append(heading_row)
+    else:
+        raise NotImplementedError
+    # print(report_table)
     for subpart in report_table:
         for row in subpart:
-            print(type(row))
-            print(row)
-            ws.append(row)
+                ws.append(styled_cells(ws, row))
     file = io.BytesIO()
     wb.save(file)
     response = HttpResponse(file.getvalue(), content_type='application/force-download')

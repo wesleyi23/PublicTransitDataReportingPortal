@@ -984,8 +984,10 @@ class summary_report_subpart_form(forms.ModelForm):
     class Meta:
         model = report_summary_table_subpart
         fields = ['name',
+                  'order',
                   'sub_part_type',
                   'sub_heading',
+                  'display_sub_heading',
                   'sql_query',
                   'has_sub_total',
                   'sub_total_text',
@@ -993,8 +995,10 @@ class summary_report_subpart_form(forms.ModelForm):
                   'round_using_form_masking_class']
         widgets = {
             'name': forms.TextInput(attrs={'class': 'form-control'}),
+            'order': forms.NumberInput(attrs={'class': 'form-control'}),
             'sub_part_type': forms.Select(choices=report_summary_table_subpart.TYPES, attrs={'class': 'form-control'}),
             'sub_heading': forms.TextInput(attrs={'class': 'form-control'}),
+            'display_sub_heading': forms.CheckboxInput(attrs={'class': 'form-control'}),
             'sql_query': forms.Textarea(attrs={'rows': 3, 'class': 'form-control'}),
             'has_sub_total': forms.CheckboxInput(attrs={'class': 'form-control'}),
             'sub_total_text': forms.TextInput(attrs={'class': 'form-control'}),

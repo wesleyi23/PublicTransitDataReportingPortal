@@ -375,6 +375,9 @@ class revenue_source(models.Model):
     agency_classification = models.ManyToManyField(summary_organization_type, blank=True)
     inactive_flag = models.BooleanField(default=False, choices=TRUE_FALSE_CHOICES)
     help_text = models.TextField(blank=True, null=True)
+    history = HistoricalRecords()
+    created_at = models.DateTimeField(auto_now_add=True, null=True)
+    updated_at = models.DateTimeField(auto_now=True, null=True)
 
     def __str__(self):
         return self.name
@@ -400,7 +403,10 @@ class expense_source(models.Model):
     agency_classification = models.ManyToManyField(summary_organization_type, blank=True)
     help_text = models.TextField(blank=True, null=True)
     order_in_summary = models.IntegerField(blank=True, null=True)
-    heading = models.CharField(max_length=200, blank = True, null = True)
+    heading = models.CharField(max_length=200, blank=True, null=True)
+    history = HistoricalRecords()
+    created_at = models.DateTimeField(auto_now_add=True, null=True)
+    updated_at = models.DateTimeField(auto_now=True, null=True)
 
     def __str__(self):
         return self.name
@@ -434,6 +440,9 @@ class transit_metrics(models.Model):
     order_in_summary = models.FloatField(null=True, blank=True, unique=True)
     form_masking_class = models.CharField(max_length=25, choices=FORM_MASKING_CLASSES, null=True, blank=True)
     help_text = models.TextField(blank=True, null=True)
+    history = HistoricalRecords()
+    created_at = models.DateTimeField(auto_now_add=True, null=True)
+    updated_at = models.DateTimeField(auto_now=True, null=True)
 
     def __str__(self):
         return self.name
@@ -876,8 +885,10 @@ class report_summary_table_subpart(models.Model):
         ("NOT IMPLEMENTED", "NOT IMPLEMENTED")
     )
     name = models.CharField(max_length=100)
+    order = models.FloatField(null=True)
     sub_part_type = models.CharField(max_length=100, choices=TYPES)
     sub_heading = models.CharField(max_length=100, null=True)
+    display_sub_heading = models.BooleanField(default=False, null=False)
     sql_query = models.TextField(default=None)
     has_sub_total = models.BooleanField(default=False)
     sub_total_text = models.CharField(max_length=100, null=True)
@@ -887,6 +898,7 @@ class report_summary_table_subpart(models.Model):
 class report_summary_table(models.Model):
     TYPES = (
         ("Standard", "Standard"),
+        ("Non-standard headings", "Non-standard headings"),
         ("NOT IMPLEMENTED", "NOT IMPLEMENTED")
     )
 
