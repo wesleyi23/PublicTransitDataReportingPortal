@@ -23,7 +23,6 @@ from dateutil.relativedelta import relativedelta
 # TODO make this real
 def get_current_summary_report_year():
     year = system_configuration_variables.objects.get(name='active_report_year').get_value()
-    print(year)
     return year
 
 def ntd_mode_translator(mode):

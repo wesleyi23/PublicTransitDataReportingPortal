@@ -1,0 +1,44 @@
+This file contains a list of thing you need to know to run the portal.
+
+1.  Setting up the portal for a new year:
+    - Update the 'active_report_year' value in the 'system_configuration_variables' database table
+    - In the application under Summary admin > Yearly setup > Yearly setup press the three buttons in order
+    - These three buttons can also be used to reset tracking of who has submitted information.
+    - Note: Whenever the application references a year it uses a function 'get_current_summary_report_year'
+      in utilities.py.
+
+2.  Pushing changes to the application:
+    - Instructions are in the 'Dockerfile' located where this file is stored
+    - This will containerize the image and push it to the the Azure container registry
+    - It does take about 10 - 15 minutes for the container to start and run again.
+    - Test that it works.  If it does not work, something has gone wrong.  You can get the previous container
+      from the Azure container registry.
+
+3.  WaTech updates the SAW security keys
+    - So from time to time WaTech updates the keys used to access SAW.  We are supposed to get an email in
+      advance but it has not happened yet.
+    - You will know this is the issue because a user will get an error when trying to log into the system.
+      And the error stack chain will have layers related to SAML authentication.
+    - This error is simple to fix. You will get the key from WaTech:
+      (Bietz, Aaron (WaTech) <aaron.bietz@watech.wa.gov>)
+    - It will look like this in a text file:
+
+      -----BEGIN CERTIFICATE-----
+      [Long string of numbers, letters, and other characters]
+      -----END CERTIFICATE-----
+
+    - Take that string and copy it into the 'sawidp_WaTech_metadata_PROD.xml' file. There are two
+      'X509Certificate' nodes in that file. Replace the string in both places with the new certificate key.
+    - IMPORTANT - Never publish these files or keys to GitHub!!!
+
+4.  Changing who gets emails
+    - There is a setting in the settings.py file that changes who gets admin emails.  Make a change here.
+      Then push the change to production.
+
+5. Github
+    - The current main branch is 'wsdotprod.'  I would recommend removing all of the other branches.
+    - https://github.com/ptddatateam/PublicTransitDataReportingPortal/
+
+6. Passwords:
+   -  Keys and passwords used by the application are stored in the 'keys_and_passwords.py' file. Do not publish
+      this to github!

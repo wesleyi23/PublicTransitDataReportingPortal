@@ -3,7 +3,9 @@
 ###########
 # Build Docker image
 #
-# Before starting be sure you have correctly configured the settings to be "Prod", "Dev", or "Test" as needed.
+# Before starting be sure you have correctly configured the MODE in 'settings.py' file to be
+# "Prod", "Dev", or "Test" as needed. (If pushing to production use Prod)
+#
 # 1. From windows command line change directory to directory with this file
 # 2. Run docker build:
     # - FOR DEV: docker build -t  wsdotdev.azurecr.io/ptd_report:latest .

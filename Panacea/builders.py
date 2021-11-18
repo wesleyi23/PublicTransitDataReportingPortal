@@ -245,13 +245,11 @@ class SummaryDataEntryBuilder(SummaryBuilderReportType):
                                  'transit_mode': transit_mode.objects.get(name=self.form_filter_1),
                                  'administration_of_mode': self.form_filter_2,
                                  self.get_metric_id_field_name(): metric[0],
-                                 'reported_value': None,
                                  }
         elif self.report_type in ['revenue', 'expense', 'fund_balance', ]:
             create_dictionary = {'year': metric[1],
                                  'organization': self.target_organization,
                                  self.get_metric_id_field_name(): metric[0],
-                                 'reported_value': None,
                                  }
         else:
             raise Http404
@@ -283,10 +281,11 @@ class SummaryDataEntryBuilder(SummaryBuilderReportType):
         if len(missing_metrics) > 0:
             with transaction.atomic():
                 for m in missing_metrics:
-                    model.create(**self.get_create_metric_dictionary(m))
+                    model.get_or_create(**self.get_create_metric_dictionary(m))
 
-        form_metrics = model.filter(organization=self.target_organization).order_by(
+        form_metrics = report_model.filter(organization=self.target_organization).order_by(
             self.get_metric_id_field_name() + '__name')
+
         return form_metrics
 
     def get_widgets(self):
@@ -369,7 +368,10 @@ class SummaryDataEntryBuilder(SummaryBuilderReportType):
         else:
             masking_class = form_querysets.filter(year=self.year).values_list(
                 self.get_metric_model_name() + "__form_masking_class", flat=True)
-
+        print('test')
+        print(str(len(formsets['this_year'])))
+        print(str(len(formsets['previous_year'])))
+        print(str(len(formsets['two_years_ago'])))
         return formsets, formset_labels, masking_class, help_text
 
     def get_other_measure_totals(self):
